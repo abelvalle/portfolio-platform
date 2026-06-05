@@ -1,12 +1,15 @@
 import { Badge } from "@/components/ui/badge";
+import type { PublicCopy } from "@/lib/i18n";
 import type { PortfolioSnapshot } from "@/lib/portfolio-data";
 
 export function EducationTimeline({
   education,
-  certifications
+  certifications,
+  typeLabels
 }: {
   education: PortfolioSnapshot["education"];
   certifications: PortfolioSnapshot["certifications"];
+  typeLabels: PublicCopy["education"]["typeLabels"];
 }) {
   const items = [...education, ...certifications];
   return (
@@ -14,7 +17,7 @@ export function EducationTimeline({
       {items.map((item) => (
         <article key={`${item.title}-${item.date}`} className="rounded-lg border border-border bg-card/60 p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <Badge variant={item.type === "study" ? "default" : "secondary"}>{item.type}</Badge>
+            <Badge variant={item.type === "study" ? "default" : "secondary"}>{typeLabels[item.type] || item.type}</Badge>
             <span className="font-mono text-xs text-muted-foreground">{item.date}</span>
           </div>
           <h3 className="text-lg font-semibold">{item.title}</h3>

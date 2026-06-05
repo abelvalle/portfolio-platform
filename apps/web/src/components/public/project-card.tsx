@@ -1,17 +1,18 @@
 import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import type { PublicCopy } from "@/lib/i18n";
 import type { PortfolioSnapshot } from "@/lib/portfolio-data";
 
 type Project = PortfolioSnapshot["projects"][number];
 
-export function ProjectCard({ project }: { project: Project }) {
+export function ProjectCard({ project, copy }: { project: Project; copy: PublicCopy["projects"] }) {
   return (
     <Card className="bg-card/70">
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
           <CardTitle>{project.name}</CardTitle>
-          {project.sample ? <Badge variant="secondary">sample/demo</Badge> : null}
+          {project.sample ? <Badge variant="secondary">{copy.sample}</Badge> : null}
         </div>
       </CardHeader>
       <CardContent>

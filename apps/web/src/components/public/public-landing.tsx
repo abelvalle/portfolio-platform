@@ -12,14 +12,17 @@ import { ProjectCard } from "./project-card";
 import { SectionNavigation } from "./section-navigation";
 import { SkillsGrid } from "./skills-grid";
 import { portfolioClient } from "@/lib/api";
-import { sections, type PortfolioSnapshot } from "@/lib/portfolio-data";
+import { getPortfolioPath, publicCopy, type Locale } from "@/lib/i18n";
+import type { PortfolioSnapshot } from "@/lib/portfolio-data";
 
-export function PublicLanding({ snapshot }: { snapshot: PortfolioSnapshot }) {
+export function PublicLanding({ snapshot, locale }: { snapshot: PortfolioSnapshot; locale: Locale }) {
   const [introVisible, setIntroVisible] = useState(true);
+  const copy = publicCopy[locale];
+  const trackingPath = getPortfolioPath(locale);
 
   useEffect(() => {
-    portfolioClient.track("landing_visit", "home", "/");
-  }, []);
+    portfolioClient.track("landing_visit", "home", trackingPath);
+  }, [trackingPath]);
 
   const cvUrl = snapshot.profile.cvUrl || snapshot.cv.url;
 
@@ -27,52 +30,57 @@ export function PublicLanding({ snapshot }: { snapshot: PortfolioSnapshot }) {
     <main className="min-h-dvh bg-background text-foreground">
       <AnimatePresence>
         {introVisible ? (
-          <IntroScreen name={snapshot.profile.fullName} subtitle={snapshot.profile.subtitle} onEnter={() => setIntroVisible(false)} />
+          <IntroScreen
+            name={snapshot.profile.fullName}
+            subtitle={snapshot.profile.subtitle}
+            label={copy.intro.label}
+            enterLabel={copy.intro.enter}
+            skipLabel={copy.intro.skip}
+            onEnter={() => setIntroVisible(false)}
+          />
         ) : null}
       </AnimatePresence>
-      <SectionNavigation />
-      <CommandPalette cvUrl={cvUrl} linkedin={snapshot.profile.linkedin} email={snapshot.profile.email} />
-      <HeroSection snapshot={snapshot} />
+      <SectionNavigation sections={copy.sections} ariaLabel={copy.ariaSections} />
+      <CommandPalette cvUrl={cvUrl} linkedin={snapshot.profile.linkedin} email={snapshot.profile.email} locale={locale} copy={copy.command} />
+      <HeroSection snapshot={snapshot} locale={locale} copy={copy.hero} />
       <div className="mx-auto flex max-w-7xl flex-col gap-28 px-6 py-20 sm:px-10 lg:px-16">
-        <NumberedSection id="about" number="01" title="Sobre mí">
+        <NumberedSection id="about" number="01" title={copy.sections[0].label} sections={copy.sections}>
           <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
             <p className="text-3xl font-semibold leading-tight text-balance">{snapshot.profile.shortBio}</p>
             <div className="flex flex-col gap-6 text-lg leading-9 text-muted-foreground">
               <p>{snapshot.profile.longBio}</p>
-              <p className="border-l border-primary pl-5 text-foreground">
-                Gestión IT, delivery, cliente, KPIs y UAT como hilo conductor entre negocio y equipos técnicos.
-              </p>
+              <p className="border-l border-primary pl-5 text-foreground">{copy.about.highlight}</p>
             </div>
           </div>
         </NumberedSection>
 
-        <NumberedSection id="experience" number="02" title="Experiencia">
-          <ExperienceTimeline experiences={snapshot.experiences} />
+        <NumberedSection id="experience" number="02" title={copy.sections[1].label} sections={copy.sections}>
+          <ExperienceTimeline experiences={snapshot.experiences} copy={copy.experience} />
         </NumberedSection>
 
-        <NumberedSection id="projects" number="03" title="Proyectos">
+        <NumberedSection id="projects" number="03" title={copy.sections[2].label} sections={copy.sections}>
           <div className="grid gap-5 md:grid-cols-2">
-            {snapshot.projects.map((project) => <ProjectCard key={project.name} project={project} />)}
+            {snapshot.projects.map((project) => <ProjectCard key={project.name} project={project} copy={copy.projects} />)}
           </div>
         </NumberedSection>
 
-        <NumberedSection id="education" number="04" title="Estudios y certificaciones">
-          <EducationTimeline education={snapshot.education} certifications={snapshot.certifications} />
+        <NumberedSection id="education" number="04" title={copy.sections[3].label} sections={copy.sections}>
+          <EducationTimeline education={snapshot.education} certifications={snapshot.certifications} typeLabels={copy.education.typeLabels} />
         </NumberedSection>
 
-        <NumberedSection id="skills" number="05" title="Skills">
+        <NumberedSection id="skills" number="05" title={copy.sections[4].label} sections={copy.sections}>
           <SkillsGrid skills={snapshot.skills} />
         </NumberedSection>
 
-        <NumberedSection id="contact" number="06" title="Contacto">
+        <NumberedSection id="contact" number="06" title={copy.sections[5].label} sections={copy.sections}>
           <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
             <div className="flex flex-col gap-5">
-              <p className="text-3xl font-semibold leading-tight">Construyamos algo juntos.</p>
+              <p className="text-3xl font-semibold leading-tight">{copy.contact.title}</p>
               <a className="text-muted-foreground hover:text-foreground" href={`mailto:${snapshot.profile.email}`}>{snapshot.profile.email}</a>
               {snapshot.profile.linkedin ? <a className="text-muted-foreground hover:text-foreground" href={snapshot.profile.linkedin}>LinkedIn</a> : null}
               {snapshot.profile.phone ? <p className="text-muted-foreground">{snapshot.profile.phone}</p> : null}
             </div>
-            <ContactForm />
+            <ContactForm copy={copy.contact.form} trackingPath={trackingPath} />
           </div>
         </NumberedSection>
       </div>
@@ -84,11 +92,13 @@ function NumberedSection({
   id,
   number,
   title,
+  sections,
   children
 }: {
   id: string;
   number: string;
   title: string;
+  sections: { id: string; label: string; number: string }[];
   children: React.ReactNode;
 }) {
   return (

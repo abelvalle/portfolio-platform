@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { sections } from "@/lib/portfolio-data";
+import type { PublicCopy } from "@/lib/i18n";
 
-export function SectionNavigation() {
+export function SectionNavigation({ sections, ariaLabel }: { sections: PublicCopy["sections"]; ariaLabel: string }) {
   const [active, setActive] = useState(sections[0].id);
 
   useEffect(() => {
@@ -18,10 +18,10 @@ export function SectionNavigation() {
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [sections]);
 
   return (
-    <nav className="fixed left-6 top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-3 xl:flex" aria-label="Secciones">
+    <nav className="fixed left-6 top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-3 xl:flex" aria-label={ariaLabel}>
       {sections.map((section) => (
         <a
           key={section.id}

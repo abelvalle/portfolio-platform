@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { portfolioClient } from "@/lib/api";
+import type { PublicCopy } from "@/lib/i18n";
 
 const contactSchema = z.object({
   name: z.string().min(2),
@@ -17,23 +18,23 @@ const contactSchema = z.object({
   message: z.string().min(10)
 });
 
-export function ContactForm() {
+export function ContactForm({ copy, trackingPath = "/" }: { copy: PublicCopy["contact"]["form"]; trackingPath?: string }) {
   const [loading, setLoading] = useState(false);
 
   async function submit(formData: FormData) {
     const parsed = contactSchema.safeParse(Object.fromEntries(formData.entries()));
     if (!parsed.success) {
-      toast.error("Revisa los campos del formulario.");
+      toast.error(copy.validationError);
       return;
     }
 
     setLoading(true);
     try {
       await portfolioClient.sendContact(parsed.data);
-      await portfolioClient.track("contact_submit", "landing_contact", "/");
-      toast.success("Mensaje enviado. Gracias por contactar.");
+      await portfolioClient.track("contact_submit", "landing_contact", trackingPath);
+      toast.success(copy.success);
     } catch {
-      toast.error("No se pudo enviar el mensaje. Puedes escribir por email.");
+      toast.error(copy.submitError);
     } finally {
       setLoading(false);
     }
@@ -42,24 +43,24 @@ export function ContactForm() {
   return (
     <form action={submit} className="grid gap-4">
       <div className="grid gap-2">
-        <Label htmlFor="name">Nombre</Label>
-        <Input id="name" name="name" placeholder="Tu nombre" required />
+        <Label htmlFor="name">{copy.name}</Label>
+        <Input id="name" name="name" placeholder={copy.namePlaceholder} required />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" placeholder="tu@email.com" type="email" required />
+        <Label htmlFor="email">{copy.email}</Label>
+        <Input id="email" name="email" placeholder={copy.emailPlaceholder} type="email" required />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="subject">Asunto</Label>
-        <Input id="subject" name="subject" placeholder="Oportunidad / proyecto / contacto" />
+        <Label htmlFor="subject">{copy.subject}</Label>
+        <Input id="subject" name="subject" placeholder={copy.subjectPlaceholder} />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="message">Mensaje</Label>
-        <Textarea id="message" name="message" placeholder="Cuéntame brevemente en qué puedo ayudar." required rows={6} />
+        <Label htmlFor="message">{copy.message}</Label>
+        <Textarea id="message" name="message" placeholder={copy.messagePlaceholder} required rows={6} />
       </div>
       <Button disabled={loading} type="submit" size="lg">
         <Send data-icon="inline-start" />
-        {loading ? "Enviando..." : "Enviar mensaje"}
+        {loading ? copy.sending : copy.submit}
       </Button>
     </form>
   );

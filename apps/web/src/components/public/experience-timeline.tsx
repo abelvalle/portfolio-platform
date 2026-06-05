@@ -1,7 +1,14 @@
 import { Badge } from "@/components/ui/badge";
+import type { PublicCopy } from "@/lib/i18n";
 import type { PortfolioSnapshot } from "@/lib/portfolio-data";
 
-export function ExperienceTimeline({ experiences }: { experiences: PortfolioSnapshot["experiences"] }) {
+export function ExperienceTimeline({
+  experiences,
+  copy
+}: {
+  experiences: PortfolioSnapshot["experiences"];
+  copy: PublicCopy["experience"];
+}) {
   return (
     <div className="flex flex-col gap-10">
       {experiences.map((experience, index) => (
@@ -9,7 +16,7 @@ export function ExperienceTimeline({ experiences }: { experiences: PortfolioSnap
           <div className="font-mono text-sm text-muted-foreground">
             {String(index + 1).padStart(2, "0")}
             <div className="mt-2 text-xs">
-              {experience.startDate.slice(0, 4)} - {experience.current ? "Actual" : experience.endDate?.slice(0, 4)}
+              {experience.startDate.slice(0, 4)} - {experience.current ? copy.current : experience.endDate?.slice(0, 4)}
             </div>
           </div>
           <div className="flex flex-col gap-4">
@@ -25,7 +32,7 @@ export function ExperienceTimeline({ experiences }: { experiences: PortfolioSnap
             </div>
             {experience.achievements.length ? (
               <div className="flex flex-col gap-2">
-                <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">Resultados</p>
+                <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">{copy.results}</p>
                 {experience.achievements.map((item) => <p key={item} className="text-sm text-muted-foreground">{item}</p>)}
               </div>
             ) : null}

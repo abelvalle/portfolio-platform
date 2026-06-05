@@ -2,10 +2,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { Download, ExternalLink, Mail, MapPin } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { getCvPath, type Locale, type PublicCopy } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { PortfolioSnapshot } from "@/lib/portfolio-data";
 
-export function HeroSection({ snapshot }: { snapshot: PortfolioSnapshot }) {
+export function HeroSection({
+  snapshot,
+  locale,
+  copy
+}: {
+  snapshot: PortfolioSnapshot;
+  locale: Locale;
+  copy: PublicCopy["hero"];
+}) {
   const { profile, cv } = snapshot;
   const cvUrl = profile.cvUrl || cv.url;
 
@@ -33,13 +42,13 @@ export function HeroSection({ snapshot }: { snapshot: PortfolioSnapshot }) {
           <div className="flex flex-wrap gap-3">
             <a className={cn(buttonVariants({ size: "lg" }))} href={cvUrl} download>
               <Download data-icon="inline-start" />
-              Descargar CV
+              {copy.downloadCv}
             </a>
-            <Link className={cn(buttonVariants({ variant: "outline", size: "lg" }))} href="/cv">
-              Ver CV online
+            <Link className={cn(buttonVariants({ variant: "outline", size: "lg" }))} href={getCvPath(locale)}>
+              {copy.viewCv}
             </Link>
             <Link className={cn(buttonVariants({ variant: "secondary", size: "lg" }))} href="#contact">
-              Contactar
+              {copy.contact}
             </Link>
             {profile.linkedin ? (
               <a className={cn(buttonVariants({ variant: "ghost", size: "lg" }))} href={profile.linkedin} target="_blank" rel="noreferrer">
@@ -49,14 +58,14 @@ export function HeroSection({ snapshot }: { snapshot: PortfolioSnapshot }) {
             ) : null}
             <a className={cn(buttonVariants({ variant: "ghost", size: "lg" }))} href={`mailto:${profile.email}`}>
               <Mail data-icon="inline-start" />
-              Email
+              {copy.email}
             </a>
           </div>
         </div>
         <div className="relative min-h-[520px] overflow-hidden rounded-lg border border-border bg-card">
           <Image
             src="/media/abel-portrait-dark.png"
-            alt="Retrato de Abel Valle Rosa"
+            alt={copy.portraitAlt}
             fill
             priority
             className="object-cover"

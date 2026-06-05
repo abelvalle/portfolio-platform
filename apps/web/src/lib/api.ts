@@ -1,4 +1,5 @@
 import { portfolioFallback, type PortfolioSnapshot } from "./portfolio-data";
+import { getLocalizedFallback, localizeSnapshot, type Locale } from "./i18n";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
@@ -21,7 +22,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const portfolioClient = {
-  async snapshot(): Promise<PortfolioSnapshot> {
+  async snapshot(locale: Locale = "es"): Promise<PortfolioSnapshot> {
     try {
       const [profile, theme, experiences, education, certifications, skills, projects, cv] = await Promise.all([
         apiFetch("/profile"),
@@ -33,9 +34,12 @@ export const portfolioClient = {
         apiFetch("/projects"),
         apiFetch("/cv")
       ]);
-      return { profile, theme, experiences, education, certifications, skills, projects, cv } as PortfolioSnapshot;
+      return localizeSnapshot(
+        { profile, theme, experiences, education, certifications, skills, projects, cv } as PortfolioSnapshot,
+        locale
+      );
     } catch {
-      return portfolioFallback;
+      return locale === "es" ? portfolioFallback : getLocalizedFallback(locale);
     }
   },
   sendContact(data: Record<string, string>) {

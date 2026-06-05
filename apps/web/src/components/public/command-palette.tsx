@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Download, ExternalLink, LockKeyhole, Mail, MapPinned } from "lucide-react";
+import { Download, ExternalLink, Languages, LockKeyhole, Mail, MapPinned } from "lucide-react";
 import { portfolioClient } from "@/lib/api";
+import { getAlternateLocalePath, type Locale, type PublicCopy } from "@/lib/i18n";
 
 type CommandPaletteProps = {
   cvUrl: string;
   linkedin?: string;
   email: string;
+  locale: Locale;
+  copy: PublicCopy["command"];
 };
 
-export function CommandPalette({ cvUrl, linkedin, email }: CommandPaletteProps) {
+export function CommandPalette({ cvUrl, linkedin, email, locale, copy }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
   const [secret, setSecret] = useState("");
 
@@ -43,48 +46,52 @@ export function CommandPalette({ cvUrl, linkedin, email }: CommandPaletteProps) 
         className="fixed bottom-5 right-5 z-40 rounded-md border border-border bg-card px-3 py-2 font-mono text-xs text-muted-foreground shadow-lg transition hover:text-foreground"
         onClick={() => setOpen(true)}
       >
-        Ctrl K
+        {copy.trigger}
       </button>
-      <a className="fixed right-0 top-0 z-40 size-8" href="/login" aria-label="Acceso admin oculto" />
+      <a className="fixed right-0 top-0 z-40 size-8" href="/login" aria-label={copy.hiddenAdminLabel} />
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Buscar accion..." />
+        <CommandInput placeholder={copy.placeholder} />
         <CommandList>
-          <CommandEmpty>No hay acciones.</CommandEmpty>
-          <CommandGroup heading="Navegación">
+          <CommandEmpty>{copy.empty}</CommandEmpty>
+          <CommandGroup heading={copy.navigation}>
             <CommandItem onSelect={() => go("#experience")}>
               <MapPinned data-icon="inline-start" />
-              Ir a experiencia
+              {copy.goExperience}
             </CommandItem>
             <CommandItem onSelect={() => go("#projects")}>
               <MapPinned data-icon="inline-start" />
-              Ir a proyectos
+              {copy.goProjects}
             </CommandItem>
             <CommandItem onSelect={() => go("#contact")}>
               <Mail data-icon="inline-start" />
-              Contactar
+              {copy.contact}
             </CommandItem>
           </CommandGroup>
-          <CommandGroup heading="Acciones">
+          <CommandGroup heading={copy.actions}>
             <CommandItem
               onSelect={() => {
-                portfolioClient.track("cv_download", "command_palette", "/");
+                portfolioClient.track("cv_download", "command_palette", locale === "en" ? "/en" : "/");
                 window.open(cvUrl, "_blank");
               }}
             >
               <Download data-icon="inline-start" />
-              Descargar CV
+              {copy.downloadCv}
+            </CommandItem>
+            <CommandItem onSelect={() => (window.location.href = getAlternateLocalePath(locale))}>
+              <Languages data-icon="inline-start" />
+              {copy.switchLanguage}
             </CommandItem>
             <CommandItem onSelect={() => linkedin && window.open(linkedin, "_blank")}>
               <ExternalLink data-icon="inline-start" />
-              Abrir LinkedIn
+              {copy.openLinkedIn}
             </CommandItem>
             <CommandItem onSelect={() => (window.location.href = `mailto:${email}`)}>
               <Mail data-icon="inline-start" />
-              Email
+              {copy.email}
             </CommandItem>
             <CommandItem onSelect={() => (window.location.href = "/login")}>
               <LockKeyhole data-icon="inline-start" />
-              Acceso secreto admin
+              {copy.admin}
             </CommandItem>
           </CommandGroup>
         </CommandList>
