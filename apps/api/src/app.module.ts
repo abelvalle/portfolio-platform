@@ -11,6 +11,7 @@ import { CvModule } from './cv/cv.module';
 import { MediaModule } from './media/media.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ResourcesModule } from './resources/resources.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ResourcesModule } from './resources/resources.module';
     AdminModule,
     AnalyticsModule,
     MediaModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

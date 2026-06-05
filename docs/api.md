@@ -62,6 +62,9 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `GET|POST|PATCH|DELETE /projects`
 - `POST /contact-messages`
 - `GET /admin/dashboard`
+- `GET|POST /users`
+- `PATCH|DELETE /users/:id`
+- `GET /users/permissions`
 - `POST /analytics/events`
 
 ## CV

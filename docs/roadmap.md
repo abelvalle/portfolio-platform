@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 01:32 CEST.
+Estado actualizado: 2026-06-06 01:36 CEST.
 
 ## Hitos completados
 
@@ -119,6 +119,28 @@ Verificación realizada en este hito:
 
 - `npm.cmd run build:api`
 - `npm.cmd --prefix apps/api run test`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
+### Sistema multiusuario y permisos granulares
+
+- Añadido `UsersModule` con endpoints admin-only para listar, crear, actualizar y desactivar usuarios.
+- Añadida matriz de permisos por rol (`admin`, `editor`, `viewer`).
+- Protección contra auto-democión y auto-borrado de la cuenta admin actual.
+- Passwords de nuevos usuarios hasheadas con bcrypt.
+- Los endpoints devuelven usuario público sin hash de contraseña ni refresh token.
+- Añadida ruta admin `/admin/settings/users` con tabla de roles/permisos.
+- Sidebar admin incluye acceso a Usuarios.
+- `docs/api.md` actualizado con endpoints de usuarios.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
 
 ## Deuda técnica abierta
 
@@ -134,14 +156,15 @@ Verificación realizada en este hito:
 - ATS por oferta concreta: el score actual valida estructura general; falta comparar contra keywords de una oferta específica.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
+- Usuarios UI CRUD: existe API y vista de matriz de permisos, pero falta tabla conectada a API para crear/editar/desactivar usuarios desde el panel.
+- Permisos por acción: existe matriz de permisos, pero los guards todavía se basan en roles por endpoint.
 - Publicación draft/publish: existe estructura inicial, pero falta workflow granular con revisión de cambios por entidad.
 - Media: la estrategia actual es local/demo; falta almacenamiento externo y servicio desacoplado para producción.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 
 ## Próximos hitos priorizados
 
-1. Sistema multiusuario y permisos granulares.
-2. Webhooks de formularios/contacto.
-3. Integración con LinkedIn.
-4. Plantillas públicas de CV.
-5. Servicio de media independiente.
+1. Webhooks de formularios/contacto.
+2. Integración con LinkedIn.
+3. Plantillas públicas de CV.
+4. Servicio de media independiente.

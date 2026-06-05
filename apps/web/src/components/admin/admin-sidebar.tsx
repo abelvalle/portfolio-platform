@@ -9,6 +9,7 @@ import {
   Inbox,
   Layers,
   Settings,
+  ShieldCheck,
   UserRound
 } from "lucide-react";
 
@@ -20,6 +21,7 @@ const items = [
   { href: "/admin/messages", label: "Mensajes", icon: Inbox },
   { href: "/admin/analytics", label: "Analítica", icon: BarChart3 },
   { href: "/admin/media", label: "Media", icon: Image },
+  { href: "/admin/settings/users", label: "Usuarios", icon: ShieldCheck },
   { href: "/admin/settings", label: "Configuración", icon: Settings },
   { href: "/admin/settings#modules", label: "Módulos futuros", icon: Layers }
 ];
