@@ -84,6 +84,12 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `POST /cv/adapt-to-role`
 - `POST /cv/compare-versions`
 
+### Adaptación de CV
+
+`POST /cv/adapt-to-role` usa el motor por reglas por defecto. Si `CV_AI_ADAPTER_URL` está configurado, el backend consulta un proveedor IA externo opcional y guarda sus sugerencias en `adaptationMeta.aiSuggestion`.
+
+Las sugerencias IA quedan pendientes de revisión y solo pueden reordenar skills/experiencias existentes; no se aceptan empresas, títulos, fechas ni certificaciones nuevas.
+
 ### ATS
 
 `GET /cv/:id/ats-report` valida la versión principal del CV y devuelve:

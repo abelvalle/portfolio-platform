@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CvAiAdapterService } from './cv-ai-adapter.service';
 import { AdaptCvDto, CompareVersionsDto } from './cv.dto';
 
 @Injectable()
 export class CvAdaptationService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly aiAdapter: CvAiAdapterService,
+  ) {}
 
   async adapt(dto: AdaptCvDto) {
     const base = await this.prisma.cvVersion.findUnique({
@@ -18,29 +22,37 @@ export class CvAdaptationService {
     const keywords = this.extractKeywords(
       `${dto.targetRole} ${dto.jobDescription}`,
     );
+    const aiSuggestion = await this.aiAdapter.propose({
+      targetRole: dto.targetRole,
+      targetCompany: dto.targetCompany,
+      jobDescription: dto.jobDescription,
+      keywords,
+      source,
+    });
     const skills = (source.skills || []) as any[];
     const experiences = (source.experiences || []) as any[];
     const proposed = {
       ...source,
       summary: this.orientSummary(source.summary, dto.targetRole),
-      skills: this.rankByKeywords(
+      skills: this.rankSkills(
         skills,
         keywords,
-        (skill) => `${skill.name} ${skill.category}`,
+        aiSuggestion?.prioritizedSkillNames,
       ),
-      experiences: this.rankByKeywords(
+      experiences: this.rankExperiences(
         experiences,
         keywords,
-        (experience) =>
-          `${experience.role} ${experience.company} ${experience.description} ${(experience.responsibilities || []).join(' ')} ${(experience.technologies || []).join(' ')}`,
+        aiSuggestion?.prioritizedExperienceCompanies,
       ),
       adaptationMeta: {
         targetRole: dto.targetRole,
         targetCompany: dto.targetCompany,
         keywords,
+        mode: aiSuggestion ? 'ai_assisted_with_rule_guardrails' : 'rules',
+        aiSuggestion,
         pendingReview: true,
         guardrail:
-          'No se han inventado empresas, fechas, títulos ni certificaciones. Revisa el resumen sugerido antes de publicar.',
+          'No se han inventado empresas, fechas, títulos ni certificaciones. Las sugerencias IA quedan pendientes de revisión humana y solo pueden reordenar datos existentes.',
       },
     };
 
@@ -121,10 +133,47 @@ export class CvAdaptationService {
     items: T[],
     keywords: string[],
     render: (item: T) => string,
+    boost: (item: T) => number = () => 0,
   ) {
     return [...items].sort(
       (a, b) =>
-        this.score(render(b), keywords) - this.score(render(a), keywords),
+        this.score(render(b), keywords) +
+        boost(b) -
+        (this.score(render(a), keywords) + boost(a)),
+    );
+  }
+
+  private rankSkills(
+    skills: any[],
+    keywords: string[],
+    prioritizedSkillNames?: string[],
+  ) {
+    const prioritized = new Set(
+      (prioritizedSkillNames || []).map((name) => name.toLowerCase()),
+    );
+    return this.rankByKeywords(
+      skills,
+      keywords,
+      (skill) => `${skill.name} ${skill.category}`,
+      (skill) => (prioritized.has(String(skill.name).toLowerCase()) ? 10 : 0),
+    );
+  }
+
+  private rankExperiences(
+    experiences: any[],
+    keywords: string[],
+    prioritizedCompanies?: string[],
+  ) {
+    const prioritized = new Set(
+      (prioritizedCompanies || []).map((company) => company.toLowerCase()),
+    );
+    return this.rankByKeywords(
+      experiences,
+      keywords,
+      (experience) =>
+        `${experience.role} ${experience.company} ${experience.description} ${(experience.responsibilities || []).join(' ')} ${(experience.technologies || []).join(' ')}`,
+      (experience) =>
+        prioritized.has(String(experience.company).toLowerCase()) ? 10 : 0,
     );
   }
 

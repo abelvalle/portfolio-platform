@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 01:27 CEST.
+Estado actualizado: 2026-06-06 01:32 CEST.
 
 ## Hitos completados
 
@@ -54,6 +54,10 @@ Verificación realizada en este hito:
 - `npm.cmd run db:generate`
 - `npm.cmd run build:api`
 - `npm.cmd --prefix apps/api run test`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build`
 - `npm.cmd run lint`
@@ -101,6 +105,21 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Integración IA opcional para adaptación de CV
+
+- Añadido `CvAiAdapterService` como proveedor IA externo opcional por HTTP.
+- Añadidas variables `CV_AI_ADAPTER_URL` y `CV_AI_ADAPTER_API_KEY` en `.env.example`.
+- Si no hay proveedor configurado, la adaptación sigue usando el motor por reglas.
+- Si hay proveedor configurado, sus sugerencias quedan en `adaptationMeta.aiSuggestion` como pendientes de revisión.
+- La IA solo puede influir en el orden de skills/experiencias existentes; no se aceptan datos profesionales nuevos.
+- Añadido test unitario para el fallback sin proveedor IA.
+- `docs/api.md` actualizado con el comportamiento IA opcional.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build:api`
+- `npm.cmd --prefix apps/api run test`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -113,15 +132,16 @@ Verificación realizada en este hito:
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
 - ATS por oferta concreta: el score actual valida estructura general; falta comparar contra keywords de una oferta específica.
+- IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
+- Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
 - Publicación draft/publish: existe estructura inicial, pero falta workflow granular con revisión de cambios por entidad.
 - Media: la estrategia actual es local/demo; falta almacenamiento externo y servicio desacoplado para producción.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 
 ## Próximos hitos priorizados
 
-1. Integración IA opcional para adaptación de CV: proveedor desacoplado y fallback por reglas.
-2. Sistema multiusuario y permisos granulares.
-3. Webhooks de formularios/contacto.
-4. Integración con LinkedIn.
-5. Plantillas públicas de CV.
-6. Servicio de media independiente.
+1. Sistema multiusuario y permisos granulares.
+2. Webhooks de formularios/contacto.
+3. Integración con LinkedIn.
+4. Plantillas públicas de CV.
+5. Servicio de media independiente.
