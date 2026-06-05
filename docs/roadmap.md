@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 01:00 CEST.
+Estado actualizado: 2026-06-06 01:18 CEST.
 
 ## Hitos completados
 
@@ -37,23 +37,48 @@ Verificación realizada en este hito:
 - `npm.cmd run test:e2e`
 - QA visual Playwright en `/en` desktop y móvil; Browser integrado no mantuvo sesión conectada, se usó fallback local.
 
+### MFA preparado para admin
+
+- Añadidos campos MFA en `User` y migración Prisma `000002_add_mfa_support`.
+- Añadido servicio TOTP con códigos de 6 dígitos, ventana temporal estándar y recovery codes generados una sola vez.
+- Recovery codes almacenados como hashes bcrypt, no en claro.
+- Login mantiene el flujo actual cuando MFA está desactivado.
+- Si MFA está activado, `POST /auth/login` devuelve un reto temporal y no emite tokens finales hasta `POST /auth/mfa/verify-login`.
+- Añadidos endpoints protegidos para estado, setup, confirmación y desactivación MFA.
+- Login frontend preparado para segundo paso MFA cuando la API responda `mfaRequired`.
+- Admin settings muestra el estado funcional del módulo MFA y endpoints disponibles.
+- `docs/api.md` actualizado con el flujo MFA.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run db:generate`
+- `npm.cmd run build:api`
+- `npm.cmd --prefix apps/api run test`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - `html lang` global sigue configurado en `es`; para accesibilidad perfecta conviene migrar a rutas con layout por locale.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
+- MFA UI avanzada: falta pantalla de configuración con QR visual, copia de recovery codes y regeneración controlada desde admin.
+- MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
+- Auditoría MFA granular: conviene registrar setup/confirm/disable en `AuditLog`.
 - Publicación draft/publish: existe estructura inicial, pero falta workflow granular con revisión de cambios por entidad.
 - Media: la estrategia actual es local/demo; falta almacenamiento externo y servicio desacoplado para producción.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 
 ## Próximos hitos priorizados
 
-1. MFA preparado para admin: añadir modelo/flujo base y documentación sin activar obligatoriedad por defecto.
-2. Editor visual de estilos avanzado: ampliar preview y persistencia de tokens de tema.
-3. Exportación ATS avanzada: plantilla ATS y validación de secciones críticas.
-4. Integración IA opcional para adaptación de CV: proveedor desacoplado y fallback por reglas.
-5. Sistema multiusuario y permisos granulares.
-6. Webhooks de formularios/contacto.
-7. Integración con LinkedIn.
-8. Plantillas públicas de CV.
-9. Servicio de media independiente.
+1. Editor visual de estilos avanzado: ampliar preview y persistencia de tokens de tema.
+2. Exportación ATS avanzada: plantilla ATS y validación de secciones críticas.
+3. Integración IA opcional para adaptación de CV: proveedor desacoplado y fallback por reglas.
+4. Sistema multiusuario y permisos granulares.
+5. Webhooks de formularios/contacto.
+6. Integración con LinkedIn.
+7. Plantillas públicas de CV.
+8. Servicio de media independiente.

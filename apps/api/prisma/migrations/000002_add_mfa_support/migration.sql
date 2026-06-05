@@ -1,0 +1,6 @@
+ALTER TABLE "User"
+ADD COLUMN "mfaEnabled" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "mfaSecret" TEXT,
+ADD COLUMN "mfaConfirmedAt" TIMESTAMP(3),
+ADD COLUMN "mfaLastUsedAt" TIMESTAMP(3),
+ADD COLUMN "mfaRecoveryCodeHashes" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

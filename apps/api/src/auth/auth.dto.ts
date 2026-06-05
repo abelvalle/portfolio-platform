@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({ example: 'abel.valle.rosa@gmail.com' })
@@ -16,4 +16,18 @@ export class RefreshTokenDto {
   @ApiProperty()
   @IsString()
   refreshToken!: string;
+}
+
+export class MfaCodeDto {
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  @MinLength(6)
+  @MaxLength(20)
+  code!: string;
+}
+
+export class VerifyMfaLoginDto extends MfaCodeDto {
+  @ApiProperty()
+  @IsString()
+  mfaToken!: string;
 }

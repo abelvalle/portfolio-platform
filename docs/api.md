@@ -17,6 +17,40 @@ Swagger: `http://localhost:4000/api/docs`
 
 Devuelve `accessToken`, `refreshToken` y usuario. Las rutas admin usan bearer token/cookie.
 
+Si el usuario tiene MFA activado, el login no emite tokens finales todavía:
+
+```json
+{
+  "mfaRequired": true,
+  "mfaToken": "jwt-temporal",
+  "user": {
+    "email": "abel.valle.rosa@gmail.com",
+    "role": "admin",
+    "mfaEnabled": true
+  }
+}
+```
+
+`POST /auth/mfa/verify-login`
+
+```json
+{
+  "mfaToken": "jwt-temporal",
+  "code": "123456"
+}
+```
+
+Devuelve `accessToken`, `refreshToken` y usuario tras validar TOTP o recovery code.
+
+Endpoints protegidos para preparar MFA:
+
+- `GET /auth/mfa/status`
+- `POST /auth/mfa/setup`
+- `POST /auth/mfa/confirm`
+- `POST /auth/mfa/disable`
+
+MFA no está activado por defecto en seed para evitar bloquear el primer acceso admin.
+
 ## Endpoints principales
 
 - `GET /profile`, `PATCH /profile`

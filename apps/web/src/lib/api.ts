@@ -63,6 +63,12 @@ export const authClient = {
       body: JSON.stringify({ email, password })
     });
   },
+  verifyMfaLogin(mfaToken: string, code: string) {
+    return apiFetch("/auth/mfa/verify-login", {
+      method: "POST",
+      body: JSON.stringify({ mfaToken, code })
+    });
+  },
   me() {
     return apiFetch("/auth/me");
   },

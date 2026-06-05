@@ -5,7 +5,12 @@ import type { Response } from 'express';
 import { CurrentUser } from '../common/guards/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
-import { LoginDto, RefreshTokenDto } from './auth.dto';
+import {
+  LoginDto,
+  MfaCodeDto,
+  RefreshTokenDto,
+  VerifyMfaLoginDto,
+} from './auth.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -19,6 +24,22 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const result = await this.authService.login(body.email, body.password);
+    if ('accessToken' in result) {
+      this.writeAuthCookies(response, result.accessToken, result.refreshToken);
+    }
+    return result;
+  }
+
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  @Post('mfa/verify-login')
+  async verifyMfaLogin(
+    @Body() body: VerifyMfaLoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.authService.verifyMfaLogin(
+      body.mfaToken,
+      body.code,
+    );
     this.writeAuthCookies(response, result.accessToken, result.refreshToken);
     return result;
   }
@@ -58,6 +79,34 @@ export class AuthController {
   @Get('me')
   me(@CurrentUser() user: { id: string }) {
     return this.authService.getMe(user.id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('mfa/status')
+  mfaStatus(@CurrentUser() user: { id: string }) {
+    return this.authService.getMfaStatus(user.id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('mfa/setup')
+  setupMfa(@CurrentUser() user: { id: string }) {
+    return this.authService.setupMfa(user.id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('mfa/confirm')
+  confirmMfa(@CurrentUser() user: { id: string }, @Body() body: MfaCodeDto) {
+    return this.authService.confirmMfa(user.id, body.code);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('mfa/disable')
+  disableMfa(@CurrentUser() user: { id: string }, @Body() body: MfaCodeDto) {
+    return this.authService.disableMfa(user.id, body.code);
   }
 
   private writeAuthCookies(
