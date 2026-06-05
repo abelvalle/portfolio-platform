@@ -121,3 +121,5 @@ Las exportaciones ATS generan PDF/DOCX con layout textual, nombres de archivo `-
   "message": "Me gustaría hablar sobre un proyecto."
 }
 ```
+
+Si `CONTACT_WEBHOOK_URL` está configurado, cada mensaje guardado dispara un `POST` externo con evento `contact.message.created`. Si `CONTACT_WEBHOOK_SECRET` existe, se añade firma HMAC SHA-256 en `X-Portfolio-Signature`.

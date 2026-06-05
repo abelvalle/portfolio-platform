@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 01:36 CEST.
+Estado actualizado: 2026-06-06 01:39 CEST.
 
 ## Hitos completados
 
@@ -142,6 +142,22 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Webhooks de formularios/contacto
+
+- Añadido `ContactWebhookService` con envío opcional `contact.message.created`.
+- El mensaje se guarda siempre en base de datos; el webhook no bloquea el flujo si no está configurado o falla.
+- Añadida firma HMAC SHA-256 opcional con `CONTACT_WEBHOOK_SECRET`.
+- Añadidas variables `CONTACT_WEBHOOK_URL` y `CONTACT_WEBHOOK_SECRET` en `.env.example`.
+- Añadido test unitario para fallback sin webhook configurado.
+- `docs/api.md` actualizado con el comportamiento del webhook.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -158,13 +174,14 @@ Verificación realizada en este hito:
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
 - Usuarios UI CRUD: existe API y vista de matriz de permisos, pero falta tabla conectada a API para crear/editar/desactivar usuarios desde el panel.
 - Permisos por acción: existe matriz de permisos, pero los guards todavía se basan en roles por endpoint.
+- Webhooks admin UI: falta pantalla para configurar/testear webhooks desde el panel; ahora se gestionan por variables de entorno.
+- Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Publicación draft/publish: existe estructura inicial, pero falta workflow granular con revisión de cambios por entidad.
 - Media: la estrategia actual es local/demo; falta almacenamiento externo y servicio desacoplado para producción.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 
 ## Próximos hitos priorizados
 
-1. Webhooks de formularios/contacto.
-2. Integración con LinkedIn.
-3. Plantillas públicas de CV.
-4. Servicio de media independiente.
+1. Integración con LinkedIn.
+2. Plantillas públicas de CV.
+3. Servicio de media independiente.

@@ -3,13 +3,17 @@ import { createHash } from 'node:crypto';
 import sanitizeHtml from 'sanitize-html';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateContactMessageDto } from './contact-message.dto';
+import { ContactWebhookService } from './contact-webhook.service';
 
 @Injectable()
 export class ContactMessagesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly webhookService: ContactWebhookService,
+  ) {}
 
-  create(dto: CreateContactMessageDto, ip?: string, userAgent?: string) {
-    return this.prisma.contactMessage.create({
+  async create(dto: CreateContactMessageDto, ip?: string, userAgent?: string) {
+    const message = await this.prisma.contactMessage.create({
       data: {
         name: this.clean(dto.name),
         email: dto.email.toLowerCase(),
@@ -19,6 +23,8 @@ export class ContactMessagesService {
         userAgent,
       },
     });
+    void this.webhookService.dispatch(message);
+    return message;
   }
 
   list(status?: string) {
