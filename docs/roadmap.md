@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 01:18 CEST.
+Estado actualizado: 2026-06-06 01:22 CEST.
 
 ## Hitos completados
 
@@ -60,6 +60,25 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Editor visual de estilos avanzado
+
+- El editor de tema carga los tokens actuales desde el snapshot de portfolio.
+- Añadidos controles de color con swatch y valor editable para principal, secundario, fondo y texto.
+- Añadidos controles para tipografía, radio de bordes, estilo de cards, intensidad de animaciones y modo oscuro/claro.
+- Añadida vista previa viva con estilos aplicados en tiempo real.
+- Añadida persistencia: guardar borrador escribe `draftJson`; publicar envía tokens y `publishedAt` a `PATCH /theme`.
+- Añadida acción `adminClient.updateTheme` para centralizar el consumo del endpoint.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run lint`
+- QA visual Playwright en `/admin/portfolio/theme` con cookie local de test; no se pulsó guardar al no existir sesión API real en la comprobación visual.
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -68,17 +87,18 @@ Verificación realizada en este hito:
 - MFA UI avanzada: falta pantalla de configuración con QR visual, copia de recovery codes y regeneración controlada desde admin.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
 - Auditoría MFA granular: conviene registrar setup/confirm/disable en `AuditLog`.
+- Tema global desde API: el editor persiste tokens, pero falta aplicar automáticamente esos tokens a las variables CSS de la landing/admin en runtime.
+- QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - Publicación draft/publish: existe estructura inicial, pero falta workflow granular con revisión de cambios por entidad.
 - Media: la estrategia actual es local/demo; falta almacenamiento externo y servicio desacoplado para producción.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 
 ## Próximos hitos priorizados
 
-1. Editor visual de estilos avanzado: ampliar preview y persistencia de tokens de tema.
-2. Exportación ATS avanzada: plantilla ATS y validación de secciones críticas.
-3. Integración IA opcional para adaptación de CV: proveedor desacoplado y fallback por reglas.
-4. Sistema multiusuario y permisos granulares.
-5. Webhooks de formularios/contacto.
-6. Integración con LinkedIn.
-7. Plantillas públicas de CV.
-8. Servicio de media independiente.
+1. Exportación ATS avanzada: plantilla ATS y validación de secciones críticas.
+2. Integración IA opcional para adaptación de CV: proveedor desacoplado y fallback por reglas.
+3. Sistema multiusuario y permisos granulares.
+4. Webhooks de formularios/contacto.
+5. Integración con LinkedIn.
+6. Plantillas públicas de CV.
+7. Servicio de media independiente.

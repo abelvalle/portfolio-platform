@@ -1,44 +1,227 @@
+"use client";
+
+import type { CSSProperties } from "react";
+import { useMemo, useState } from "react";
+import { Eye, Palette, Save } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { adminClient } from "@/lib/api";
 
-export function ThemeEditor() {
+type ThemeTokens = {
+  primaryColor: string;
+  secondaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  fontFamily: string;
+  borderRadius: string;
+  cardStyle: string;
+  animationIntensity: string;
+  colorMode: string;
+};
+
+const defaultTheme: ThemeTokens = {
+  primaryColor: "#5eead4",
+  secondaryColor: "#94a3b8",
+  backgroundColor: "#07090d",
+  textColor: "#f8fafc",
+  fontFamily: "Inter",
+  borderRadius: "8px",
+  cardStyle: "subtle",
+  animationIntensity: "60",
+  colorMode: "dark"
+};
+
+export function ThemeEditor({ initialTheme }: { initialTheme?: Partial<ThemeTokens> }) {
+  const [theme, setTheme] = useState<ThemeTokens>(() => normalizeTheme(initialTheme));
+  const [saving, setSaving] = useState<"draft" | "publish" | null>(null);
+
+  const previewStyle = useMemo<CSSProperties>(() => ({
+    backgroundColor: theme.backgroundColor,
+    color: theme.textColor,
+    borderColor: withAlpha(theme.secondaryColor, "55"),
+    borderRadius: theme.borderRadius,
+    fontFamily: theme.fontFamily
+  }), [theme]);
+
+  const cardStyle = useMemo<CSSProperties>(() => ({
+    backgroundColor: withAlpha(theme.secondaryColor, theme.cardStyle === "solid" ? "44" : "20"),
+    borderColor: withAlpha(theme.primaryColor, "66"),
+    borderRadius: theme.borderRadius
+  }), [theme]);
+
+  const updateTheme = (key: keyof ThemeTokens, value: string) => {
+    setTheme((current) => ({ ...current, [key]: value }));
+  };
+
+  async function save(mode: "draft" | "publish") {
+    setSaving(mode);
+    try {
+      const payload = mode === "draft"
+        ? { draftJson: theme }
+        : { ...theme, draftJson: theme, publishedAt: new Date().toISOString() };
+      await adminClient.updateTheme(payload);
+      toast.success(mode === "draft" ? "Borrador de tema guardado." : "Tema publicado.");
+    } catch {
+      toast.error("No se pudo guardar el tema. Revisa la API o la sesión.");
+    } finally {
+      setSaving(null);
+    }
+  }
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_460px]">
       <Card>
         <CardHeader>
-          <CardTitle>Editor visual de estilos</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Palette />
+            Editor visual de estilos
+          </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-5">
-          {["Color principal", "Color secundario", "Color de fondo", "Color de texto", "Tipografía"].map((label) => (
-            <div className="grid gap-2" key={label}>
-              <Label>{label}</Label>
-              <Input placeholder={label} />
-            </div>
-          ))}
-          <div className="grid gap-2">
-            <Label>Intensidad de animaciones</Label>
-            <Input type="range" defaultValue={60} max={100} />
+        <CardContent className="grid gap-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <ColorField label="Color principal" value={theme.primaryColor} onChange={(value) => updateTheme("primaryColor", value)} />
+            <ColorField label="Color secundario" value={theme.secondaryColor} onChange={(value) => updateTheme("secondaryColor", value)} />
+            <ColorField label="Color de fondo" value={theme.backgroundColor} onChange={(value) => updateTheme("backgroundColor", value)} />
+            <ColorField label="Color de texto" value={theme.textColor} onChange={(value) => updateTheme("textColor", value)} />
           </div>
-          <div className="flex items-center justify-between">
-            <Label>Modo oscuro</Label>
-            <Switch defaultChecked />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="fontFamily">Tipografía</Label>
+              <Input
+                id="fontFamily"
+                value={theme.fontFamily}
+                onChange={(event) => updateTheme("fontFamily", event.target.value)}
+                placeholder="Inter"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="borderRadius">Radio de bordes</Label>
+              <Input
+                id="borderRadius"
+                value={theme.borderRadius}
+                onChange={(event) => updateTheme("borderRadius", event.target.value)}
+                placeholder="8px"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="cardStyle">Estilo de cards</Label>
+              <select
+                id="cardStyle"
+                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                value={theme.cardStyle}
+                onChange={(event) => updateTheme("cardStyle", event.target.value)}
+              >
+                <option value="subtle">Sutil</option>
+                <option value="solid">Sólido</option>
+                <option value="outline">Outline</option>
+              </select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="animationIntensity">Intensidad de animaciones</Label>
+              <Input
+                id="animationIntensity"
+                type="range"
+                min={0}
+                max={100}
+                value={theme.animationIntensity}
+                onChange={(event) => updateTheme("animationIntensity", event.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border p-4">
+            <Label htmlFor="colorMode">Modo oscuro</Label>
+            <Switch
+              id="colorMode"
+              checked={theme.colorMode === "dark"}
+              onCheckedChange={(checked) => updateTheme("colorMode", checked ? "dark" : "light")}
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" variant="outline" disabled={Boolean(saving)} onClick={() => save("draft")}>
+              <Save data-icon="inline-start" />
+              {saving === "draft" ? "Guardando..." : "Guardar borrador"}
+            </Button>
+            <Button type="button" disabled={Boolean(saving)} onClick={() => save("publish")}>
+              <Eye data-icon="inline-start" />
+              {saving === "publish" ? "Publicando..." : "Publicar tema"}
+            </Button>
           </div>
         </CardContent>
       </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Vista previa</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border border-border bg-background p-6">
-            <p className="font-mono text-xs text-primary">01 / Preview</p>
-            <h3 className="mt-3 text-3xl font-semibold">Abel Valle Rosa</h3>
-            <p className="mt-3 text-muted-foreground">IT Project Manager · Delivery Manager</p>
+          <div className="grid gap-5 rounded-lg border p-6" style={previewStyle}>
+            <div>
+              <p className="font-mono text-xs" style={{ color: theme.primaryColor }}>01 / Preview</p>
+              <h3 className="mt-3 text-3xl font-semibold">Abel Valle Rosa</h3>
+              <p className="mt-3 text-sm" style={{ color: theme.secondaryColor }}>IT Project Manager · Delivery Manager</p>
+            </div>
+            <div className="grid gap-3 border p-4" style={cardStyle}>
+              <p className="text-sm font-medium">Delivery con foco ejecutivo</p>
+              <p className="text-sm leading-6" style={{ color: theme.secondaryColor }}>
+                KPIs, UAT, cliente y equipos técnicos conectados en una experiencia sobria y editable.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {["Delivery", "KPIs", "UAT"].map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-md border px-2 py-1 text-xs"
+                    style={{ borderColor: theme.primaryColor, color: theme.primaryColor }}
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
     </div>
   );
+}
+
+function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={label}>{label}</Label>
+      <div className="grid grid-cols-[44px_1fr] gap-2">
+        <Input id={`${label}-swatch`} type="color" value={value} onChange={(event) => onChange(event.target.value)} className="p-1" />
+        <Input id={label} value={value} onChange={(event) => onChange(event.target.value)} />
+      </div>
+    </div>
+  );
+}
+
+function normalizeTheme(initialTheme?: Partial<ThemeTokens>): ThemeTokens {
+  const merged = { ...defaultTheme, ...initialTheme };
+  return {
+    ...merged,
+    animationIntensity: normalizeAnimationIntensity(merged.animationIntensity)
+  };
+}
+
+function normalizeAnimationIntensity(value?: string) {
+  if (!value) return defaultTheme.animationIntensity;
+  if (value === "low") return "25";
+  if (value === "medium") return "60";
+  if (value === "high") return "90";
+  return value;
+}
+
+function withAlpha(hex: string, alpha: string) {
+  return /^#[0-9A-Fa-f]{6}$/.test(hex) ? `${hex}${alpha}` : hex;
 }

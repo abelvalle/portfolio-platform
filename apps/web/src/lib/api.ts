@@ -81,6 +81,9 @@ export const adminClient = {
   dashboard() {
     return apiFetch("/admin/dashboard");
   },
+  updateTheme(data: unknown) {
+    return apiFetch("/theme", { method: "PATCH", body: JSON.stringify(data) });
+  },
   list(resource: string) {
     return apiFetch(`/${resource}?includeHidden=true`);
   },
