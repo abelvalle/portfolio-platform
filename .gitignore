@@ -1,0 +1,14 @@
+node_modules
+.next
+dist
+coverage
+.turbo
+.vercel
+.env
+.env.*
+!.env.example
+apps/api/storage
+apps/api/prisma/dev.db
+*.log
+Thumbs.db
+.DS_Store

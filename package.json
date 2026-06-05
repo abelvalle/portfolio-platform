@@ -1,0 +1,34 @@
+{
+  "name": "portfolio-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Portfolio/CV platform for Abel Valle Rosa with independent Next.js frontend and NestJS REST API.",
+  "workspaces": [
+    "apps/web",
+    "apps/api",
+    "packages/shared",
+    "packages/ui",
+    "packages/config"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm --prefix apps/api run start:dev\" \"npm --prefix apps/web run dev\"",
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:api": "npm --prefix apps/api run start:dev",
+    "build": "npm --prefix apps/api run build && npm --prefix apps/web run build",
+    "build:web": "npm --prefix apps/web run build",
+    "build:api": "npm --prefix apps/api run build",
+    "lint": "npm --prefix apps/api run lint && npm --prefix apps/web run lint",
+    "test": "npm --prefix apps/api run test && npm --prefix apps/web run test",
+    "test:e2e": "npm --prefix apps/api run test:e2e && npm --prefix apps/web run test:e2e",
+    "format": "npm --prefix apps/api run format",
+    "db:generate": "npm --prefix apps/api run db:generate",
+    "db:migrate": "npm --prefix apps/api run db:migrate",
+    "db:seed": "npm --prefix apps/api run db:seed",
+    "docker:up": "docker compose -f infra/docker-compose.yml up --build",
+    "docker:down": "docker compose -f infra/docker-compose.yml down",
+    "install:all": "npm --prefix apps/api install && npm --prefix apps/web install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
