@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Download } from "lucide-react";
+import { Download, LayoutTemplate } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getPortfolioPath, type Locale, type PublicCopy } from "@/lib/i18n";
+import { getCvTemplatesPath, getPortfolioPath, type Locale, type PublicCopy } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { PortfolioSnapshot } from "@/lib/portfolio-data";
 
@@ -40,6 +40,10 @@ export function CvOnlinePage({
             <Download data-icon="inline-start" />
             {copy.download}
           </a>
+          <Link className={cn(buttonVariants({ variant: "outline", size: "lg" }))} href={getCvTemplatesPath(locale)}>
+            <LayoutTemplate data-icon="inline-start" />
+            {copy.templates}
+          </Link>
           <Link className={cn(buttonVariants({ variant: "outline", size: "lg" }))} href={getPortfolioPath(locale)}>
             {copy.back}
           </Link>

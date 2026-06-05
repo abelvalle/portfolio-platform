@@ -71,6 +71,7 @@ export type PublicCopy = {
   cv: {
     eyebrow: string;
     download: string;
+    templates: string;
     back: string;
     contact: string;
   };
@@ -157,6 +158,7 @@ export const publicCopy: Record<Locale, PublicCopy> = {
     cv: {
       eyebrow: "CV online",
       download: "Descargar CV",
+      templates: "Ver plantillas",
       back: "Volver al portfolio",
       contact: "Contacto"
     }
@@ -232,6 +234,7 @@ export const publicCopy: Record<Locale, PublicCopy> = {
     cv: {
       eyebrow: "Online resume",
       download: "Download resume",
+      templates: "View templates",
       back: "Back to portfolio",
       contact: "Contact"
     }
@@ -244,6 +247,10 @@ export function getPortfolioPath(locale: Locale) {
 
 export function getCvPath(locale: Locale) {
   return locale === "en" ? "/en/cv" : "/cv";
+}
+
+export function getCvTemplatesPath(locale: Locale) {
+  return locale === "en" ? "/en/cv/templates" : "/cv/templates";
 }
 
 export function getContactPath(locale: Locale) {

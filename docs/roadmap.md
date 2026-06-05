@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 01:44 CEST.
+Estado actualizado: 2026-06-06 01:50 CEST.
 
 ## Hitos completados
 
@@ -176,11 +176,31 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Plantillas públicas de CV
+
+- Añadidas rutas públicas `/cv/templates` y `/en/cv/templates`.
+- La galería consume `GET /api/v1/cv-templates` y usa fallback local si la API no está disponible.
+- El CV online enlaza la galería de plantillas en ES y EN.
+- Las tarjetas muestran configuración real de cada plantilla: tipografía, densidad, foto e iconos.
+- Añadida normalización tipada de plantillas para evitar confiar en datos sin forma desde la API.
+- Añadida cobertura e2e desktop/mobile para ambas rutas públicas.
+
+Verificación realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - `html lang` global sigue configurado en `es`; para accesibilidad perfecta conviene migrar a rutas con layout por locale.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
+- Preview A4 por plantilla: la galería pública muestra configuración y disponibilidad, pero falta renderizar una previsualización visual real de cada plantilla.
+- Selección pública de plantilla: el cambio de plantilla sigue siendo una acción de admin/CV Manager; falta selector público con URLs compartibles por plantilla y versión.
 - MFA UI avanzada: falta pantalla de configuración con QR visual, copia de recovery codes y regeneración controlada desde admin.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
 - Auditoría MFA granular: conviene registrar setup/confirm/disable en `AuditLog`.
@@ -202,5 +222,5 @@ Verificación realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. Plantillas públicas de CV.
-2. Servicio de media independiente.
+1. Servicio de media independiente.
+2. Preview A4 y URLs compartibles por plantilla de CV.

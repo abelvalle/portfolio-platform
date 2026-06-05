@@ -21,3 +21,15 @@ test("english landing and online resume route work", async ({ page }) => {
   await expect(page.getByText("Online resume")).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to portfolio" })).toHaveAttribute("href", "/en");
 });
+
+test("public CV template galleries work in Spanish and English", async ({ page }) => {
+  await page.goto("/cv/templates");
+  await expect(page.getByRole("heading", { name: "Plantillas de CV" })).toBeVisible();
+  await expect(page.getByText("ATS-friendly")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ver CV online" })).toHaveAttribute("href", "/cv");
+
+  await page.goto("/en/cv/templates");
+  await expect(page.getByRole("heading", { name: "Resume templates" })).toBeVisible();
+  await expect(page.getByText("ATS-friendly")).toBeVisible();
+  await expect(page.getByRole("link", { name: "View resume online" })).toHaveAttribute("href", "/en/cv");
+});
