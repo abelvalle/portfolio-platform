@@ -1,0 +1,439 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  editor
+  viewer
+}
+
+enum PublishStatus {
+  draft
+  published
+  archived
+}
+
+enum CvFileType {
+  pdf
+  docx
+  json
+  original
+  preview
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String?
+  passwordHash     String
+  role             UserRole  @default(viewer)
+  refreshTokenHash String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+  auditLogs        AuditLog[]
+}
+
+model Profile {
+  id           String   @id @default(cuid())
+  fullName     String
+  headline     String
+  subtitle     String
+  shortBio     String   @db.Text
+  longBio      String   @db.Text
+  location     String
+  availability String
+  email        String
+  phone        String?
+  linkedin     String?
+  github       String?
+  website      String?
+  avatarUrl    String?
+  cvUrl        String?
+  seoTitle     String?
+  seoDescription String?
+  ogImageUrl   String?
+  primaryLanguage String @default("es")
+  ctaPrimary   String   @default("Descargar CV")
+  ctaSecondary String   @default("Contactar")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ThemeSettings {
+  id                 String   @id @default(cuid())
+  primaryColor       String   @default("#5eead4")
+  secondaryColor     String   @default("#94a3b8")
+  backgroundColor    String   @default("#07090d")
+  textColor          String   @default("#f8fafc")
+  fontFamily         String   @default("Inter")
+  borderRadius       String   @default("8px")
+  cardStyle          String   @default("subtle")
+  animationIntensity String   @default("medium")
+  colorMode          String   @default("dark")
+  draftJson          Json?
+  publishedAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Experience {
+  id               String    @id @default(cuid())
+  company          String
+  role             String
+  startDate        DateTime
+  endDate          DateTime?
+  current          Boolean   @default(false)
+  location         String?
+  modality         String?
+  description      String    @db.Text
+  achievements     String[]  @default([])
+  responsibilities String[]  @default([])
+  technologies     String[]  @default([])
+  methodologies    String[]  @default([])
+  skills           String[]  @default([])
+  order            Int       @default(0)
+  visible          Boolean   @default(true)
+  featured         Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+}
+
+model ExperienceAchievement {
+  id           String   @id @default(cuid())
+  experienceId String
+  text         String   @db.Text
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Education {
+  id          String    @id @default(cuid())
+  title       String
+  institution String
+  date        String
+  description String?   @db.Text
+  type        String
+  certificateUrl String?
+  attachmentId String?
+  order       Int       @default(0)
+  visible     Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+}
+
+model Certification {
+  id          String    @id @default(cuid())
+  title       String
+  institution String
+  date        String
+  description String?   @db.Text
+  certificateUrl String?
+  attachmentId String?
+  order       Int       @default(0)
+  visible     Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+}
+
+model SkillCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  order     Int      @default(0)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  skills    Skill[]
+}
+
+model Skill {
+  id         String    @id @default(cuid())
+  name       String
+  categoryId String?
+  category   SkillCategory? @relation(fields: [categoryId], references: [id])
+  categoryName String?
+  level      String?
+  order      Int       @default(0)
+  visible    Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+}
+
+model ProjectCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  order     Int      @default(0)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  projects  Project[]
+}
+
+model Project {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  description   String    @db.Text
+  status        PublishStatus @default(draft)
+  categoryId    String?
+  category      ProjectCategory? @relation(fields: [categoryId], references: [id])
+  categoryName  String?
+  technologies  String[]  @default([])
+  imageUrl      String?
+  publicUrl     String?
+  repositoryUrl String?
+  featured      Boolean   @default(false)
+  visible       Boolean   @default(true)
+  sample        Boolean   @default(false)
+  order         Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+}
+
+model ContactMessage {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String    @db.Text
+  status    String    @default("unread")
+  ipHash    String?
+  userAgent  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model MediaAsset {
+  id          String    @id @default(cuid())
+  filename    String
+  originalName String?
+  mimeType    String
+  size        Int?
+  url         String
+  storageKey  String?
+  altText     String?
+  type        String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  generatedFiles CvGeneratedFile[]
+}
+
+model Cv {
+  id             String    @id @default(cuid())
+  slug           String    @unique
+  name           String
+  headline       String
+  summary        String    @db.Text
+  contactJson    Json
+  linksJson      Json?
+  structuredJson Json
+  originalFileId String?
+  isPrimary      Boolean   @default(false)
+  status         PublishStatus @default(draft)
+  language       String    @default("es")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+  sections       CvSection[]
+  versions       CvVersion[]
+}
+
+model CvSection {
+  id        String   @id @default(cuid())
+  cvId      String
+  cv        Cv       @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  key       String
+  title     String
+  content   Json
+  order     Int      @default(0)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CvExperience {
+  id        String   @id @default(cuid())
+  cvId      String
+  data      Json
+  order     Int      @default(0)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CvEducation {
+  id        String   @id @default(cuid())
+  cvId      String
+  data      Json
+  order     Int      @default(0)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CvSkill {
+  id        String   @id @default(cuid())
+  cvId      String
+  data      Json
+  order     Int      @default(0)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CvProject {
+  id        String   @id @default(cuid())
+  cvId      String
+  data      Json
+  order     Int      @default(0)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CvTemplate {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  description String?
+  config    Json
+  visible   Boolean   @default(true)
+  order     Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  versions  CvVersion[]
+}
+
+model CvVersion {
+  id              String    @id @default(cuid())
+  cvId            String
+  cv              Cv        @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  templateId      String?
+  template        CvTemplate? @relation(fields: [templateId], references: [id])
+  name            String
+  slug            String    @unique
+  description     String?
+  targetRole      String
+  targetCompany   String?
+  language        String    @default("es")
+  status          PublishStatus @default(draft)
+  structuredJson  Json
+  generatedPdfId  String?
+  generatedDocxId String?
+  isPrimary       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  generatedFiles  CvGeneratedFile[]
+}
+
+model CvTargetRole {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  keywords    String[]  @default([])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+}
+
+model CvAdaptationRequest {
+  id              String    @id @default(cuid())
+  baseCvVersionId String?
+  targetRole      String
+  targetCompany   String?
+  jobDescription  String    @db.Text
+  proposedJson    Json
+  status          String    @default("pending_review")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+}
+
+model CvGeneratedFile {
+  id          String    @id @default(cuid())
+  cvVersionId String?
+  cvVersion   CvVersion? @relation(fields: [cvVersionId], references: [id])
+  mediaAssetId String?
+  mediaAsset   MediaAsset? @relation(fields: [mediaAssetId], references: [id])
+  type        CvFileType
+  url         String
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PageSection {
+  id        String    @id @default(cuid())
+  key       String    @unique
+  title     String
+  content   Json
+  order     Int       @default(0)
+  visible   Boolean   @default(true)
+  status    PublishStatus @default(published)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model ChangeLog {
+  id          String   @id @default(cuid())
+  entityType  String
+  entityId    String?
+  action      String
+  summary     String
+  beforeJson  Json?
+  afterJson   Json?
+  actorUserId String?
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  resource  String
+  resourceId String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  type      String
+  path      String?
+  label     String?
+  metadata  Json?
+  ipHash    String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}
+
+model AppModule {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  enabled     Boolean  @default(true)
+  order       Int      @default(0)
+  config      Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
