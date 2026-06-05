@@ -86,6 +86,30 @@ export class CvController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin, UserRole.editor)
+  @Get(':id/ats-report')
+  getAtsReport(@Param('id') id: string) {
+    return this.cvService.getAtsReport(id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.admin, UserRole.editor)
+  @Post(':id/generate-ats-pdf')
+  generateAtsPdf(@Param('id') id: string) {
+    return this.cvService.generateAtsPdf(id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.admin, UserRole.editor)
+  @Post(':id/generate-ats-docx')
+  generateAtsDocx(@Param('id') id: string) {
+    return this.cvService.generateAtsDocx(id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.admin, UserRole.editor)
   @Post(':id/set-primary')
   setPrimary(@Param('id') id: string) {
     return this.cvService.setPrimary(id);

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 01:22 CEST.
+Estado actualizado: 2026-06-06 01:27 CEST.
 
 ## Hitos completados
 
@@ -79,6 +79,28 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Exportación ATS avanzada
+
+- Añadido `CvAtsService` para scoring ATS, checks ponderados, keywords detectadas y recomendaciones.
+- Añadidos tests unitarios del validador ATS.
+- Añadidos endpoints protegidos:
+  - `GET /api/v1/cv/:id/ats-report`
+  - `POST /api/v1/cv/:id/generate-ats-pdf`
+  - `POST /api/v1/cv/:id/generate-ats-docx`
+- Exportación ATS genera archivos con sufijo `-ats` y metadata de score/status.
+- La plantilla `ATS-friendly` del panel muestra capacidades específicas: texto plano, score ATS y PDF/DOCX ATS.
+- `docs/api.md` actualizado con el reporte ATS y endpoints nuevos.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build:api`
+- `npm.cmd --prefix apps/api run test`
+- `npm.cmd run build:web`
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -89,16 +111,17 @@ Verificación realizada en este hito:
 - Auditoría MFA granular: conviene registrar setup/confirm/disable en `AuditLog`.
 - Tema global desde API: el editor persiste tokens, pero falta aplicar automáticamente esos tokens a las variables CSS de la landing/admin en runtime.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
+- ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
+- ATS por oferta concreta: el score actual valida estructura general; falta comparar contra keywords de una oferta específica.
 - Publicación draft/publish: existe estructura inicial, pero falta workflow granular con revisión de cambios por entidad.
 - Media: la estrategia actual es local/demo; falta almacenamiento externo y servicio desacoplado para producción.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 
 ## Próximos hitos priorizados
 
-1. Exportación ATS avanzada: plantilla ATS y validación de secciones críticas.
-2. Integración IA opcional para adaptación de CV: proveedor desacoplado y fallback por reglas.
-3. Sistema multiusuario y permisos granulares.
-4. Webhooks de formularios/contacto.
-5. Integración con LinkedIn.
-6. Plantillas públicas de CV.
-7. Servicio de media independiente.
+1. Integración IA opcional para adaptación de CV: proveedor desacoplado y fallback por reglas.
+2. Sistema multiusuario y permisos granulares.
+3. Webhooks de formularios/contacto.
+4. Integración con LinkedIn.
+5. Plantillas públicas de CV.
+6. Servicio de media independiente.

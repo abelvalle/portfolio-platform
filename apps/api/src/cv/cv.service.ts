@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PublishStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { CvAtsService } from './cv-ats.service';
 import { CreateCvDto } from './cv.dto';
 import { CvExportService } from './cv-export.service';
 import { CvParserService } from './cv-parser.service';
@@ -11,6 +12,7 @@ export class CvService {
     private readonly prisma: PrismaService,
     private readonly parser: CvParserService,
     private readonly exporter: CvExportService,
+    private readonly atsService: CvAtsService,
   ) {}
 
   list() {
@@ -124,6 +126,45 @@ export class CvService {
     );
   }
 
+  async getAtsReport(cvId: string) {
+    const version = await this.findPrimaryVersion(cvId);
+    return this.atsService.validate(version.structuredJson as never);
+  }
+
+  async generateAtsPdf(cvId: string) {
+    const version = await this.findPrimaryVersion(cvId);
+    const report = this.atsService.validate(version.structuredJson as never);
+    const file = await this.exporter.generatePdf(
+      version.id,
+      version.structuredJson as never,
+      { ats: true },
+    );
+    return this.persistGeneratedFile(
+      version.id,
+      file,
+      'pdf',
+      'application/pdf',
+      { ats: true, atsScore: report.score, atsStatus: report.status },
+    );
+  }
+
+  async generateAtsDocx(cvId: string) {
+    const version = await this.findPrimaryVersion(cvId);
+    const report = this.atsService.validate(version.structuredJson as never);
+    const file = await this.exporter.generateDocx(
+      version.id,
+      version.structuredJson as never,
+      { ats: true },
+    );
+    return this.persistGeneratedFile(
+      version.id,
+      file,
+      'docx',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      { ats: true, atsScore: report.score, atsStatus: report.status },
+    );
+  }
+
   private async findPrimaryVersion(cvId: string) {
     const version = await this.prisma.cvVersion.findFirst({
       where: {
@@ -144,6 +185,7 @@ export class CvService {
     file: { filename: string; path: string; url: string },
     type: 'pdf' | 'docx',
     mimeType: string,
+    metadata?: Record<string, unknown>,
   ) {
     const media = await this.prisma.mediaAsset.create({
       data: {
@@ -153,6 +195,7 @@ export class CvService {
         url: file.url,
         storageKey: file.path,
         type: 'cv-generated',
+        metadata: metadata as never,
       },
     });
     const generated = await this.prisma.cvGeneratedFile.create({
@@ -161,6 +204,7 @@ export class CvService {
         mediaAssetId: media.id,
         type,
         url: file.url,
+        metadata: metadata as never,
       },
     });
     await this.prisma.cvVersion.update({

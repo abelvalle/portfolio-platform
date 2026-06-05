@@ -74,12 +74,33 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `POST /cv/import`
 - `POST /cv/:id/generate-pdf`
 - `POST /cv/:id/generate-docx`
+- `GET /cv/:id/ats-report`
+- `POST /cv/:id/generate-ats-pdf`
+- `POST /cv/:id/generate-ats-docx`
 - `POST /cv/:id/set-primary`
 - `GET|POST|PATCH|DELETE /cv-versions`
 - `GET|POST|PATCH|DELETE /cv-templates`
 - `GET|POST|PATCH|DELETE /cv-target-roles`
 - `POST /cv/adapt-to-role`
 - `POST /cv/compare-versions`
+
+### ATS
+
+`GET /cv/:id/ats-report` valida la versión principal del CV y devuelve:
+
+```json
+{
+  "score": 90,
+  "status": "strong",
+  "checks": [
+    { "key": "contact", "passed": true, "weight": 15 }
+  ],
+  "keywords": ["Delivery Management", "KPIs", "UAT"],
+  "recommendations": []
+}
+```
+
+Las exportaciones ATS generan PDF/DOCX con layout textual, nombres de archivo `-ats` y metadata de score ATS.
 
 ## Ejemplo contacto
 

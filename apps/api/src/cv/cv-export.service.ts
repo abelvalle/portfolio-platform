@@ -31,9 +31,13 @@ type CvStructuredData = {
 export class CvExportService {
   storageDir = process.env.STORAGE_DIR || 'storage';
 
-  async generateDocx(versionId: string, data: CvStructuredData) {
+  async generateDocx(
+    versionId: string,
+    data: CvStructuredData,
+    options: { ats?: boolean } = {},
+  ) {
     const outDir = this.ensureCvDir();
-    const filename = `${versionId}.docx`;
+    const filename = `${versionId}${options.ats ? '-ats' : ''}.docx`;
     const outPath = join(outDir, filename);
     const doc = new Document({
       sections: [
@@ -47,7 +51,10 @@ export class CvExportService {
             this.text(this.contactLine(data)),
             this.heading('Resumen profesional', 18),
             this.text(data.summary || ''),
-            this.heading('Experiencia', 18),
+            this.heading(
+              options.ats ? 'Experiencia profesional' : 'Experiencia',
+              18,
+            ),
             ...this.experienceParagraphs(data),
             this.heading('Formación y certificaciones', 18),
             ...this.simpleList(
@@ -76,19 +83,26 @@ export class CvExportService {
     return { filename, path: outPath, url: `/media/generated/${filename}` };
   }
 
-  async generatePdf(versionId: string, data: CvStructuredData) {
+  async generatePdf(
+    versionId: string,
+    data: CvStructuredData,
+    options: { ats?: boolean } = {},
+  ) {
     const outDir = this.ensureCvDir();
-    const filename = `${versionId}.pdf`;
+    const filename = `${versionId}${options.ats ? '-ats' : ''}.pdf`;
     const outPath = join(outDir, filename);
 
     await new Promise<void>((resolve, reject) => {
-      const doc = new PDFDocument({ margin: 48, size: 'A4' });
+      const doc = new PDFDocument({
+        margin: options.ats ? 42 : 48,
+        size: 'A4',
+      });
       const stream = createWriteStream(outPath);
       doc.pipe(stream);
       doc.fontSize(24).text(data.profile?.fullName || 'Abel Valle Rosa');
       doc
         .fontSize(12)
-        .fillColor('#334155')
+        .fillColor(options.ats ? '#111827' : '#334155')
         .text(
           data.profile?.headline || 'IT Project Manager | Delivery Manager',
         );
@@ -100,7 +114,7 @@ export class CvExportService {
       this.pdfSection(doc, 'Resumen profesional', [data.summary || '']);
       this.pdfSection(
         doc,
-        'Experiencia',
+        options.ats ? 'Experiencia profesional' : 'Experiencia',
         (data.experiences || []).map(
           (exp) =>
             `${exp.role} · ${exp.company}\n${exp.description}\n${[...(exp.responsibilities || []), ...(exp.achievements || [])].join('\n')}`,
