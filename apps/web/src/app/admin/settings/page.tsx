@@ -27,6 +27,25 @@ export default function SettingsPage() {
           ]} />
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-4">
+            <CardTitle>Integración LinkedIn</CardTitle>
+            <Badge variant="secondary">Opcional</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="grid gap-3 text-sm text-muted-foreground">
+          <p>
+            La API expone estado, URL de autorización OAuth opcional y URL de compartir portfolio. Si no hay credenciales
+            LinkedIn, la landing conserva el enlace público del perfil.
+          </p>
+          <DataTable rows={[
+            { flujo: "Estado", endpoint: "GET /api/v1/integrations/linkedin/status", acceso: "público" },
+            { flujo: "Auth URL", endpoint: "GET /api/v1/integrations/linkedin/auth-url", acceso: "admin" },
+            { flujo: "Share URL", endpoint: "GET /api/v1/integrations/linkedin/share-url", acceso: "público" }
+          ]} />
+        </CardContent>
+      </Card>
       <section id="modules">
         <DataTable rows={[
           { modulo: "Dashboard", activo: true },

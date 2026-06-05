@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ContactMessagesModule } from './contact-messages/contact-messages.module';
 import { CvModule } from './cv/cv.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 import { MediaModule } from './media/media.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ResourcesModule } from './resources/resources.module';
@@ -22,6 +23,7 @@ import { UsersModule } from './users/users.module';
     ResourcesModule,
     ContactMessagesModule,
     CvModule,
+    IntegrationsModule,
     AdminModule,
     AnalyticsModule,
     MediaModule,

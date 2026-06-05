@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 01:39 CEST.
+Estado actualizado: 2026-06-06 01:44 CEST.
 
 ## Hitos completados
 
@@ -158,6 +158,24 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Integración con LinkedIn
+
+- Añadido `IntegrationsModule` con endpoints LinkedIn.
+- `GET /api/v1/integrations/linkedin/status` expone estado de configuración, URL pública de perfil y scopes previstos.
+- `GET /api/v1/integrations/linkedin/share-url` construye URLs de compartir portfolio/CV en LinkedIn.
+- `GET /api/v1/integrations/linkedin/auth-url` prepara URL OAuth protegida para admin cuando existan credenciales.
+- Añadidas variables opcionales `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `LINKEDIN_REDIRECT_URI` y `PUBLIC_SITE_URL`.
+- Añadida sección LinkedIn en `/admin/settings`.
+- Añadidos tests unitarios de estado/share URL.
+- `docs/api.md` actualizado con endpoints de integración.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -176,12 +194,13 @@ Verificación realizada en este hito:
 - Permisos por acción: existe matriz de permisos, pero los guards todavía se basan en roles por endpoint.
 - Webhooks admin UI: falta pantalla para configurar/testear webhooks desde el panel; ahora se gestionan por variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
+- LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
+- LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación draft/publish: existe estructura inicial, pero falta workflow granular con revisión de cambios por entidad.
 - Media: la estrategia actual es local/demo; falta almacenamiento externo y servicio desacoplado para producción.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 
 ## Próximos hitos priorizados
 
-1. Integración con LinkedIn.
-2. Plantillas públicas de CV.
-3. Servicio de media independiente.
+1. Plantillas públicas de CV.
+2. Servicio de media independiente.

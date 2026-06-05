@@ -65,6 +65,9 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `GET|POST /users`
 - `PATCH|DELETE /users/:id`
 - `GET /users/permissions`
+- `GET /integrations/linkedin/status`
+- `GET /integrations/linkedin/share-url`
+- `GET /integrations/linkedin/auth-url`
 - `POST /analytics/events`
 
 ## CV
@@ -123,3 +126,13 @@ Las exportaciones ATS generan PDF/DOCX con layout textual, nombres de archivo `-
 ```
 
 Si `CONTACT_WEBHOOK_URL` está configurado, cada mensaje guardado dispara un `POST` externo con evento `contact.message.created`. Si `CONTACT_WEBHOOK_SECRET` existe, se añade firma HMAC SHA-256 en `X-Portfolio-Signature`.
+
+## Integraciones
+
+### LinkedIn
+
+- `GET /integrations/linkedin/status`: devuelve si OAuth está configurado, URL de perfil y scopes previstos.
+- `GET /integrations/linkedin/share-url?path=/cv`: construye una URL de compartir en LinkedIn para una ruta pública.
+- `GET /integrations/linkedin/auth-url`: protegido para admin; construye URL OAuth si `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` y `LINKEDIN_REDIRECT_URI` están configurados.
+
+Sin credenciales LinkedIn, el sistema mantiene integración pública mediante enlace de perfil y share URL.
