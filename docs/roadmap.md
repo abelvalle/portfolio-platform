@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 17:40 CEST.
+Estado actualizado: 2026-06-06 17:47 CEST.
 
 ## Hitos completados
 
@@ -2857,6 +2857,26 @@ Verificacion realizada en este hito:
 - `npm.cmd run lint`
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
+### Draft/publish de metadatos en Versiones CV
+
+- `/admin/cv/versions` anade un formulario de metadatos para la version CV seleccionada.
+- El formulario permite guardar como borrador nombre, slug derivado, puesto objetivo, empresa objetivo, idioma, estado, descripcion y plantilla.
+- `Guardar metadatos CV` escribe `draftJson` sin publicar directamente la version ni tocar la base de datos fuera del endpoint REST.
+- `Guardar borrador CV` preserva metadatos pendientes cuando actualiza `draftJson.structuredJson`.
+- La revision/publicacion existente muestra y publica campos no JSON junto a `structuredJson`.
+- Anadida cobertura e2e desktop/mobile para guardar y publicar cambios de `name`, `slug` y `targetRole`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- QA funcional Playwright fallback en `/admin/cv/versions` desktop/mobile; Browser integrado no expuso herramienta navegable en esta sesion.
 
 ## Deuda técnica abierta
 
@@ -2880,7 +2900,7 @@ Verificacion realizada en este hito:
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones y draft/publish desde UI; falta drag/drop.
-- Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples, bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, formulario granular de experiencia y borrador/revision/publicacion para `structuredJson`; faltan formularios granulares para otros bloques y draft/publish de metadatos no JSON.
+- Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples, bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, formulario granular de experiencia, borrador/revision/publicacion para `structuredJson` y draft/publish de metadatos no JSON; faltan formularios granulares para otros bloques.
 - Editor CV por bloques: el editor principal está conectado a campos básicos y Versiones CV ya tiene bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, duplicado de versiones y edición granular de una experiencia; falta duplicado por bloque y granularidad equivalente en multiples experiencias/resto de bloques.
 - Preview A4 admin avanzado: el preview está sincronizado; falta render fiel a la plantilla seleccionada, paginación real y comparación pixel-perfect con exportación PDF.
 - LinkedIn OAuth persistente: el callback ya intercambia `code` y obtiene `userinfo` sanitizado; falta persistir/sincronizar perfil con una entidad segura de integración y credenciales reales.
@@ -2893,6 +2913,6 @@ Verificacion realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. Draft/publish de metadatos no JSON en Versiones CV.
-2. Formularios granulares para otros bloques y multiples experiencias en Versiones CV.
-3. Comparacion pixel-perfect entre preview A4 publico/admin y PDF generado.
+1. Formularios granulares para otros bloques y multiples experiencias en Versiones CV.
+2. Comparacion pixel-perfect entre preview A4 publico/admin y PDF generado.
+3. Prueba e2e con DB real para generar y descargar archivos CV persistidos.

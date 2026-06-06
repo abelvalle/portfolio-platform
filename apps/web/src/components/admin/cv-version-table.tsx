@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { adminClient, cvClient, getApiUrl, type AuditLogItem, type CvTemplateItem, type CvVersionItem, type CvVersionMutation, type PublicationCvVersionReview } from "@/lib/api";
+import { adminClient, cvClient, getApiUrl, type AuditLogItem, type CvTemplateItem, type CvVersionDraftJson, type CvVersionItem, type CvVersionMutation, type PublicationCvVersionReview } from "@/lib/api";
 
 type CvVersionDraft = {
   name: string;
@@ -64,6 +64,19 @@ function slugify(value: string) {
 
 function uniqueCopySlug(value: string) {
   return `${slugify(`${value}-copia`)}-${Date.now().toString(36)}`;
+}
+
+function metadataDraftFromVersion(version?: CvVersionItem): CvVersionDraft {
+  const draft = version?.draftJson;
+  return {
+    name: draft?.name ?? version?.name ?? "",
+    description: draft?.description ?? version?.description ?? "",
+    targetRole: draft?.targetRole ?? version?.targetRole ?? "",
+    targetCompany: draft?.targetCompany ?? version?.targetCompany ?? "",
+    language: draft?.language ?? version?.language ?? "es",
+    status: draft?.status ?? version?.status ?? "draft",
+    templateId: draft?.templateId ?? version?.templateId ?? ""
+  };
 }
 
 function formatJson(value: unknown) {
@@ -416,6 +429,7 @@ export function CvVersionTable() {
   const [auditPage, setAuditPage] = useState(1);
   const [auditMessage, setAuditMessage] = useState("");
   const [draft, setDraft] = useState(emptyDraft);
+  const [metadataDraft, setMetadataDraft] = useState(emptyDraft);
   const [message, setMessage] = useState("Cargando versiones de CV.");
   const [jsonVersionId, setJsonVersionId] = useState("");
   const [jsonDraft, setJsonDraft] = useState("{}");
@@ -447,6 +461,7 @@ export function CvVersionTable() {
     if (!selectedVersion) {
       setJsonVersionId("");
       setJsonDraft("{}");
+      setMetadataDraft(emptyDraft);
       setSummaryDraft("");
       setSkillsDraft("");
       setLanguagesDraft("");
@@ -462,6 +477,7 @@ export function CvVersionTable() {
     if (!jsonVersionId || selectedVersion.id !== jsonVersionId) {
       setJsonVersionId(selectedVersion.id);
       setJsonDraft(formatJson(selectedVersion.structuredJson));
+      setMetadataDraft(metadataDraftFromVersion(selectedVersion));
       setSummaryDraft(summaryFromStructuredJson(selectedVersion.structuredJson));
       setSkillsDraft(skillsFromStructuredJson(selectedVersion.structuredJson));
       setLanguagesDraft(languagesFromStructuredJson(selectedVersion.structuredJson));
@@ -675,6 +691,7 @@ export function CvVersionTable() {
     setJsonVersionId(id);
     setCvVersionReview(null);
     setJsonDraft(formatJson(selectedVersion?.structuredJson));
+    setMetadataDraft(metadataDraftFromVersion(selectedVersion));
     setSummaryDraft(summaryFromStructuredJson(selectedVersion?.structuredJson));
     setSkillsDraft(skillsFromStructuredJson(selectedVersion?.structuredJson));
     setLanguagesDraft(languagesFromStructuredJson(selectedVersion?.structuredJson));
@@ -1098,12 +1115,51 @@ export function CvVersionTable() {
 
     setIsDraftSaving(true);
     try {
-      await cvClient.updateVersion(selectedVersion.id, { draftJson: { structuredJson: parsed } });
+      await cvClient.updateVersion(selectedVersion.id, { draftJson: { ...(selectedVersion.draftJson || {}), structuredJson: parsed } });
       const review = await adminClient.publicationCvVersionReview(selectedVersion.id);
       setCvVersionReview(review);
       setJsonMessage(`Borrador CV guardado: ${selectedVersion.name}.`);
     } catch {
       setJsonMessage("No se pudo guardar el borrador CV.");
+    } finally {
+      setIsDraftSaving(false);
+    }
+  }
+
+  async function saveCvVersionMetadataDraft() {
+    const selectedVersion = versions.find((version) => version.id === jsonVersionId);
+    if (!selectedVersion) {
+      setJsonMessage("Selecciona una version valida antes de guardar metadatos.");
+      return;
+    }
+
+    const name = metadataDraft.name.trim();
+    const targetRole = metadataDraft.targetRole.trim();
+    if (!name || !targetRole) {
+      setJsonMessage("Nombre y puesto objetivo son obligatorios para el borrador de metadatos.");
+      return;
+    }
+
+    const draftJson: CvVersionDraftJson = {
+      ...(selectedVersion.draftJson || {}),
+      name,
+      slug: slugify(name),
+      description: metadataDraft.description.trim() || null,
+      targetRole,
+      targetCompany: metadataDraft.targetCompany.trim() || null,
+      language: metadataDraft.language.trim() || "es",
+      status: metadataDraft.status,
+      templateId: metadataDraft.templateId || null
+    };
+
+    setIsDraftSaving(true);
+    try {
+      await cvClient.updateVersion(selectedVersion.id, { draftJson });
+      const review = await adminClient.publicationCvVersionReview(selectedVersion.id);
+      setCvVersionReview(review);
+      setJsonMessage(`Borrador de metadatos CV guardado: ${name}.`);
+    } catch {
+      setJsonMessage("No se pudo guardar el borrador de metadatos CV.");
     } finally {
       setIsDraftSaving(false);
     }
@@ -1425,6 +1481,78 @@ export function CvVersionTable() {
             <Rocket data-icon="inline-start" />
             {isDraftPublishing ? "Publicando..." : "Publicar borrador CV"}
           </Button>
+        </div>
+        <div className="grid gap-4 border-t border-border pt-4">
+          <div className="grid gap-3 md:grid-cols-4">
+            <div className="grid gap-2">
+              <Label htmlFor="metadataDraftName">Nombre borrador CV</Label>
+              <Input
+                id="metadataDraftName"
+                value={metadataDraft.name}
+                onChange={(event) => setMetadataDraft((current) => ({ ...current, name: event.target.value }))}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="metadataDraftTargetRole">Puesto borrador CV</Label>
+              <Input
+                id="metadataDraftTargetRole"
+                value={metadataDraft.targetRole}
+                onChange={(event) => setMetadataDraft((current) => ({ ...current, targetRole: event.target.value }))}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="metadataDraftLanguage">Idioma borrador CV</Label>
+              <Input
+                id="metadataDraftLanguage"
+                value={metadataDraft.language}
+                onChange={(event) => setMetadataDraft((current) => ({ ...current, language: event.target.value }))}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="metadataDraftTemplate">Plantilla borrador CV</Label>
+              <select
+                id="metadataDraftTemplate"
+                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                value={metadataDraft.templateId}
+                onChange={(event) => setMetadataDraft((current) => ({ ...current, templateId: event.target.value }))}
+              >
+                <option value="">Sin plantilla</option>
+                {templates.map((template) => (
+                  <option key={template.id} value={template.id}>{template.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-[1fr_2fr]">
+            <div className="grid gap-2">
+              <Label htmlFor="metadataDraftTargetCompany">Empresa objetivo borrador</Label>
+              <Input
+                id="metadataDraftTargetCompany"
+                value={metadataDraft.targetCompany}
+                onChange={(event) => setMetadataDraft((current) => ({ ...current, targetCompany: event.target.value }))}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="metadataDraftDescription">Descripcion borrador CV</Label>
+              <Textarea
+                id="metadataDraftDescription"
+                rows={3}
+                value={metadataDraft.description}
+                onChange={(event) => setMetadataDraft((current) => ({ ...current, description: event.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {(["draft", "published", "archived"] as const).map((status) => (
+              <Button key={`metadata-${status}`} type="button" variant={metadataDraft.status === status ? "default" : "outline"} onClick={() => setMetadataDraft((current) => ({ ...current, status }))}>
+                {status}
+              </Button>
+            ))}
+            <Button type="button" variant="outline" onClick={saveCvVersionMetadataDraft} disabled={isDraftSaving || !jsonVersionId}>
+              <Save data-icon="inline-start" />
+              Guardar metadatos CV
+            </Button>
+          </div>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="summaryBlock">Resumen profesional CV</Label>

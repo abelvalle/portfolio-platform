@@ -58,6 +58,28 @@ test("public CV template detail previews are shareable", async ({ page }) => {
 
 test("admin publication page is reachable behind the session proxy", async ({ context, page }) => {
   test.setTimeout(60_000);
+  let cvBaseDraftJson: Record<string, unknown> | null = null;
+
+  function cvBaseChangedFields() {
+    const fields: string[] = [];
+    if (!cvBaseDraftJson) {
+      return fields;
+    }
+    if (cvBaseDraftJson.name && cvBaseDraftJson.name !== "CV Base") {
+      fields.push("name");
+    }
+    if (cvBaseDraftJson.slug && cvBaseDraftJson.slug !== "cv-base") {
+      fields.push("slug");
+    }
+    if (cvBaseDraftJson.targetRole && cvBaseDraftJson.targetRole !== "IT Project Manager") {
+      fields.push("targetRole");
+    }
+    if ("structuredJson" in cvBaseDraftJson) {
+      fields.push("structuredJson");
+    }
+    return fields.length ? fields : ["structuredJson"];
+  }
+
   await context.addCookies([{ name: "accessToken", value: "test-token", url: "http://localhost:3000" }]);
   await page.route("**/api/v1/auth/mfa/status", async (route) => {
     await route.fulfill({
@@ -393,13 +415,16 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify([
-        { id: "cv-base", cvId: "cv-1", name: "CV Base", status: "published", targetRole: "IT Project Manager", language: "es", isPrimary: true, structuredJson: { summary: "Gestion IT general.", skills: [], experiences: [{ role: "IT Project Manager", company: "Demo Company", period: "2025", description: "Delivery inicial.", responsibilities: ["Coordinar UAT"] }] }, draftJson: null, publishedAt: "2026-06-01T08:00:00.000Z", updatedAt: "2026-06-01T08:00:00.000Z" },
+        { id: "cv-base", cvId: "cv-1", name: "CV Base", status: "published", targetRole: "IT Project Manager", language: "es", isPrimary: true, structuredJson: { summary: "Gestion IT general.", skills: [], experiences: [{ role: "IT Project Manager", company: "Demo Company", period: "2025", description: "Delivery inicial.", responsibilities: ["Coordinar UAT"] }] }, draftJson: cvBaseDraftJson, publishedAt: "2026-06-01T08:00:00.000Z", updatedAt: "2026-06-01T08:00:00.000Z" },
         { id: "cv-adapted", cvId: "cv-1", name: "CV Adaptado", status: "draft", targetRole: "Delivery Manager", language: "es", isPrimary: false, structuredJson: { summary: "Delivery IT orientado a KPIs.", skills: [] }, draftJson: null, publishedAt: null, updatedAt: "2026-06-02T08:00:00.000Z" }
       ])
     });
   });
   await page.route("**/api/v1/cv-versions/cv-base", async (route) => {
     const data = JSON.parse(route.request().postData() || "{}");
+    if ("draftJson" in data) {
+      cvBaseDraftJson = data.draftJson;
+    }
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -410,13 +435,14 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         language: "es",
         isPrimary: true,
         structuredJson: data.structuredJson || { summary: "Gestion IT general.", skills: [], experiences: [{ role: "IT Project Manager", company: "Demo Company", period: "2025", description: "Delivery inicial.", responsibilities: ["Coordinar UAT"] }] },
-        draftJson: data.draftJson ?? null,
+        draftJson: cvBaseDraftJson,
         publishedAt: "2026-06-01T08:00:00.000Z",
         updatedAt: "2026-06-06T09:00:00.000Z"
       })
     });
   });
   await page.route("**/api/v1/admin/publication/cv-versions/cv-base/review", async (route) => {
+    const draft = cvBaseDraftJson || { structuredJson: { summary: "Resumen profesional editado por bloques.", skills: [] } };
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -425,16 +451,21 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         hasDraft: true,
         publishedAt: "2026-06-01T08:00:00.000Z",
         fields: [
-          { field: "structuredJson", before: { summary: "Gestion IT general.", skills: [] }, after: { summary: "Resumen profesional editado por bloques.", skills: [] }, changed: true }
+          { field: "name", before: "CV Base", after: draft.name ?? "CV Base", changed: Boolean(draft.name && draft.name !== "CV Base") },
+          { field: "slug", before: "cv-base", after: draft.slug ?? "cv-base", changed: Boolean(draft.slug && draft.slug !== "cv-base") },
+          { field: "targetRole", before: "IT Project Manager", after: draft.targetRole ?? "IT Project Manager", changed: Boolean(draft.targetRole && draft.targetRole !== "IT Project Manager") },
+          { field: "structuredJson", before: { summary: "Gestion IT general.", skills: [] }, after: draft.structuredJson ?? { summary: "Resumen profesional editado por bloques.", skills: [] }, changed: "structuredJson" in draft }
         ],
         latestChanges: []
       })
     });
   });
   await page.route("**/api/v1/admin/publication/cv-versions/cv-base/publish", async (route) => {
+    const changedFields = cvBaseChangedFields();
+    cvBaseDraftJson = null;
     await route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({ changedFields: ["structuredJson"] })
+      body: JSON.stringify({ changedFields })
     });
   });
   await page.route("**/api/v1/cv-versions/cv-adapted-new/set-primary", async (route) => {
@@ -1370,6 +1401,14 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Publicar borrador CV" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByText("Borrador CV publicado. Campos modificados: structuredJson.")).toBeVisible();
+  await page.getByLabel("Nombre borrador CV").fill("CV Base Ejecutivo");
+  await page.getByLabel("Puesto borrador CV").fill("Delivery Manager");
+  await page.getByRole("button", { name: "Guardar metadatos CV" }).click();
+  await expect(page.getByText("Borrador de metadatos CV guardado: CV Base Ejecutivo.")).toBeVisible();
+  await expect(page.getByLabel("Revision borrador CV").getByText("name", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Revision borrador CV").getByText("CV Base Ejecutivo")).toBeVisible();
+  await page.getByRole("button", { name: "Publicar borrador CV" }).click();
+  await expect(page.getByText("Borrador CV publicado. Campos modificados: name, slug, targetRole.")).toBeVisible();
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
   await page.getByLabel("Skills CV").fill("KPIs\nUAT");
