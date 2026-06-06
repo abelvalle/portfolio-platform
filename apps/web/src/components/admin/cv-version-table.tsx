@@ -98,6 +98,29 @@ function languagesFromStructuredJson(value: unknown) {
     .join("\n");
 }
 
+function projectsFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return "";
+  }
+  const projects = (value as Record<string, unknown>).projects;
+  if (!Array.isArray(projects)) {
+    return "";
+  }
+  return projects
+    .map((project) => {
+      if (typeof project === "string") {
+        return project;
+      }
+      if (project && typeof project === "object" && "name" in project) {
+        const name = (project as { name?: unknown }).name;
+        return typeof name === "string" ? name : "";
+      }
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
 function splitBlockLines(value: string) {
   return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
 }
@@ -145,6 +168,7 @@ export function CvVersionTable() {
   const [summaryDraft, setSummaryDraft] = useState("");
   const [skillsDraft, setSkillsDraft] = useState("");
   const [languagesDraft, setLanguagesDraft] = useState("");
+  const [projectsDraft, setProjectsDraft] = useState("");
   const [jsonMessage, setJsonMessage] = useState("Selecciona una version para editar su JSON estructurado.");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -163,6 +187,7 @@ export function CvVersionTable() {
       setSummaryDraft("");
       setSkillsDraft("");
       setLanguagesDraft("");
+      setProjectsDraft("");
       setJsonMessage("Sin versiones disponibles para editar.");
       return;
     }
@@ -172,6 +197,7 @@ export function CvVersionTable() {
       setSummaryDraft(summaryFromStructuredJson(selectedVersion.structuredJson));
       setSkillsDraft(skillsFromStructuredJson(selectedVersion.structuredJson));
       setLanguagesDraft(languagesFromStructuredJson(selectedVersion.structuredJson));
+      setProjectsDraft(projectsFromStructuredJson(selectedVersion.structuredJson));
       setJsonMessage(
         requestedVersionId === selectedVersion.id
           ? "Version enlazada desde el comparador cargada para edicion."
@@ -312,6 +338,7 @@ export function CvVersionTable() {
     setSummaryDraft(summaryFromStructuredJson(selectedVersion?.structuredJson));
     setSkillsDraft(skillsFromStructuredJson(selectedVersion?.structuredJson));
     setLanguagesDraft(languagesFromStructuredJson(selectedVersion?.structuredJson));
+    setProjectsDraft(projectsFromStructuredJson(selectedVersion?.structuredJson));
     setJsonMessage(selectedVersion ? "JSON estructurado cargado desde la version seleccionada." : "Version no encontrada.");
   }
 
@@ -391,6 +418,31 @@ export function CvVersionTable() {
     }
     setJsonDraft(formatJson(nextStructuredJson));
     setJsonMessage("Bloque idiomas aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function applyProjectsBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el bloque.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const nextProjects = splitBlockLines(projectsDraft).map((name) => ({ name }));
+    if (nextProjects.length) {
+      nextStructuredJson.projects = nextProjects;
+    } else {
+      delete nextStructuredJson.projects;
+    }
+    setJsonDraft(formatJson(nextStructuredJson));
+    setJsonMessage("Bloque proyectos aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
   async function saveStructuredJson() {
@@ -564,6 +616,18 @@ export function CvVersionTable() {
           />
           <Button type="button" variant="outline" className="w-fit" onClick={applyLanguagesBlock} disabled={!jsonVersionId}>
             Aplicar idiomas
+          </Button>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="projectsBlock">Proyectos CV</Label>
+          <Textarea
+            id="projectsBlock"
+            rows={3}
+            value={projectsDraft}
+            onChange={(event) => setProjectsDraft(event.target.value)}
+          />
+          <Button type="button" variant="outline" className="w-fit" onClick={applyProjectsBlock} disabled={!jsonVersionId}>
+            Aplicar proyectos
           </Button>
         </div>
         <div className="grid gap-2">
