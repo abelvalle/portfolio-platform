@@ -372,6 +372,7 @@ export class CvExportService {
       `body{margin:0;background:#f8fafc;font-family:${template.fontFamily},Arial,sans-serif;color:#0f172a}`,
       `.cv-page{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:${pagePadding};line-height:1.45;overflow:hidden}`,
       '@media screen{body{padding:24px}.cv-page{box-shadow:0 24px 60px rgba(15,23,42,.18)}}',
+      '@media print{body{background:#fff}.cv-page{min-height:auto;margin:0;overflow:visible;box-shadow:none}.cv-page section,.cv-page article{break-inside:avoid;page-break-inside:avoid}}',
       '.cv-header{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;border-bottom:1px solid #e2e8f0;padding-bottom:20px}',
       `.cv-eyebrow{margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;color:${template.primaryColor}}`,
       `h1{font-size:${template.density === 'compact' ? '28px' : '32px'};line-height:1.12;color:#0f172a;margin:0}`,
