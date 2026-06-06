@@ -3614,6 +3614,15 @@ Verificacion realizada en este hito:
 
 - `git diff --check`
 
+### Suite raiz tras revision granular CV
+
+- Ejecutada la suite raiz despues de ampliar el wizard de adaptacion y los contratos A4.
+- Pasan los tests unitarios del API y el smoke test del frontend.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test` (`24` suites y `109` tests API, mas smoke web)
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
