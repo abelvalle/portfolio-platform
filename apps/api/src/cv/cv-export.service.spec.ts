@@ -87,6 +87,15 @@ describe('CvExportService', () => {
         sections: [
           { title: 'Publicaciones', content: 'Pendiente de revision' },
         ],
+        sectionOrder: [
+          'skills',
+          'summary',
+          'sections',
+          'experiences',
+          'formation',
+          'languages',
+          'projects',
+        ],
       },
       {
         template: {
@@ -120,6 +129,12 @@ describe('CvExportService', () => {
     expect(html).toContain('Portfolio Platform');
     expect(html).toContain('Publicaciones');
     expect(html).toContain('Resumen &lt;seguro&gt;');
+    expect(html.indexOf('<h2>Skills</h2>')).toBeLessThan(
+      html.indexOf('<h2>Resumen profesional</h2>'),
+    );
+    expect(html.indexOf('<h2>Publicaciones</h2>')).toBeLessThan(
+      html.indexOf('<h2>Experiencia</h2>'),
+    );
 
     const noPhotoHtml = service.renderHtml(
       { profile: { fullName: 'Abel Valle Rosa' } },

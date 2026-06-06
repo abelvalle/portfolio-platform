@@ -117,10 +117,16 @@ export class CvAdaptationService {
         ),
       },
       sectionOrder: {
-        base: Object.keys(baseJson),
-        adapted: Object.keys(adaptedJson),
+        base: this.sectionOrder(baseJson),
+        adapted: this.sectionOrder(adaptedJson),
       },
     };
+  }
+
+  private sectionOrder(data: Record<string, any>) {
+    return Array.isArray(data.sectionOrder)
+      ? data.sectionOrder.filter((item) => typeof item === 'string')
+      : Object.keys(data);
   }
 
   private extractKeywords(text: string) {

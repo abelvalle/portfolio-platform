@@ -39,6 +39,45 @@ describe('CvAdaptationService', () => {
       }),
     );
   });
+
+  it('compares explicit CV section order when available', async () => {
+    const prisma = mockPrisma();
+    prisma.cvVersion.findUnique
+      .mockResolvedValueOnce({
+        id: 'base',
+        structuredJson: {
+          summary: 'Base',
+          sectionOrder: ['skills', 'summary', 'experiences'],
+          skills: [{ name: 'KPIs' }],
+          experiences: [],
+        },
+      })
+      .mockResolvedValueOnce({
+        id: 'adapted',
+        structuredJson: {
+          summary: 'Adapted',
+          sectionOrder: ['summary', 'skills', 'experiences'],
+          skills: [{ name: 'KPIs' }],
+          experiences: [],
+        },
+      });
+    const service = new CvAdaptationService(
+      prisma as never,
+      {
+        propose: jest.fn().mockResolvedValue(null),
+      } as never,
+    );
+
+    const result = await service.compare({
+      baseCvVersionId: 'base',
+      adaptedCvVersionId: 'adapted',
+    });
+
+    expect(result.sectionOrder).toEqual({
+      base: ['skills', 'summary', 'experiences'],
+      adapted: ['summary', 'skills', 'experiences'],
+    });
+  });
 });
 
 function mockPrisma() {

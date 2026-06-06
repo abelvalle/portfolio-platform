@@ -118,6 +118,33 @@ const emptyCertificationFormDraft: CertificationFormDraft = {
 
 const auditActionOptions = ["", "create", "update", "archive", "set_primary", "generate_pdf", "generate_docx"];
 const auditPageSize = 6;
+const defaultCvSectionOrder = ["summary", "experiences", "formation", "skills", "languages", "projects", "sections"];
+const cvSectionOrderAliases: Record<string, string> = {
+  resumen: "summary",
+  "resumen profesional": "summary",
+  summary: "summary",
+  experiencia: "experiences",
+  experiencias: "experiences",
+  experience: "experiences",
+  experiences: "experiences",
+  formacion: "formation",
+  "formacion y certificaciones": "formation",
+  formation: "formation",
+  educacion: "formation",
+  education: "formation",
+  certificaciones: "formation",
+  certifications: "formation",
+  skills: "skills",
+  habilidades: "skills",
+  idiomas: "languages",
+  languages: "languages",
+  proyectos: "projects",
+  projects: "projects",
+  secciones: "sections",
+  "secciones personalizadas": "sections",
+  sections: "sections",
+  custom: "sections"
+};
 
 function slugify(value: string) {
   return value
@@ -368,6 +395,29 @@ function sectionsFromStructuredJson(value: unknown) {
     .join("\n");
 }
 
+function sectionListFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return [];
+  }
+  const sections = (value as Record<string, unknown>).sections;
+  return Array.isArray(sections) ? sections : [];
+}
+
+function normalizeCvSectionOrderItem(value: string) {
+  return cvSectionOrderAliases[value.trim().toLowerCase()] || "";
+}
+
+function sectionOrderFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return defaultCvSectionOrder.join("\n");
+  }
+  const sectionOrder = (value as Record<string, unknown>).sectionOrder;
+  if (!Array.isArray(sectionOrder)) {
+    return defaultCvSectionOrder.join("\n");
+  }
+  return sectionOrder.filter((item): item is string => typeof item === "string").join("\n");
+}
+
 function splitBlockLines(value: string) {
   return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
 }
@@ -556,7 +606,7 @@ function validateStructuredJson(value: unknown) {
   }
 
   const data = value as Record<string, unknown>;
-  const arrayFields = ["experience", "experiences", "education", "certifications", "skills", "projects", "languages", "sections"];
+  const arrayFields = ["experience", "experiences", "education", "certifications", "skills", "projects", "languages", "sections", "sectionOrder"];
   for (const field of arrayFields) {
     if (field in data && !Array.isArray(data[field])) {
       return `El campo ${field} debe ser una lista.`;
@@ -605,6 +655,8 @@ export function CvVersionTable() {
   const [experiencesDraft, setExperiencesDraft] = useState("");
   const [experienceFormDraft, setExperienceFormDraft] = useState(emptyExperienceFormDraft);
   const [sectionsDraft, setSectionsDraft] = useState("");
+  const [sectionOrderDraft, setSectionOrderDraft] = useState(defaultCvSectionOrder.join("\n"));
+  const [sectionActionIndex, setSectionActionIndex] = useState(0);
   const [jsonMessage, setJsonMessage] = useState("Selecciona una version para editar su JSON estructurado.");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -638,6 +690,8 @@ export function CvVersionTable() {
       setExperiencesDraft("");
       setExperienceFormDraft(emptyExperienceFormDraft);
       setSectionsDraft("");
+      setSectionOrderDraft(defaultCvSectionOrder.join("\n"));
+      setSectionActionIndex(0);
       setJsonMessage("Sin versiones disponibles para editar.");
       return;
     }
@@ -658,6 +712,8 @@ export function CvVersionTable() {
       setExperiencesDraft(experiencesFromStructuredJson(selectedVersion.structuredJson));
       setExperienceFormDraft(experienceFormFromStructuredJson(selectedVersion.structuredJson));
       setSectionsDraft(sectionsFromStructuredJson(selectedVersion.structuredJson));
+      setSectionOrderDraft(sectionOrderFromStructuredJson(selectedVersion.structuredJson));
+      setSectionActionIndex(0);
       setJsonMessage(
         requestedVersionId === selectedVersion.id
           ? "Version enlazada desde el comparador cargada para edicion."
@@ -876,6 +932,8 @@ export function CvVersionTable() {
     setExperiencesDraft(experiencesFromStructuredJson(selectedVersion?.structuredJson));
     setExperienceFormDraft(experienceFormFromStructuredJson(selectedVersion?.structuredJson));
     setSectionsDraft(sectionsFromStructuredJson(selectedVersion?.structuredJson));
+    setSectionOrderDraft(sectionOrderFromStructuredJson(selectedVersion?.structuredJson));
+    setSectionActionIndex(0);
     setJsonMessage(selectedVersion ? "JSON estructurado cargado desde la version seleccionada." : "Version no encontrada.");
   }
 
@@ -1496,7 +1554,100 @@ export function CvVersionTable() {
       delete nextStructuredJson.sections;
     }
     setJsonDraft(formatJson(nextStructuredJson));
+    setSectionsDraft(sectionsFromStructuredJson(nextStructuredJson));
+    setSectionActionIndex(Math.min(sectionActionIndex, Math.max(nextSections.length - 1, 0)));
     setJsonMessage("Bloque secciones aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function applySectionOrderBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el orden.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const requestedOrder = splitBlockLines(sectionOrderDraft);
+    const invalidItems = requestedOrder.filter((item) => !normalizeCvSectionOrderItem(item));
+    if (invalidItems.length) {
+      setJsonMessage(`Orden de bloques invalido: ${invalidItems.join(", ")}.`);
+      return;
+    }
+
+    const uniqueOrder = Array.from(new Set(requestedOrder.map(normalizeCvSectionOrderItem).filter(Boolean)));
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    if (uniqueOrder.length) {
+      nextStructuredJson.sectionOrder = uniqueOrder;
+    } else {
+      delete nextStructuredJson.sectionOrder;
+    }
+    setJsonDraft(formatJson(nextStructuredJson));
+    setSectionOrderDraft(sectionOrderFromStructuredJson(nextStructuredJson));
+    setJsonMessage("Orden de bloques aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function updateCustomSections(mutator: (sections: Record<string, unknown>[]) => { sections: Record<string, unknown>[]; index: number }, message: string) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de modificar secciones.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const currentSections = sectionListFromStructuredJson(nextStructuredJson)
+      .filter((section): section is Record<string, unknown> => Boolean(section) && typeof section === "object" && !Array.isArray(section))
+      .map((section) => ({ ...section }));
+    if (!currentSections.length) {
+      setJsonMessage("No hay secciones personalizadas para modificar.");
+      return;
+    }
+
+    const result = mutator(currentSections);
+    nextStructuredJson.sections = result.sections.filter((section) => textField(section, "title"));
+    setJsonDraft(formatJson(nextStructuredJson));
+    setSectionsDraft(sectionsFromStructuredJson(nextStructuredJson));
+    setSectionActionIndex(Math.min(Math.max(result.index, 0), Math.max(result.sections.length - 1, 0)));
+    setJsonMessage(message);
+  }
+
+  function duplicateCustomSection() {
+    updateCustomSections((sections) => {
+      const index = Math.min(Math.max(sectionActionIndex, 0), sections.length - 1);
+      const source = sections[index] || {};
+      const title = textField(source, "title");
+      const duplicate = {
+        ...source,
+        title: title ? `${title} copia` : "Seccion copia"
+      };
+      const nextSections = [...sections.slice(0, index + 1), duplicate, ...sections.slice(index + 1)];
+      return { sections: nextSections, index: index + 1 };
+    }, "Seccion personalizada duplicada en el JSON. Guarda JSON para persistirla.");
+  }
+
+  function moveCustomSection(direction: -1 | 1) {
+    updateCustomSections((sections) => {
+      const index = Math.min(Math.max(sectionActionIndex, 0), sections.length - 1);
+      const nextIndex = Math.min(Math.max(index + direction, 0), sections.length - 1);
+      if (nextIndex === index) {
+        return { sections, index };
+      }
+      const nextSections = [...sections];
+      [nextSections[index], nextSections[nextIndex]] = [nextSections[nextIndex], nextSections[index]];
+      return { sections: nextSections, index: nextIndex };
+    }, "Seccion personalizada reordenada en el JSON. Guarda JSON para persistirla.");
   }
 
   async function saveStructuredJson() {
@@ -1663,6 +1814,7 @@ export function CvVersionTable() {
   const projectOptions = splitBlockLines(projectsDraft);
   const educationOptions = splitBlockLines(educationDraft);
   const certificationOptions = splitBlockLines(certificationsDraft);
+  const sectionOptions = splitTextareaLines(sectionsDraft);
 
   return (
     <div className="grid gap-6">
@@ -2411,6 +2563,23 @@ export function CvVersionTable() {
           </div>
         </div>
         <div className="grid gap-2">
+          <Label htmlFor="sectionOrderBlock">Orden de bloques CV</Label>
+          <Textarea
+            id="sectionOrderBlock"
+            rows={4}
+            value={sectionOrderDraft}
+            onChange={(event) => setSectionOrderDraft(event.target.value)}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" className="w-fit" onClick={() => setSectionOrderDraft(defaultCvSectionOrder.join("\n"))} disabled={!jsonVersionId}>
+              Usar orden recomendado
+            </Button>
+            <Button type="button" variant="outline" className="w-fit" onClick={applySectionOrderBlock} disabled={!jsonVersionId}>
+              Aplicar orden de bloques
+            </Button>
+          </div>
+        </div>
+        <div className="grid gap-2">
           <Label htmlFor="sectionsBlock">Secciones personalizadas CV</Label>
           <Textarea
             id="sectionsBlock"
@@ -2421,6 +2590,35 @@ export function CvVersionTable() {
           <Button type="button" variant="outline" className="w-fit" onClick={applySectionsBlock} disabled={!jsonVersionId}>
             Aplicar secciones
           </Button>
+          <div className="grid gap-3 border-t border-border pt-3">
+            <div className="grid gap-2 md:grid-cols-[minmax(220px,1fr)_auto_auto_auto] md:items-end">
+              <div className="grid gap-2">
+                <Label htmlFor="sectionActionIndex">Seccion personalizada CV</Label>
+                <select
+                  id="sectionActionIndex"
+                  className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                  value={String(sectionActionIndex)}
+                  onChange={(event) => setSectionActionIndex(Number(event.target.value))}
+                  disabled={!jsonVersionId || !sectionOptions.length}
+                >
+                  {sectionOptions.length ? sectionOptions.map((item, index) => (
+                    <option key={`${item}-${index}`} value={index}>{item}</option>
+                  )) : (
+                    <option value="0">Sin secciones</option>
+                  )}
+                </select>
+              </div>
+              <Button type="button" variant="outline" onClick={() => moveCustomSection(-1)} disabled={!jsonVersionId || sectionActionIndex <= 0}>
+                Subir seccion
+              </Button>
+              <Button type="button" variant="outline" onClick={() => moveCustomSection(1)} disabled={!jsonVersionId || sectionActionIndex >= sectionOptions.length - 1}>
+                Bajar seccion
+              </Button>
+              <Button type="button" variant="outline" onClick={duplicateCustomSection} disabled={!jsonVersionId || !sectionOptions.length}>
+                Duplicar seccion
+              </Button>
+            </div>
+          </div>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="structuredJson">JSON estructurado</Label>

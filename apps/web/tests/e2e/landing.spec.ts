@@ -1403,7 +1403,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("JSON estructurado")).toBeVisible();
   await expect(page.locator("#structuredJsonVersion")).toHaveValue("cv-base");
   await expect(page.getByLabel("Rol experiencia")).toHaveValue("IT Project Manager");
-  await page.getByRole("button", { name: "Duplicar" }).first().click({ force: true });
+  await page.getByRole("button", { name: "Duplicar", exact: true }).first().click({ force: true });
   await expect(page.getByText("Version duplicada: CV Base copia.")).toBeVisible();
   await page.getByLabel("Resumen profesional CV").fill("Resumen profesional editado por bloques.");
   await page.getByRole("button", { name: "Aplicar resumen" }).focus();
@@ -1494,10 +1494,18 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
   await confirmJsonSaveIfNeeded();
-  await page.getByLabel("Secciones personalizadas CV").fill("Publicaciones: Seccion demo pendiente de revision");
+  await page.getByLabel("Secciones personalizadas CV", { exact: true }).fill("Publicaciones: Seccion demo pendiente de revision\nCharlas: Demo pendiente de revision");
   await page.getByRole("button", { name: "Aplicar secciones" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Publicaciones\"/);
+  await page.getByLabel("Orden de bloques CV").fill("skills\nsummary\nexperiences\nformation\nlanguages\nprojects\nsections");
+  await page.getByRole("button", { name: "Aplicar orden de bloques" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"sectionOrder\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"skills\"/);
+  await page.getByRole("button", { name: "Duplicar seccion" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Publicaciones copia/);
+  await page.getByRole("button", { name: "Bajar seccion" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Charlas\"[\s\S]*\"title\": \"Publicaciones copia\"/);
   await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
   await confirmJsonSaveIfNeeded();

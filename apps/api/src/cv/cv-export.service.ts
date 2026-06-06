@@ -38,6 +38,7 @@ type CvStructuredData = {
     technologies?: string[];
   }>;
   sections?: Array<{ title: string; content?: string }>;
+  sectionOrder?: string[];
 };
 
 type CvTemplateExportOptions = {
@@ -55,6 +56,15 @@ type ResolvedTemplateOptions = {
   density: 'compact' | 'normal';
   includePhoto: boolean;
 };
+
+type CvExportSectionKey =
+  | 'summary'
+  | 'experiences'
+  | 'formation'
+  | 'skills'
+  | 'languages'
+  | 'projects'
+  | 'sections';
 
 @Injectable()
 export class CvExportService {
@@ -84,46 +94,7 @@ export class CvExportService {
               true,
             ),
             this.text(this.contactLine(data), template),
-            this.heading('Resumen profesional', 18, template),
-            this.text(data.summary || '', template),
-            this.heading(
-              options.ats ? 'Experiencia profesional' : 'Experiencia',
-              18,
-              template,
-            ),
-            ...this.experienceParagraphs(data, template),
-            this.heading('Formacion y certificaciones', 18, template),
-            ...this.simpleList(
-              [...(data.education || []), ...(data.certifications || [])],
-              (item) =>
-                [item.title, item.institution, item.date]
-                  .filter(Boolean)
-                  .join(' - '),
-              template,
-            ),
-            this.heading('Skills', 18, template),
-            this.text(
-              (data.skills || []).map((skill) => skill.name).join(' - '),
-              template,
-            ),
-            this.heading('Idiomas', 18, template),
-            this.text(
-              (data.languages || [])
-                .map((language) =>
-                  language.level
-                    ? `${language.name}: ${language.level}`
-                    : language.name,
-                )
-                .join(' - '),
-              template,
-            ),
-            this.heading('Proyectos', 18, template),
-            ...this.simpleList(
-              this.projectRows(data),
-              (item) => item,
-              template,
-            ),
-            ...this.customSectionParagraphs(data, template),
+            ...this.docxSectionBlocks(data, template, options),
           ],
         },
       ],
@@ -212,7 +183,35 @@ export class CvExportService {
       .join('');
     const subtitle = data.profile?.subtitle || data.summary || '';
 
-    return `<!doctype html><html><head><meta charset="utf-8"><style>${this.htmlStyles(template, pagePadding)}</style></head><body><main class="cv-page" data-page-size="A4"><header class="cv-header"><div><p class="cv-eyebrow">${this.html(data.profile?.headline || '')}</p><h1>${this.html(data.profile?.fullName || 'Abel Valle Rosa')}</h1>${this.htmlParagraph(subtitle, 'cv-subtitle')}</div>${this.htmlPhoto(data, template)}</header><section class="cv-contact">${this.htmlContactItems(data)}</section>${this.htmlSection('Resumen profesional', this.htmlParagraph(data.summary))}${this.htmlSection(options.ats ? 'Experiencia profesional' : 'Experiencia', experienceBody)}${this.htmlSection('Formacion y certificaciones', formationBody ? `<ul>${formationBody}</ul>` : '')}${this.htmlSection('Skills', skillChips ? `<div class="cv-chips">${skillChips}</div>` : '')}${this.htmlSection('Idiomas', languageRows ? `<ul>${languageRows}</ul>` : '')}${this.htmlSection('Proyectos', projectBody)}${customSections}</main></body></html>`;
+    const sections = {
+      summary: this.htmlSection(
+        'Resumen profesional',
+        this.htmlParagraph(data.summary),
+      ),
+      experiences: this.htmlSection(
+        options.ats ? 'Experiencia profesional' : 'Experiencia',
+        experienceBody,
+      ),
+      formation: this.htmlSection(
+        'Formacion y certificaciones',
+        formationBody ? `<ul>${formationBody}</ul>` : '',
+      ),
+      skills: this.htmlSection(
+        'Skills',
+        skillChips ? `<div class="cv-chips">${skillChips}</div>` : '',
+      ),
+      languages: this.htmlSection(
+        'Idiomas',
+        languageRows ? `<ul>${languageRows}</ul>` : '',
+      ),
+      projects: this.htmlSection('Proyectos', projectBody),
+      sections: customSections,
+    };
+    const orderedSections = this.orderedSectionKeys(data)
+      .map((key) => sections[key])
+      .join('');
+
+    return `<!doctype html><html><head><meta charset="utf-8"><style>${this.htmlStyles(template, pagePadding)}</style></head><body><main class="cv-page" data-page-size="A4"><header class="cv-header"><div><p class="cv-eyebrow">${this.html(data.profile?.headline || '')}</p><h1>${this.html(data.profile?.fullName || 'Abel Valle Rosa')}</h1>${this.htmlParagraph(subtitle, 'cv-subtitle')}</div>${this.htmlPhoto(data, template)}</header><section class="cv-contact">${this.htmlContactItems(data)}</section>${orderedSections}</main></body></html>`;
   }
 
   private html(value: unknown) {
@@ -260,6 +259,104 @@ export class CvExportService {
     return body.trim()
       ? `<section><h2>${this.html(title)}</h2>${body}</section>`
       : '';
+  }
+
+  private orderedSectionKeys(data: CvStructuredData): CvExportSectionKey[] {
+    const defaultOrder: CvExportSectionKey[] = [
+      'summary',
+      'experiences',
+      'formation',
+      'skills',
+      'languages',
+      'projects',
+      'sections',
+    ];
+    const aliases: Record<string, CvExportSectionKey> = {
+      summary: 'summary',
+      resumen: 'summary',
+      experience: 'experiences',
+      experiences: 'experiences',
+      experiencia: 'experiences',
+      experiencias: 'experiences',
+      formation: 'formation',
+      formacion: 'formation',
+      education: 'formation',
+      educacion: 'formation',
+      certifications: 'formation',
+      certificaciones: 'formation',
+      skills: 'skills',
+      habilidades: 'skills',
+      languages: 'languages',
+      idiomas: 'languages',
+      projects: 'projects',
+      proyectos: 'projects',
+      sections: 'sections',
+      secciones: 'sections',
+      custom: 'sections',
+    };
+    const requested = (data.sectionOrder || [])
+      .map((item) => aliases[item.trim().toLowerCase()])
+      .filter((item): item is CvExportSectionKey => Boolean(item));
+    return Array.from(new Set([...requested, ...defaultOrder]));
+  }
+
+  private docxSectionBlocks(
+    data: CvStructuredData,
+    template: ResolvedTemplateOptions,
+    options: CvTemplateExportOptions,
+  ) {
+    const blocks: Record<CvExportSectionKey, Paragraph[]> = {
+      summary: [
+        this.heading('Resumen profesional', 18, template),
+        this.text(data.summary || '', template),
+      ],
+      experiences: [
+        this.heading(
+          options.ats ? 'Experiencia profesional' : 'Experiencia',
+          18,
+          template,
+        ),
+        ...this.experienceParagraphs(data, template),
+      ],
+      formation: [
+        this.heading('Formacion y certificaciones', 18, template),
+        ...this.simpleList(
+          [...(data.education || []), ...(data.certifications || [])],
+          (item) =>
+            [item.title, item.institution, item.date]
+              .filter(Boolean)
+              .join(' - '),
+          template,
+        ),
+      ],
+      skills: [
+        this.heading('Skills', 18, template),
+        this.text(
+          (data.skills || []).map((skill) => skill.name).join(' - '),
+          template,
+        ),
+      ],
+      languages: [
+        this.heading('Idiomas', 18, template),
+        this.text(
+          (data.languages || [])
+            .map((language) =>
+              language.level
+                ? `${language.name}: ${language.level}`
+                : language.name,
+            )
+            .join(' - '),
+          template,
+        ),
+      ],
+      projects: [
+        this.heading('Proyectos', 18, template),
+        ...this.simpleList(this.projectRows(data), (item) => item, template),
+      ],
+      sections: this.customSectionParagraphs(data, template),
+    };
+
+    return this.orderedSectionKeys(data).flatMap((key) => blocks[key]);
   }
 
   private htmlStyles(template: ResolvedTemplateOptions, pagePadding: string) {
