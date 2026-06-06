@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Archive, FileText, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,23 +38,39 @@ function slugify(value: string) {
     .replace(/^-|-$/g, "");
 }
 
+function formatJson(value: unknown) {
+  return JSON.stringify(value || {}, null, 2);
+}
+
 export function CvVersionTable() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
   const [templates, setTemplates] = useState<CvTemplateItem[]>([]);
   const [draft, setDraft] = useState(emptyDraft);
   const [message, setMessage] = useState("Cargando versiones de CV.");
+  const [jsonVersionId, setJsonVersionId] = useState("");
+  const [jsonDraft, setJsonDraft] = useState("{}");
+  const [jsonMessage, setJsonMessage] = useState("Selecciona una version para editar su JSON estructurado.");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isJsonSaving, setIsJsonSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadVersions();
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
+  const syncJsonEditor = useCallback((nextVersions: CvVersionItem[]) => {
+    const selectedVersion = nextVersions.find((version) => version.id === jsonVersionId) || nextVersions[0];
+    if (!selectedVersion) {
+      setJsonVersionId("");
+      setJsonDraft("{}");
+      setJsonMessage("Sin versiones disponibles para editar.");
+      return;
+    }
+    if (!jsonVersionId || selectedVersion.id !== jsonVersionId) {
+      setJsonVersionId(selectedVersion.id);
+      setJsonDraft(formatJson(selectedVersion.structuredJson));
+      setJsonMessage("JSON estructurado cargado desde la API.");
+    }
+  }, [jsonVersionId]);
 
-  async function loadVersions() {
+  const loadVersions = useCallback(async () => {
     setIsLoading(true);
     try {
       const [nextVersions, nextTemplates] = await Promise.all([
@@ -63,13 +79,21 @@ export function CvVersionTable() {
       ]);
       setVersions(nextVersions);
       setTemplates(nextTemplates);
+      syncJsonEditor(nextVersions);
       setMessage(nextVersions.length ? "Versiones y plantillas sincronizadas con la API." : "Sin versiones registradas.");
     } catch {
       setMessage("No se pudieron cargar versiones. Comprueba la sesion admin.");
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [syncJsonEditor]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadVersions();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadVersions]);
 
   function buildMutation(cvId: string): CvVersionMutation {
     return {
@@ -170,6 +194,40 @@ export function CvVersionTable() {
     }
   }
 
+  function selectJsonVersion(id: string) {
+    const selectedVersion = versions.find((version) => version.id === id);
+    setJsonVersionId(id);
+    setJsonDraft(formatJson(selectedVersion?.structuredJson));
+    setJsonMessage(selectedVersion ? "JSON estructurado cargado desde la version seleccionada." : "Version no encontrada.");
+  }
+
+  async function saveStructuredJson() {
+    const selectedVersion = versions.find((version) => version.id === jsonVersionId);
+    if (!selectedVersion) {
+      setJsonMessage("Selecciona una version valida antes de guardar.");
+      return;
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas.");
+      return;
+    }
+
+    setIsJsonSaving(true);
+    try {
+      await cvClient.updateVersion(selectedVersion.id, { structuredJson: parsed });
+      setJsonMessage("JSON estructurado guardado.");
+      await loadVersions();
+    } catch {
+      setJsonMessage("No se pudo guardar el JSON estructurado.");
+    } finally {
+      setIsJsonSaving(false);
+    }
+  }
+
   function templateLabel(templateId?: string | null) {
     if (!templateId) {
       return "Sin plantilla";
@@ -242,6 +300,39 @@ export function CvVersionTable() {
             {isSaving ? "Guardando..." : "Crear version"}
           </Button>
         </div>
+      </section>
+
+      <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="grid min-w-[260px] gap-2">
+            <Label htmlFor="structuredJsonVersion">Version</Label>
+            <select
+              id="structuredJsonVersion"
+              className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+              value={jsonVersionId}
+              onChange={(event) => selectJsonVersion(event.target.value)}
+            >
+              {versions.map((version) => (
+                <option key={version.id} value={version.id}>{version.name}</option>
+              ))}
+            </select>
+          </div>
+          <Button type="button" onClick={saveStructuredJson} disabled={isJsonSaving || !jsonVersionId}>
+            <Save data-icon="inline-start" />
+            {isJsonSaving ? "Guardando JSON..." : "Guardar JSON"}
+          </Button>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="structuredJson">JSON estructurado</Label>
+          <Textarea
+            id="structuredJson"
+            rows={10}
+            className="font-mono text-xs"
+            value={jsonDraft}
+            onChange={(event) => setJsonDraft(event.target.value)}
+          />
+        </div>
+        <p className="text-sm text-muted-foreground" aria-live="polite">{jsonMessage}</p>
       </section>
 
       <section className="overflow-x-auto rounded-lg border border-border">

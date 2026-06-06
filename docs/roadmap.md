@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 03:47 CEST.
+Estado actualizado: 2026-06-06 03:49 CEST.
 
 ## Hitos completados
 
@@ -637,6 +637,20 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Editor JSON estructurado en versiones CV
+
+- Añadido editor JSON en `/admin/cv/versions` para modificar `structuredJson` de una versión concreta.
+- El editor permite seleccionar versión, preformatea el JSON existente y valida sintaxis antes de guardar.
+- El guardado usa `PATCH /api/v1/cv-versions/:id` y conserva feedback de éxito/error.
+- Añadida cobertura e2e mínima para asegurar que el editor aparece en la ruta protegida.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -667,7 +681,7 @@ Verificación realizada en este hito:
 - Skills UI avanzada: el CRUD básico está conectado; faltan edición completa inline, categorías gestionadas como entidad, orden drag/drop y niveles con selector consistente.
 - Estudios UI avanzada: el CRUD básico está conectado; faltan edición completa inline, selector de adjuntos/media, orden drag/drop y confirmación modal de borrado.
 - Certificaciones UI avanzada: el CRUD básico está conectado; faltan edición completa inline, selector de adjuntos/media, orden drag/drop y confirmación modal de borrado.
-- Versiones CV UI avanzada: la tabla está conectada; falta edición completa de `structuredJson`.
+- Versiones CV UI avanzada: el JSON estructurado ya se puede editar; faltan edición por bloques, validación semántica del schema y confirmación modal para cambios grandes.
 - Editor CV por bloques: el editor principal está conectado a campos básicos; faltan bloques estructurados para experiencia, educación, certificaciones, skills, proyectos, idiomas y secciones personalizadas.
 - Preview A4 admin avanzado: el preview está sincronizado; falta render fiel a la plantilla seleccionada, paginación real y comparación pixel-perfect con exportación PDF.
 - Plantillas CV UI avanzada: el CRUD básico está conectado; faltan edición completa de JSON, preview embebido por plantilla, validación visual de tokens y confirmación modal de borrado.
