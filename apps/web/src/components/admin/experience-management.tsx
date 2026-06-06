@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -81,6 +82,7 @@ export function ExperienceManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDeleteExperience, setPendingDeleteExperience] = useState<ExperienceItem | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -135,11 +137,12 @@ export function ExperienceManagement() {
     }
   }
 
-  async function deleteExperience(id: string) {
-    setBusyId(id);
+  async function deleteExperience(item: ExperienceItem) {
+    setBusyId(item.id);
     try {
-      await adminClient.deleteExperience(id);
-      setMessage("Experiencia eliminada.");
+      await adminClient.deleteExperience(item.id);
+      setPendingDeleteExperience(null);
+      setMessage(`Experiencia eliminada: ${item.company}.`);
       await loadExperiences();
     } catch {
       setMessage("No se pudo eliminar la experiencia.");
@@ -244,7 +247,7 @@ export function ExperienceManagement() {
                 <Button type="button" variant="outline" size="icon" onClick={() => patchExperience(item.id, { featured: !item.featured })} disabled={busyId === item.id}>
                   <Star />
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => deleteExperience(item.id)} disabled={busyId === item.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Eliminar ${item.company}`} onClick={() => setPendingDeleteExperience(item)} disabled={busyId === item.id}>
                   <Trash2 />
                 </Button>
               </span>
@@ -254,6 +257,25 @@ export function ExperienceManagement() {
           )}
         </div>
       </section>
+
+      <Dialog open={Boolean(pendingDeleteExperience)} onOpenChange={(open) => !open && setPendingDeleteExperience(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar borrado</DialogTitle>
+            <DialogDescription>
+              Esta accion eliminara la experiencia de {pendingDeleteExperience?.company}. Puedes ocultarla si solo quieres retirarla de la landing.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingDeleteExperience(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => pendingDeleteExperience && deleteExperience(pendingDeleteExperience)}>
+              Eliminar experiencia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

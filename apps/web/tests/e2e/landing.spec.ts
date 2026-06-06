@@ -317,6 +317,32 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route(/\/api\/v1\/experiences(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "experience-1",
+          company: "Demo Company",
+          role: "IT Project Manager",
+          startDate: "2025-01-01",
+          endDate: null,
+          current: true,
+          location: "Zaragoza",
+          modality: "hybrid",
+          description: "Experiencia demo",
+          achievements: [],
+          responsibilities: [],
+          technologies: [],
+          methodologies: [],
+          skills: [],
+          order: 0,
+          visible: true,
+          featured: true
+        }
+      ])
+    });
+  });
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
@@ -339,6 +365,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/portfolio/experience");
   await expect(page.getByRole("heading", { name: "Experiencia profesional" })).toBeVisible();
+  await expect(page.getByRole("main").getByText("Demo Company")).toBeVisible();
+  await page.getByRole("button", { name: "Eliminar Demo Company" }).click();
+  await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancelar" }).click();
 
   await page.goto("/admin/portfolio/projects");
   await expect(page.getByRole("heading", { name: "Proyectos" })).toBeVisible();
