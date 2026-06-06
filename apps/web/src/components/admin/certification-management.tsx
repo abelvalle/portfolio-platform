@@ -98,12 +98,12 @@ export function CertificationManagement() {
     }
   }
 
-  async function patchCertification(id: string, data: Partial<CertificationMutation>) {
+  async function patchCertification(id: string, data: Partial<CertificationMutation>, successMessage = "Certificacion actualizada.") {
     setBusyId(id);
     try {
       await adminClient.updateCertification(id, data);
-      setMessage("Certificacion actualizada.");
       await loadCertifications();
+      setMessage(successMessage);
     } catch {
       setMessage("No se pudo actualizar la certificacion.");
     } finally {
@@ -230,10 +230,10 @@ export function CertificationManagement() {
                 <Button type="button" variant="outline" size="icon" onClick={() => patchCertification(item.id, { visible: !item.visible })} disabled={busyId === item.id}>
                   {item.visible ? <EyeOff /> : <Eye />}
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => patchCertification(item.id, { order: item.order - 1 })} disabled={busyId === item.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Subir ${item.title}`} onClick={() => patchCertification(item.id, { order: item.order - 1 }, `Certificacion reordenada: ${item.title}.`)} disabled={busyId === item.id}>
                   <ArrowUp />
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => patchCertification(item.id, { order: item.order + 1 })} disabled={busyId === item.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Bajar ${item.title}`} onClick={() => patchCertification(item.id, { order: item.order + 1 }, `Certificacion reordenada: ${item.title}.`)} disabled={busyId === item.id}>
                   <ArrowDown />
                 </Button>
                 <Button type="button" variant="outline" size="icon" aria-label={`Eliminar ${item.title}`} onClick={() => setPendingDeleteCertification(item)} disabled={busyId === item.id}>

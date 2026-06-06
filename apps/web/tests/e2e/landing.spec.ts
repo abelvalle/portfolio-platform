@@ -824,6 +824,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Descripcion certificacion").fill("Certificacion ampliada de agilidad.");
   await page.getByRole("button", { name: "Guardar certificacion" }).click();
   await expect(page.getByText("Certificacion actualizada: Scrum Master avanzado.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Bajar Scrum Master" })).toBeVisible();
+  await page.getByRole("button", { name: "Subir Scrum Master" }).click();
+  await expect(page.getByText("Certificacion reordenada: Scrum Master.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Scrum Master" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();
