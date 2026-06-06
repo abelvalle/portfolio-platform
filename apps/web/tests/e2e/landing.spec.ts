@@ -64,6 +64,7 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-renderer", "web-preview");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "minimalista");
   await expect(page.locator("[data-cv-section='summary']")).toBeVisible();
+  await expect(page.locator("[data-cv-section='languages']")).toContainText("Inglés B1");
   await expect(page.locator("[data-cv-section='projects']")).toContainText("Portfolio Platform");
 
   await page.goto("/en/cv/templates/ats-friendly");
@@ -888,6 +889,16 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           level: "Intermedio",
           order: 1,
           visible: false,
+          draftJson: null,
+          publishedAt: null
+        },
+        {
+          id: "skill-3",
+          name: "Ingles B1",
+          categoryName: "Idiomas",
+          level: "B1",
+          order: 2,
+          visible: true,
           draftJson: null,
           publishedAt: null
         }
@@ -1808,6 +1819,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.locator("[data-cv-section='experiences']")).toBeVisible();
   await expect(page.locator("[data-cv-section='formation']")).toContainText("Formación superior en desarrollo de aplicaciones.");
   await expect(page.locator("[data-cv-section='formation']")).toContainText("Certificación incluida en el CV actual.");
+  await expect(page.locator("[data-cv-section='languages']")).toContainText("Inglés B1");
   await expect(page.locator("[data-cv-section='projects']")).toContainText("Portfolio Platform");
   await expect(page.getByRole("heading", { name: "Validacion ATS" })).toBeVisible();
   await page.getByRole("button", { name: "Generar reporte ATS" }).click();

@@ -237,7 +237,7 @@ La exportación aplica:
 
 El HTML server-side de preview/export incluye `@page A4`, contenedor `main.cv-page` con ancho `210mm` y alto minimo `297mm`, y estilos de pantalla para revisar el documento como hoja A4.
 
-Los previews A4 web publico/admin exponen el mismo contrato `data-cv-section` para `header`, `contact`, `summary`, `experiences`, `skills`, `formation` y `projects`.
+Los previews A4 web publico/admin exponen el mismo contrato `data-cv-section` para `header`, `contact`, `summary`, `experiences`, `skills`, `languages`, `formation` y `projects`.
 
 PDF y DOCX incluyen tambien proyectos destacados y secciones personalizadas cuando existen en `structuredJson`.
 

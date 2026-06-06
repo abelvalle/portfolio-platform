@@ -11,12 +11,17 @@ type PreviewFormationItem = PortfolioSnapshot["education"][number] & {
   credentialId?: string | null;
 };
 
+type PreviewSkillItem = PortfolioSnapshot["skills"][number] & {
+  categoryName?: string | null;
+};
+
 const previewCopy = {
   es: {
     summary: "Resumen",
     experience: "Experiencia",
     skills: "Skills",
     education: "Formacion",
+    languages: "Idiomas",
     projects: "Proyectos",
     contact: "Contacto",
     current: "Actual"
@@ -26,6 +31,7 @@ const previewCopy = {
     experience: "Experience",
     skills: "Skills",
     education: "Education",
+    languages: "Languages",
     projects: "Projects",
     contact: "Contact",
     current: "Present"
@@ -49,7 +55,9 @@ export function CvA4Preview({
   const density = isCompact ? "compact" : "normal";
   const showPhoto = template?.config.includePhoto !== false;
   const visibleExperiences = snapshot.experiences.slice(0, isCompact ? 2 : 3);
-  const visibleSkills = snapshot.skills.slice(0, isCompact ? 10 : 14);
+  const languageSkills = snapshot.skills.filter(isLanguageSkill);
+  const visibleSkills = snapshot.skills.filter((skill) => !isLanguageSkill(skill)).slice(0, isCompact ? 10 : 14);
+  const visibleLanguages = languageSkills.slice(0, 3);
   const visibleEducation = [...snapshot.education, ...snapshot.certifications].slice(0, isCompact ? 2 : 4);
   const visibleProjects = snapshot.projects
     .filter((project) => project.status === "published" || project.featured)
@@ -122,12 +130,24 @@ export function CvA4Preview({
         <PreviewSection title={copy.skills} color={color} section="skills">
           <div className="flex flex-wrap gap-1.5">
             {visibleSkills.map((skill) => (
-              <span key={`${skill.category}-${skill.name}`} className="rounded border border-slate-200 px-2 py-1 text-[10px]">
+              <span key={`${skillCategory(skill)}-${skill.name}`} className="rounded border border-slate-200 px-2 py-1 text-[10px]">
                 {skill.name}
               </span>
             ))}
           </div>
         </PreviewSection>
+
+        {visibleLanguages.length > 0 ? (
+          <PreviewSection title={copy.languages} color={color} section="languages">
+            <div className="flex flex-wrap gap-1.5">
+              {visibleLanguages.map((language) => (
+                <span key={language.name} className="rounded border border-slate-200 px-2 py-1 text-[10px]">
+                  {language.name}
+                </span>
+              ))}
+            </div>
+          </PreviewSection>
+        ) : null}
 
         <PreviewSection title={copy.education} color={color} section="formation">
           <div className="grid gap-2">
@@ -164,6 +184,14 @@ export function CvA4Preview({
       </div>
     </article>
   );
+}
+
+function skillCategory(skill: PreviewSkillItem) {
+  return skill.categoryName || skill.category || "";
+}
+
+function isLanguageSkill(skill: PreviewSkillItem) {
+  return ["idiomas", "languages"].includes(skillCategory(skill).trim().toLowerCase());
 }
 
 function FormationMetadata({ item }: { item: PreviewFormationItem }) {
