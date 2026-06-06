@@ -5,6 +5,16 @@ import { writeFile } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import { chromium } from 'playwright';
 
+type CvFormationItem = {
+  title: string;
+  institution?: string;
+  date?: string;
+  description?: string;
+  url?: string;
+  certificateUrl?: string;
+  credentialId?: string;
+};
+
 type CvStructuredData = {
   profile?: {
     fullName?: string;
@@ -25,12 +35,8 @@ type CvStructuredData = {
     responsibilities?: string[];
     achievements?: string[];
   }>;
-  education?: Array<{ title: string; institution?: string; date?: string }>;
-  certifications?: Array<{
-    title: string;
-    institution?: string;
-    date?: string;
-  }>;
+  education?: CvFormationItem[];
+  certifications?: CvFormationItem[];
   skills?: Array<{ name: string; category?: string }>;
   languages?: Array<{ name: string; level?: string }>;
   projects?: Array<{
@@ -130,10 +136,10 @@ export class CvExportService {
       0,
       template.density === 'compact' ? 10 : 14,
     );
-    const formationRows = [
-      ...(data.education || []),
-      ...(data.certifications || []),
-    ].slice(0, template.density === 'compact' ? 2 : 4);
+    const formationRows = this.formationRows(data).slice(
+      0,
+      template.density === 'compact' ? 2 : 4,
+    );
 
     const experienceBody = visibleExperiences
       .map((experience) =>
@@ -148,11 +154,7 @@ export class CvExportService {
       )
       .join('');
     const formationBody = formationRows
-      .map((item) =>
-        this.htmlListItem(
-          [item.title, item.institution, item.date].filter(Boolean).join(' - '),
-        ),
-      )
+      .map((item) => this.htmlListItem(item))
       .join('');
     const skillChips = visibleSkills
       .map((skill) => `<span class="cv-chip">${this.html(skill.name)}</span>`)
@@ -331,14 +333,7 @@ export class CvExportService {
       ],
       formation: [
         this.heading('Formacion y certificaciones', 18, template),
-        ...this.simpleList(
-          [...(data.education || []), ...(data.certifications || [])],
-          (item) =>
-            [item.title, item.institution, item.date]
-              .filter(Boolean)
-              .join(' - '),
-          template,
-        ),
+        ...this.simpleList(this.formationRows(data), (item) => item, template),
       ],
       skills: [
         this.heading('Skills', 18, template),
@@ -506,6 +501,23 @@ export class CvExportService {
       ]
         .filter(Boolean)
         .join('\n'),
+    );
+  }
+
+  private formationRows(data: CvStructuredData) {
+    return [...(data.education || []), ...(data.certifications || [])].map(
+      (item) =>
+        [
+          item.title,
+          item.institution,
+          item.date,
+          item.description,
+          item.url,
+          item.certificateUrl ? `Certificado: ${item.certificateUrl}` : '',
+          item.credentialId ? `ID: ${item.credentialId}` : '',
+        ]
+          .filter(Boolean)
+          .join(' - '),
     );
   }
 

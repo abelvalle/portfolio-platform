@@ -14,6 +14,7 @@ describe('CvExportService', () => {
   it('prepares projects and custom sections for binary exports', () => {
     const service = new CvExportService() as unknown as {
       projectRows: (data: unknown) => string[];
+      formationRows: (data: unknown) => string[];
       customSectionRows: (data: unknown) => Array<{
         title: string;
         rows: string[];
@@ -31,6 +32,31 @@ describe('CvExportService', () => {
         ],
       }),
     ).toEqual(['Portfolio Platform\nCV Manager\nNext.js - NestJS']);
+
+    expect(
+      service.formationRows({
+        education: [
+          {
+            title: 'Project Management',
+            institution: 'Demo Institute',
+            date: '2026',
+            description: 'Formacion demo',
+            url: 'https://example.com/formacion',
+          },
+        ],
+        certifications: [
+          {
+            title: 'Scrum Master',
+            institution: 'Demo Academy',
+            credentialId: 'SCRUM-DEMO-2026',
+            certificateUrl: 'https://example.com/certificado',
+          },
+        ],
+      }),
+    ).toEqual([
+      'Project Management - Demo Institute - 2026 - Formacion demo - https://example.com/formacion',
+      'Scrum Master - Demo Academy - Certificado: https://example.com/certificado - ID: SCRUM-DEMO-2026',
+    ]);
 
     expect(
       service.customSectionRows({
@@ -70,10 +96,16 @@ describe('CvExportService', () => {
             title: 'Project Management',
             institution: 'Demo Institute',
             date: '2026',
+            url: 'https://example.com/formacion',
           },
         ],
         certifications: [
-          { title: 'Scrum Master', institution: 'Demo Academy', date: '2026' },
+          {
+            title: 'Scrum Master',
+            institution: 'Demo Academy',
+            date: '2026',
+            credentialId: 'SCRUM-DEMO-2026',
+          },
         ],
         skills: [{ name: 'KPIs', category: 'Reporting' }],
         languages: [{ name: 'Español', level: 'Nativo' }],
@@ -118,6 +150,8 @@ describe('CvExportService', () => {
     expect(html).toContain('class="cv-page" data-page-size="A4"');
     expect(html).toContain('data-cv-renderer="server-html"');
     expect(html).toContain('data-cv-density="compact"');
+    expect(html).toContain('https://example.com/formacion');
+    expect(html).toContain('ID: SCRUM-DEMO-2026');
     expect(html).toContain('data-cv-template="ejecutiva"');
     expect(html).toContain('width:210mm;min-height:297mm');
     expect(html).toContain('@media screen');
