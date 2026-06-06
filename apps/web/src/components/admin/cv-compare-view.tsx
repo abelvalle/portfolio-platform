@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Edit3, FileText, GitCompare, RefreshCw } from "lucide-react";
+import { Edit3, FileText, GitCompare, RefreshCw, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,6 +61,7 @@ export function CvCompareView() {
   const [message, setMessage] = useState("Cargando versiones.");
   const [isLoading, setIsLoading] = useState(true);
   const [isComparing, setIsComparing] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const adaptedVersion = versions.find((version) => version.id === adaptedId);
 
   useEffect(() => {
@@ -101,6 +102,24 @@ export function CvCompareView() {
       setMessage("No se pudo comparar estas versiones.");
     } finally {
       setIsComparing(false);
+    }
+  }
+
+  async function publishAdaptedVersion() {
+    if (!adaptedId) {
+      setMessage("Selecciona una version adaptada antes de publicar.");
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      await cvClient.setPrimaryVersion(adaptedId);
+      await loadVersions();
+      setMessage("Version adaptada publicada como CV principal.");
+    } catch {
+      setMessage("No se pudo publicar la version adaptada.");
+    } finally {
+      setIsPublishing(false);
     }
   }
 
@@ -173,6 +192,10 @@ export function CvCompareView() {
               <FileText data-icon="inline-start" />
               Editar CV principal
             </Link>
+            <Button type="button" variant="outline" onClick={publishAdaptedVersion} disabled={isPublishing}>
+              <Star data-icon="inline-start" />
+              {isPublishing ? "Publicando..." : "Publicar version adaptada"}
+            </Button>
           </div>
         </section>
       ) : null}

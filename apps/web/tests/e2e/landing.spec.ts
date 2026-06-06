@@ -310,6 +310,22 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/cv-versions/cv-adapted-new/set-primary", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "cv-adapted-new",
+        cvId: "cv-1",
+        name: "CV adaptado - Delivery Manager",
+        status: "published",
+        targetRole: "Delivery Manager",
+        language: "es",
+        isPrimary: true,
+        structuredJson: { summary: "Resumen revisado." },
+        updatedAt: "2026-06-06T10:00:00.000Z"
+      })
+    });
+  });
   await page.route("**/api/v1/cv/adapt-to-role", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -1137,6 +1153,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("link", { name: "Comparar version" }).click();
   await expect(page).toHaveURL(/\/admin\/cv\/compare\?baseId=cv-base&adaptedId=cv-adapted-new/);
   await expect(page.getByRole("heading", { name: "Comparar CV" })).toBeVisible();
+  await page.getByRole("button", { name: "Publicar version adaptada" }).click();
+  await expect(page.getByText("Version adaptada publicada como CV principal.")).toBeVisible();
 
   await page.goto("/admin/cv/compare");
   await expect(page.getByRole("heading", { name: "Comparar CV" })).toBeVisible();
