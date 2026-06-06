@@ -29,11 +29,15 @@ test("public CV template galleries work in Spanish and English", async ({ page }
   await expect(page.getByRole("heading", { name: "Plantillas de CV" })).toBeVisible();
   await expect(page.getByText("ATS-friendly")).toBeVisible();
   await expect(page.getByRole("link", { name: "Ver CV online" })).toHaveAttribute("href", "/cv");
+  await expect(page.getByRole("link", { name: "Descargar CV" }).first()).toHaveAttribute("href", /\/api\/v1\/cv\/download$/);
+  await expect(page.locator("a[download][href*='template=ats-friendly']").first()).toBeVisible();
 
   await page.goto("/en/cv/templates");
   await expect(page.getByRole("heading", { name: "Resume templates" })).toBeVisible();
   await expect(page.getByText("ATS-friendly")).toBeVisible();
   await expect(page.getByRole("link", { name: "View resume online" })).toHaveAttribute("href", "/en/cv");
+  await expect(page.getByRole("link", { name: "Download resume" }).first()).toHaveAttribute("href", /\/api\/v1\/cv\/download$/);
+  await expect(page.locator("a[download][href*='template=ats-friendly']").first()).toBeVisible();
 });
 
 test("public CV template detail previews are shareable", async ({ page }) => {
@@ -42,12 +46,14 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await expect(page.getByText("Preview A4")).toBeVisible();
   await expect(page.getByText("/cv/templates/minimalista")).toBeVisible();
   await expect(page.getByRole("link", { name: "Todas las plantillas" })).toHaveAttribute("href", "/cv/templates");
+  await expect(page.getByRole("link", { name: "Descargar CV" })).toHaveAttribute("href", /\/api\/v1\/cv\/download\?template=minimalista$/);
 
   await page.goto("/en/cv/templates/ats-friendly");
   await expect(page.getByRole("heading", { name: "ATS-friendly" })).toBeVisible();
   await expect(page.getByText("A4 preview")).toBeVisible();
   await expect(page.getByText("/en/cv/templates/ats-friendly")).toBeVisible();
   await expect(page.getByRole("link", { name: "All templates" })).toHaveAttribute("href", "/en/cv/templates");
+  await expect(page.getByRole("link", { name: "Download resume" })).toHaveAttribute("href", /\/api\/v1\/cv\/download\?template=ats-friendly$/);
 });
 
 test("admin publication page is reachable behind the session proxy", async ({ context, page }) => {

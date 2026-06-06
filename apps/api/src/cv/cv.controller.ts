@@ -6,9 +6,14 @@ import {
   Param,
   Patch,
   Post,
+  Query,
+  Res,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { createReadStream } from 'node:fs';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermissions } from '../common/guards/permissions.decorator';
@@ -17,6 +22,7 @@ import {
   AtsRoleReportDto,
   CompareVersionsDto,
   CreateCvDto,
+  DownloadCvQueryDto,
 } from './cv.dto';
 import { CvAdaptationService } from './cv-adaptation.service';
 import { CvService } from './cv.service';
@@ -32,6 +38,20 @@ export class CvController {
   @Get()
   getPrimary() {
     return this.cvService.getPrimary();
+  }
+
+  @Get('download')
+  async downloadPrimaryPdf(
+    @Query() query: DownloadCvQueryDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.cvService.generatePublicPdf(query.template);
+    response.setHeader('Content-Type', result.download.mimeType);
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${result.download.filename.replace(/"/g, '')}"`,
+    );
+    return new StreamableFile(createReadStream(result.download.storageKey));
   }
 
   @Get(':id')

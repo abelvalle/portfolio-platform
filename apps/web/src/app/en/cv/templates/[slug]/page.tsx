@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { CvTemplatePreviewPage } from "@/components/public/cv-template-preview-page";
-import { portfolioClient } from "@/lib/api";
+import { getPublicCvDownloadUrl, portfolioClient } from "@/lib/api";
 import { findPublicCvTemplate, getPublicCvTemplates } from "@/app/cv/templates/template-data";
 
 export default async function EnglishCvTemplateRoute({ params }: { params: Promise<{ slug: string }> }) {
@@ -15,6 +15,6 @@ export default async function EnglishCvTemplateRoute({ params }: { params: Promi
     notFound();
   }
 
-  const cvUrl = snapshot.profile.cvUrl || snapshot.cv.url;
+  const cvUrl = getPublicCvDownloadUrl(template.slug);
   return <CvTemplatePreviewPage template={template} snapshot={snapshot} locale="en" cvUrl={cvUrl} />;
 }

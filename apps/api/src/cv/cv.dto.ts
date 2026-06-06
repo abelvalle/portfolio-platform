@@ -63,3 +63,11 @@ export class AtsRoleReportDto {
   @MinLength(40)
   jobDescription!: string;
 }
+
+export class DownloadCvQueryDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  template?: string;
+}

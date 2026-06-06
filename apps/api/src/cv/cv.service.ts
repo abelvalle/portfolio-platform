@@ -130,6 +130,42 @@ export class CvService {
     );
   }
 
+  async generatePublicPdf(templateSlug?: string) {
+    const normalizedTemplateSlug = templateSlug?.trim() || undefined;
+    const cv = await this.getPrimary();
+    const version = await this.findPrimaryVersion(cv.id);
+    const template = normalizedTemplateSlug
+      ? await this.findVisibleTemplate(normalizedTemplateSlug)
+      : this.exportTemplate(version);
+    const file = await this.exporter.generatePdf(
+      version.id,
+      version.structuredJson as never,
+      { template },
+    );
+    const persisted = await this.persistGeneratedFile(
+      version.id,
+      file,
+      'pdf',
+      'application/pdf',
+      this.generationMetadata(
+        { template: template || null },
+        {
+          publicDownload: true,
+          templateOverride: Boolean(normalizedTemplateSlug),
+        },
+      ),
+      { updateVersionReference: !normalizedTemplateSlug },
+    );
+    return {
+      ...persisted,
+      download: {
+        filename: file.filename,
+        storageKey: file.path,
+        mimeType: 'application/pdf',
+      },
+    };
+  }
+
   async getAtsReport(cvId: string) {
     const version = await this.findPrimaryVersion(cvId);
     return this.atsService.validate(version.structuredJson as never);
@@ -206,6 +242,20 @@ export class CvService {
     return version;
   }
 
+  private async findVisibleTemplate(slug: string) {
+    const template = await this.prisma.cvTemplate.findFirst({
+      where: { slug, visible: true, deletedAt: null },
+    });
+    if (!template) {
+      throw new NotFoundException('CV template not found');
+    }
+    return {
+      name: template.name,
+      slug: template.slug,
+      config: template.config,
+    };
+  }
+
   private exportTemplate(version: {
     template?: { name: string; slug: string; config: unknown } | null;
   }) {
@@ -237,6 +287,9 @@ export class CvService {
     type: 'pdf' | 'docx',
     mimeType: string,
     metadata?: Record<string, unknown>,
+    options: { updateVersionReference?: boolean } = {
+      updateVersionReference: true,
+    },
   ) {
     const media = await this.prisma.mediaAsset.create({
       data: {
@@ -258,13 +311,15 @@ export class CvService {
         metadata: metadata as never,
       },
     });
-    await this.prisma.cvVersion.update({
-      where: { id: versionId },
-      data:
-        type === 'pdf'
-          ? { generatedPdfId: media.id }
-          : { generatedDocxId: media.id },
-    });
+    if (options.updateVersionReference !== false) {
+      await this.prisma.cvVersion.update({
+        where: { id: versionId },
+        data:
+          type === 'pdf'
+            ? { generatedPdfId: media.id }
+            : { generatedDocxId: media.id },
+      });
+    }
     return { media, generated };
   }
 

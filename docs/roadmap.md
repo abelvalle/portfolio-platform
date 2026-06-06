@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 08:00 CEST.
+Estado actualizado: 2026-06-06 08:07 CEST.
 
 ## Hitos completados
 
@@ -1543,12 +1543,28 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Descarga pública de CV con override de plantilla
+
+- Añadido `GET /api/v1/cv/download?template=ats-friendly` para descargar el PDF de la versión primaria con una plantilla pública concreta.
+- Si `template` se omite, la descarga usa la plantilla asociada a la versión primaria.
+- El override se persiste como `MediaAsset` y `CvGeneratedFile`, pero no pisa `generatedPdfId` de la versión primaria.
+- Las páginas públicas `/cv/templates`, `/cv/templates/[slug]`, `/en/cv/templates` y `/en/cv/templates/[slug]` enlazan al endpoint correcto.
+- La galería pública permite descargar cada plantilla directamente además de abrir el preview.
+- `docs/api.md` documenta el contrato público de descarga.
+- Añadidos tests unitarios del servicio CV y cobertura e2e de hrefs de descarga por plantilla.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
 - Renderer fiel al preview: PDF/DOCX aplican tokens de plantilla, pero todavía no generan desde el mismo HTML/CSS A4 del preview público.
-- Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.

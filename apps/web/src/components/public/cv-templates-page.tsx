@@ -4,6 +4,7 @@ import { ArrowLeft, Download, Eye, LayoutTemplate } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { getCvPath, getCvTemplatePath, getPortfolioPath, type Locale } from "@/lib/i18n";
+import { getPublicCvDownloadUrl } from "@/lib/api";
 import { getCvTemplateFeatures, type CvTemplateItem } from "@/lib/cv-templates";
 import type { PortfolioSnapshot } from "@/lib/portfolio-data";
 import { buildPublicThemeStyle } from "@/lib/public-theme";
@@ -98,11 +99,16 @@ export function CvTemplatesPage({
                     </Badge>
                   ))}
                 </div>
-                <div className="flex items-center justify-between border-t border-border pt-4 text-sm text-muted-foreground">
+                <div className="flex items-center justify-between gap-4 border-t border-border pt-4 text-sm text-muted-foreground">
                   <span>{copy.available}</span>
-                  <Link className="font-medium text-primary" href={getCvTemplatePath(locale, template.slug)}>
-                    {copy.preview}
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <a className="font-medium text-primary" href={getPublicCvDownloadUrl(template.slug)} download>
+                      {copy.download}
+                    </a>
+                    <Link className="font-medium text-primary" href={getCvTemplatePath(locale, template.slug)}>
+                      {copy.preview}
+                    </Link>
+                  </div>
                 </div>
               </div>
             </article>

@@ -7,6 +7,10 @@ export function getApiUrl(path: string) {
   return `${API_URL}${path}`;
 }
 
+export function getPublicCvDownloadUrl(templateSlug?: string) {
+  return getApiUrl(withQuery("/cv/download", { template: templateSlug }));
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(getApiUrl(path), {
     ...init,
