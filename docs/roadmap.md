@@ -3596,6 +3596,15 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run lint`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 
+### Build web tras revision granular CV
+
+- Ejecutado build de produccion del frontend tras ampliar el wizard de adaptacion CV.
+- Next compila rutas publicas y privadas sin errores de TypeScript ni build.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
