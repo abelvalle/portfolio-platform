@@ -58,6 +58,18 @@ describe('PermissionsGuard', () => {
     expect(guard.canActivate(mockContext(UserRole.viewer))).toBe(false);
   });
 
+  it('allows viewers to read CV versions', () => {
+    const guard = new PermissionsGuard(mockReflector(['read_cv']));
+
+    expect(guard.canActivate(mockContext(UserRole.viewer))).toBe(true);
+  });
+
+  it('rejects viewers from managing CV content', () => {
+    const guard = new PermissionsGuard(mockReflector(['manage_cv']));
+
+    expect(guard.canActivate(mockContext(UserRole.viewer))).toBe(false);
+  });
+
   it('allows routes without explicit permissions', () => {
     const guard = new PermissionsGuard(mockReflector(undefined));
 

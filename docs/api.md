@@ -104,24 +104,25 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 
 - `GET /cv`
 - `GET /cv/:id`
-- `POST /cv`
-- `PATCH /cv/:id`
-- `DELETE /cv/:id`
-- `POST /cv/import`
-- `POST /cv/:id/generate-pdf`
-- `POST /cv/:id/generate-docx`
-- `GET /cv/:id/ats-report`
-- `POST /cv/:id/generate-ats-pdf`
-- `POST /cv/:id/generate-ats-docx`
-- `POST /cv/:id/set-primary`
-- `GET|POST|PATCH|DELETE /cv-versions`
-- `POST /cv-versions/:id/generate-pdf`
-- `POST /cv-versions/:id/generate-docx`
-- `POST /cv-versions/:id/set-primary`
-- `GET|POST|PATCH|DELETE /cv-templates`
-- `GET|POST|PATCH|DELETE /cv-target-roles`
-- `POST /cv/adapt-to-role`
-- `POST /cv/compare-versions`
+- `POST /cv` (`manage_cv`)
+- `PATCH /cv/:id` (`manage_cv`)
+- `DELETE /cv/:id` (`manage_cv`)
+- `POST /cv/import` (`manage_cv`)
+- `POST /cv/:id/generate-pdf` (`manage_cv`)
+- `POST /cv/:id/generate-docx` (`manage_cv`)
+- `GET /cv/:id/ats-report` (`manage_cv`)
+- `POST /cv/:id/generate-ats-pdf` (`manage_cv`)
+- `POST /cv/:id/generate-ats-docx` (`manage_cv`)
+- `POST /cv/:id/set-primary` (`manage_cv`)
+- `GET /cv-versions` y `GET /cv-versions/:id` (`read_cv`)
+- `POST|PATCH|DELETE /cv-versions` (`manage_cv`)
+- `POST /cv-versions/:id/generate-pdf` (`manage_cv`)
+- `POST /cv-versions/:id/generate-docx` (`manage_cv`)
+- `POST /cv-versions/:id/set-primary` (`manage_cv`)
+- `GET|POST|PATCH|DELETE /cv-templates` (writes: `manage_cv`)
+- `GET|POST|PATCH|DELETE /cv-target-roles` (writes: `manage_cv`)
+- `POST /cv/adapt-to-role` (`manage_cv`)
+- `POST /cv/compare-versions` (`manage_cv`)
 
 ### Adaptación de CV
 

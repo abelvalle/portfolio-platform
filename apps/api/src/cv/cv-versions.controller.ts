@@ -9,16 +9,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Roles } from '../common/guards/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/guards/permissions.decorator';
 import { CvVersionService } from './cv-version.service';
 
 @ApiTags('cv-versions')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.admin, UserRole.editor, UserRole.viewer)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequirePermissions('read_cv')
 @Controller('cv-versions')
 export class CvVersionsController {
   constructor(private readonly cvVersionService: CvVersionService) {}
@@ -33,37 +32,37 @@ export class CvVersionsController {
     return this.cvVersionService.findOne(id);
   }
 
-  @Roles(UserRole.admin, UserRole.editor)
+  @RequirePermissions('manage_cv')
   @Post()
   create(@Body() body: Record<string, any>) {
     return this.cvVersionService.create(body);
   }
 
-  @Roles(UserRole.admin, UserRole.editor)
+  @RequirePermissions('manage_cv')
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: Record<string, any>) {
     return this.cvVersionService.update(id, body);
   }
 
-  @Roles(UserRole.admin, UserRole.editor)
+  @RequirePermissions('manage_cv')
   @Post(':id/generate-pdf')
   generatePdf(@Param('id') id: string) {
     return this.cvVersionService.generatePdf(id);
   }
 
-  @Roles(UserRole.admin, UserRole.editor)
+  @RequirePermissions('manage_cv')
   @Post(':id/generate-docx')
   generateDocx(@Param('id') id: string) {
     return this.cvVersionService.generateDocx(id);
   }
 
-  @Roles(UserRole.admin, UserRole.editor)
+  @RequirePermissions('manage_cv')
   @Post(':id/set-primary')
   setPrimary(@Param('id') id: string) {
     return this.cvVersionService.setPrimary(id);
   }
 
-  @Roles(UserRole.admin, UserRole.editor)
+  @RequirePermissions('manage_cv')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.cvVersionService.remove(id);

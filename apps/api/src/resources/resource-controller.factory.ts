@@ -19,6 +19,7 @@ import { ResourcesService } from './resources.service';
 export function createResourceController(
   path: string,
   model: string,
+  writePermission = 'manage_portfolio',
 ): Type<any> {
   @ApiTags(path)
   @Controller(path)
@@ -37,7 +38,7 @@ export function createResourceController(
 
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions('manage_portfolio')
+    @RequirePermissions(writePermission)
     @Post()
     create(@Body() body: Record<string, unknown>) {
       return this.resourcesService.create(model, body);
@@ -45,7 +46,7 @@ export function createResourceController(
 
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions('manage_portfolio')
+    @RequirePermissions(writePermission)
     @Patch(':id')
     update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
       return this.resourcesService.update(model, id, body);
@@ -53,7 +54,7 @@ export function createResourceController(
 
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermissions('manage_portfolio')
+    @RequirePermissions(writePermission)
     @Delete(':id')
     remove(@Param('id') id: string) {
       return this.resourcesService.remove(model, id);
