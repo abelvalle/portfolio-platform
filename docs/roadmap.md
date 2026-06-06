@@ -2803,11 +2803,29 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Paridad HTML A4 del renderer CV
+
+- `CvExportService.renderHtml` usa una estructura A4 mas cercana al preview publico: `cv-header`, contacto separado, foto configurable, secciones con encabezados y chips de skills.
+- La plantilla server-side respeta `fontFamily`, `primaryColor`, `density` compacta y `includePhoto`.
+- El modo ATS sigue desactivando foto y conserva salida textual.
+- El HTML limita experiencias, skills y formacion en modo compacto de forma similar al preview publico.
+- Anadida cobertura unitaria de header, contacto, foto, chips, escaping seguro y configuracion `includePhoto`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- cv-export.service.spec.ts`
+- `npm.cmd run build:api`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
-- Renderer fiel al preview: el HTML server-side ya renderiza secciones estructuradas, aplica tokens de plantilla y usa contenedor/CSS A4; PDF/DOCX ya incluyen proyectos y secciones personalizadas, pero todavia no generan desde ese mismo HTML/CSS A4 del preview público.
+- Renderer fiel al preview: el HTML server-side ya renderiza secciones estructuradas, aplica tokens de plantilla, usa contenedor/CSS A4 y se acerca al preview publico con header/contacto/foto/chips; PDF/DOCX ya incluyen proyectos y secciones personalizadas, pero todavia no generan desde ese mismo HTML/CSS A4 ni tienen comparacion pixel-perfect.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; falta prueba con DB real que genere archivos desde una version persistida y valide descarga.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
@@ -2838,6 +2856,6 @@ Verificacion realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. Renderer HTML/CSS server-side fiel al preview A4 público.
+1. Generar PDF desde HTML/CSS A4 server-side con Playwright/Puppeteer o equivalente.
 2. Formularios avanzados por bloque en Versiones CV.
 3. Draft/publish de metadatos no JSON en Versiones CV.

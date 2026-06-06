@@ -40,6 +40,10 @@ describe('CvExportService', () => {
         profile: {
           fullName: 'Abel Valle Rosa',
           headline: 'IT Project Manager',
+          subtitle: 'Delivery Manager',
+          email: 'abel@example.com',
+          location: 'Zaragoza',
+          avatarUrl: '/media/abel.png',
         },
         summary: 'Resumen <seguro>',
         experiences: [
@@ -82,6 +86,7 @@ describe('CvExportService', () => {
             fontFamily: 'Manrope',
             primaryColor: '#123456',
             density: 'compact',
+            includePhoto: true,
           },
         },
       },
@@ -94,11 +99,28 @@ describe('CvExportService', () => {
     expect(html).toContain('class="cv-page" data-page-size="A4"');
     expect(html).toContain('width:210mm;min-height:297mm');
     expect(html).toContain('@media screen');
+    expect(html).toContain('class="cv-header"');
+    expect(html).toContain('class="cv-contact"');
+    expect(html).toContain('class="cv-photo" src="/media/abel.png"');
+    expect(html).toContain('class="cv-chips"');
+    expect(html).toContain('class="cv-chip">KPIs</span>');
     expect(html).toContain('Delivery Manager - Demo Company');
     expect(html).toContain('Reporting ejecutivo');
     expect(html).toContain('Formacion y certificaciones');
     expect(html).toContain('Portfolio Platform');
     expect(html).toContain('Publicaciones');
     expect(html).toContain('Resumen &lt;seguro&gt;');
+
+    const noPhotoHtml = service.renderHtml(
+      { profile: { fullName: 'Abel Valle Rosa' } },
+      {
+        template: {
+          name: 'ATS',
+          slug: 'ats-friendly',
+          config: { includePhoto: false },
+        },
+      },
+    );
+    expect(noPhotoHtml).not.toContain('class="cv-photo"');
   });
 });

@@ -8,10 +8,12 @@ type CvStructuredData = {
   profile?: {
     fullName?: string;
     headline?: string;
+    subtitle?: string;
     email?: string;
     phone?: string;
     linkedin?: string;
     location?: string;
+    avatarUrl?: string;
   };
   summary?: string;
   experiences?: Array<{
@@ -51,6 +53,7 @@ type ResolvedTemplateOptions = {
   primaryColor: string;
   fontFamily: string;
   density: 'compact' | 'normal';
+  includePhoto: boolean;
 };
 
 @Injectable()
@@ -226,7 +229,20 @@ export class CvExportService {
   renderHtml(data: CvStructuredData, options: CvTemplateExportOptions = {}) {
     const template = this.resolveTemplateOptions(options);
     const pagePadding = template.density === 'compact' ? '36px' : '48px';
-    const experienceBody = (data.experiences || [])
+    const visibleExperiences = (data.experiences || []).slice(
+      0,
+      template.density === 'compact' ? 2 : 3,
+    );
+    const visibleSkills = (data.skills || []).slice(
+      0,
+      template.density === 'compact' ? 10 : 14,
+    );
+    const formationRows = [
+      ...(data.education || []),
+      ...(data.certifications || []),
+    ].slice(0, template.density === 'compact' ? 2 : 4);
+
+    const experienceBody = visibleExperiences
       .map((experience) =>
         this.htmlArticle(
           `${experience.role} - ${experience.company}`,
@@ -238,22 +254,15 @@ export class CvExportService {
         ),
       )
       .join('');
-    const formationRows = [
-      ...(data.education || []),
-      ...(data.certifications || []),
-    ]
+    const formationBody = formationRows
       .map((item) =>
         this.htmlListItem(
           [item.title, item.institution, item.date].filter(Boolean).join(' - '),
         ),
       )
       .join('');
-    const skillRows = (data.skills || [])
-      .map((skill) =>
-        this.htmlListItem(
-          skill.category ? `${skill.name} - ${skill.category}` : skill.name,
-        ),
-      )
+    const skillChips = visibleSkills
+      .map((skill) => `<span class="cv-chip">${this.html(skill.name)}</span>`)
       .join('');
     const languageRows = (data.languages || [])
       .map((language) =>
@@ -278,8 +287,9 @@ export class CvExportService {
         this.htmlSection(section.title, this.htmlParagraph(section.content)),
       )
       .join('');
+    const subtitle = data.profile?.subtitle || data.summary || '';
 
-    return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:#f8fafc;font-family:${template.fontFamily},Arial,sans-serif;color:#0f172a}.cv-page{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:${pagePadding};line-height:1.45}@media screen{body{padding:24px}.cv-page{box-shadow:0 24px 60px rgba(15,23,42,.18)}}h1{font-size:32px;color:${template.primaryColor};margin:0 0 6px}h2{font-size:16px;border-top:1px solid #cbd5e1;padding-top:14px;color:${template.primaryColor};margin-top:20px}article{margin:0 0 14px}h3{font-size:13px;margin:0 0 4px}p{margin:0 0 8px}ul{margin:0 0 10px 18px;padding:0}li{margin:0 0 4px}</style></head><body><main class="cv-page" data-page-size="A4"><h1>${this.html(data.profile?.fullName || 'Abel Valle Rosa')}</h1><p>${this.html(data.profile?.headline || '')}</p><p>${this.html(this.contactLine(data))}</p>${this.htmlSection('Resumen profesional', this.htmlParagraph(data.summary))}${this.htmlSection(options.ats ? 'Experiencia profesional' : 'Experiencia', experienceBody)}${this.htmlSection('Formacion y certificaciones', formationRows ? `<ul>${formationRows}</ul>` : '')}${this.htmlSection('Skills', skillRows ? `<ul>${skillRows}</ul>` : '')}${this.htmlSection('Idiomas', languageRows ? `<ul>${languageRows}</ul>` : '')}${this.htmlSection('Proyectos', projectBody)}${customSections}</main></body></html>`;
+    return `<!doctype html><html><head><meta charset="utf-8"><style>${this.htmlStyles(template, pagePadding)}</style></head><body><main class="cv-page" data-page-size="A4"><header class="cv-header"><div><p class="cv-eyebrow">${this.html(data.profile?.headline || '')}</p><h1>${this.html(data.profile?.fullName || 'Abel Valle Rosa')}</h1>${this.htmlParagraph(subtitle, 'cv-subtitle')}</div>${this.htmlPhoto(data, template)}</header><section class="cv-contact">${this.htmlContactItems(data)}</section>${this.htmlSection('Resumen profesional', this.htmlParagraph(data.summary))}${this.htmlSection(options.ats ? 'Experiencia profesional' : 'Experiencia', experienceBody)}${this.htmlSection('Formacion y certificaciones', formationBody ? `<ul>${formationBody}</ul>` : '')}${this.htmlSection('Skills', skillChips ? `<div class="cv-chips">${skillChips}</div>` : '')}${this.htmlSection('Idiomas', languageRows ? `<ul>${languageRows}</ul>` : '')}${this.htmlSection('Proyectos', projectBody)}${customSections}</main></body></html>`;
   }
 
   private html(value: unknown) {
@@ -297,9 +307,10 @@ export class CvExportService {
       .replace(/'/g, '&#39;');
   }
 
-  private htmlParagraph(value: unknown) {
+  private htmlParagraph(value: unknown, className?: string) {
     const text = this.html(value);
-    return text ? `<p>${text}</p>` : '';
+    const classAttribute = className ? ` class="${className}"` : '';
+    return text ? `<p${classAttribute}>${text}</p>` : '';
   }
 
   private htmlListItem(value: unknown) {
@@ -326,6 +337,58 @@ export class CvExportService {
     return body.trim()
       ? `<section><h2>${this.html(title)}</h2>${body}</section>`
       : '';
+  }
+
+  private htmlStyles(template: ResolvedTemplateOptions, pagePadding: string) {
+    return [
+      '@page{size:A4;margin:0}',
+      '*{box-sizing:border-box}',
+      `body{margin:0;background:#f8fafc;font-family:${template.fontFamily},Arial,sans-serif;color:#0f172a}`,
+      `.cv-page{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:${pagePadding};line-height:1.45;overflow:hidden}`,
+      '@media screen{body{padding:24px}.cv-page{box-shadow:0 24px 60px rgba(15,23,42,.18)}}',
+      '.cv-header{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;border-bottom:1px solid #e2e8f0;padding-bottom:20px}',
+      `.cv-eyebrow{margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;color:${template.primaryColor}}`,
+      `h1{font-size:${template.density === 'compact' ? '28px' : '32px'};line-height:1.12;color:#0f172a;margin:0}`,
+      '.cv-subtitle{max-width:620px;margin:12px 0 0;color:#475569;font-size:13px}',
+      '.cv-photo{width:96px;height:96px;border:1px solid #e2e8f0;border-radius:8px;object-fit:cover;display:grid;place-items:center;background:#f8fafc;color:#334155;font-weight:700}',
+      '.cv-contact{display:flex;flex-wrap:wrap;gap:8px 16px;padding:18px 0 4px;color:#475569;font-size:12px}',
+      `h2{font-size:13px;border-top:1px solid #cbd5e1;padding-top:14px;color:${template.primaryColor};margin:18px 0 10px;text-transform:uppercase}`,
+      'article{margin:0 0 14px}',
+      'h3{font-size:13px;margin:0 0 4px}',
+      'p{margin:0 0 8px}',
+      'ul{margin:0 0 10px 18px;padding:0}',
+      'li{margin:0 0 4px}',
+      '.cv-chips{display:flex;flex-wrap:wrap;gap:6px}',
+      '.cv-chip{border:1px solid #e2e8f0;border-radius:4px;padding:3px 8px;font-size:10px}',
+    ].join('');
+  }
+
+  private htmlContactItems(data: CvStructuredData) {
+    const profile = data.profile || {};
+    return [profile.email, profile.phone, profile.location, profile.linkedin]
+      .filter(Boolean)
+      .map((item) => `<span>${this.html(item)}</span>`)
+      .join('');
+  }
+
+  private htmlPhoto(data: CvStructuredData, template: ResolvedTemplateOptions) {
+    if (!template.includePhoto) {
+      return '';
+    }
+    const avatarUrl = data.profile?.avatarUrl;
+    if (avatarUrl) {
+      return `<img class="cv-photo" src="${this.html(avatarUrl)}" alt="${this.html(data.profile?.fullName || 'CV photo')}">`;
+    }
+    return `<div class="cv-photo" aria-hidden="true">${this.html(this.profileInitials(data))}</div>`;
+  }
+
+  private profileInitials(data: CvStructuredData) {
+    return (data.profile?.fullName || 'Abel Valle Rosa')
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('');
   }
 
   private ensureCvDir() {
@@ -479,6 +542,7 @@ export class CvExportService {
       fontFamily: this.stringConfig(config.fontFamily, 'Inter'),
       density:
         options.ats || config.density !== 'compact' ? 'normal' : 'compact',
+      includePhoto: !options.ats && config.includePhoto !== false,
     };
   }
 
