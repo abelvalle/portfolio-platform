@@ -4,10 +4,25 @@ import { useEffect, useState } from "react";
 import { RefreshCw, WandSparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cvClient, type CvAdaptationResult, type CvVersionItem } from "@/lib/api";
+
+type AdaptationBlockKey = "summary" | "skills" | "experiences";
+
+const adaptationBlocks: Array<{ key: AdaptationBlockKey; label: string }> = [
+  { key: "summary", label: "resumen" },
+  { key: "skills", label: "skills" },
+  { key: "experiences", label: "experiencias" }
+];
+
+const defaultAcceptedBlocks: Record<AdaptationBlockKey, boolean> = {
+  summary: true,
+  skills: true,
+  experiences: true
+};
 
 export function CvAdaptationWizard() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
@@ -16,6 +31,7 @@ export function CvAdaptationWizard() {
   const [targetCompany, setTargetCompany] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [result, setResult] = useState<CvAdaptationResult | null>(null);
+  const [acceptedBlocks, setAcceptedBlocks] = useState(defaultAcceptedBlocks);
   const [message, setMessage] = useState("Cargando versiones base.");
   const [isLoading, setIsLoading] = useState(true);
   const [isAdapting, setIsAdapting] = useState(false);
@@ -57,6 +73,7 @@ export function CvAdaptationWizard() {
         jobDescription: jobDescription.trim()
       });
       setResult(nextResult);
+      setAcceptedBlocks(defaultAcceptedBlocks);
       setMessage("Propuesta generada. Revisa antes de aprobar o convertirla en version.");
     } catch {
       setMessage("No se pudo generar la adaptacion.");
@@ -67,6 +84,32 @@ export function CvAdaptationWizard() {
 
   const selectedVersion = versions.find((version) => version.id === baseCvVersionId);
 
+  function setBlockAccepted(key: AdaptationBlockKey, checked: boolean) {
+    setAcceptedBlocks((current) => ({ ...current, [key]: checked }));
+  }
+
+  function buildReviewedProposal(nextResult: CvAdaptationResult) {
+    const nextProposal = { ...(nextResult.proposed as Record<string, unknown>) };
+    const accepted = adaptationBlocks
+      .map((block) => block.key)
+      .filter((key) => acceptedBlocks[key] && key in nextProposal);
+    const rejected = adaptationBlocks
+      .map((block) => block.key)
+      .filter((key) => !acceptedBlocks[key] && key in nextProposal);
+
+    for (const key of rejected) {
+      delete nextProposal[key];
+    }
+
+    nextProposal.adaptationMeta = {
+      ...(nextResult.proposed.adaptationMeta || {}),
+      acceptedBlocks: accepted,
+      rejectedBlocks: rejected
+    };
+
+    return nextProposal;
+  }
+
   async function createAdaptedVersion() {
     if (!result || !selectedVersion) {
       setMessage("Genera una propuesta y selecciona una version base antes de crear el borrador.");
@@ -76,6 +119,7 @@ export function CvAdaptationWizard() {
     setIsCreatingVersion(true);
     try {
       const role = result.request.targetRole || targetRole.trim();
+      const reviewedProposal = buildReviewedProposal(result);
       const created = await cvClient.createVersion({
         cvId: selectedVersion.cvId,
         name: `CV adaptado - ${role}`,
@@ -89,9 +133,9 @@ export function CvAdaptationWizard() {
         status: "draft",
         templateId: selectedVersion.templateId || null,
         structuredJson: {
-          ...(result.proposed as Record<string, unknown>),
+          ...reviewedProposal,
           adaptationMeta: {
-            ...(result.proposed.adaptationMeta || {}),
+            ...((reviewedProposal.adaptationMeta || {}) as Record<string, unknown>),
             createdFromRequestId: result.request.id,
             pendingReview: true
           }
@@ -174,6 +218,24 @@ export function CvAdaptationWizard() {
               <p className="font-medium text-foreground">Keywords</p>
               <p className="mt-1">{result.proposed.adaptationMeta?.keywords?.join(", ") || "Sin keywords detectadas."}</p>
             </div>
+            <fieldset className="grid gap-2 rounded-lg border border-border p-3">
+              <legend className="px-1 font-medium text-foreground">Revision por bloques</legend>
+              {adaptationBlocks.map((block) => {
+                const hasProposal = block.key in result.proposed;
+                return (
+                  <div key={block.key} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`accept-${block.key}`}
+                      checked={acceptedBlocks[block.key]}
+                      disabled={!hasProposal}
+                      onCheckedChange={(checked) => setBlockAccepted(block.key, Boolean(checked))}
+                    />
+                    <Label htmlFor={`accept-${block.key}`}>Aceptar {block.label}</Label>
+                    {!hasProposal ? <span className="text-xs text-muted-foreground">sin propuesta</span> : null}
+                  </div>
+                );
+              })}
+            </fieldset>
             <div>
               <p className="font-medium text-foreground">Resumen propuesto</p>
               <p className="mt-1">{result.proposed.summary || "Sin resumen propuesto."}</p>
