@@ -3498,6 +3498,15 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run build:api`
 
+### Suite raiz tras hitos CV/A4
+
+- Ejecutada la suite raiz despues de los cambios en exportacion CV, preview A4 y documentacion de deuda.
+- Pasan los tests unitarios del API y el smoke test del frontend.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test` (`24` suites y `109` tests API, mas smoke web)
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
