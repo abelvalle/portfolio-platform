@@ -393,7 +393,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify([
-        { id: "cv-base", cvId: "cv-1", name: "CV Base", status: "published", targetRole: "IT Project Manager", language: "es", isPrimary: true, structuredJson: { summary: "Gestion IT general.", skills: [] }, draftJson: null, publishedAt: "2026-06-01T08:00:00.000Z", updatedAt: "2026-06-01T08:00:00.000Z" },
+        { id: "cv-base", cvId: "cv-1", name: "CV Base", status: "published", targetRole: "IT Project Manager", language: "es", isPrimary: true, structuredJson: { summary: "Gestion IT general.", skills: [], experiences: [{ role: "IT Project Manager", company: "Demo Company", period: "2025", description: "Delivery inicial.", responsibilities: ["Coordinar UAT"] }] }, draftJson: null, publishedAt: "2026-06-01T08:00:00.000Z", updatedAt: "2026-06-01T08:00:00.000Z" },
         { id: "cv-adapted", cvId: "cv-1", name: "CV Adaptado", status: "draft", targetRole: "Delivery Manager", language: "es", isPrimary: false, structuredJson: { summary: "Delivery IT orientado a KPIs.", skills: [] }, draftJson: null, publishedAt: null, updatedAt: "2026-06-02T08:00:00.000Z" }
       ])
     });
@@ -409,7 +409,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         status: "published",
         language: "es",
         isPrimary: true,
-        structuredJson: data.structuredJson || { summary: "Gestion IT general.", skills: [] },
+        structuredJson: data.structuredJson || { summary: "Gestion IT general.", skills: [], experiences: [{ role: "IT Project Manager", company: "Demo Company", period: "2025", description: "Delivery inicial.", responsibilities: ["Coordinar UAT"] }] },
         draftJson: data.draftJson ?? null,
         publishedAt: "2026-06-01T08:00:00.000Z",
         updatedAt: "2026-06-06T09:00:00.000Z"
@@ -1356,6 +1356,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("Plantilla", { exact: true })).toBeVisible();
   await expect(page.getByLabel("JSON estructurado")).toBeVisible();
   await expect(page.locator("#structuredJsonVersion")).toHaveValue("cv-base");
+  await expect(page.getByLabel("Rol experiencia")).toHaveValue("IT Project Manager");
   await page.getByRole("button", { name: "Duplicar" }).first().click({ force: true });
   await expect(page.getByText("Version duplicada: CV Base copia.")).toBeVisible();
   await page.getByLabel("Resumen profesional CV").fill("Resumen profesional editado por bloques.");
@@ -1414,7 +1415,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
   await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
   await page.getByLabel("Experiencia CV").fill("Delivery Manager - Demo Company - 2026");
-  await page.getByRole("button", { name: "Aplicar experiencia" }).focus();
+  await page.getByRole("button", { name: "Aplicar experiencia", exact: true }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"role\": \"Delivery Manager\"/);
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
@@ -1446,9 +1447,16 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     }]
   }, null, 2));
   await page.getByLabel("Experiencia CV").fill("Delivery Manager - Demo Company - 2027");
-  await page.getByRole("button", { name: "Aplicar experiencia" }).focus();
+  await page.getByRole("button", { name: "Aplicar experiencia", exact: true }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Mantener detalle de experiencia/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Coordinar UAT/);
+  await expect(page.getByLabel("Descripcion experiencia")).toHaveValue("Mantener detalle de experiencia");
+  await expect(page.getByLabel("Responsabilidades experiencia")).toHaveValue("Coordinar UAT");
+  await page.getByLabel("Logros experiencia").fill("UAT estabilizado\nReporting ejecutivo");
+  await page.getByRole("button", { name: "Aplicar experiencia granular" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"achievements\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/UAT estabilizado/);
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Coordinar UAT/);
   await page.getByLabel("Proyectos CV").fill("Portfolio Platform");
   await page.getByRole("button", { name: "Aplicar proyectos" }).focus();
@@ -1458,7 +1466,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("JSON estructurado")).toHaveValue("[]");
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByText("JSON estructurado debe ser un objeto raiz.")).toBeVisible();
-  await page.getByLabel("JSON estructurado").fill(JSON.stringify({ summary: "x".repeat(300), skills: [] }, null, 2));
+  await page.getByLabel("JSON estructurado").fill(JSON.stringify({ summary: "x".repeat(700), skills: [] }, null, 2));
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/"summary"/);
   await page.getByRole("button", { name: "Guardar JSON" }).first().focus();
   await page.keyboard.press("Enter");

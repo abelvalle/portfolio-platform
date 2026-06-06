@@ -20,6 +20,16 @@ type CvVersionDraft = {
   templateId: string;
 };
 
+type ExperienceFormDraft = {
+  index: number;
+  role: string;
+  company: string;
+  period: string;
+  description: string;
+  responsibilities: string;
+  achievements: string;
+};
+
 const emptyDraft: CvVersionDraft = {
   name: "",
   description: "",
@@ -28,6 +38,16 @@ const emptyDraft: CvVersionDraft = {
   language: "es",
   status: "draft",
   templateId: ""
+};
+
+const emptyExperienceFormDraft: ExperienceFormDraft = {
+  index: 0,
+  role: "",
+  company: "",
+  period: "",
+  description: "",
+  responsibilities: "",
+  achievements: ""
 };
 
 const auditActionOptions = ["", "create", "update", "archive", "set_primary", "generate_pdf", "generate_docx"];
@@ -204,6 +224,15 @@ function experiencesFromStructuredJson(value: unknown) {
     .join("\n");
 }
 
+function experienceListFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return [];
+  }
+  const data = value as Record<string, unknown>;
+  const experiences = Array.isArray(data.experiences) ? data.experiences : data.experience;
+  return Array.isArray(experiences) ? experiences : [];
+}
+
 function sectionsFromStructuredJson(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return "";
@@ -232,6 +261,10 @@ function splitBlockLines(value: string) {
   return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
 }
 
+function splitTextareaLines(value: string) {
+  return value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+}
+
 function listField(data: Record<string, unknown>, field: string) {
   const value = data[field];
   return Array.isArray(value) ? value : [];
@@ -243,6 +276,31 @@ function textField(data: Record<string, unknown> | undefined, field: string) {
   }
   const value = data[field];
   return typeof value === "string" ? value : "";
+}
+
+function stringListField(data: Record<string, unknown>, field: string) {
+  const value = data[field];
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string");
+  }
+  return typeof value === "string" ? splitTextareaLines(value) : [];
+}
+
+function experienceFormFromStructuredJson(value: unknown, index = 0): ExperienceFormDraft {
+  const selected = experienceListFromStructuredJson(value)[index];
+  if (!selected || typeof selected !== "object" || Array.isArray(selected)) {
+    return { ...emptyExperienceFormDraft, index };
+  }
+  const data = selected as Record<string, unknown>;
+  return {
+    index,
+    role: textField(data, "role"),
+    company: textField(data, "company"),
+    period: textField(data, "period"),
+    description: textField(data, "description"),
+    responsibilities: stringListField(data, "responsibilities").join("\n"),
+    achievements: stringListField(data, "achievements").join("\n")
+  };
 }
 
 function findRecord(items: unknown[], matches: (item: Record<string, unknown>) => boolean) {
@@ -368,6 +426,7 @@ export function CvVersionTable() {
   const [educationDraft, setEducationDraft] = useState("");
   const [certificationsDraft, setCertificationsDraft] = useState("");
   const [experiencesDraft, setExperiencesDraft] = useState("");
+  const [experienceFormDraft, setExperienceFormDraft] = useState(emptyExperienceFormDraft);
   const [sectionsDraft, setSectionsDraft] = useState("");
   const [jsonMessage, setJsonMessage] = useState("Selecciona una version para editar su JSON estructurado.");
   const [isLoading, setIsLoading] = useState(true);
@@ -395,6 +454,7 @@ export function CvVersionTable() {
       setEducationDraft("");
       setCertificationsDraft("");
       setExperiencesDraft("");
+      setExperienceFormDraft(emptyExperienceFormDraft);
       setSectionsDraft("");
       setJsonMessage("Sin versiones disponibles para editar.");
       return;
@@ -409,6 +469,7 @@ export function CvVersionTable() {
       setEducationDraft(educationFromStructuredJson(selectedVersion.structuredJson));
       setCertificationsDraft(certificationsFromStructuredJson(selectedVersion.structuredJson));
       setExperiencesDraft(experiencesFromStructuredJson(selectedVersion.structuredJson));
+      setExperienceFormDraft(experienceFormFromStructuredJson(selectedVersion.structuredJson));
       setSectionsDraft(sectionsFromStructuredJson(selectedVersion.structuredJson));
       setJsonMessage(
         requestedVersionId === selectedVersion.id
@@ -621,6 +682,7 @@ export function CvVersionTable() {
     setEducationDraft(educationFromStructuredJson(selectedVersion?.structuredJson));
     setCertificationsDraft(certificationsFromStructuredJson(selectedVersion?.structuredJson));
     setExperiencesDraft(experiencesFromStructuredJson(selectedVersion?.structuredJson));
+    setExperienceFormDraft(experienceFormFromStructuredJson(selectedVersion?.structuredJson));
     setSectionsDraft(sectionsFromStructuredJson(selectedVersion?.structuredJson));
     setJsonMessage(selectedVersion ? "JSON estructurado cargado desde la version seleccionada." : "Version no encontrada.");
   }
@@ -852,7 +914,89 @@ export function CvVersionTable() {
       delete nextStructuredJson.experiences;
     }
     setJsonDraft(formatJson(nextStructuredJson));
+    setExperienceFormDraft(experienceFormFromStructuredJson(nextStructuredJson, Math.min(experienceFormDraft.index, Math.max(nextExperiences.length - 1, 0))));
     setJsonMessage("Bloque experiencia aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function selectExperienceFormIndex(index: number) {
+    try {
+      setExperienceFormDraft(experienceFormFromStructuredJson(JSON.parse(jsonDraft), index));
+    } catch {
+      setExperienceFormDraft((current) => ({ ...current, index }));
+    }
+  }
+
+  function applyExperienceFormBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el bloque.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const role = experienceFormDraft.role.trim();
+    if (!role) {
+      setJsonMessage("El rol de experiencia es obligatorio para aplicar el formulario granular.");
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const existingExperiences = Array.isArray(nextStructuredJson.experiences)
+      ? nextStructuredJson.experiences
+      : listField(nextStructuredJson, "experience");
+    const nextExperiences = existingExperiences.map((item) =>
+      item && typeof item === "object" && !Array.isArray(item) ? { ...(item as Record<string, unknown>) } : { role: String(item || "") }
+    );
+    const index = Math.min(Math.max(experienceFormDraft.index, 0), nextExperiences.length);
+    const nextExperience: Record<string, unknown> = {
+      ...(nextExperiences[index] || {}),
+      role
+    };
+    const company = experienceFormDraft.company.trim();
+    const period = experienceFormDraft.period.trim();
+    const description = experienceFormDraft.description.trim();
+    const responsibilities = splitTextareaLines(experienceFormDraft.responsibilities);
+    const achievements = splitTextareaLines(experienceFormDraft.achievements);
+
+    if (company) {
+      nextExperience.company = company;
+    } else {
+      delete nextExperience.company;
+    }
+    if (period) {
+      nextExperience.period = period;
+    } else {
+      delete nextExperience.period;
+    }
+    if (description) {
+      nextExperience.description = description;
+    } else {
+      delete nextExperience.description;
+    }
+    if (responsibilities.length) {
+      nextExperience.responsibilities = responsibilities;
+    } else {
+      delete nextExperience.responsibilities;
+    }
+    if (achievements.length) {
+      nextExperience.achievements = achievements;
+    } else {
+      delete nextExperience.achievements;
+    }
+
+    nextExperiences[index] = nextExperience;
+    nextStructuredJson.experiences = nextExperiences.filter((experience) => textField(experience, "role"));
+    delete nextStructuredJson.experience;
+    setJsonDraft(formatJson(nextStructuredJson));
+    setExperiencesDraft(experiencesFromStructuredJson(nextStructuredJson));
+    setExperienceFormDraft(experienceFormFromStructuredJson(nextStructuredJson, index));
+    setJsonMessage("Formulario granular de experiencia aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
   function applySectionsBlock() {
@@ -1008,6 +1152,8 @@ export function CvVersionTable() {
     }
     return templates.find((template) => template.id === templateId)?.name || "Plantilla asignada";
   }
+
+  const experienceOptions = splitBlockLines(experiencesDraft);
 
   return (
     <div className="grid gap-6">
@@ -1315,6 +1461,84 @@ export function CvVersionTable() {
           <Button type="button" variant="outline" className="w-fit" onClick={applyExperiencesBlock} disabled={!jsonVersionId}>
             Aplicar experiencia
           </Button>
+          <div className="grid gap-3 rounded-lg border border-border p-4">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="grid min-w-[220px] gap-2">
+                <Label htmlFor="experienceFormIndex">Experiencia granular</Label>
+                <select
+                  id="experienceFormIndex"
+                  className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                  value={String(experienceFormDraft.index)}
+                  onChange={(event) => selectExperienceFormIndex(Number(event.target.value))}
+                  disabled={!jsonVersionId}
+                >
+                  {experienceOptions.length ? experienceOptions.map((experience, index) => (
+                    <option key={`${experience}-${index}`} value={index}>{experience}</option>
+                  )) : (
+                    <option value="0">Nueva experiencia</option>
+                  )}
+                </select>
+              </div>
+              <Button type="button" variant="outline" onClick={applyExperienceFormBlock} disabled={!jsonVersionId}>
+                Aplicar experiencia granular
+              </Button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-2">
+                <Label htmlFor="experienceFormRole">Rol experiencia</Label>
+                <Input
+                  id="experienceFormRole"
+                  value={experienceFormDraft.role}
+                  onChange={(event) => setExperienceFormDraft((current) => ({ ...current, role: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="experienceFormCompany">Empresa experiencia</Label>
+                <Input
+                  id="experienceFormCompany"
+                  value={experienceFormDraft.company}
+                  onChange={(event) => setExperienceFormDraft((current) => ({ ...current, company: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="experienceFormPeriod">Periodo experiencia</Label>
+                <Input
+                  id="experienceFormPeriod"
+                  value={experienceFormDraft.period}
+                  onChange={(event) => setExperienceFormDraft((current) => ({ ...current, period: event.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-2">
+                <Label htmlFor="experienceFormDescription">Descripcion experiencia</Label>
+                <Textarea
+                  id="experienceFormDescription"
+                  rows={4}
+                  value={experienceFormDraft.description}
+                  onChange={(event) => setExperienceFormDraft((current) => ({ ...current, description: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="experienceFormResponsibilities">Responsabilidades experiencia</Label>
+                <Textarea
+                  id="experienceFormResponsibilities"
+                  rows={4}
+                  value={experienceFormDraft.responsibilities}
+                  onChange={(event) => setExperienceFormDraft((current) => ({ ...current, responsibilities: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="experienceFormAchievements">Logros experiencia</Label>
+                <Textarea
+                  id="experienceFormAchievements"
+                  rows={4}
+                  value={experienceFormDraft.achievements}
+                  onChange={(event) => setExperienceFormDraft((current) => ({ ...current, achievements: event.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="languagesBlock">Idiomas CV</Label>
