@@ -3121,6 +3121,23 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Drag/drop visual de experiencias CMS
+
+- `/admin/portfolio/experience` incorpora filas draggable con handle visual para reordenado de experiencias.
+- Los botones existentes de subir/bajar se mantienen como fallback accesible.
+- La accion reutiliza el endpoint existente de actualizacion de orden y mantiene el feedback `Experiencia reordenada`.
+- La cobertura e2e desktop/mobile valida filas draggable con una segunda experiencia sample/demo en el mock.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3138,7 +3155,7 @@ Verificacion realizada en este hito:
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto` y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal y embudo básico desde UI; faltan embudos configurables/multicanal.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa y cohorts mensuales; faltan cohorts avanzados por fuente/canal.
-- Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, reordenado por botones y draft/publish desde UI; faltan drag/drop y asociación visual con skills/tecnologías.
+- Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, reordenado por botones, filas drag/drop y draft/publish desde UI; falta asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones y draft/publish desde UI; falta drag/drop.
@@ -3158,4 +3175,4 @@ Verificacion realizada en este hito:
 
 1. Diff visual automatizado entre preview A4 y PDF generado.
 2. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
-3. Drag/drop visual en entidades CMS principales.
+3. Drag/drop visual en proyectos, skills, estudios y certificaciones CMS.

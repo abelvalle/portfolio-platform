@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Rocket, Save, Star, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, GripVertical, Pencil, RefreshCw, Rocket, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -112,6 +112,7 @@ export function ExperienceManagement() {
   const [experienceReview, setExperienceReview] = useState<PublicationExperienceReview | null>(null);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isPublishingDraft, setIsPublishingDraft] = useState(false);
+  const [draggedExperienceIndex, setDraggedExperienceIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -164,6 +165,23 @@ export function ExperienceManagement() {
     } finally {
       setBusyId(null);
     }
+  }
+
+  function moveExperienceToIndex(fromIndex: number, toIndex: number) {
+    const item = items[fromIndex];
+    if (!item || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) {
+      return;
+    }
+    const direction = toIndex > fromIndex ? 1 : -1;
+    void patchExperience(item.id, { order: item.order + direction }, `Experiencia reordenada: ${item.company}.`);
+  }
+
+  function handleExperienceDrop(toIndex: number) {
+    if (draggedExperienceIndex === null) {
+      return;
+    }
+    moveExperienceToIndex(draggedExperienceIndex, toIndex);
+    setDraggedExperienceIndex(null);
   }
 
   async function deleteExperience(item: ExperienceItem) {
@@ -341,15 +359,28 @@ export function ExperienceManagement() {
 
       <section className="overflow-x-auto rounded-lg border border-border">
         <div className="min-w-[1000px]">
-          <div className="grid grid-cols-[1.3fr_1.3fr_140px_130px_280px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+          <div className="grid grid-cols-[40px_1.3fr_1.3fr_140px_130px_280px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+            <span aria-hidden="true" />
             <span>Empresa</span>
             <span>Cargo</span>
             <span>Fechas</span>
             <span>Estado</span>
             <span>Acciones</span>
           </div>
-          {items.length ? items.map((item) => (
-            <div key={item.id} className="grid grid-cols-[1.3fr_1.3fr_140px_130px_280px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+          {items.length ? items.map((item, index) => (
+            <div
+              key={item.id}
+              className="grid grid-cols-[40px_1.3fr_1.3fr_140px_130px_280px] gap-3 border-b border-border p-3 text-sm last:border-b-0"
+              data-cms-experience-id={item.id}
+              draggable={busyId !== item.id}
+              onDragStart={() => setDraggedExperienceIndex(index)}
+              onDragEnd={() => setDraggedExperienceIndex(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => handleExperienceDrop(index)}
+            >
+              <span className="flex items-center text-muted-foreground" aria-hidden="true">
+                <GripVertical className="h-4 w-4" />
+              </span>
               <span className="font-medium">{item.company}</span>
               <span className="text-muted-foreground">{item.role}</span>
               <span className="text-muted-foreground">{formatDate(item.startDate)} - {formatDate(item.endDate)}</span>

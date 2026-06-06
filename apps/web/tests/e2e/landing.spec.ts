@@ -1078,6 +1078,25 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           order: 0,
           visible: true,
           featured: true
+        },
+        {
+          id: "experience-2",
+          company: "Demo Support Company",
+          role: "Sample Delivery Role",
+          startDate: "2024-01-01",
+          endDate: "2024-06-01",
+          current: false,
+          location: "Demo",
+          modality: "remote",
+          description: "Experiencia sample para pruebas de reordenado.",
+          achievements: [],
+          responsibilities: [],
+          technologies: [],
+          methodologies: [],
+          skills: [],
+          order: 1,
+          visible: false,
+          featured: false
         }
       ])
     });
@@ -1221,6 +1240,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.keyboard.press("Enter");
   await expect(page.getByText("Borrador de experiencia publicado. Campos modificados: role, description, technologies.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Demo Company" })).toBeVisible();
+  await expect(page.locator("[data-cms-experience-id='experience-1']")).toHaveAttribute("draggable", "true");
+  await expect(page.locator("[data-cms-experience-id='experience-2']")).toHaveAttribute("draggable", "true");
   await page.getByRole("button", { name: "Subir Demo Company" }).click();
   await expect(page.getByText("Experiencia reordenada: Demo Company.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Demo Company" }).click();
