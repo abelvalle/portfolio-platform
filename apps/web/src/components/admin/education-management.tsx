@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Save, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Rocket, Save, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { adminClient, mediaClient, type EducationItem, type EducationMutation, type MediaAsset } from "@/lib/api";
+import { adminClient, mediaClient, type EducationItem, type EducationMutation, type MediaAsset, type PublicationEducationReview } from "@/lib/api";
 
 const emptyDraft = {
   title: "",
@@ -40,6 +40,19 @@ function mediaAssetLabel(asset: MediaAsset) {
   return asset.originalName || asset.filename;
 }
 
+function formatPublicationValue(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.join(", ") || "-";
+  }
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+  if (typeof value === "boolean") {
+    return value ? "si" : "no";
+  }
+  return String(value);
+}
+
 export function EducationManagement() {
   const [items, setItems] = useState<EducationItem[]>([]);
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
@@ -51,6 +64,9 @@ export function EducationManagement() {
   const [pendingDeleteEducation, setPendingDeleteEducation] = useState<EducationItem | null>(null);
   const [editingEducation, setEditingEducation] = useState<EducationItem | null>(null);
   const [editDraft, setEditDraft] = useState<EducationDraft>(emptyDraft);
+  const [educationReview, setEducationReview] = useState<PublicationEducationReview | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isPublishingDraft, setIsPublishingDraft] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -140,6 +156,12 @@ export function EducationManagement() {
   function openEditEducation(item: EducationItem) {
     setEditingEducation(item);
     setEditDraft(educationToDraft(item));
+    setEducationReview(null);
+  }
+
+  function closeEditEducation() {
+    setEditingEducation(null);
+    setEducationReview(null);
   }
 
   async function updateEditingEducation() {
@@ -155,13 +177,71 @@ export function EducationManagement() {
     setBusyId(editingEducation.id);
     try {
       await adminClient.updateEducation(editingEducation.id, payload);
-      setEditingEducation(null);
+      closeEditEducation();
       await loadEducation();
       setMessage(`Estudio actualizado: ${payload.title}.`);
     } catch {
       setMessage("No se pudo actualizar el estudio.");
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function saveEditingDraft() {
+    if (!editingEducation) {
+      return;
+    }
+    const payload = buildMutation(editDraft, editingEducation.order);
+    if (!payload.title || !payload.institution || !payload.date) {
+      setMessage("Titulo, institucion y fecha son obligatorios.");
+      return;
+    }
+
+    setIsSavingDraft(true);
+    try {
+      await adminClient.updateEducation(editingEducation.id, { draftJson: payload });
+      const review = await adminClient.publicationEducationReview(editingEducation.id);
+      setEducationReview(review);
+      setMessage(`Borrador de estudio guardado: ${payload.title}.`);
+    } catch {
+      setMessage("No se pudo guardar el borrador de estudio.");
+    } finally {
+      setIsSavingDraft(false);
+    }
+  }
+
+  async function reviewEditingDraft() {
+    if (!editingEducation) {
+      return;
+    }
+
+    setBusyId(editingEducation.id);
+    try {
+      const review = await adminClient.publicationEducationReview(editingEducation.id);
+      setEducationReview(review);
+      setMessage(review.hasDraft ? "Borrador de estudio pendiente de publicacion." : "No hay borrador de estudio pendiente.");
+    } catch {
+      setMessage("No se pudo revisar el borrador de estudio.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function publishEditingDraft() {
+    if (!editingEducation) {
+      return;
+    }
+
+    setIsPublishingDraft(true);
+    try {
+      const result = await adminClient.publishEducationDraft(editingEducation.id);
+      closeEditEducation();
+      await loadEducation();
+      setMessage(`Borrador de estudio publicado. Campos modificados: ${result.changedFields.join(", ")}.`);
+    } catch {
+      setMessage("No se pudo publicar el borrador de estudio.");
+    } finally {
+      setIsPublishingDraft(false);
     }
   }
 
@@ -280,8 +360,8 @@ export function EducationManagement() {
         </div>
       </section>
 
-      <Dialog open={Boolean(editingEducation)} onOpenChange={(open) => !open && setEditingEducation(null)}>
-        <DialogContent className="max-w-3xl">
+      <Dialog open={Boolean(editingEducation)} onOpenChange={(open) => !open && closeEditEducation()}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:!max-w-4xl">
           <DialogHeader>
             <DialogTitle>Editar estudio</DialogTitle>
             <DialogDescription>
@@ -337,9 +417,44 @@ export function EducationManagement() {
               </Button>
             </div>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setEditingEducation(null)}>
+          {educationReview ? (
+            <section className="grid gap-3 rounded-lg border border-border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="font-semibold">Revision borrador estudio</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {educationReview.hasDraft ? "Cambios pendientes antes de publicar." : "Sin cambios pendientes."}
+                  </p>
+                </div>
+                <Badge variant={educationReview.hasDraft ? "default" : "outline"}>
+                  {educationReview.fields.filter((field) => field.changed).length} cambios
+                </Badge>
+              </div>
+              <div className="grid gap-2">
+                {educationReview.fields.filter((field) => field.changed).slice(0, 6).map((field) => (
+                  <div key={field.field} className="grid gap-1 rounded-md bg-muted/40 p-2 text-sm md:grid-cols-[140px_1fr_1fr]">
+                    <span className="font-medium">{field.field}</span>
+                    <span className="truncate text-muted-foreground">{formatPublicationValue(field.before)}</span>
+                    <span className="truncate">{formatPublicationValue(field.after)}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+          <DialogFooter className="flex-wrap">
+            <Button type="button" variant="outline" onClick={closeEditEducation}>
               Cancelar
+            </Button>
+            <Button type="button" variant="outline" onClick={saveEditingDraft} disabled={isSavingDraft}>
+              <Save data-icon="inline-start" />
+              {isSavingDraft ? "Guardando borrador..." : "Guardar borrador"}
+            </Button>
+            <Button type="button" variant="outline" onClick={reviewEditingDraft} disabled={Boolean(editingEducation && busyId === editingEducation.id)}>
+              Revisar borrador
+            </Button>
+            <Button type="button" onClick={publishEditingDraft} disabled={!educationReview?.hasDraft || isPublishingDraft}>
+              <Rocket data-icon="inline-start" />
+              {isPublishingDraft ? "Publicando..." : "Publicar borrador"}
             </Button>
             <Button type="button" onClick={updateEditingEducation} disabled={Boolean(editingEducation && busyId === editingEducation.id)}>
               Guardar estudio

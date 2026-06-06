@@ -866,7 +866,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           certificateUrl: null,
           attachmentId: null,
           order: 0,
-          visible: true
+          visible: true,
+          draftJson: null,
+          publishedAt: null
         }
       ])
     });
@@ -885,8 +887,34 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         certificateUrl: data.certificateUrl ?? null,
         attachmentId: data.attachmentId ?? null,
         order: data.order ?? 0,
-        visible: data.visible ?? true
+        visible: data.visible ?? true,
+        draftJson: data.draftJson ?? null,
+        publishedAt: null
       })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/education/education-1/review", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        entityType: "education",
+        entityId: "education-1",
+        hasDraft: true,
+        publishedAt: null,
+        fields: [
+          { field: "title", before: "Project Management", after: "Project Management avanzado", changed: true },
+          { field: "date", before: "2025", after: "2026", changed: true },
+          { field: "description", before: "Formacion demo", after: "Programa ampliado de gestion.", changed: true },
+          { field: "attachmentId", before: null, after: "media-1", changed: true }
+        ],
+        latestChanges: []
+      })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/education/education-1/publish", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ changedFields: ["title", "date", "description", "attachmentId"] })
     });
   });
   await page.route(/\/api\/v1\/certifications(\?.*)?$/, async (route) => {
@@ -1162,8 +1190,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Descripcion estudio").fill("Programa ampliado de gestion.");
   await page.getByLabel("Adjunto media estudio").selectOption("media-1");
   await expect(page.getByLabel("Adjunto ID estudio")).toHaveValue("media-1");
-  await page.getByRole("button", { name: "Guardar estudio" }).click();
-  await expect(page.getByText("Estudio actualizado: Project Management avanzado.")).toBeVisible();
+  await page.getByRole("button", { name: "Guardar borrador" }).click();
+  await expect(page.getByText("Borrador de estudio guardado: Project Management avanzado.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Revision borrador estudio" })).toBeVisible();
+  await page.getByRole("button", { name: "Publicar borrador" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Borrador de estudio publicado. Campos modificados: title, date, description, attachmentId.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Project Management" })).toBeVisible();
   await page.getByRole("button", { name: "Subir Project Management" }).click();
   await expect(page.getByText("Estudio reordenado: Project Management.")).toBeVisible();
