@@ -6,6 +6,8 @@ import { ArrowRight, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { adminClient, type AdminDashboard } from "@/lib/api";
 
 function formatDate(value?: string | null) {
@@ -14,21 +16,26 @@ function formatDate(value?: string | null) {
 
 export function DashboardCards() {
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [message, setMessage] = useState("Cargando dashboard.");
   const [isLoading, setIsLoading] = useState(true);
 
   const loadDashboard = useCallback(async () => {
     setIsLoading(true);
     try {
-      const nextDashboard = await adminClient.dashboard();
+      const nextDashboard = await adminClient.dashboard({
+        from: fromDate || undefined,
+        to: toDate || undefined
+      });
       setDashboard(nextDashboard);
-      setMessage("Dashboard sincronizado con la API.");
+      setMessage("Dashboard sincronizado con filtros de API.");
     } catch {
       setMessage("No se pudo cargar el dashboard. Comprueba la sesion admin.");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [fromDate, toDate]);
 
   const cards = useMemo(() => {
     const values = dashboard?.cards;
@@ -51,12 +58,24 @@ export function DashboardCards() {
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground" aria-live="polite">{message}</p>
-        <Button type="button" variant="outline" onClick={loadDashboard} disabled={isLoading}>
-          <RefreshCw className={isLoading ? "animate-spin" : ""} data-icon="inline-start" />
-          Actualizar
-        </Button>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label htmlFor="dashboardFromDate">Desde</Label>
+            <Input id="dashboardFromDate" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="dashboardToDate">Hasta</Label>
+            <Input id="dashboardToDate" type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} />
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-muted-foreground" aria-live="polite">{message}</p>
+          <Button type="button" variant="outline" onClick={loadDashboard} disabled={isLoading}>
+            <RefreshCw className={isLoading ? "animate-spin" : ""} data-icon="inline-start" />
+            Actualizar
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

@@ -123,8 +123,8 @@ export const authClient = {
 };
 
 export const adminClient = {
-  dashboard() {
-    return apiFetch<AdminDashboard>("/admin/dashboard");
+  dashboard(filters?: DateRangeFilters) {
+    return apiFetch<AdminDashboard>(withQuery("/admin/dashboard", filters));
   },
   publicationThemeReview() {
     return apiFetch<PublicationThemeReview>("/admin/publication/theme/review");
