@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Eye, EyeOff, RefreshCw, Save, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,10 @@ function buildConfig(draft: typeof emptyDraft) {
   };
 }
 
+function formatJson(value: unknown) {
+  return JSON.stringify(value || {}, null, 2);
+}
+
 function validateTemplateDraft(draft: typeof emptyDraft) {
   if (!/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(draft.primaryColor.trim())) {
     return "Color principal debe ser HEX (#RRGGBB).";
@@ -49,6 +53,22 @@ function validateTemplateDraft(draft: typeof emptyDraft) {
   if (!templateDensities.includes(draft.density.trim() as (typeof templateDensities)[number])) {
     return "Densidad debe ser normal o compact.";
   }
+  return "";
+}
+
+function validateTemplateConfig(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return "Config de plantilla debe ser un objeto.";
+  }
+
+  const config = value as Record<string, unknown>;
+  if ("primaryColor" in config && (typeof config.primaryColor !== "string" || !/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(config.primaryColor))) {
+    return "primaryColor debe ser HEX (#RRGGBB).";
+  }
+  if ("density" in config && !templateDensities.includes(config.density as (typeof templateDensities)[number])) {
+    return "density debe ser normal o compact.";
+  }
+
   return "";
 }
 
@@ -99,26 +119,91 @@ export function CvTemplateSelector() {
   const [message, setMessage] = useState("Cargando plantillas.");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isConfigSaving, setIsConfigSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingDeleteTemplate, setPendingDeleteTemplate] = useState<CvTemplateItem | null>(null);
+  const [configTemplateId, setConfigTemplateId] = useState("");
+  const [configDraft, setConfigDraft] = useState("{}");
+  const [configMessage, setConfigMessage] = useState("Selecciona una plantilla para editar su config JSON.");
+  const configTemplateIdRef = useRef("");
+
+  const syncConfigEditor = useCallback((nextTemplates: CvTemplateItem[]) => {
+    const selectedTemplate = nextTemplates.find((template) => template.id === configTemplateIdRef.current) || nextTemplates[0];
+    if (!selectedTemplate) {
+      configTemplateIdRef.current = "";
+      setConfigTemplateId("");
+      setConfigDraft("{}");
+      setConfigMessage("Sin plantillas disponibles para editar.");
+      return;
+    }
+    if (!configTemplateIdRef.current || selectedTemplate.id !== configTemplateIdRef.current) {
+      configTemplateIdRef.current = selectedTemplate.id;
+      setConfigTemplateId(selectedTemplate.id);
+      setConfigDraft(formatJson(selectedTemplate.config));
+      setConfigMessage("Config JSON cargada desde la API.");
+    }
+  }, []);
+
+  const loadTemplates = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const nextTemplates = await cvClient.templates();
+      setTemplates(nextTemplates);
+      syncConfigEditor(nextTemplates);
+      setMessage(nextTemplates.length ? "Plantillas sincronizadas con la API." : "Sin plantillas registradas.");
+    } catch {
+      setMessage("No se pudieron cargar plantillas. Comprueba la sesion admin.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [syncConfigEditor]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void loadTemplates();
     }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [loadTemplates]);
 
-  async function loadTemplates() {
-    setIsLoading(true);
+  function selectConfigTemplate(id: string) {
+    const selectedTemplate = templates.find((template) => template.id === id);
+    configTemplateIdRef.current = id;
+    setConfigTemplateId(id);
+    setConfigDraft(formatJson(selectedTemplate?.config));
+    setConfigMessage(selectedTemplate ? "Config JSON cargada desde la plantilla seleccionada." : "Plantilla no encontrada.");
+  }
+
+  async function saveTemplateConfig() {
+    const selectedTemplate = templates.find((template) => template.id === configTemplateId);
+    if (!selectedTemplate) {
+      setConfigMessage("Selecciona una plantilla valida antes de guardar.");
+      return;
+    }
+
+    let parsed: unknown;
     try {
-      const nextTemplates = await cvClient.templates();
-      setTemplates(nextTemplates);
-      setMessage(nextTemplates.length ? "Plantillas sincronizadas con la API." : "Sin plantillas registradas.");
+      parsed = JSON.parse(configDraft);
     } catch {
-      setMessage("No se pudieron cargar plantillas. Comprueba la sesion admin.");
+      setConfigMessage("JSON invalido. Revisa comas, llaves y comillas.");
+      return;
+    }
+
+    const validationMessage = validateTemplateConfig(parsed);
+    if (validationMessage) {
+      setConfigMessage(validationMessage);
+      return;
+    }
+
+    setIsConfigSaving(true);
+    try {
+      await cvClient.updateTemplate(selectedTemplate.id, { config: parsed as Record<string, unknown> });
+      setConfigDraft(formatJson(parsed));
+      setConfigMessage("Config JSON guardada.");
+      await loadTemplates();
+    } catch {
+      setConfigMessage("No se pudo guardar la config JSON.");
     } finally {
-      setIsLoading(false);
+      setIsConfigSaving(false);
     }
   }
 
@@ -250,6 +335,39 @@ export function CvTemplateSelector() {
             {isSaving ? "Guardando..." : "Crear plantilla"}
           </Button>
         </div>
+      </section>
+
+      <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="grid min-w-[260px] gap-2">
+            <Label htmlFor="templateConfigId">Plantilla</Label>
+            <select
+              id="templateConfigId"
+              className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+              value={configTemplateId}
+              onChange={(event) => selectConfigTemplate(event.target.value)}
+            >
+              {templates.map((template) => (
+                <option key={template.id} value={template.id}>{template.name}</option>
+              ))}
+            </select>
+          </div>
+          <Button type="button" onClick={saveTemplateConfig} disabled={isConfigSaving || !configTemplateId}>
+            <Save data-icon="inline-start" />
+            {isConfigSaving ? "Guardando config..." : "Guardar config JSON"}
+          </Button>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="templateConfigJson">JSON de configuracion</Label>
+          <Textarea
+            id="templateConfigJson"
+            rows={8}
+            className="font-mono text-xs"
+            value={configDraft}
+            onChange={(event) => setConfigDraft(event.target.value)}
+          />
+        </div>
+        <p className="text-sm text-muted-foreground" aria-live="polite">{configMessage}</p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

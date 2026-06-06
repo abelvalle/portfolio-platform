@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 06:26 CEST.
+Estado actualizado: 2026-06-06 06:33 CEST.
 
 ## Hitos completados
 
@@ -1196,6 +1196,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Editor JSON de configuracion en plantillas CV
+
+- `/admin/cv/templates` incorpora editor JSON para la `config` completa de la plantilla seleccionada.
+- El editor valida que la config sea un objeto, que `primaryColor` sea HEX si existe y que `density` sea `normal` o `compact`.
+- El guardado usa `PATCH /api/v1/cv-templates/:id` y mantiene feedback de carga/error/éxito.
+- Añadida cobertura e2e para bloquear una lista raiz `[]` antes de guardar.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1224,7 +1238,6 @@ Verificacion realizada en este hito:
 - Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima y confirmación para cambios grandes; falta edición por bloques.
 - Editor CV por bloques: el editor principal está conectado a campos básicos; faltan bloques estructurados para experiencia, educación, certificaciones, skills, proyectos, idiomas y secciones personalizadas.
 - Preview A4 admin avanzado: el preview está sincronizado; falta render fiel a la plantilla seleccionada, paginación real y comparación pixel-perfect con exportación PDF.
-- Plantillas CV UI avanzada: el CRUD básico está conectado con confirmación modal de borrado, validación básica de tokens y preview embebido; falta edición completa de JSON.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.

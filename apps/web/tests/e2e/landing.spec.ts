@@ -437,6 +437,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/cv/templates");
   await expect(page.getByRole("heading", { name: "Plantillas de CV" })).toBeVisible();
+  await expect(page.getByLabel("JSON de configuracion")).toBeVisible();
+  await expect(page.getByLabel("JSON de configuracion")).toHaveValue(/primaryColor/);
+  await page.getByLabel("JSON de configuracion").fill("[]");
+  await expect(page.getByLabel("JSON de configuracion")).toHaveValue("[]");
+  await page.getByRole("button", { name: "Guardar config JSON" }).click({ force: true });
+  await expect(page.getByText("Config de plantilla debe ser un objeto.")).toBeVisible();
   await page.getByLabel("Densidad").selectOption("compact");
   await page.getByLabel("Nombre").fill("Plantilla invalida");
   await page.getByLabel("Color principal").fill("teal");
