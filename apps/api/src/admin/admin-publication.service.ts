@@ -135,6 +135,29 @@ type SkillValues = Record<SkillField, SkillValue>;
 
 const REQUIRED_SKILL_FIELDS = new Set<SkillField>(['name']);
 
+const EDUCATION_FIELDS = [
+  'title',
+  'institution',
+  'date',
+  'description',
+  'type',
+  'certificateUrl',
+  'attachmentId',
+  'order',
+  'visible',
+] as const;
+
+type EducationField = (typeof EDUCATION_FIELDS)[number];
+type EducationValue = string | number | boolean | null;
+type EducationValues = Record<EducationField, EducationValue>;
+
+const REQUIRED_EDUCATION_FIELDS = new Set<EducationField>([
+  'title',
+  'institution',
+  'date',
+  'type',
+]);
+
 @Injectable()
 export class AdminPublicationService {
   constructor(private readonly prisma: PrismaService) {}
@@ -321,6 +344,41 @@ export class AdminPublicationService {
       entityId: skill.id,
       hasDraft: fields.some((field) => field.changed),
       publishedAt: skill.publishedAt,
+      fields,
+      latestChanges,
+    };
+  }
+
+  async educationReview(id: string) {
+    const [education, latestChanges] = await Promise.all([
+      this.prisma.education.findUnique({ where: { id } }),
+      this.latestChanges('education'),
+    ]);
+
+    if (!education || education.deletedAt) {
+      throw new NotFoundException('Education not found');
+    }
+
+    const published = this.pickEducationValues(education);
+    const draft = this.readEducationDraft(education.draftJson);
+    const fields = EDUCATION_FIELDS.map((field) => {
+      const before = published[field];
+      const hasDraftValue =
+        draft && Object.prototype.hasOwnProperty.call(draft, field);
+      const after = hasDraftValue ? (draft[field] ?? null) : before;
+      return {
+        field,
+        before,
+        after,
+        changed: !this.samePublicationValue(before, after),
+      };
+    });
+
+    return {
+      entityType: 'education',
+      entityId: education.id,
+      hasDraft: fields.some((field) => field.changed),
+      publishedAt: education.publishedAt,
       fields,
       latestChanges,
     };
@@ -649,6 +707,73 @@ export class AdminPublicationService {
     };
   }
 
+  async publishEducationDraft(id: string, actorUserId?: string) {
+    const education = await this.prisma.education.findUnique({
+      where: { id },
+    });
+    if (!education || education.deletedAt) {
+      throw new NotFoundException('Education not found');
+    }
+
+    const draft = this.readEducationDraft(education.draftJson);
+    if (!draft) {
+      throw new BadRequestException('Education draft not found');
+    }
+
+    const before = this.pickEducationValues(education);
+    const after: EducationValues = { ...before, ...draft };
+    const changedFields = EDUCATION_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    const missingRequiredFields = [...REQUIRED_EDUCATION_FIELDS].filter(
+      (field) => !String(after[field] ?? '').trim(),
+    );
+    if (missingRequiredFields.length) {
+      throw new BadRequestException(
+        `Education draft is missing required fields: ${missingRequiredFields.join(', ')}`,
+      );
+    }
+    if (!changedFields.length) {
+      throw new BadRequestException('Education draft has no changes');
+    }
+
+    const published = await this.prisma.education.update({
+      where: { id: education.id },
+      data: {
+        ...this.buildEducationUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'education',
+        entityId: education.id,
+        action: 'publish',
+        summary: `Published education draft (${changedFields.join(', ')})`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'publish',
+        resource: 'education',
+        resourceId: education.id,
+        metadata: { changedFields } as never,
+      },
+    });
+
+    return {
+      published,
+      changedFields,
+    };
+  }
+
   async restoreThemeChange(changeLogId: string, actorUserId?: string) {
     const change = await this.prisma.changeLog.findUnique({
       where: { id: changeLogId },
@@ -686,6 +811,10 @@ export class AdminPublicationService {
 
     if (change.entityType === 'skill') {
       return this.restoreSkillSnapshot(change, actorUserId);
+    }
+
+    if (change.entityType === 'education') {
+      return this.restoreEducationSnapshot(change, actorUserId);
     }
 
     throw new NotFoundException('Publication change not found');
@@ -1005,6 +1134,72 @@ export class AdminPublicationService {
         action: 'restore',
         resource: 'skill',
         resourceId: skill.id,
+        metadata: { changeLogId: change.id, changedFields } as never,
+      },
+    });
+
+    return {
+      restored,
+      changedFields,
+    };
+  }
+
+  private async restoreEducationSnapshot(
+    change: ChangeLog,
+    actorUserId?: string,
+  ) {
+    if (!change.entityId) {
+      throw new NotFoundException('Education change not found');
+    }
+
+    const restoreValues = this.readEducationDraft(change.beforeJson);
+    if (!restoreValues) {
+      throw new BadRequestException('Education change cannot be restored');
+    }
+
+    const education = await this.prisma.education.findUnique({
+      where: { id: change.entityId },
+    });
+    if (!education || education.deletedAt) {
+      throw new NotFoundException('Education not found');
+    }
+
+    const before = this.pickEducationValues(education);
+    const after: EducationValues = { ...before, ...restoreValues };
+    const changedFields = EDUCATION_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    if (!changedFields.length) {
+      throw new BadRequestException('Education is already at this version');
+    }
+
+    const restored = await this.prisma.education.update({
+      where: { id: education.id },
+      data: {
+        ...this.buildEducationUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'education',
+        entityId: education.id,
+        action: 'restore',
+        summary: `Restored education change ${change.id}`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'restore',
+        resource: 'education',
+        resourceId: education.id,
         metadata: { changeLogId: change.id, changedFields } as never,
       },
     });
@@ -1353,6 +1548,87 @@ export class AdminPublicationService {
       }
       return current;
     }, {} as Partial<SkillValues>);
+
+    return Object.keys(values).length ? values : null;
+  }
+
+  private pickEducationValues(
+    education: Record<string, unknown>,
+  ): EducationValues {
+    return {
+      title: this.stringValue(education.title),
+      institution: this.stringValue(education.institution),
+      date: this.stringValue(education.date),
+      description:
+        typeof education.description === 'string'
+          ? education.description
+          : null,
+      type: this.stringValue(education.type),
+      certificateUrl:
+        typeof education.certificateUrl === 'string'
+          ? education.certificateUrl
+          : null,
+      attachmentId:
+        typeof education.attachmentId === 'string'
+          ? education.attachmentId
+          : null,
+      order: typeof education.order === 'number' ? education.order : 0,
+      visible: education.visible !== false,
+    };
+  }
+
+  private buildEducationUpdateData(
+    values: EducationValues,
+  ): Prisma.EducationUpdateInput {
+    return {
+      title: String(values.title ?? ''),
+      institution: String(values.institution ?? ''),
+      date: String(values.date ?? ''),
+      description: values.description ? String(values.description) : null,
+      type: String(values.type ?? ''),
+      certificateUrl: values.certificateUrl
+        ? String(values.certificateUrl)
+        : null,
+      attachmentId: values.attachmentId ? String(values.attachmentId) : null,
+      order: typeof values.order === 'number' ? values.order : 0,
+      visible: Boolean(values.visible),
+    };
+  }
+
+  private readEducationDraft(
+    draftJson: unknown,
+  ): Partial<EducationValues> | null {
+    if (
+      !draftJson ||
+      typeof draftJson !== 'object' ||
+      Array.isArray(draftJson)
+    ) {
+      return null;
+    }
+
+    const draft = draftJson as Record<string, unknown>;
+    const values = EDUCATION_FIELDS.reduce((current, field) => {
+      const value = draft[field];
+      if (value === undefined) {
+        return current;
+      }
+      if (field === 'visible') {
+        if (typeof value === 'boolean') {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (field === 'order') {
+        if (typeof value === 'number') {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (typeof value === 'string' || value === null) {
+        current[field] = value;
+      }
+      return current;
+    }, {} as Partial<EducationValues>);
 
     return Object.keys(values).length ? values : null;
   }

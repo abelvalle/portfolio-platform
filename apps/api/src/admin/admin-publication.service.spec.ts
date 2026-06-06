@@ -307,6 +307,65 @@ describe('AdminPublicationService', () => {
     );
   });
 
+  it('builds a field-level education draft review', async () => {
+    const service = new AdminPublicationService(
+      mockPrisma({
+        education: educationFixture({
+          title: 'Project Management',
+          draftJson: { title: 'Project Management avanzado' },
+        }),
+      }),
+    );
+
+    const review = await service.educationReview('education-1');
+
+    expect(review.hasDraft).toBe(true);
+    expect(review.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: 'title',
+          before: 'Project Management',
+          after: 'Project Management avanzado',
+          changed: true,
+        }),
+      ]),
+    );
+  });
+
+  it('publishes education drafts and logs changed fields', async () => {
+    const prisma = mockPrisma({
+      education: educationFixture({
+        title: 'Project Management',
+        draftJson: {
+          title: 'Project Management avanzado',
+          description: 'Programa ampliado de gestion.',
+        },
+      }),
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.publishEducationDraft('education-1', 'user-1');
+
+    expect(result.changedFields).toEqual(['title', 'description']);
+    expect(prisma.education.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          title: 'Project Management avanzado',
+          description: 'Programa ampliado de gestion.',
+          draftJson: expect.anything(),
+        }),
+      }),
+    );
+    expect(prisma.changeLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          entityType: 'education',
+          action: 'publish',
+        }),
+      }),
+    );
+  });
+
   it('restores theme values from a changelog entry', async () => {
     const prisma = mockPrisma({
       theme: {
@@ -424,6 +483,31 @@ describe('AdminPublicationService', () => {
       }),
     );
   });
+
+  it('restores education values from a changelog entry', async () => {
+    const prisma = mockPrisma({
+      education: educationFixture({ title: 'Project Management avanzado' }),
+      change: {
+        id: 'change-education-1',
+        entityType: 'education',
+        entityId: 'education-1',
+        beforeJson: educationSnapshot({ title: 'Project Management' }),
+      },
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.restorePublicationChange(
+      'change-education-1',
+      'user-1',
+    );
+
+    expect(result.changedFields).toEqual(['title']);
+    expect(prisma.education.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ title: 'Project Management' }),
+      }),
+    );
+  });
 });
 
 function mockPrisma({
@@ -432,6 +516,7 @@ function mockPrisma({
   experience,
   project,
   skill,
+  education,
   change,
 }: {
   theme?: Record<string, unknown>;
@@ -439,6 +524,7 @@ function mockPrisma({
   experience?: Record<string, unknown>;
   project?: Record<string, unknown>;
   skill?: Record<string, unknown>;
+  education?: Record<string, unknown>;
   change?: Record<string, unknown>;
 }) {
   return {
@@ -463,6 +549,10 @@ function mockPrisma({
     skill: {
       findUnique: jest.fn().mockResolvedValue(skill),
       update: jest.fn().mockResolvedValue(skill),
+    },
+    education: {
+      findUnique: jest.fn().mockResolvedValue(education),
+      update: jest.fn().mockResolvedValue(education),
     },
     changeLog: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -587,6 +677,32 @@ function skillSnapshot(overrides: Record<string, unknown> = {}) {
     categoryId: null,
     categoryName: 'Agile',
     level: 'Avanzado',
+    ...overrides,
+  };
+}
+
+function educationFixture(overrides: Record<string, unknown> = {}) {
+  return {
+    ...educationSnapshot(),
+    id: 'education-1',
+    order: 0,
+    visible: true,
+    draftJson: null,
+    publishedAt: null,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+function educationSnapshot(overrides: Record<string, unknown> = {}) {
+  return {
+    title: 'Project Management',
+    institution: 'Demo Institute',
+    date: '2025',
+    description: 'Formacion demo.',
+    type: 'course',
+    certificateUrl: null,
+    attachmentId: null,
     ...overrides,
   };
 }
