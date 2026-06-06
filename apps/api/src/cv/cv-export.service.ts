@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { mkdirSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import { chromium } from 'playwright';
 
@@ -101,9 +102,7 @@ export class CvExportService {
     });
 
     const buffer = await Packer.toBuffer(doc);
-    await import('node:fs/promises').then((fs) =>
-      fs.writeFile(outPath, buffer),
-    );
+    await writeFile(outPath, buffer);
     return { filename, path: outPath, url: `/media/generated/${filename}` };
   }
 
