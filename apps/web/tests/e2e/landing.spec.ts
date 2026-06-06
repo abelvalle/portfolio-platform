@@ -250,7 +250,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     });
   });
   await page.route(/\/api\/v1\/cv-versions\/audit-log(\?.*)?$/, async (route) => {
-    const action = new URL(route.request().url()).searchParams.get("action") || "generate_pdf";
+    const url = new URL(route.request().url());
+    const action = url.searchParams.get("action") || "generate_pdf";
+    const resourceId = url.searchParams.get("resourceId") || "cv-base";
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify([
@@ -259,7 +261,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           userId: "user-1",
           action,
           resource: "cv-version",
-          resourceId: "cv-base",
+          resourceId,
           metadata: action === "update" ? { changedFields: ["status"] } : { mediaAssetId: "media-1" },
           createdAt: "2026-06-06T08:35:00.000Z"
         }
@@ -1155,6 +1157,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("heading", { name: "Comparar CV" })).toBeVisible();
   await page.getByRole("button", { name: "Publicar version adaptada" }).click();
   await expect(page.getByText("Version adaptada publicada como CV principal.")).toBeVisible();
+  await expect(page.getByText("Auditoria publicacion")).toBeVisible();
+  await expect(page.getByText(/set_primary \| cv-adapted-new/)).toBeVisible();
 
   await page.goto("/admin/cv/compare");
   await expect(page.getByRole("heading", { name: "Comparar CV" })).toBeVisible();

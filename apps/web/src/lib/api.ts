@@ -396,6 +396,7 @@ export type AuditLogItem = {
 
 export type CvVersionAuditFilters = {
   action?: string;
+  resourceId?: string;
   userId?: string;
   from?: string;
   to?: string;

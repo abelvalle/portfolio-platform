@@ -5,6 +5,7 @@ import { CvExportService } from './cv-export.service';
 
 type CvVersionAuditTrailFilters = {
   action?: string;
+  resourceId?: string;
   userId?: string;
   from?: string;
   to?: string;
@@ -50,6 +51,7 @@ export class CvVersionService {
       where: {
         resource: 'cv-version',
         ...(filters.action ? { action: filters.action } : {}),
+        ...(filters.resourceId ? { resourceId: filters.resourceId } : {}),
         ...(filters.userId ? { userId: filters.userId } : {}),
         ...(Object.keys(createdAt).length ? { createdAt } : {}),
       },

@@ -31,6 +31,7 @@ export class CvVersionsController {
 
   @Get('audit-log')
   @ApiQuery({ name: 'action', required: false })
+  @ApiQuery({ name: 'resourceId', required: false })
   @ApiQuery({ name: 'userId', required: false })
   @ApiQuery({ name: 'from', required: false })
   @ApiQuery({ name: 'to', required: false })
@@ -38,6 +39,7 @@ export class CvVersionsController {
   @ApiQuery({ name: 'limit', required: false })
   auditTrail(
     @Query('action') action?: string,
+    @Query('resourceId') resourceId?: string,
     @Query('userId') userId?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
@@ -46,6 +48,7 @@ export class CvVersionsController {
   ) {
     return this.cvVersionService.auditTrail({
       action,
+      resourceId,
       userId,
       from,
       to,

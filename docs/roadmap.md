@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 14:07 CEST.
+Estado actualizado: 2026-06-06 14:14 CEST.
 
 ## Hitos completados
 
@@ -2334,6 +2334,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Auditoria visual de publicacion adaptada
+
+- `GET /api/v1/cv-versions/audit-log` admite filtro `resourceId` para localizar trazas de una version concreta.
+- Tras publicar desde `/admin/cv/compare`, la UI carga la ultima traza `set_primary` de la version adaptada.
+- El comparador muestra un panel `Auditoria publicacion` con accion, recurso y fecha.
+- `docs/api.md` documenta el nuevo filtro `resourceId`.
+- Añadida cobertura e2e para validar la traza visual de publicacion.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -2343,7 +2358,7 @@ Verificacion realizada en este hito:
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: el wizard ya permite aceptar/rechazar bloques principales, skills individuales y experiencias individuales con trazabilidad; falta revision granular de campos internos de cada experiencia.
-- Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor y permite publicarla como principal desde el comparador; falta auditoria visual de publicacion especifica del CV adaptado.
+- Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; falta auditoria historica completa de todas las publicaciones CV.
 - Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, fecha y usuario, con detalle por evento y exportacion CSV de trazas visibles; falta exportacion server-side del historico completo.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: hay trazabilidad persistente y vista admin de entregas/test; falta cola/retry persistente para destinos externos caídos.

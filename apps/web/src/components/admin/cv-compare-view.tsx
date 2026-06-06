@@ -6,7 +6,7 @@ import { Edit3, FileText, GitCompare, RefreshCw, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cvClient, type CvCompareResult, type CvVersionItem } from "@/lib/api";
+import { cvClient, type AuditLogItem, type CvCompareResult, type CvVersionItem } from "@/lib/api";
 
 function joinList(items?: string[]) {
   return items?.length ? items.join(", ") : "Sin datos.";
@@ -62,6 +62,7 @@ export function CvCompareView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isComparing, setIsComparing] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [publicationAudit, setPublicationAudit] = useState<AuditLogItem | null>(null);
   const adaptedVersion = versions.find((version) => version.id === adaptedId);
 
   useEffect(() => {
@@ -115,6 +116,12 @@ export function CvCompareView() {
     try {
       await cvClient.setPrimaryVersion(adaptedId);
       await loadVersions();
+      const auditLogs = await cvClient.versionAuditLog({
+        action: "set_primary",
+        resourceId: adaptedId,
+        limit: "1"
+      }).catch(() => []);
+      setPublicationAudit(auditLogs[0] || null);
       setMessage("Version adaptada publicada como CV principal.");
     } catch {
       setMessage("No se pudo publicar la version adaptada.");
@@ -197,6 +204,14 @@ export function CvCompareView() {
               {isPublishing ? "Publicando..." : "Publicar version adaptada"}
             </Button>
           </div>
+          {publicationAudit ? (
+            <div className="basis-full rounded-lg border border-border p-3 text-sm">
+              <p className="font-medium">Auditoria publicacion</p>
+              <p className="mt-1 text-muted-foreground">
+                {publicationAudit.action} | {publicationAudit.resourceId || "sin recurso"} | {new Date(publicationAudit.createdAt).toLocaleString()}
+              </p>
+            </div>
+          ) : null}
         </section>
       ) : null}
 

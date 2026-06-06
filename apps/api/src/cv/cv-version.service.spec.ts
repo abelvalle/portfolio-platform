@@ -99,6 +99,7 @@ describe('CvVersionService', () => {
 
     const result = await service.auditTrail({
       action: 'generate_pdf',
+      resourceId: 'version-1',
       userId: 'user-1',
       from: '2026-06-01',
       to: '2026-06-06',
@@ -110,6 +111,7 @@ describe('CvVersionService', () => {
       where: {
         resource: 'cv-version',
         action: 'generate_pdf',
+        resourceId: 'version-1',
         userId: 'user-1',
         createdAt: {
           gte: new Date('2026-06-01'),
