@@ -594,6 +594,13 @@ export function CvVersionTable() {
     setAuditMessage(`Auditoria filtrada por version: ${version.name}.`);
   }
 
+  function viewPublicationHistory() {
+    setAuditActionFilter("set_primary");
+    setAuditResourceId("");
+    setAuditPage(1);
+    setAuditMessage("Historial de publicaciones CV filtrado.");
+  }
+
   function selectJsonVersion(id: string) {
     const selectedVersion = versions.find((version) => version.id === id);
     setJsonVersionId(id);
@@ -1017,6 +1024,10 @@ export function CvVersionTable() {
               <Download data-icon="inline-start" />
               Exportar auditoria CSV
             </Button>
+            <Button type="button" variant="outline" onClick={viewPublicationHistory}>
+              <Star data-icon="inline-start" />
+              Ver publicaciones CV
+            </Button>
             <a
               className={buttonVariants({ variant: "outline" })}
               href={cvClient.versionAuditExportUrl({
@@ -1044,6 +1055,28 @@ export function CvVersionTable() {
           </Button>
         </div>
         <p className="text-sm text-muted-foreground" aria-live="polite">{auditMessage}</p>
+        {auditActionFilter === "set_primary" ? (
+          <div className="grid gap-3 rounded-lg border border-border p-4" aria-label="Historial publicaciones CV">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-semibold">Historial publicaciones CV</h3>
+                <p className="text-sm text-muted-foreground">Cambios de version principal publicados desde auditoria.</p>
+              </div>
+              <Badge variant="outline">{auditLogs.length} publicaciones</Badge>
+            </div>
+            <div className="grid gap-2">
+              {auditLogs.length ? auditLogs.map((log) => (
+                <div key={`publication-${log.id}`} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-muted/40 px-3 py-2 text-sm">
+                  <span className="font-medium">{log.resourceId || "Version sin ID"}</span>
+                  <span className="text-muted-foreground">{auditMetadata(log.metadata) || "Sin metadata."}</span>
+                  <span className="text-xs text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</span>
+                </div>
+              )) : (
+                <p className="text-sm text-muted-foreground">Sin publicaciones registradas.</p>
+              )}
+            </div>
+          </div>
+        ) : null}
         {auditResourceId.trim() ? (
           <div className="grid gap-3 rounded-lg border border-border p-4" aria-label="Timeline auditoria version">
             <div className="flex flex-wrap items-center justify-between gap-2">

@@ -1116,6 +1116,18 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   expect(auditHistoryHref).toContain("from=2026-06-01");
   expect(auditHistoryHref).toContain("to=2026-06-06");
   expect(auditHistoryHref).toContain("userId=user-1");
+  const publicationHistoryRequestPromise = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return url.pathname.endsWith("/api/v1/cv-versions/audit-log")
+      && url.searchParams.get("action") === "set_primary"
+      && !url.searchParams.has("resourceId")
+      && url.searchParams.get("page") === "1";
+  });
+  await page.getByRole("button", { name: "Ver publicaciones CV" }).click();
+  await publicationHistoryRequestPromise;
+  await expect(page.getByLabel("Accion")).toHaveValue("set_primary");
+  await expect(page.getByLabel("Version auditoria")).toHaveValue("");
+  await expect(page.getByRole("heading", { name: "Historial publicaciones CV" })).toBeVisible();
   await expect(page.getByLabel("Plantilla", { exact: true })).toBeVisible();
   await expect(page.getByLabel("JSON estructurado")).toBeVisible();
   await expect(page.locator("#structuredJsonVersion")).toHaveValue("cv-base");
@@ -1145,7 +1157,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"name\": \"Portfolio Platform\"/);
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).click({ force: true });
+  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
   await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
   await page.getByLabel("Educacion CV").fill("Project Management - Demo Institute - 2026");
@@ -1154,7 +1167,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Project Management\"/);
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).click({ force: true });
+  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
   await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
   await page.getByLabel("Certificaciones CV").fill("Scrum Master - Demo Academy - 2026");

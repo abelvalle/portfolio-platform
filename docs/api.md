@@ -190,7 +190,7 @@ Las exportaciones ATS generan PDF/DOCX con layout textual, nombres de archivo `-
 
 En admin, `/admin/cv/editor` consume estos endpoints para mostrar el reporte ATS del CV principal, comparar contra una oferta concreta con `ats-role-report` y generar archivos ATS descargables desde `GET /media/:id/download`.
 
-En admin, `/admin/cv/versions` permite filtrar la auditoria por version concreta usando `resourceId`, muestra una timeline visual para ese filtro y conserva `resourceId` en la exportacion historica CSV.
+En admin, `/admin/cv/versions` permite filtrar la auditoria por version concreta usando `resourceId`, muestra una timeline visual para ese filtro, conserva `resourceId` en la exportacion historica CSV y ofrece un acceso directo al historial agregado de publicaciones CV (`action=set_primary`).
 
 `POST /cv/:id/ats-role-report` compara la versión primaria contra una descripción de oferta concreta:
 
