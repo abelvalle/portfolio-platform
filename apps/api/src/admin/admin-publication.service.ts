@@ -61,6 +61,36 @@ const REQUIRED_PROFILE_FIELDS = new Set<ProfileField>([
   'ctaSecondary',
 ]);
 
+const EXPERIENCE_FIELDS = [
+  'company',
+  'role',
+  'startDate',
+  'endDate',
+  'current',
+  'location',
+  'modality',
+  'description',
+  'achievements',
+  'responsibilities',
+  'technologies',
+  'methodologies',
+  'skills',
+  'order',
+  'visible',
+  'featured',
+] as const;
+
+type ExperienceField = (typeof EXPERIENCE_FIELDS)[number];
+type ExperienceValue = string | number | boolean | string[] | null;
+type ExperienceValues = Record<ExperienceField, ExperienceValue>;
+
+const REQUIRED_EXPERIENCE_FIELDS = new Set<ExperienceField>([
+  'company',
+  'role',
+  'startDate',
+  'description',
+]);
+
 @Injectable()
 export class AdminPublicationService {
   constructor(private readonly prisma: PrismaService) {}
@@ -142,6 +172,41 @@ export class AdminPublicationService {
       entityId: profile.id,
       hasDraft: fields.some((field) => field.changed),
       publishedAt: profile.publishedAt,
+      fields,
+      latestChanges,
+    };
+  }
+
+  async experienceReview(id: string) {
+    const [experience, latestChanges] = await Promise.all([
+      this.prisma.experience.findUnique({ where: { id } }),
+      this.latestChanges('experience'),
+    ]);
+
+    if (!experience || experience.deletedAt) {
+      throw new NotFoundException('Experience not found');
+    }
+
+    const published = this.pickExperienceValues(experience);
+    const draft = this.readExperienceDraft(experience.draftJson);
+    const fields = EXPERIENCE_FIELDS.map((field) => {
+      const before = published[field];
+      const hasDraftValue =
+        draft && Object.prototype.hasOwnProperty.call(draft, field);
+      const after = hasDraftValue ? (draft[field] ?? null) : before;
+      return {
+        field,
+        before,
+        after,
+        changed: !this.samePublicationValue(before, after),
+      };
+    });
+
+    return {
+      entityType: 'experience',
+      entityId: experience.id,
+      hasDraft: fields.some((field) => field.changed),
+      publishedAt: experience.publishedAt,
       fields,
       latestChanges,
     };
@@ -269,6 +334,73 @@ export class AdminPublicationService {
     };
   }
 
+  async publishExperienceDraft(id: string, actorUserId?: string) {
+    const experience = await this.prisma.experience.findUnique({
+      where: { id },
+    });
+    if (!experience || experience.deletedAt) {
+      throw new NotFoundException('Experience not found');
+    }
+
+    const draft = this.readExperienceDraft(experience.draftJson);
+    if (!draft) {
+      throw new BadRequestException('Experience draft not found');
+    }
+
+    const before = this.pickExperienceValues(experience);
+    const after: ExperienceValues = { ...before, ...draft };
+    const changedFields = EXPERIENCE_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    const missingRequiredFields = [...REQUIRED_EXPERIENCE_FIELDS].filter(
+      (field) => !String(after[field] ?? '').trim(),
+    );
+    if (missingRequiredFields.length) {
+      throw new BadRequestException(
+        `Experience draft is missing required fields: ${missingRequiredFields.join(', ')}`,
+      );
+    }
+    if (!changedFields.length) {
+      throw new BadRequestException('Experience draft has no changes');
+    }
+
+    const published = await this.prisma.experience.update({
+      where: { id: experience.id },
+      data: {
+        ...this.buildExperienceUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'experience',
+        entityId: experience.id,
+        action: 'publish',
+        summary: `Published experience draft (${changedFields.join(', ')})`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'publish',
+        resource: 'experience',
+        resourceId: experience.id,
+        metadata: { changedFields } as never,
+      },
+    });
+
+    return {
+      published,
+      changedFields,
+    };
+  }
+
   async restoreThemeChange(changeLogId: string, actorUserId?: string) {
     const change = await this.prisma.changeLog.findUnique({
       where: { id: changeLogId },
@@ -294,6 +426,10 @@ export class AdminPublicationService {
 
     if (change.entityType === 'profile') {
       return this.restoreProfileSnapshot(change, actorUserId);
+    }
+
+    if (change.entityType === 'experience') {
+      return this.restoreExperienceSnapshot(change, actorUserId);
     }
 
     throw new NotFoundException('Publication change not found');
@@ -428,6 +564,72 @@ export class AdminPublicationService {
     };
   }
 
+  private async restoreExperienceSnapshot(
+    change: ChangeLog,
+    actorUserId?: string,
+  ) {
+    if (!change.entityId) {
+      throw new NotFoundException('Experience change not found');
+    }
+
+    const restoreValues = this.readExperienceDraft(change.beforeJson);
+    if (!restoreValues) {
+      throw new BadRequestException('Experience change cannot be restored');
+    }
+
+    const experience = await this.prisma.experience.findUnique({
+      where: { id: change.entityId },
+    });
+    if (!experience || experience.deletedAt) {
+      throw new NotFoundException('Experience not found');
+    }
+
+    const before = this.pickExperienceValues(experience);
+    const after: ExperienceValues = { ...before, ...restoreValues };
+    const changedFields = EXPERIENCE_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    if (!changedFields.length) {
+      throw new BadRequestException('Experience is already at this version');
+    }
+
+    const restored = await this.prisma.experience.update({
+      where: { id: experience.id },
+      data: {
+        ...this.buildExperienceUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'experience',
+        entityId: experience.id,
+        action: 'restore',
+        summary: `Restored experience change ${change.id}`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'restore',
+        resource: 'experience',
+        resourceId: experience.id,
+        metadata: { changeLogId: change.id, changedFields } as never,
+      },
+    });
+
+    return {
+      restored,
+      changedFields,
+    };
+  }
+
   latestChanges(entityType?: string) {
     return this.prisma.changeLog.findMany({
       where: entityType ? { entityType } : undefined,
@@ -504,5 +706,134 @@ export class AdminPublicationService {
     }, {} as Partial<ProfileValues>);
 
     return Object.keys(values).length ? values : null;
+  }
+
+  private pickExperienceValues(
+    experience: Record<string, unknown>,
+  ): ExperienceValues {
+    return {
+      company: this.stringValue(experience.company),
+      role: this.stringValue(experience.role),
+      startDate: this.dateValue(experience.startDate),
+      endDate: this.dateValue(experience.endDate),
+      current: Boolean(experience.current),
+      location:
+        typeof experience.location === 'string' ? experience.location : null,
+      modality:
+        typeof experience.modality === 'string' ? experience.modality : null,
+      description: this.stringValue(experience.description),
+      achievements: this.stringArrayValue(experience.achievements),
+      responsibilities: this.stringArrayValue(experience.responsibilities),
+      technologies: this.stringArrayValue(experience.technologies),
+      methodologies: this.stringArrayValue(experience.methodologies),
+      skills: this.stringArrayValue(experience.skills),
+      order: typeof experience.order === 'number' ? experience.order : 0,
+      visible: experience.visible !== false,
+      featured: Boolean(experience.featured),
+    };
+  }
+
+  private buildExperienceUpdateData(
+    values: ExperienceValues,
+  ): Prisma.ExperienceUpdateInput {
+    return {
+      company: String(values.company ?? ''),
+      role: String(values.role ?? ''),
+      startDate: new Date(String(values.startDate)),
+      endDate: values.endDate ? new Date(String(values.endDate)) : null,
+      current: Boolean(values.current),
+      location: values.location ? String(values.location) : null,
+      modality: values.modality ? String(values.modality) : null,
+      description: String(values.description ?? ''),
+      achievements: this.stringArrayValue(values.achievements),
+      responsibilities: this.stringArrayValue(values.responsibilities),
+      technologies: this.stringArrayValue(values.technologies),
+      methodologies: this.stringArrayValue(values.methodologies),
+      skills: this.stringArrayValue(values.skills),
+      order: typeof values.order === 'number' ? values.order : 0,
+      visible: Boolean(values.visible),
+      featured: Boolean(values.featured),
+    };
+  }
+
+  private readExperienceDraft(
+    draftJson: unknown,
+  ): Partial<ExperienceValues> | null {
+    if (
+      !draftJson ||
+      typeof draftJson !== 'object' ||
+      Array.isArray(draftJson)
+    ) {
+      return null;
+    }
+
+    const draft = draftJson as Record<string, unknown>;
+    const values = EXPERIENCE_FIELDS.reduce((current, field) => {
+      const value = draft[field];
+      if (value === undefined) {
+        return current;
+      }
+      if (
+        [
+          'achievements',
+          'responsibilities',
+          'technologies',
+          'methodologies',
+          'skills',
+        ].includes(field)
+      ) {
+        if (Array.isArray(value)) {
+          current[field] = this.stringArrayValue(value);
+        }
+        return current;
+      }
+      if (['current', 'visible', 'featured'].includes(field)) {
+        if (typeof value === 'boolean') {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (field === 'order') {
+        if (typeof value === 'number') {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (typeof value === 'string' || value === null) {
+        current[field] = value;
+      }
+      return current;
+    }, {} as Partial<ExperienceValues>);
+
+    return Object.keys(values).length ? values : null;
+  }
+
+  private samePublicationValue(left: unknown, right: unknown) {
+    return JSON.stringify(left) === JSON.stringify(right);
+  }
+
+  private stringValue(value: unknown) {
+    return typeof value === 'string' ? value : '';
+  }
+
+  private stringArrayValue(value: unknown) {
+    return Array.isArray(value)
+      ? value.filter((item): item is string => typeof item === 'string')
+      : [];
+  }
+
+  private dateValue(value: unknown) {
+    if (!value) {
+      return null;
+    }
+    if (
+      !(value instanceof Date) &&
+      typeof value !== 'string' &&
+      typeof value !== 'number'
+    ) {
+      return null;
+    }
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
   }
 }

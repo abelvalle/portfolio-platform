@@ -127,6 +127,64 @@ describe('AdminPublicationService', () => {
     );
   });
 
+  it('builds a field-level experience draft review', async () => {
+    const service = new AdminPublicationService(
+      mockPrisma({
+        experience: experienceFixture({
+          role: 'IT Project Manager',
+          draftJson: { role: 'Delivery Manager', skills: ['UAT', 'KPIs'] },
+        }),
+      }),
+    );
+
+    const review = await service.experienceReview('experience-1');
+
+    expect(review.hasDraft).toBe(true);
+    expect(review.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: 'role',
+          before: 'IT Project Manager',
+          after: 'Delivery Manager',
+          changed: true,
+        }),
+      ]),
+    );
+  });
+
+  it('publishes experience drafts and logs changed fields', async () => {
+    const prisma = mockPrisma({
+      experience: experienceFixture({
+        role: 'IT Project Manager',
+        draftJson: { role: 'Delivery Manager', skills: ['UAT', 'KPIs'] },
+      }),
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.publishExperienceDraft(
+      'experience-1',
+      'user-1',
+    );
+
+    expect(result.changedFields).toEqual(['role', 'skills']);
+    expect(prisma.experience.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          role: 'Delivery Manager',
+          draftJson: expect.anything(),
+        }),
+      }),
+    );
+    expect(prisma.changeLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          entityType: 'experience',
+          action: 'publish',
+        }),
+      }),
+    );
+  });
+
   it('restores theme values from a changelog entry', async () => {
     const prisma = mockPrisma({
       theme: {
@@ -169,15 +227,42 @@ describe('AdminPublicationService', () => {
       }),
     );
   });
+
+  it('restores experience values from a changelog entry', async () => {
+    const prisma = mockPrisma({
+      experience: experienceFixture({ role: 'Delivery Manager' }),
+      change: {
+        id: 'change-experience-1',
+        entityType: 'experience',
+        entityId: 'experience-1',
+        beforeJson: experienceSnapshot({ role: 'IT Project Manager' }),
+      },
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.restorePublicationChange(
+      'change-experience-1',
+      'user-1',
+    );
+
+    expect(result.changedFields).toEqual(['role']);
+    expect(prisma.experience.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ role: 'IT Project Manager' }),
+      }),
+    );
+  });
 });
 
 function mockPrisma({
   theme,
   profile,
+  experience,
   change,
 }: {
   theme?: Record<string, unknown>;
   profile?: Record<string, unknown>;
+  experience?: Record<string, unknown>;
   change?: Record<string, unknown>;
 }) {
   return {
@@ -190,6 +275,10 @@ function mockPrisma({
       findFirst: jest.fn().mockResolvedValue(profile),
       findUnique: jest.fn().mockResolvedValue(profile),
       update: jest.fn().mockResolvedValue(profile),
+    },
+    experience: {
+      findUnique: jest.fn().mockResolvedValue(experience),
+      update: jest.fn().mockResolvedValue(experience),
     },
     changeLog: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -227,6 +316,39 @@ function profileFixture(overrides: Record<string, unknown> = {}) {
     ctaSecondary: 'Contactar',
     publishedAt: null,
     draftJson: null,
+    ...overrides,
+  };
+}
+
+function experienceFixture(overrides: Record<string, unknown> = {}) {
+  return {
+    ...experienceSnapshot(),
+    id: 'experience-1',
+    current: false,
+    order: 0,
+    visible: true,
+    featured: false,
+    draftJson: null,
+    publishedAt: null,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+function experienceSnapshot(overrides: Record<string, unknown> = {}) {
+  return {
+    company: 'Empresa real',
+    role: 'IT Project Manager',
+    startDate: new Date('2024-01-01T00:00:00.000Z'),
+    endDate: null,
+    location: 'Zaragoza',
+    modality: 'hibrido',
+    description: 'Gestion de proyectos IT.',
+    achievements: ['Mejora de reporting'],
+    responsibilities: ['Coordinar UAT'],
+    technologies: ['Cloud'],
+    methodologies: ['Agile'],
+    skills: ['Stakeholders'],
     ...overrides,
   };
 }

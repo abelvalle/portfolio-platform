@@ -83,6 +83,8 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `POST /admin/publication/theme/publish` (`manage_publication`)
 - `GET /admin/publication/profile/review` (`read_publication`)
 - `POST /admin/publication/profile/publish` (`manage_publication`)
+- `GET /admin/publication/experiences/:id/review` (`read_publication`)
+- `POST /admin/publication/experiences/:id/publish` (`manage_publication`)
 - `GET /admin/dashboard?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_dashboard`)
 - `GET /admin/publication/changelog` (`read_publication`)
 - `POST /admin/publication/changelog/:id/restore` (`manage_publication`)
@@ -315,8 +317,10 @@ El workflow draft/publish real está conectado a `ThemeSettings` y `Profile`, qu
 - `POST /admin/publication/theme/publish`: protegido con `manage_publication`; publica el borrador, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
 - `GET /admin/publication/profile/review`: protegido con `read_publication`; devuelve comparación campo a campo entre perfil publicado y borrador.
 - `POST /admin/publication/profile/publish`: protegido con `manage_publication`; publica el borrador del perfil, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
+- `GET /admin/publication/experiences/:id/review`: protegido con `read_publication`; devuelve comparación campo a campo entre experiencia publicada y borrador.
+- `POST /admin/publication/experiences/:id/publish`: protegido con `manage_publication`; publica el borrador de una experiencia, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
 - `GET /admin/publication/changelog`: protegido con `read_publication`; lista cambios recientes.
-- `POST /admin/publication/changelog/:id/restore`: protegido con `manage_publication`; restaura cambios de tema o perfil usando `beforeJson` y registra una nueva entrada `restore`.
+- `POST /admin/publication/changelog/:id/restore`: protegido con `manage_publication`; restaura cambios de tema, perfil o experiencia usando `beforeJson` y registra una nueva entrada `restore`.
 
 Ejemplo de respuesta de revisión:
 

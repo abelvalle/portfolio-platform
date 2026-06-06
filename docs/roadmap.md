@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 15:33 CEST.
+Estado actualizado: 2026-06-06 15:43 CEST.
 
 ## Hitos completados
 
@@ -2559,6 +2559,29 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Draft/publish API para experiencias
+
+- Anadidos `draftJson` y `publishedAt` al modelo `Experience`.
+- Anadida migracion `000005_add_experience_publication`.
+- `GET /api/v1/admin/publication/experiences/:id/review` devuelve diffs campo a campo.
+- `POST /api/v1/admin/publication/experiences/:id/publish` publica el borrador, limpia `draftJson` y actualiza `publishedAt`.
+- La publicacion valida campos obligatorios de experiencia: empresa, cargo, fecha de inicio y descripcion.
+- `ChangeLog` y `AuditLog` registran publicaciones de experiencias.
+- `POST /api/v1/admin/publication/changelog/:id/restore` soporta restaurar experiencias desde `beforeJson`.
+- `docs/api.md` documenta endpoints nuevos y restore de experiencias.
+- Anadida cobertura unitaria para review, publish y restore de experiencia.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run db:generate`
+- `npm.cmd --prefix apps/api run test -- admin-publication.service.spec.ts`
+- `npm.cmd run build:api`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -2576,7 +2599,7 @@ Verificacion realizada en este hito:
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto` y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal y embudo básico desde UI; faltan embudos configurables/multicanal.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa y cohorts mensuales; faltan cohorts avanzados por fuente/canal.
-- Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo y reordenado por botones; faltan drag/drop y asociación visual con skills/tecnologías.
+- Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo y reordenado por botones; ya existe API draft/publish para experiencia, pero falta UI para guardar borradores/publicar/restaurar desde la pantalla de experiencia, drag/drop y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media y reordenado por botones; falta drag/drop.
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles y reordenado por botones; falta drag/drop.
 - Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; falta drag/drop.
@@ -2594,6 +2617,6 @@ Verificacion realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. Extender draft/publish a entidades CMS principales.
-2. Renderer HTML/CSS server-side fiel al preview A4 público.
-3. Analytics agregada de uso por rol objetivo en adaptaciones CV.
+1. UI draft/publish para experiencias.
+2. Extender draft/publish API a proyectos, skills, educacion y certificaciones.
+3. Renderer HTML/CSS server-side fiel al preview A4 público.

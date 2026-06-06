@@ -24,6 +24,11 @@ export class AdminPublicationController {
     return this.publicationService.profileReview();
   }
 
+  @Get('experiences/:id/review')
+  experienceReview(@Param('id') id: string) {
+    return this.publicationService.experienceReview(id);
+  }
+
   @Get('changelog')
   changeLog() {
     return this.publicationService.latestChanges();
@@ -39,6 +44,15 @@ export class AdminPublicationController {
   @Post('profile/publish')
   publishProfile(@CurrentUser() user: { id?: string }) {
     return this.publicationService.publishProfileDraft(user?.id);
+  }
+
+  @RequirePermissions('manage_publication')
+  @Post('experiences/:id/publish')
+  publishExperience(
+    @Param('id') id: string,
+    @CurrentUser() user: { id?: string },
+  ) {
+    return this.publicationService.publishExperienceDraft(id, user?.id);
   }
 
   @RequirePermissions('manage_publication')
