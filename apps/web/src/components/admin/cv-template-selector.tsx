@@ -52,6 +52,47 @@ function validateTemplateDraft(draft: typeof emptyDraft) {
   return "";
 }
 
+function getTemplatePreviewConfig(template: CvTemplateItem) {
+  const config = template.config || {};
+  const primaryColor = typeof config.primaryColor === "string" && /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(config.primaryColor)
+    ? config.primaryColor
+    : "#111827";
+  const fontFamily = typeof config.fontFamily === "string" && config.fontFamily.trim() ? config.fontFamily : "Inter";
+  const density = config.density === "compact" ? "compact" : "normal";
+
+  return { primaryColor, fontFamily, density };
+}
+
+function TemplatePreview({ template }: { template: CvTemplateItem }) {
+  const config = getTemplatePreviewConfig(template);
+  const lineGap = config.density === "compact" ? "gap-1" : "gap-1.5";
+
+  return (
+    <div
+      aria-label={`Preview de ${template.name}`}
+      className="mt-4 rounded-md border bg-background p-3"
+      style={{ borderColor: config.primaryColor, fontFamily: config.fontFamily }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[0.65rem] font-semibold uppercase tracking-normal" style={{ color: config.primaryColor }}>Abel Valle Rosa</p>
+          <p className="mt-1 text-[0.6rem] text-muted-foreground">Titular profesional</p>
+        </div>
+        <span className="h-7 w-7 rounded-full" style={{ backgroundColor: config.primaryColor }} />
+      </div>
+      <div className={`mt-3 grid ${lineGap}`}>
+        <span className="h-1.5 w-3/4 rounded-full bg-muted" />
+        <span className="h-1.5 w-full rounded-full bg-muted" />
+        <span className="h-1.5 w-2/3 rounded-full bg-muted" />
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <span className="h-6 rounded-sm bg-muted" />
+        <span className="h-6 rounded-sm bg-muted" />
+      </div>
+    </div>
+  );
+}
+
 export function CvTemplateSelector() {
   const [templates, setTemplates] = useState<CvTemplateItem[]>([]);
   const [draft, setDraft] = useState(emptyDraft);
@@ -222,6 +263,7 @@ export function CvTemplateSelector() {
               <Badge variant={template.visible ? "default" : "secondary"}>{template.visible ? "visible" : "oculta"}</Badge>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">{template.description || "Sin descripcion."}</p>
+            <TemplatePreview template={template} />
             <div className="mt-4 flex flex-wrap gap-2">
               {Object.entries(template.config || {}).slice(0, 5).map(([key, value]) => (
                 <Badge key={key} variant="outline">{key}: {String(value)}</Badge>

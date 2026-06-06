@@ -443,6 +443,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Crear plantilla" }).click();
   await expect(page.getByText("Color principal debe ser HEX (#RRGGBB).")).toBeVisible();
   await expect(page.getByRole("heading", { name: "ATS-friendly" })).toBeVisible();
+  await expect(page.getByLabel("Preview de ATS-friendly")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar ATS-friendly" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();
