@@ -3360,6 +3360,15 @@ Verificacion realizada en este hito:
 
 - `git diff --check`
 
+### Estabilizacion de lint web con artefactos Playwright
+
+- `apps/web/eslint.config.mjs` ignora explicitamente `test-results/**` y `playwright-report/**`.
+- Esto evita que ESLint intente recorrer carpetas de artefactos mientras Playwright las crea o elimina.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
