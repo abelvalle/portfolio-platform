@@ -88,8 +88,8 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /users/permissions` (`manage_users`)
 - `GET /integrations/linkedin/status`
 - `GET /integrations/linkedin/share-url`
-- `GET /integrations/linkedin/auth-url`
-- `GET /integrations/linkedin/callback?code=...&state=...`
+- `GET /integrations/linkedin/auth-url` (`manage_integrations`)
+- `GET /integrations/linkedin/callback?code=...&state=...` (`manage_integrations`)
 - `GET /media`
 - `GET /media/:id`
 - `GET /media/:id/download`
@@ -190,8 +190,8 @@ Endpoints admin de webhook:
 
 - `GET /integrations/linkedin/status`: devuelve si OAuth está configurado, URL de perfil y scopes previstos.
 - `GET /integrations/linkedin/share-url?path=/cv`: construye una URL de compartir en LinkedIn para una ruta pública.
-- `GET /integrations/linkedin/auth-url`: protegido para admin; construye URL OAuth si `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` y `LINKEDIN_REDIRECT_URI` están configurados.
-- `GET /integrations/linkedin/callback?code=...&state=...`: protegido para admin; intercambia el `code` por token, consulta OpenID `userinfo` y devuelve perfil sanitizado sin exponer el access token.
+- `GET /integrations/linkedin/auth-url`: protegido con `manage_integrations`; construye URL OAuth si `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` y `LINKEDIN_REDIRECT_URI` están configurados.
+- `GET /integrations/linkedin/callback?code=...&state=...`: protegido con `manage_integrations`; intercambia el `code` por token, consulta OpenID `userinfo` y devuelve perfil sanitizado sin exponer el access token.
 
 Sin credenciales LinkedIn, el sistema mantiene integración pública mediante enlace de perfil y share URL.
 

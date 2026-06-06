@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 07:32 CEST.
+Estado actualizado: 2026-06-06 07:35 CEST.
 
 ## Hitos completados
 
@@ -1435,6 +1435,22 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Permisos granulares en Integrations
+
+- `GET /api/v1/integrations/linkedin/auth-url` usa `manage_integrations`.
+- `GET /api/v1/integrations/linkedin/callback` usa `manage_integrations`.
+- `GET /api/v1/integrations/linkedin/status` y `share-url` se mantienen publicos.
+- La matriz reserva `manage_integrations` a `admin`.
+- `docs/api.md` documenta `manage_integrations`.
+- Añadidos tests unitarios para permitir integraciones a `admin` y rechazarlas a `editor`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1449,7 +1465,7 @@ Verificacion realizada en este hito:
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
 - Adaptación CV a versión final: el wizard ya propone datos desde API; falta aceptar/rechazar cambios por bloque y crear/publicar una `CvVersion` adaptada desde la propuesta.
-- Permisos por acción: existe matriz de permisos y guard granular aplicado a `/users`, `/analytics`, dashboard admin, mensajes, media, profile/theme, CRUD CMS genericos, CV Manager y publication; falta extenderlo a integrations y otros endpoints admin restantes.
+- Permisos por acción: existe matriz de permisos y guard granular aplicado a `/users`, `/analytics`, dashboard admin, mensajes, media, profile/theme, CRUD CMS genericos, CV Manager, publication e integrations; falta revisar endpoints admin restantes o nuevos modulos futuros.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado y respuesta `mailto`; falta integracion real con proveedor email.

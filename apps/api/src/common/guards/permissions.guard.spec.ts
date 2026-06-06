@@ -82,6 +82,18 @@ describe('PermissionsGuard', () => {
     expect(guard.canActivate(mockContext(UserRole.viewer))).toBe(false);
   });
 
+  it('allows admins to manage integrations', () => {
+    const guard = new PermissionsGuard(mockReflector(['manage_integrations']));
+
+    expect(guard.canActivate(mockContext(UserRole.admin))).toBe(true);
+  });
+
+  it('rejects editors from managing integrations', () => {
+    const guard = new PermissionsGuard(mockReflector(['manage_integrations']));
+
+    expect(guard.canActivate(mockContext(UserRole.editor))).toBe(false);
+  });
+
   it('allows routes without explicit permissions', () => {
     const guard = new PermissionsGuard(mockReflector(undefined));
 
