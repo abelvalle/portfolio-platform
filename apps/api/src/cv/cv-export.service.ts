@@ -214,6 +214,7 @@ export class CvExportService {
 
   renderHtml(data: CvStructuredData, options: CvTemplateExportOptions = {}) {
     const template = this.resolveTemplateOptions(options);
+    const pagePadding = template.density === 'compact' ? '36px' : '48px';
     const experienceBody = (data.experiences || [])
       .map((experience) =>
         this.htmlArticle(
@@ -267,7 +268,7 @@ export class CvExportService {
       )
       .join('');
 
-    return `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:${template.fontFamily},Arial,sans-serif;color:#0f172a;padding:${template.density === 'compact' ? '36px' : '48px'};line-height:1.45}h1{font-size:32px;color:${template.primaryColor};margin:0 0 6px}h2{font-size:16px;border-top:1px solid #cbd5e1;padding-top:14px;color:${template.primaryColor};margin-top:20px}article{margin:0 0 14px}h3{font-size:13px;margin:0 0 4px}p{margin:0 0 8px}ul{margin:0 0 10px 18px;padding:0}li{margin:0 0 4px}</style></head><body><h1>${this.html(data.profile?.fullName || 'Abel Valle Rosa')}</h1><p>${this.html(data.profile?.headline || '')}</p><p>${this.html(this.contactLine(data))}</p>${this.htmlSection('Resumen profesional', this.htmlParagraph(data.summary))}${this.htmlSection(options.ats ? 'Experiencia profesional' : 'Experiencia', experienceBody)}${this.htmlSection('Formacion y certificaciones', formationRows ? `<ul>${formationRows}</ul>` : '')}${this.htmlSection('Skills', skillRows ? `<ul>${skillRows}</ul>` : '')}${this.htmlSection('Idiomas', languageRows ? `<ul>${languageRows}</ul>` : '')}${this.htmlSection('Proyectos', projectBody)}${customSections}</body></html>`;
+    return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:#f8fafc;font-family:${template.fontFamily},Arial,sans-serif;color:#0f172a}.cv-page{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:${pagePadding};line-height:1.45}@media screen{body{padding:24px}.cv-page{box-shadow:0 24px 60px rgba(15,23,42,.18)}}h1{font-size:32px;color:${template.primaryColor};margin:0 0 6px}h2{font-size:16px;border-top:1px solid #cbd5e1;padding-top:14px;color:${template.primaryColor};margin-top:20px}article{margin:0 0 14px}h3{font-size:13px;margin:0 0 4px}p{margin:0 0 8px}ul{margin:0 0 10px 18px;padding:0}li{margin:0 0 4px}</style></head><body><main class="cv-page" data-page-size="A4"><h1>${this.html(data.profile?.fullName || 'Abel Valle Rosa')}</h1><p>${this.html(data.profile?.headline || '')}</p><p>${this.html(this.contactLine(data))}</p>${this.htmlSection('Resumen profesional', this.htmlParagraph(data.summary))}${this.htmlSection(options.ats ? 'Experiencia profesional' : 'Experiencia', experienceBody)}${this.htmlSection('Formacion y certificaciones', formationRows ? `<ul>${formationRows}</ul>` : '')}${this.htmlSection('Skills', skillRows ? `<ul>${skillRows}</ul>` : '')}${this.htmlSection('Idiomas', languageRows ? `<ul>${languageRows}</ul>` : '')}${this.htmlSection('Proyectos', projectBody)}${customSections}</main></body></html>`;
   }
 
   private html(value: unknown) {

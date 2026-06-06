@@ -59,6 +59,10 @@ describe('CvExportService', () => {
     expect(html).toContain('font-family:Manrope');
     expect(html).toContain('color:#123456');
     expect(html).toContain('padding:36px');
+    expect(html).toContain('@page{size:A4;margin:0}');
+    expect(html).toContain('class="cv-page" data-page-size="A4"');
+    expect(html).toContain('width:210mm;min-height:297mm');
+    expect(html).toContain('@media screen');
     expect(html).toContain('Delivery Manager - Demo Company');
     expect(html).toContain('Reporting ejecutivo');
     expect(html).toContain('Formacion y certificaciones');

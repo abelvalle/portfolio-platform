@@ -223,6 +223,8 @@ La exportación aplica:
 - `slug` de plantilla en el nombre de archivo generado.
 - metadata `template` en `MediaAsset` y `CvGeneratedFile`.
 
+El HTML server-side de preview/export incluye `@page A4`, contenedor `main.cv-page` con ancho `210mm` y alto minimo `297mm`, y estilos de pantalla para revisar el documento como hoja A4.
+
 Las exportaciones ATS siguen priorizando compatibilidad: fuerzan color textual y densidad normal aunque la versión tenga otra plantilla.
 
 ## Ejemplo contacto
