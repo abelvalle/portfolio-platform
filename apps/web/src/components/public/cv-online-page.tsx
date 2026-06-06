@@ -3,6 +3,7 @@ import { Download, LayoutTemplate } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCvTemplatesPath, getPortfolioPath, type Locale, type PublicCopy } from "@/lib/i18n";
+import { buildPublicThemeStyle } from "@/lib/public-theme";
 import { cn } from "@/lib/utils";
 import type { PortfolioSnapshot } from "@/lib/portfolio-data";
 
@@ -18,7 +19,7 @@ export function CvOnlinePage({
   const cvUrl = snapshot.profile.cvUrl || snapshot.cv.url;
 
   return (
-    <main className="min-h-dvh bg-background px-6 py-12 text-foreground sm:px-10 lg:px-16">
+    <main className="min-h-dvh bg-background px-6 py-12 text-foreground sm:px-10 lg:px-16" style={buildPublicThemeStyle(snapshot.theme)}>
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_320px]">
         <section className="rounded-lg border border-border bg-card p-8">
           <p className="font-mono text-sm text-primary">{copy.eyebrow}</p>

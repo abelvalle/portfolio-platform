@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:10 CEST.
+Estado actualizado: 2026-06-06 04:14 CEST.
 
 ## Hitos completados
 
@@ -739,6 +739,20 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Tema público reutilizable
+
+- Extraída utilidad `buildPublicThemeStyle` para compartir el saneado y mapeo de tokens de tema.
+- El tema publicado se aplica también al CV online, contacto ES/EN, galería de plantillas y previews públicos.
+- Las rutas de detalle `/cv/[slug]` quedan cubiertas al reutilizar el CV online.
+- La deuda de tema público queda reducida al admin y a validación visual avanzada.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -748,7 +762,7 @@ Verificación realizada en este hito:
 - Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
 - MFA QR/regeneración: existe UI funcional con secret, otpauth URL y recovery codes; falta QR visual local y regeneración controlada de recovery codes.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
-- Tema global desde API: la landing pública aplica tokens publicados; falta extender la aplicación automática al admin completo y a otras rutas públicas.
+- Tema global desde API: las rutas públicas principales aplican tokens publicados; falta extender la aplicación automática al admin completo y añadir validación visual avanzada de contraste.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
 - ATS por oferta concreta: el score actual valida estructura general; falta comparar contra keywords de una oferta específica.

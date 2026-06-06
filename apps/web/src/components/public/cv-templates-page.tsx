@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { getCvPath, getCvTemplatePath, getPortfolioPath, type Locale } from "@/lib/i18n";
 import { getCvTemplateFeatures, type CvTemplateItem } from "@/lib/cv-templates";
+import type { PortfolioSnapshot } from "@/lib/portfolio-data";
+import { buildPublicThemeStyle } from "@/lib/public-theme";
 import { cn } from "@/lib/utils";
 
 const copyByLocale = {
@@ -36,16 +38,18 @@ const copyByLocale = {
 export function CvTemplatesPage({
   templates,
   locale,
-  cvUrl
+  cvUrl,
+  theme
 }: {
   templates: CvTemplateItem[];
   locale: Locale;
   cvUrl: string;
+  theme: PortfolioSnapshot["theme"];
 }) {
   const copy = copyByLocale[locale];
 
   return (
-    <main className="min-h-dvh bg-background px-6 py-12 text-foreground sm:px-10 lg:px-16">
+    <main className="min-h-dvh bg-background px-6 py-12 text-foreground sm:px-10 lg:px-16" style={buildPublicThemeStyle(theme)}>
       <div className="mx-auto flex max-w-6xl flex-col gap-10">
         <header className="grid gap-8 border-b border-border pb-10 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>

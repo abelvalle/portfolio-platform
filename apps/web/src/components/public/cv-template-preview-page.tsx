@@ -12,6 +12,7 @@ import {
 } from "@/lib/i18n";
 import { getCvTemplateFeatures, type CvTemplateItem } from "@/lib/cv-templates";
 import type { PortfolioSnapshot } from "@/lib/portfolio-data";
+import { buildPublicThemeStyle } from "@/lib/public-theme";
 import { cn } from "@/lib/utils";
 
 const copyByLocale = {
@@ -66,7 +67,7 @@ export function CvTemplatePreviewPage({
   const visibleEducation = [...snapshot.education, ...snapshot.certifications].slice(0, isCompact ? 2 : 4);
 
   return (
-    <main className="min-h-dvh bg-background px-6 py-12 text-foreground sm:px-10 lg:px-16">
+    <main className="min-h-dvh bg-background px-6 py-12 text-foreground sm:px-10 lg:px-16" style={buildPublicThemeStyle(snapshot.theme)}>
       <div className="mx-auto grid max-w-7xl gap-10 xl:grid-cols-[360px_1fr]">
         <aside className="flex flex-col gap-6">
           <div>

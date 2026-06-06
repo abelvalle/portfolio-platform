@@ -3,6 +3,7 @@ import { ContactForm } from "@/components/public/contact-form";
 import { buttonVariants } from "@/components/ui/button";
 import { portfolioClient } from "@/lib/api";
 import { publicCopy } from "@/lib/i18n";
+import { buildPublicThemeStyle } from "@/lib/public-theme";
 import { cn } from "@/lib/utils";
 
 export default async function ContactPage() {
@@ -10,7 +11,7 @@ export default async function ContactPage() {
   const copy = publicCopy.es;
 
   return (
-    <main className="min-h-dvh bg-background px-6 py-16 text-foreground sm:px-10 lg:px-16">
+    <main className="min-h-dvh bg-background px-6 py-16 text-foreground sm:px-10 lg:px-16" style={buildPublicThemeStyle(snapshot.theme)}>
       <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
         <section>
           <p className="font-mono text-sm text-primary">{copy.contact.eyebrow}</p>

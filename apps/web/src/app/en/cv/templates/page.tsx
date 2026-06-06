@@ -6,5 +6,5 @@ export default async function EnglishCvTemplatesRoute() {
   const [snapshot, templates] = await Promise.all([portfolioClient.snapshot("en"), getPublicCvTemplates()]);
   const cvUrl = snapshot.profile.cvUrl || snapshot.cv.url;
 
-  return <CvTemplatesPage templates={templates} locale="en" cvUrl={cvUrl} />;
+  return <CvTemplatesPage templates={templates} locale="en" cvUrl={cvUrl} theme={snapshot.theme} />;
 }
