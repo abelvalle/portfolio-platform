@@ -89,13 +89,20 @@ describe('AnalyticsService filters', () => {
     });
 
     await service.record(
-      { type: 'landing_visit', path: '/' },
+      {
+        type: 'landing_visit',
+        path: '/?utm_source=linkedin&utm_medium=social',
+      },
       '127.0.0.1',
       'ua',
     );
 
     expect(prisma.analyticsEvent.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
+        metadata: {
+          source: 'linkedin',
+          channel: 'social',
+        },
         ipHash: createHash('sha256').update('salt:127.0.0.1').digest('hex'),
         userAgent: null,
       }),
@@ -158,6 +165,42 @@ describe('AnalyticsService filters', () => {
       { date: '2026-06-02', total: 0, types: {} },
       { date: '2026-06-03', total: 1, types: { landing_visit: 1 } },
     ]);
+  });
+
+  it('aggregates source and channel segments from metadata and paths', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsEvent.findMany.mockResolvedValue([
+      {
+        metadata: { source: 'linkedin', channel: 'social' },
+        path: '/',
+      },
+      {
+        metadata: null,
+        path: '/?utm_source=email&utm_medium=newsletter',
+      },
+      {
+        metadata: { source: 'linkedin', channel: 'social' },
+        path: '/cv',
+      },
+    ]);
+    const service = createService(prisma);
+
+    const result = await service.channels({ type: 'landing_visit' });
+
+    expect(prisma.analyticsEvent.findMany).toHaveBeenCalledWith({
+      where: { type: 'landing_visit' },
+      select: { metadata: true, path: true },
+    });
+    expect(result).toEqual({
+      sources: [
+        { name: 'linkedin', count: 2 },
+        { name: 'email', count: 1 },
+      ],
+      channels: [
+        { name: 'social', count: 2 },
+        { name: 'newsletter', count: 1 },
+      ],
+    });
   });
 });
 

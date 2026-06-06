@@ -18,6 +18,18 @@ export class CreateAnalyticsEventDto {
   @IsString()
   @MaxLength(160)
   label?: string;
+
+  @ApiProperty({ required: false, example: 'linkedin' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  source?: string;
+
+  @ApiProperty({ required: false, example: 'referral' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  channel?: string;
 }
 
 export class AnalyticsDateRangeQueryDto {

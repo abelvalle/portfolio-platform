@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   adminClient,
+  type AnalyticsChannels,
   type AnalyticsEvent,
   type AnalyticsPrivacyStatus,
   type AnalyticsSummary,
@@ -33,6 +34,7 @@ export function AnalyticsDashboard() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [timeSeries, setTimeSeries] = useState<AnalyticsTimeSeriesPoint[]>([]);
+  const [channels, setChannels] = useState<AnalyticsChannels | null>(null);
   const [privacy, setPrivacy] = useState<AnalyticsPrivacyStatus | null>(null);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -45,15 +47,17 @@ export function AnalyticsDashboard() {
     setIsLoading(true);
     try {
       const filters = { from: fromDate || undefined, to: toDate || undefined };
-      const [nextSummary, nextEvents, nextTimeSeries, nextPrivacy] = await Promise.all([
+      const [nextSummary, nextEvents, nextTimeSeries, nextChannels, nextPrivacy] = await Promise.all([
         adminClient.analyticsSummary(filters),
         adminClient.analyticsEvents({ ...filters, type: eventType || undefined }),
         adminClient.analyticsTimeSeries({ ...filters, type: eventType || undefined }),
+        adminClient.analyticsChannels({ ...filters, type: eventType || undefined }),
         adminClient.analyticsPrivacy()
       ]);
       setSummary(nextSummary);
       setEvents(nextEvents);
       setTimeSeries(nextTimeSeries);
+      setChannels(nextChannels);
       setPrivacy(nextPrivacy);
       setMessage("Analitica sincronizada con filtros de API.");
     } catch {
@@ -230,6 +234,20 @@ export function AnalyticsDashboard() {
         </div>
       </section>
 
+      <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-mono text-sm text-primary">Fuentes y canales</p>
+            <h2 className="mt-1 text-xl font-semibold">Segmentacion de trafico</h2>
+          </div>
+          <Badge variant="outline">top 8</Badge>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <SegmentList title="Fuentes" items={channels?.sources || []} empty="Sin fuentes atribuidas." />
+          <SegmentList title="Canales" items={channels?.channels || []} empty="Sin canales atribuidos." />
+        </div>
+      </section>
+
       <section className="overflow-x-auto rounded-lg border border-border">
         <div className="min-w-[720px]">
           <div className="grid grid-cols-[180px_1fr_1fr_180px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
@@ -301,6 +319,37 @@ function buildAnalyticsTrend(points: AnalyticsTimeSeriesPoint[]) {
     topTypes,
     daily: points.slice(-14)
   };
+}
+
+function SegmentList({
+  title,
+  items,
+  empty
+}: {
+  title: string;
+  items: Array<{ name: string; count: number }>;
+  empty: string;
+}) {
+  const max = Math.max(...items.map((item) => item.count), 1);
+
+  return (
+    <div className="grid gap-3">
+      <p className="text-sm font-medium text-muted-foreground">{title}</p>
+      {items.length ? items.map((item) => (
+        <div key={item.name} className="grid gap-2">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="font-medium">{item.name}</span>
+            <span className="text-muted-foreground">{item.count}</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary" style={{ width: `${(item.count / max) * 100}%` }} />
+          </div>
+        </div>
+      )) : (
+        <p className="text-sm text-muted-foreground">{empty}</p>
+      )}
+    </div>
+  );
 }
 
 function buildCsv(events: AnalyticsEvent[]) {

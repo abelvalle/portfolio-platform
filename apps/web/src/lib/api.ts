@@ -85,7 +85,7 @@ export const portfolioClient = {
   track(type: string, label?: string, path?: string) {
     return apiFetch("/analytics/events", {
       method: "POST",
-      body: JSON.stringify({ type, label, path })
+      body: JSON.stringify({ type, label, path, ...trackingAttribution(path) })
     }).catch(() => undefined);
   }
 };
@@ -249,6 +249,9 @@ export const adminClient = {
   },
   analyticsTimeSeries(filters?: AnalyticsEventFilters) {
     return apiFetch<AnalyticsTimeSeriesPoint[]>(withQuery("/analytics/timeseries", filters));
+  },
+  analyticsChannels(filters?: AnalyticsEventFilters) {
+    return apiFetch<AnalyticsChannels>(withQuery("/analytics/channels", filters));
   },
   analyticsPrivacy() {
     return apiFetch<AnalyticsPrivacyStatus>("/analytics/privacy");
@@ -569,6 +572,11 @@ export type AnalyticsTimeSeriesPoint = {
   types: Record<string, number>;
 };
 
+export type AnalyticsChannels = {
+  sources: Array<{ name: string; count: number }>;
+  channels: Array<{ name: string; count: number }>;
+};
+
 export type AnalyticsPrivacyStatus = {
   retentionDays: number | null;
   storeUserAgent: boolean;
@@ -749,3 +757,29 @@ export const mediaClient = {
     return apiFetch<MediaAsset>(`/media/${id}`, { method: "DELETE" });
   }
 };
+
+function trackingAttribution(path?: string) {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  const params = new URLSearchParams(path?.split("?")[1] || window.location.search);
+  const source = params.get("utm_source") || params.get("source");
+  const channel = params.get("utm_medium");
+  if (source || channel) {
+    return { source: source || "direct", channel: channel || "referral" };
+  }
+
+  if (document.referrer) {
+    try {
+      const referrer = new URL(document.referrer);
+      if (referrer.host !== window.location.host) {
+        return { source: referrer.host, channel: "referral" };
+      }
+    } catch {
+      return {};
+    }
+  }
+
+  return { source: "direct", channel: "direct" };
+}

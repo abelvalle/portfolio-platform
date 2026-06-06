@@ -17,9 +17,11 @@ export class AnalyticsService {
   ) {}
 
   record(dto: CreateAnalyticsEventDto, ip?: string, userAgent?: string) {
+    const { source, channel, ...event } = dto;
     return this.prisma.analyticsEvent.create({
       data: {
-        ...dto,
+        ...event,
+        metadata: this.attributionMetadata({ ...event, source, channel }),
         ipHash: this.hashIp(ip),
         userAgent: this.storeUserAgent() ? userAgent : null,
       },
@@ -109,6 +111,32 @@ export class AnalyticsService {
       }));
   }
 
+  async channels(filters: AnalyticsEventsQueryDto = {}) {
+    const events = await this.prisma.analyticsEvent.findMany({
+      where: this.eventWhere(filters),
+      select: { metadata: true, path: true },
+    });
+    const sources = new Map<string, number>();
+    const channels = new Map<string, number>();
+
+    for (const event of events) {
+      const attribution = this.resolveAttribution(event.metadata, event.path);
+      sources.set(
+        attribution.source,
+        (sources.get(attribution.source) || 0) + 1,
+      );
+      channels.set(
+        attribution.channel,
+        (channels.get(attribution.channel) || 0) + 1,
+      );
+    }
+
+    return {
+      sources: this.topSegments(sources),
+      channels: this.topSegments(channels),
+    };
+  }
+
   private eventWhere(filters: AnalyticsEventsQueryDto) {
     return {
       ...this.dateRangeWhere(filters),
@@ -183,6 +211,61 @@ export class AnalyticsService {
       this.configService.get<string>('ANALYTICS_RETENTION_DAYS') || 0,
     );
     return Number.isFinite(configured) && configured > 0 ? configured : null;
+  }
+
+  private attributionMetadata(dto: CreateAnalyticsEventDto) {
+    const attribution = this.resolveAttribution(
+      { source: dto.source, channel: dto.channel },
+      dto.path,
+    );
+    return attribution as never;
+  }
+
+  private resolveAttribution(metadata: unknown, path?: string | null) {
+    const record = this.metadataRecord(metadata);
+    const pathParams = this.pathSearchParams(path);
+    const source =
+      this.cleanSegment(record.source) ||
+      this.cleanSegment(pathParams.get('utm_source')) ||
+      this.cleanSegment(pathParams.get('source')) ||
+      'direct';
+    const channel =
+      this.cleanSegment(record.channel) ||
+      this.cleanSegment(pathParams.get('utm_medium')) ||
+      (source === 'direct' ? 'direct' : 'referral');
+
+    return { source, channel };
+  }
+
+  private pathSearchParams(path?: string | null) {
+    try {
+      return new URL(path || '/', 'https://portfolio.local').searchParams;
+    } catch {
+      return new URLSearchParams();
+    }
+  }
+
+  private cleanSegment(value: unknown) {
+    return typeof value === 'string' && value.trim()
+      ? value.trim().toLowerCase().slice(0, 80)
+      : null;
+  }
+
+  private metadataRecord(metadata: unknown): Record<string, unknown> {
+    if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
+      return metadata as Record<string, unknown>;
+    }
+    return {};
+  }
+
+  private topSegments(segments: Map<string, number>) {
+    return [...segments.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort(
+        (left, right) =>
+          right.count - left.count || left.name.localeCompare(right.name),
+      )
+      .slice(0, 8);
   }
 }
 

@@ -303,6 +303,21 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       )
     });
   });
+  await page.route(/\/api\/v1\/analytics\/channels(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        sources: [
+          { name: "linkedin", count: 2 },
+          { name: "direct", count: 1 }
+        ],
+        channels: [
+          { name: "social", count: 2 },
+          { name: "direct", count: 1 }
+        ]
+      })
+    });
+  });
   await page.route("**/api/v1/analytics/privacy", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -708,6 +723,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Purgar retencion" }).click();
   await expect(page.getByText("Retencion aplicada: 2 eventos purgados.")).toBeVisible();
   await expect(page.getByText("Serie diaria")).toBeVisible();
+  await expect(page.getByText("Fuentes y canales")).toBeVisible();
+  await expect(page.getByText("linkedin")).toBeVisible();
+  await expect(page.getByText("social")).toBeVisible();
   await expect(page.getByText("2026-06-06").first()).toBeVisible();
   await expect(page.getByText("landing_visit").first()).toBeVisible();
   await page.getByLabel("Tipo de evento").selectOption("cv_download");

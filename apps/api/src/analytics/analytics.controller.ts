@@ -59,6 +59,14 @@ export class AnalyticsController {
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_analytics')
+  @Get('channels')
+  channels(@Query() query: AnalyticsEventsQueryDto) {
+    return this.analyticsService.channels(query);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('manage_analytics')
   @Post('retention/prune')
   pruneRetention() {
