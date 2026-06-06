@@ -357,6 +357,20 @@ export type AdminDashboard = {
     primaryCv: string;
     cvUpdatedAt?: string | null;
   };
+  segments?: {
+    analytics: {
+      landingVisits: number;
+      cvDownloads: number;
+      contactSubmits: number;
+      projectViews: number;
+    };
+    content: {
+      publishedProjects: number;
+      visibleExperiences: number;
+      activeModules: number;
+      totalModules: number;
+    };
+  };
   latestChanges: ChangeLogItem[];
   modules: Array<{
     id: string;

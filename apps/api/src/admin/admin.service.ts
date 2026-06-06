@@ -11,6 +11,9 @@ export class AdminService {
     const dateWhere = this.dateRangeWhere(filters);
     const [
       totalVisits,
+      cvDownloads,
+      contactSubmits,
+      projectViews,
       publishedProjects,
       visibleExperiences,
       receivedMessages,
@@ -20,6 +23,15 @@ export class AdminService {
     ] = await Promise.all([
       this.prisma.analyticsEvent.count({
         where: { ...dateWhere, type: 'landing_visit' },
+      }),
+      this.prisma.analyticsEvent.count({
+        where: { ...dateWhere, type: 'cv_download' },
+      }),
+      this.prisma.analyticsEvent.count({
+        where: { ...dateWhere, type: 'contact_submit' },
+      }),
+      this.prisma.analyticsEvent.count({
+        where: { ...dateWhere, type: 'project_view' },
       }),
       this.prisma.project.count({
         where: { visible: true, status: 'published', deletedAt: null },
@@ -50,6 +62,20 @@ export class AdminService {
         receivedMessages,
         primaryCv: primaryCv?.name ?? 'Sin CV principal',
         cvUpdatedAt: primaryCv?.updatedAt ?? null,
+      },
+      segments: {
+        analytics: {
+          landingVisits: totalVisits,
+          cvDownloads,
+          contactSubmits,
+          projectViews,
+        },
+        content: {
+          publishedProjects,
+          visibleExperiences,
+          activeModules: modules.filter((module) => module.enabled).length,
+          totalModules: modules.length,
+        },
       },
       latestChanges: changes,
       modules,

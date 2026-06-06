@@ -118,6 +118,32 @@ export function DashboardCards() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Segmentacion operativa</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-5 md:grid-cols-2">
+          <SegmentGroup
+            title="Eventos"
+            items={[
+              ["landing_visit", dashboard?.segments?.analytics.landingVisits ?? 0],
+              ["cv_download", dashboard?.segments?.analytics.cvDownloads ?? 0],
+              ["contact_submit", dashboard?.segments?.analytics.contactSubmits ?? 0],
+              ["project_view", dashboard?.segments?.analytics.projectViews ?? 0]
+            ]}
+          />
+          <SegmentGroup
+            title="Contenido"
+            items={[
+              ["proyectos publicados", dashboard?.segments?.content.publishedProjects ?? 0],
+              ["experiencias visibles", dashboard?.segments?.content.visibleExperiences ?? 0],
+              ["modulos activos", dashboard?.segments?.content.activeModules ?? 0],
+              ["modulos totales", dashboard?.segments?.content.totalModules ?? 0]
+            ]}
+          />
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
@@ -152,6 +178,33 @@ export function DashboardCards() {
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
+
+function SegmentGroup({
+  title,
+  items
+}: {
+  title: string;
+  items: Array<[string, number]>;
+}) {
+  const max = Math.max(...items.map(([, value]) => value), 1);
+
+  return (
+    <div className="grid gap-3">
+      <p className="text-sm font-medium text-muted-foreground">{title}</p>
+      {items.map(([label, value]) => (
+        <div key={label} className="grid gap-2">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="font-medium">{label}</span>
+            <span className="text-muted-foreground">{value}</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary" style={{ width: `${(value / max) * 100}%` }} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

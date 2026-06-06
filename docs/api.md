@@ -107,6 +107,8 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 
 ## Analytics
 
+`GET /admin/dashboard` devuelve `cards`, `latestChanges`, `modules` y `segments`. `segments.analytics` agrupa eventos clave (`landingVisits`, `cvDownloads`, `contactSubmits`, `projectViews`) con los mismos filtros temporales; `segments.content` resume proyectos, experiencias y modulos activos.
+
 `POST /analytics/events` registra eventos anonimos de landing, descarga de CV, contacto y proyectos. La IP se guarda como hash SHA-256 y puede saltearse con `ANALYTICS_IP_HASH_SALT`.
 
 Variables de privacidad:

@@ -257,6 +257,20 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           primaryCv: "CV Base",
           cvUpdatedAt: "2026-06-06T08:00:00.000Z"
         },
+        segments: {
+          analytics: {
+            landingVisits: 10,
+            cvDownloads: 4,
+            contactSubmits: 2,
+            projectViews: 6
+          },
+          content: {
+            publishedProjects: 3,
+            visibleExperiences: 4,
+            activeModules: 2,
+            totalModules: 3
+          }
+        },
         latestChanges: [],
         modules: [
           { id: "module-1", key: "dashboard", name: "Dashboard", enabled: true, order: 1 },
@@ -424,6 +438,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
   await expect(page.getByText("Visitas landing")).toBeVisible();
   await expect(page.getByText("Pulso operativo")).toBeVisible();
+  await expect(page.getByText("Segmentacion operativa")).toBeVisible();
+  await expect(page.getByText("cv_download")).toBeVisible();
   await expect(page.getByText("Conversion contacto")).toBeVisible();
   await expect(page.getByRole("link", { name: /Ver eventos/ })).toHaveAttribute("href", "/admin/analytics");
 

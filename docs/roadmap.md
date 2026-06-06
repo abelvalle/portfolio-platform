@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 08:14 CEST.
+Estado actualizado: 2026-06-06 08:18 CEST.
 
 ## Hitos completados
 
@@ -1576,6 +1576,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Segmentación operativa en Dashboard admin
+
+- `GET /api/v1/admin/dashboard` devuelve `segments.analytics` con visitas landing, descargas CV, formularios y vistas de proyecto.
+- `segments.content` resume proyectos publicados, experiencias visibles y módulos activos/totales.
+- `/admin` muestra la nueva sección `Segmentacion operativa` con barras proporcionales por grupo.
+- `docs/api.md` documenta el nuevo payload de segmentos.
+- Añadidos tests unitarios del servicio admin y cobertura e2e del dashboard.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1590,7 +1605,7 @@ Verificacion realizada en este hito:
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado y respuesta `mailto`; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, privacidad configurable y purga por retención; faltan embudos y segmentación avanzada.
-- Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API y pulso operativo; falta segmentación avanzada.
+- Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo y segmentación operativa; falta segmentación por fuente/canal y cohorts.
 - Experiencias UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, reordenado drag/drop y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, selector de media, categorías gestionadas visualmente y orden drag/drop.
 - Skills UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa inline, categorías gestionadas como entidad, orden drag/drop y niveles con selector consistente.
