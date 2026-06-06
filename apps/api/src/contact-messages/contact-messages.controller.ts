@@ -51,6 +51,14 @@ export class ContactMessagesController {
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_messages')
+  @Get('webhook/deliveries')
+  webhookDeliveries() {
+    return this.contactWebhookService.deliveries();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('manage_messages')
   @Post('webhook/test')
   testWebhook() {

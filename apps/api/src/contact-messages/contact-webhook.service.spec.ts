@@ -4,6 +4,7 @@ import { ContactWebhookService } from './contact-webhook.service';
 const createPrisma = () => ({
   auditLog: {
     create: jest.fn(),
+    findMany: jest.fn(),
   },
 });
 
@@ -119,5 +120,70 @@ describe('ContactWebhookService', () => {
         },
       },
     });
+  });
+
+  it('lists recent webhook deliveries from audit logs', async () => {
+    const prisma = createPrisma();
+    prisma.auditLog.findMany.mockResolvedValue([
+      {
+        id: 'audit-1',
+        resourceId: 'contact.message.created',
+        metadata: {
+          event: 'contact.message.created',
+          configured: true,
+          dispatched: true,
+          messageId: 'message-1',
+          status: 202,
+          ignored: 'not-returned',
+        },
+        createdAt: new Date('2026-06-06T08:30:00.000Z'),
+      },
+      {
+        id: 'audit-2',
+        resourceId: 'contact.webhook.test',
+        metadata: {
+          event: 'contact.webhook.test',
+          configured: true,
+          dispatched: false,
+          error: 'fetch failed',
+        },
+        createdAt: new Date('2026-06-06T08:31:00.000Z'),
+      },
+    ]);
+    const service = createService({}, prisma);
+
+    const result = await service.deliveries();
+
+    expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
+      where: {
+        action: 'contact.webhook.delivery',
+        resource: 'contact-webhook',
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+    expect(result).toEqual([
+      {
+        id: 'audit-1',
+        event: 'contact.message.created',
+        configured: true,
+        dispatched: true,
+        status: 202,
+        error: null,
+        messageId: 'message-1',
+        createdAt: new Date('2026-06-06T08:30:00.000Z'),
+      },
+      {
+        id: 'audit-2',
+        event: 'contact.webhook.test',
+        configured: true,
+        dispatched: false,
+        status: null,
+        error: 'fetch failed',
+        messageId: null,
+        createdAt: new Date('2026-06-06T08:31:00.000Z'),
+      },
+    ]);
+    expect(JSON.stringify(result)).not.toContain('not-returned');
   });
 });

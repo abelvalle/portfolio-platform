@@ -166,6 +166,9 @@ export const adminClient = {
   contactWebhookStatus() {
     return apiFetch<ContactWebhookStatus>("/contact-messages/webhook/status");
   },
+  contactWebhookDeliveries() {
+    return apiFetch<ContactWebhookDelivery[]>("/contact-messages/webhook/deliveries");
+  },
   testContactWebhook() {
     return apiFetch<ContactWebhookTestResult>("/contact-messages/webhook/test", { method: "POST" });
   },
@@ -428,6 +431,17 @@ export type ContactWebhookStatus = {
 export type ContactWebhookTestResult = {
   configured: boolean;
   dispatched: boolean;
+};
+
+export type ContactWebhookDelivery = {
+  id: string;
+  event: string;
+  configured: boolean;
+  dispatched: boolean;
+  status?: number | null;
+  error?: string | null;
+  messageId?: string | null;
+  createdAt: string;
 };
 
 export type ContactMessage = {

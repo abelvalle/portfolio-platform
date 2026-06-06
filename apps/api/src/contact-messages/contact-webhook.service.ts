@@ -23,6 +23,31 @@ export class ContactWebhookService {
     };
   }
 
+  async deliveries() {
+    const logs = await this.prisma.auditLog.findMany({
+      where: {
+        action: 'contact.webhook.delivery',
+        resource: 'contact-webhook',
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    return logs.map((log) => {
+      const metadata = this.metadataRecord(log.metadata);
+      return {
+        id: log.id,
+        event: this.stringValue(metadata.event) || log.resourceId || 'unknown',
+        configured: Boolean(metadata.configured),
+        dispatched: Boolean(metadata.dispatched),
+        status: this.numberValue(metadata.status),
+        error: this.stringValue(metadata.error),
+        messageId: this.stringValue(metadata.messageId),
+        createdAt: log.createdAt,
+      };
+    });
+  }
+
   async dispatch(message: ContactMessage) {
     const url = this.webhookUrl;
     if (!url) {
@@ -145,5 +170,20 @@ export class ContactWebhookService {
 
   private get webhookSecret() {
     return this.configService.get<string>('CONTACT_WEBHOOK_SECRET');
+  }
+
+  private metadataRecord(metadata: unknown): Record<string, unknown> {
+    if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
+      return metadata as Record<string, unknown>;
+    }
+    return {};
+  }
+
+  private stringValue(value: unknown) {
+    return typeof value === 'string' ? value : null;
+  }
+
+  private numberValue(value: unknown) {
+    return typeof value === 'number' ? value : null;
   }
 }
