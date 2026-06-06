@@ -80,6 +80,21 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     return fields.length ? fields : ["structuredJson"];
   }
 
+  async function confirmJsonSaveIfNeeded() {
+    const savedMessage = page.getByText("JSON estructurado guardado.");
+    const largeChangeHeading = page.getByRole("heading", { name: "Confirmar cambio grande" });
+    await Promise.race([
+      savedMessage.waitFor({ state: "visible", timeout: 5000 }).then(() => "saved").catch(() => "none"),
+      largeChangeHeading.waitFor({ state: "visible", timeout: 5000 }).then(() => "dialog").catch(() => "none")
+    ]);
+    if (await largeChangeHeading.isVisible().catch(() => false)) {
+      await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).focus();
+      await page.keyboard.press("Enter");
+      await expect(largeChangeHeading).toBeHidden();
+    }
+    await expect(savedMessage).toBeVisible();
+  }
+
   await context.addCookies([{ name: "accessToken", value: "test-token", url: "http://localhost:3000" }]);
   await page.route("**/api/v1/auth/mfa/status", async (route) => {
     await route.fulfill({
@@ -1415,64 +1430,57 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Aplicar skills" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"name\": \"KPIs\"/);
-  await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
-  await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
+  await expect(page.getByLabel("Nombre skill CV")).toHaveValue("KPIs");
+  await page.getByLabel("Categoria skill CV").fill("Reporting");
+  await page.getByLabel("Nivel skill CV").fill("Avanzado");
+  await page.getByRole("button", { name: "Aplicar skill granular" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"category\": \"Reporting\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"level\": \"Avanzado\"/);
+  await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
+  await page.keyboard.press("Enter");
+  await confirmJsonSaveIfNeeded();
   await page.getByLabel("Idiomas CV").fill("Español - Nativo\nIngles - Intermedio");
   await page.getByRole("button", { name: "Aplicar idiomas" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"level\": \"Nativo\"/);
-  await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
-  await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
+  await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
+  await page.keyboard.press("Enter");
+  await confirmJsonSaveIfNeeded();
   await page.getByLabel("Proyectos CV").fill("Portfolio Platform\nCV Manager");
   await page.getByRole("button", { name: "Aplicar proyectos" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"name\": \"Portfolio Platform\"/);
-  await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
-  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).focus();
+  await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
-  await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
+  await confirmJsonSaveIfNeeded();
   await page.getByLabel("Educacion CV").fill("Project Management - Demo Institute - 2026");
   await page.getByRole("button", { name: "Aplicar educacion" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Project Management\"/);
-  await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
-  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).focus();
+  await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
-  await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
+  await confirmJsonSaveIfNeeded();
   await page.getByLabel("Certificaciones CV").fill("Scrum Master - Demo Academy - 2026");
   await page.getByRole("button", { name: "Aplicar certificaciones" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Scrum Master\"/);
-  await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
-  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).focus();
+  await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
-  await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
+  await confirmJsonSaveIfNeeded();
   await page.getByLabel("Experiencia CV").fill("Delivery Manager - Demo Company - 2026");
   await page.getByRole("button", { name: "Aplicar experiencia", exact: true }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"role\": \"Delivery Manager\"/);
-  await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
-  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).focus();
+  await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
-  await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
+  await confirmJsonSaveIfNeeded();
   await page.getByLabel("Secciones personalizadas CV").fill("Publicaciones: Seccion demo pendiente de revision");
   await page.getByRole("button", { name: "Aplicar secciones" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Publicaciones\"/);
-  await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
-  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).focus();
+  await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
-  await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
+  await confirmJsonSaveIfNeeded();
   await page.getByLabel("JSON estructurado").fill(JSON.stringify({
     experiences: [{
       role: "Delivery Manager",

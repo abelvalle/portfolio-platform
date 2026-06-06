@@ -30,6 +30,13 @@ type ExperienceFormDraft = {
   achievements: string;
 };
 
+type SkillFormDraft = {
+  index: number;
+  name: string;
+  category: string;
+  level: string;
+};
+
 const emptyDraft: CvVersionDraft = {
   name: "",
   description: "",
@@ -48,6 +55,13 @@ const emptyExperienceFormDraft: ExperienceFormDraft = {
   description: "",
   responsibilities: "",
   achievements: ""
+};
+
+const emptySkillFormDraft: SkillFormDraft = {
+  index: 0,
+  name: "",
+  category: "",
+  level: ""
 };
 
 const auditActionOptions = ["", "create", "update", "archive", "set_primary", "generate_pdf", "generate_docx"];
@@ -112,6 +126,14 @@ function skillsFromStructuredJson(value: unknown) {
     })
     .filter(Boolean)
     .join("\n");
+}
+
+function skillListFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return [];
+  }
+  const skills = (value as Record<string, unknown>).skills;
+  return Array.isArray(skills) ? skills : [];
 }
 
 function languagesFromStructuredJson(value: unknown) {
@@ -299,6 +321,20 @@ function stringListField(data: Record<string, unknown>, field: string) {
   return typeof value === "string" ? splitTextareaLines(value) : [];
 }
 
+function skillFormFromStructuredJson(value: unknown, index = 0): SkillFormDraft {
+  const selected = skillListFromStructuredJson(value)[index];
+  if (!selected || typeof selected !== "object" || Array.isArray(selected)) {
+    return { ...emptySkillFormDraft, index };
+  }
+  const data = selected as Record<string, unknown>;
+  return {
+    index,
+    name: textField(data, "name"),
+    category: textField(data, "category") || textField(data, "categoryName"),
+    level: textField(data, "level")
+  };
+}
+
 function experienceFormFromStructuredJson(value: unknown, index = 0): ExperienceFormDraft {
   const selected = experienceListFromStructuredJson(value)[index];
   if (!selected || typeof selected !== "object" || Array.isArray(selected)) {
@@ -435,6 +471,7 @@ export function CvVersionTable() {
   const [jsonDraft, setJsonDraft] = useState("{}");
   const [summaryDraft, setSummaryDraft] = useState("");
   const [skillsDraft, setSkillsDraft] = useState("");
+  const [skillFormDraft, setSkillFormDraft] = useState(emptySkillFormDraft);
   const [languagesDraft, setLanguagesDraft] = useState("");
   const [projectsDraft, setProjectsDraft] = useState("");
   const [educationDraft, setEducationDraft] = useState("");
@@ -464,6 +501,7 @@ export function CvVersionTable() {
       setMetadataDraft(emptyDraft);
       setSummaryDraft("");
       setSkillsDraft("");
+      setSkillFormDraft(emptySkillFormDraft);
       setLanguagesDraft("");
       setProjectsDraft("");
       setEducationDraft("");
@@ -480,6 +518,7 @@ export function CvVersionTable() {
       setMetadataDraft(metadataDraftFromVersion(selectedVersion));
       setSummaryDraft(summaryFromStructuredJson(selectedVersion.structuredJson));
       setSkillsDraft(skillsFromStructuredJson(selectedVersion.structuredJson));
+      setSkillFormDraft(skillFormFromStructuredJson(selectedVersion.structuredJson));
       setLanguagesDraft(languagesFromStructuredJson(selectedVersion.structuredJson));
       setProjectsDraft(projectsFromStructuredJson(selectedVersion.structuredJson));
       setEducationDraft(educationFromStructuredJson(selectedVersion.structuredJson));
@@ -694,6 +733,7 @@ export function CvVersionTable() {
     setMetadataDraft(metadataDraftFromVersion(selectedVersion));
     setSummaryDraft(summaryFromStructuredJson(selectedVersion?.structuredJson));
     setSkillsDraft(skillsFromStructuredJson(selectedVersion?.structuredJson));
+    setSkillFormDraft(skillFormFromStructuredJson(selectedVersion?.structuredJson));
     setLanguagesDraft(languagesFromStructuredJson(selectedVersion?.structuredJson));
     setProjectsDraft(projectsFromStructuredJson(selectedVersion?.structuredJson));
     setEducationDraft(educationFromStructuredJson(selectedVersion?.structuredJson));
@@ -755,7 +795,68 @@ export function CvVersionTable() {
       delete nextStructuredJson.skills;
     }
     setJsonDraft(formatJson(nextStructuredJson));
+    setSkillFormDraft(skillFormFromStructuredJson(nextStructuredJson, Math.min(skillFormDraft.index, Math.max(nextSkills.length - 1, 0))));
     setJsonMessage("Bloque skills aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function selectSkillFormIndex(index: number) {
+    try {
+      setSkillFormDraft(skillFormFromStructuredJson(JSON.parse(jsonDraft), index));
+    } catch {
+      setSkillFormDraft((current) => ({ ...current, index }));
+    }
+  }
+
+  function applySkillFormBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el bloque.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const name = skillFormDraft.name.trim();
+    if (!name) {
+      setJsonMessage("El nombre de skill es obligatorio para aplicar el formulario granular.");
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const existingSkills = listField(nextStructuredJson, "skills");
+    const nextSkills = existingSkills.map((item) =>
+      item && typeof item === "object" && !Array.isArray(item) ? { ...(item as Record<string, unknown>) } : { name: String(item || "") }
+    );
+    const index = Math.min(Math.max(skillFormDraft.index, 0), nextSkills.length);
+    const nextSkill: Record<string, unknown> = {
+      ...(nextSkills[index] || {}),
+      name
+    };
+    const category = skillFormDraft.category.trim();
+    const level = skillFormDraft.level.trim();
+
+    if (category) {
+      nextSkill.category = category;
+    } else {
+      delete nextSkill.category;
+    }
+    if (level) {
+      nextSkill.level = level;
+    } else {
+      delete nextSkill.level;
+    }
+
+    nextSkills[index] = nextSkill;
+    nextStructuredJson.skills = nextSkills.filter((skill) => textField(skill, "name"));
+    setJsonDraft(formatJson(nextStructuredJson));
+    setSkillsDraft(skillsFromStructuredJson(nextStructuredJson));
+    setSkillFormDraft(skillFormFromStructuredJson(nextStructuredJson, index));
+    setJsonMessage("Formulario granular de skill aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
   function applyLanguagesBlock() {
@@ -1209,6 +1310,7 @@ export function CvVersionTable() {
     return templates.find((template) => template.id === templateId)?.name || "Plantilla asignada";
   }
 
+  const skillOptions = splitBlockLines(skillsDraft);
   const experienceOptions = splitBlockLines(experiencesDraft);
 
   return (
@@ -1577,6 +1679,55 @@ export function CvVersionTable() {
           <Button type="button" variant="outline" className="w-fit" onClick={applySkillsBlock} disabled={!jsonVersionId}>
             Aplicar skills
           </Button>
+          <div className="grid gap-3 border-t border-border pt-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="grid min-w-[220px] gap-2">
+                <Label htmlFor="skillFormIndex">Skill granular</Label>
+                <select
+                  id="skillFormIndex"
+                  className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                  value={String(skillFormDraft.index)}
+                  onChange={(event) => selectSkillFormIndex(Number(event.target.value))}
+                  disabled={!jsonVersionId}
+                >
+                  {skillOptions.length ? skillOptions.map((skill, index) => (
+                    <option key={`${skill}-${index}`} value={index}>{skill}</option>
+                  )) : (
+                    <option value="0">Nueva skill</option>
+                  )}
+                </select>
+              </div>
+              <Button type="button" variant="outline" onClick={applySkillFormBlock} disabled={!jsonVersionId}>
+                Aplicar skill granular
+              </Button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-2">
+                <Label htmlFor="skillFormName">Nombre skill CV</Label>
+                <Input
+                  id="skillFormName"
+                  value={skillFormDraft.name}
+                  onChange={(event) => setSkillFormDraft((current) => ({ ...current, name: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="skillFormCategory">Categoria skill CV</Label>
+                <Input
+                  id="skillFormCategory"
+                  value={skillFormDraft.category}
+                  onChange={(event) => setSkillFormDraft((current) => ({ ...current, category: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="skillFormLevel">Nivel skill CV</Label>
+                <Input
+                  id="skillFormLevel"
+                  value={skillFormDraft.level}
+                  onChange={(event) => setSkillFormDraft((current) => ({ ...current, level: event.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="experiencesBlock">Experiencia CV</Label>

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 17:47 CEST.
+Estado actualizado: 2026-06-06 17:58 CEST.
 
 ## Hitos completados
 
@@ -2877,6 +2877,29 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 - QA funcional Playwright fallback en `/admin/cv/versions` desktop/mobile; Browser integrado no expuso herramienta navegable en esta sesion.
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
+### Formulario granular de skills en Versiones CV
+
+- `/admin/cv/versions` anade un subformulario granular dentro del bloque `Skills CV`.
+- El formulario permite editar nombre, categoria y nivel de la skill seleccionada.
+- La aplicacion conserva campos ricos ya existentes del objeto de skill y solo reemplaza los campos controlados por el formulario.
+- El guardado e2e acepta tanto guardado directo como confirmacion de cambio grande cuando el JSON cruza el umbral.
+- Anadida cobertura e2e desktop/mobile para aplicar categoria y nivel sin perder el nombre de la skill.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- QA funcional Playwright fallback en `/admin/cv/versions` desktop/mobile; Browser integrado no expuso herramienta navegable en esta sesion.
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
 
 ## Deuda técnica abierta
 
@@ -2900,8 +2923,8 @@ Verificacion realizada en este hito:
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones y draft/publish desde UI; falta drag/drop.
-- Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples, bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, formulario granular de experiencia, borrador/revision/publicacion para `structuredJson` y draft/publish de metadatos no JSON; faltan formularios granulares para otros bloques.
-- Editor CV por bloques: el editor principal está conectado a campos básicos y Versiones CV ya tiene bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, duplicado de versiones y edición granular de una experiencia; falta duplicado por bloque y granularidad equivalente en multiples experiencias/resto de bloques.
+- Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples, bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, formularios granulares de experiencia/skills, borrador/revision/publicacion para `structuredJson` y draft/publish de metadatos no JSON; faltan formularios granulares para otros bloques.
+- Editor CV por bloques: el editor principal está conectado a campos básicos y Versiones CV ya tiene bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, duplicado de versiones y edición granular de una experiencia y una skill; falta duplicado por bloque y granularidad equivalente en multiples experiencias/resto de bloques.
 - Preview A4 admin avanzado: el preview está sincronizado; falta render fiel a la plantilla seleccionada, paginación real y comparación pixel-perfect con exportación PDF.
 - LinkedIn OAuth persistente: el callback ya intercambia `code` y obtiene `userinfo` sanitizado; falta persistir/sincronizar perfil con una entidad segura de integración y credenciales reales.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
@@ -2913,6 +2936,6 @@ Verificacion realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. Formularios granulares para otros bloques y multiples experiencias en Versiones CV.
+1. Formularios granulares para proyectos/educacion/certificaciones en Versiones CV.
 2. Comparacion pixel-perfect entre preview A4 publico/admin y PDF generado.
 3. Prueba e2e con DB real para generar y descargar archivos CV persistidos.
