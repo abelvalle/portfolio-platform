@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { RefreshCw, Save, Search, Trash2, UserPlus } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, Save, Search, Trash2, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { adminClient, type AdminUser, type AdminUserRole } from "@/lib/api";
 
 const roles: AdminUserRole[] = ["admin", "editor", "viewer"];
+const userPageSize = 5;
 
 export function UserManagement() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -19,6 +20,7 @@ export function UserManagement() {
   const [draftUser, setDraftUser] = useState({ email: "", name: "", role: "viewer" as AdminUserRole, password: "" });
   const [roleDrafts, setRoleDrafts] = useState<Record<string, AdminUserRole>>({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [pendingDeleteUser, setPendingDeleteUser] = useState<AdminUser | null>(null);
 
   const filteredUsers = useMemo(() => {
@@ -28,6 +30,14 @@ export function UserManagement() {
       [user.email, user.name || "", user.role].some((value) => value.toLowerCase().includes(query))
     );
   }, [searchTerm, users]);
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / userPageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedUsers = useMemo(() => {
+    const start = (safeCurrentPage - 1) * userPageSize;
+    return filteredUsers.slice(start, start + userPageSize);
+  }, [safeCurrentPage, filteredUsers]);
+  const firstVisibleUser = filteredUsers.length ? (safeCurrentPage - 1) * userPageSize + 1 : 0;
+  const lastVisibleUser = Math.min(safeCurrentPage * userPageSize, filteredUsers.length);
 
   useEffect(() => {
     void loadUsers();
@@ -138,7 +148,10 @@ export function UserManagement() {
                 aria-label="Buscar usuarios"
                 className="border-0 px-0 shadow-none focus-visible:ring-0"
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
+                  setCurrentPage(1);
+                }}
                 placeholder="Buscar por email, nombre o rol"
               />
             </div>
@@ -149,7 +162,7 @@ export function UserManagement() {
             <span>MFA</span>
             <span>Acciones</span>
           </div>
-          {filteredUsers.length ? filteredUsers.map((user) => (
+          {filteredUsers.length ? paginatedUsers.map((user) => (
             <div key={user.id} className="grid grid-cols-[1.4fr_120px_120px_180px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <div className="min-w-0">
                 <p className="truncate font-medium">{user.email}</p>
@@ -177,6 +190,20 @@ export function UserManagement() {
           )) : (
             <div className="p-8 text-center text-sm text-muted-foreground">Sin usuarios para la busqueda actual.</div>
           )}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-3 text-sm text-muted-foreground">
+            <span>{firstVisibleUser}-{lastVisibleUser} de {filteredUsers.length} usuarios</span>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" aria-label="Pagina anterior usuarios" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={safeCurrentPage === 1}>
+                <ChevronLeft data-icon="inline-start" />
+                Anterior
+              </Button>
+              <span>Pagina {safeCurrentPage} de {totalPages}</span>
+              <Button type="button" variant="outline" size="sm" aria-label="Pagina siguiente usuarios" onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={safeCurrentPage === totalPages}>
+                Siguiente
+                <ChevronRight data-icon="inline-end" />
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 

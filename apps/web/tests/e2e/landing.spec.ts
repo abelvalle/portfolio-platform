@@ -93,6 +93,51 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           mfaEnabled: false,
           createdAt: "2026-06-01T08:00:00.000Z",
           updatedAt: "2026-06-01T08:00:00.000Z"
+        },
+        {
+          id: "user-2",
+          email: "admin@example.com",
+          name: "Admin Demo",
+          role: "admin",
+          mfaEnabled: true,
+          createdAt: "2026-06-01T08:00:00.000Z",
+          updatedAt: "2026-06-01T08:00:00.000Z"
+        },
+        {
+          id: "user-3",
+          email: "viewer1@example.com",
+          name: "Viewer Uno",
+          role: "viewer",
+          mfaEnabled: false,
+          createdAt: "2026-06-01T08:00:00.000Z",
+          updatedAt: "2026-06-01T08:00:00.000Z"
+        },
+        {
+          id: "user-4",
+          email: "viewer2@example.com",
+          name: "Viewer Dos",
+          role: "viewer",
+          mfaEnabled: false,
+          createdAt: "2026-06-01T08:00:00.000Z",
+          updatedAt: "2026-06-01T08:00:00.000Z"
+        },
+        {
+          id: "user-5",
+          email: "viewer3@example.com",
+          name: "Viewer Tres",
+          role: "viewer",
+          mfaEnabled: false,
+          createdAt: "2026-06-01T08:00:00.000Z",
+          updatedAt: "2026-06-01T08:00:00.000Z"
+        },
+        {
+          id: "user-6",
+          email: "viewer4@example.com",
+          name: "Viewer Cuatro",
+          role: "viewer",
+          mfaEnabled: false,
+          createdAt: "2026-06-01T08:00:00.000Z",
+          updatedAt: "2026-06-01T08:00:00.000Z"
         }
       ])
     });
@@ -186,7 +231,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/settings/users");
   await expect(page.getByRole("heading", { name: "Usuarios y permisos" })).toBeVisible();
   await expect(page.getByLabel("Buscar usuarios")).toBeVisible();
+  await expect(page.getByText("Pagina 1 de 2")).toBeVisible();
+  await page.getByRole("button", { name: "Pagina siguiente usuarios" }).click();
+  await expect(page.getByText("viewer4@example.com")).toBeVisible();
+  await expect(page.getByText("Pagina 2 de 2")).toBeVisible();
   await page.getByLabel("Buscar usuarios").fill("editor");
+  await expect(page.getByText("Pagina 1 de 1")).toBeVisible();
   await expect(page.getByText("editor@example.com")).toBeVisible();
   await page.getByRole("button", { name: "Baja" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar baja" })).toBeVisible();
