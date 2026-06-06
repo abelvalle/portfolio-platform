@@ -78,6 +78,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/cv/versions");
   await expect(page.getByRole("heading", { name: "Versiones de CV" })).toBeVisible();
+  await expect(page.getByLabel("Plantilla")).toBeVisible();
 
   await page.goto("/admin/cv/templates");
   await expect(page.getByRole("heading", { name: "Plantillas de CV" })).toBeVisible();

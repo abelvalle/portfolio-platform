@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cvClient, getApiUrl, type CvVersionItem, type CvVersionMutation } from "@/lib/api";
+import { cvClient, getApiUrl, type CvTemplateItem, type CvVersionItem, type CvVersionMutation } from "@/lib/api";
 
 type CvVersionDraft = {
   name: string;
@@ -16,6 +16,7 @@ type CvVersionDraft = {
   targetCompany: string;
   language: string;
   status: "draft" | "published" | "archived";
+  templateId: string;
 };
 
 const emptyDraft: CvVersionDraft = {
@@ -24,7 +25,8 @@ const emptyDraft: CvVersionDraft = {
   targetRole: "",
   targetCompany: "",
   language: "es",
-  status: "draft"
+  status: "draft",
+  templateId: ""
 };
 
 function slugify(value: string) {
@@ -38,6 +40,7 @@ function slugify(value: string) {
 
 export function CvVersionTable() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
+  const [templates, setTemplates] = useState<CvTemplateItem[]>([]);
   const [draft, setDraft] = useState(emptyDraft);
   const [message, setMessage] = useState("Cargando versiones de CV.");
   const [isLoading, setIsLoading] = useState(true);
@@ -54,9 +57,13 @@ export function CvVersionTable() {
   async function loadVersions() {
     setIsLoading(true);
     try {
-      const nextVersions = await cvClient.versions();
+      const [nextVersions, nextTemplates] = await Promise.all([
+        cvClient.versions(),
+        cvClient.templates().catch(() => [])
+      ]);
       setVersions(nextVersions);
-      setMessage(nextVersions.length ? "Versiones sincronizadas con la API." : "Sin versiones registradas.");
+      setTemplates(nextTemplates);
+      setMessage(nextVersions.length ? "Versiones y plantillas sincronizadas con la API." : "Sin versiones registradas.");
     } catch {
       setMessage("No se pudieron cargar versiones. Comprueba la sesion admin.");
     } finally {
@@ -74,6 +81,7 @@ export function CvVersionTable() {
       targetCompany: draft.targetCompany.trim() || null,
       language: draft.language.trim() || "es",
       status: draft.status,
+      templateId: draft.templateId || null,
       structuredJson: {}
     };
   }
@@ -162,6 +170,13 @@ export function CvVersionTable() {
     }
   }
 
+  function templateLabel(templateId?: string | null) {
+    if (!templateId) {
+      return "Sin plantilla";
+    }
+    return templates.find((template) => template.id === templateId)?.name || "Plantilla asignada";
+  }
+
   return (
     <div className="grid gap-6">
       <section className="rounded-lg border border-border bg-card p-6">
@@ -181,7 +196,7 @@ export function CvVersionTable() {
         <p className="mt-4 text-sm text-muted-foreground" aria-live="polite">{message}</p>
       </section>
 
-      <section className="grid gap-5 rounded-lg border border-border bg-card p-5 md:grid-cols-3">
+      <section className="grid gap-5 rounded-lg border border-border bg-card p-5 md:grid-cols-4">
         <div className="grid gap-2">
           <Label htmlFor="cvVersionName">Nombre</Label>
           <Input id="cvVersionName" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
@@ -195,14 +210,28 @@ export function CvVersionTable() {
           <Input id="language" value={draft.language} onChange={(event) => setDraft((current) => ({ ...current, language: event.target.value }))} />
         </div>
         <div className="grid gap-2">
+          <Label htmlFor="templateId">Plantilla</Label>
+          <select
+            id="templateId"
+            className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+            value={draft.templateId}
+            onChange={(event) => setDraft((current) => ({ ...current, templateId: event.target.value }))}
+          >
+            <option value="">Sin plantilla</option>
+            {templates.map((template) => (
+              <option key={template.id} value={template.id}>{template.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="grid gap-2">
           <Label htmlFor="targetCompany">Empresa objetivo</Label>
           <Input id="targetCompany" value={draft.targetCompany} onChange={(event) => setDraft((current) => ({ ...current, targetCompany: event.target.value }))} />
         </div>
-        <div className="grid gap-2 md:col-span-2">
+        <div className="grid gap-2 md:col-span-3">
           <Label htmlFor="versionDescription">Descripcion</Label>
           <Textarea id="versionDescription" rows={3} value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} />
         </div>
-        <div className="flex flex-wrap gap-2 md:col-span-3">
+        <div className="flex flex-wrap gap-2 md:col-span-4">
           {(["draft", "published", "archived"] as const).map((status) => (
             <Button key={status} type="button" variant={draft.status === status ? "default" : "outline"} onClick={() => setDraft((current) => ({ ...current, status }))}>
               {status}
@@ -216,8 +245,8 @@ export function CvVersionTable() {
       </section>
 
       <section className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-[900px]">
-          <div className="grid grid-cols-[1.2fr_1fr_90px_120px_110px_270px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+        <div className="min-w-[1100px]">
+          <div className="grid grid-cols-[1.1fr_1fr_90px_120px_110px_390px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
             <span>Nombre</span>
             <span>Objetivo</span>
             <span>Idioma</span>
@@ -226,10 +255,11 @@ export function CvVersionTable() {
             <span>Acciones</span>
           </div>
           {versions.length ? versions.map((version) => (
-            <div key={version.id} className="grid grid-cols-[1.2fr_1fr_90px_120px_110px_270px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+            <div key={version.id} className="grid grid-cols-[1.1fr_1fr_90px_120px_110px_390px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <span>
                 <span className="block font-medium">{version.name}</span>
                 <span className="block text-muted-foreground">{version.slug}</span>
+                <span className="mt-1 block text-xs text-muted-foreground">{templateLabel(version.templateId)}</span>
                 <span className="mt-2 flex flex-wrap gap-1">
                   {version.generatedPdfId ? <Badge variant="outline">PDF listo</Badge> : null}
                   {version.generatedDocxId ? <Badge variant="outline">DOCX listo</Badge> : null}
@@ -244,6 +274,19 @@ export function CvVersionTable() {
               <span><Badge variant={version.status === "published" ? "default" : "secondary"}>{version.status}</Badge></span>
               <span>{version.isPrimary ? <Badge>principal</Badge> : <Badge variant="outline">no</Badge>}</span>
               <span className="flex flex-wrap gap-1">
+                <label className="sr-only" htmlFor={`template-${version.id}`}>Plantilla de {version.name}</label>
+                <select
+                  id={`template-${version.id}`}
+                  className="h-7 max-w-[150px] rounded-lg border border-input bg-transparent px-2 text-xs"
+                  value={version.templateId || ""}
+                  onChange={(event) => patchVersion(version.id, { templateId: event.target.value || null })}
+                  disabled={busyId === version.id}
+                >
+                  <option value="">Sin plantilla</option>
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>{template.name}</option>
+                  ))}
+                </select>
                 <Button type="button" variant="outline" size="sm" onClick={() => generateVersionFile(version.id, "pdf")} disabled={busyId === version.id}>
                   <FileText data-icon="inline-start" />
                   PDF
