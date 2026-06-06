@@ -14,12 +14,11 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UserRole } from '@prisma/client';
 import type { Response } from 'express';
 import { CurrentUser } from '../common/guards/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Roles } from '../common/guards/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/guards/permissions.decorator';
 import {
   CreateMediaAssetDto,
   PurgeDeletedMediaDto,
@@ -40,16 +39,16 @@ export class MediaController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_media')
   @Get('storage/status')
   storageStatus() {
     return this.mediaService.storageStatus();
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('purge_media')
   @Post('storage/purge-deleted')
   purgeDeleted(
     @Body() body: PurgeDeletedMediaDto,
@@ -91,8 +90,8 @@ export class MediaController {
       },
     },
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_media')
   @UseInterceptors(FileInterceptor('file'))
   @Post('upload')
   upload(
@@ -104,24 +103,24 @@ export class MediaController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_media')
   @Post()
   create(@Body() body: CreateMediaAssetDto) {
     return this.mediaService.create(body);
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_media')
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: UpdateMediaAssetDto) {
     return this.mediaService.update(id, body);
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_media')
   @Delete(':id')
   remove(@Param('id') id: string, @CurrentUser() user: { id?: string }) {
     return this.mediaService.remove(id, user?.id);

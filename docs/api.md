@@ -93,8 +93,9 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /media`
 - `GET /media/:id`
 - `GET /media/:id/download`
-- `GET /media/storage/status`
-- `POST /media/upload`
+- `GET /media/storage/status` (`manage_media`)
+- `POST /media/storage/purge-deleted` (`purge_media`)
+- `POST /media/upload` (`manage_media`)
 - `POST /analytics/events`
 - `GET /analytics/summary?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_analytics`)
 - `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
@@ -210,10 +211,10 @@ Endpoints:
 - `GET /media`: lista assets no eliminados.
 - `GET /media/:id`: obtiene metadata de un asset.
 - `GET /media/:id/download`: descarga el binario asociado a `storageKey`.
-- `GET /media/storage/status`: protegido para `admin` y `editor`; devuelve proveedor, límites, cuota opcional, MIME types y métricas `assetCount`/`usedBytes`.
-- `POST /media/storage/purge-deleted`: protegido para `admin`; purga archivos locales de assets ya eliminados con `retentionDays` opcional y `dryRun`.
-- `POST /media/upload`: protegido para `admin` y `editor`; acepta `multipart/form-data` con `file`, `altText` opcional y `type` opcional.
-- `POST|PATCH|DELETE /media`: protegido para `admin` y `editor`; mantiene registro manual/edición/soft delete de metadata.
+- `GET /media/storage/status`: protegido con `manage_media`; devuelve proveedor, límites, cuota opcional, MIME types y métricas `assetCount`/`usedBytes`.
+- `POST /media/storage/purge-deleted`: protegido con `purge_media`; purga archivos locales de assets ya eliminados con `retentionDays` opcional y `dryRun`.
+- `POST /media/upload`: protegido con `manage_media`; acepta `multipart/form-data` con `file`, `altText` opcional y `type` opcional.
+- `POST|PATCH|DELETE /media`: protegido con `manage_media`; mantiene registro manual/edición/soft delete de metadata.
 - `POST /media/upload`, `DELETE /media/:id` y la purga diferida registran auditoría en `AuditLog`.
 
 Ejemplo `multipart/form-data`:

@@ -34,6 +34,18 @@ describe('PermissionsGuard', () => {
     expect(guard.canActivate(mockContext(UserRole.viewer))).toBe(false);
   });
 
+  it('allows editors to manage media metadata and uploads', () => {
+    const guard = new PermissionsGuard(mockReflector(['manage_media']));
+
+    expect(guard.canActivate(mockContext(UserRole.editor))).toBe(true);
+  });
+
+  it('rejects editors from purging media files physically', () => {
+    const guard = new PermissionsGuard(mockReflector(['purge_media']));
+
+    expect(guard.canActivate(mockContext(UserRole.editor))).toBe(false);
+  });
+
   it('allows routes without explicit permissions', () => {
     const guard = new PermissionsGuard(mockReflector(undefined));
 
