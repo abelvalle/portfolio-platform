@@ -29,6 +29,9 @@ export type StoredMediaFile = {
   url: string;
 };
 
+const EICAR_SIGNATURE =
+  'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!';
+
 @Injectable()
 export class MediaStorageService {
   constructor(private readonly configService: ConfigService) {}
@@ -40,6 +43,7 @@ export class MediaStorageService {
       maxFileSizeMb: this.maxFileSizeMb,
       quotaMb: this.quotaMb,
       allowedMimeTypes: this.allowedMimeTypes,
+      signatureScanEnabled: this.signatureScanEnabled,
       uploadEndpoint: '/api/v1/media/upload',
       downloadPattern: '/api/v1/media/:id/download',
     };
@@ -118,6 +122,9 @@ export class MediaStorageService {
     if (file.size > this.maxFileSizeBytes) {
       throw new BadRequestException(`File exceeds ${this.maxFileSizeMb} MB`);
     }
+    if (this.signatureScanEnabled && file.buffer.includes(EICAR_SIGNATURE)) {
+      throw new BadRequestException('File failed malware signature scan');
+    }
   }
 
   private buildFilename(originalName: string, mimeType: string) {
@@ -177,6 +184,12 @@ export class MediaStorageService {
       this.configService.get<string>('MEDIA_STORAGE_QUOTA_MB') || 0,
     );
     return Number.isFinite(configured) && configured > 0 ? configured : null;
+  }
+
+  private get signatureScanEnabled() {
+    return (
+      this.configService.get<string>('MEDIA_SIGNATURE_SCAN_ENABLED') !== 'false'
+    );
   }
 
   private get allowedMimeTypes() {

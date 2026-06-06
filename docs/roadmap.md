@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 08:18 CEST.
+Estado actualizado: 2026-06-06 08:22 CEST.
 
 ## Hitos completados
 
@@ -1591,6 +1591,22 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Escaneo básico de firma en uploads media
+
+- `MediaStorageService` bloquea la firma de prueba EICAR antes de escribir archivos en storage local.
+- `MEDIA_SIGNATURE_SCAN_ENABLED=false` permite desactivar el bloqueo en entornos controlados.
+- `GET /api/v1/media/storage/status` expone `signatureScanEnabled`.
+- `/admin/media` muestra el estado `scan on/off` en los badges de almacenamiento.
+- `.env.example`, `README.md`, `docs/deployment.md` y `docs/api.md` documentan la variable y sus límites.
+- Añadidos tests unitarios del storage y cobertura e2e del badge en media.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1619,7 +1635,7 @@ Verificacion realizada en este hito:
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.
 - Restauración por entidad CMS: existe restore para tema visual y perfil público; falta restaurar otras entidades cuando entren al workflow draft/publish.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
-- Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete y purga fisica diferida; falta antivirus.
+- Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete, purga fisica diferida y bloqueo local de firma EICAR; falta integracion antivirus externa real.
 - NPM audit: quedan 2 vulnerabilidades moderadas reportadas por `npm install`; no se aplica `audit fix --force` para evitar cambios de versiones fuera de hito.
 
 ## Próximos hitos priorizados

@@ -59,6 +59,10 @@ Variables opcionales de analitica:
 - `ANALYTICS_STORE_USER_AGENT=false`: evita guardar user-agent.
 - `ANALYTICS_RETENTION_DAYS`: dias de retencion antes de purgar eventos antiguos.
 
+Variables opcionales de media:
+
+- `MEDIA_SIGNATURE_SCAN_ENABLED=false`: desactiva el bloqueo local de firmas EICAR en uploads.
+
 ## Migraciones y seed
 
 ```bash

@@ -407,6 +407,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         storageDir: "storage",
         maxFileSizeMb: 10,
         quotaMb: 250,
+        signatureScanEnabled: true,
         assetCount: 1,
         usedBytes: 2048,
         usedMb: 0,
@@ -576,6 +577,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/media");
   await expect(page.getByRole("heading", { name: "Biblioteca media" })).toBeVisible();
   await expect(page.getByText("cuota 250 MB")).toBeVisible();
+  await expect(page.getByText("scan on")).toBeVisible();
   await expect(page.getByText("assets 1")).toBeVisible();
   await expect(page.getByText("uso 2 KB")).toBeVisible();
   await expect(page.getByText("CV Demo.pdf")).toBeVisible();

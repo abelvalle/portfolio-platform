@@ -605,6 +605,7 @@ export type MediaStorageStatus = {
   assetCount?: number;
   usedBytes?: number;
   usedMb?: number;
+  signatureScanEnabled?: boolean;
   allowedMimeTypes: string[];
   uploadEndpoint: string;
   downloadPattern: string;

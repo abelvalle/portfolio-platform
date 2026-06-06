@@ -13,6 +13,7 @@ describe('MediaStorageService', () => {
       storageDir: 'storage',
       maxFileSizeMb: 10,
       quotaMb: null,
+      signatureScanEnabled: true,
       uploadEndpoint: '/api/v1/media/upload',
     });
   });
@@ -34,6 +35,22 @@ describe('MediaStorageService', () => {
         mimetype: 'text/plain',
         size: 10,
         buffer: Buffer.from('hello'),
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects EICAR test signature before writing files', async () => {
+    const service = new MediaStorageService(mockConfig());
+    const buffer = Buffer.from(
+      'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*',
+    );
+
+    await expect(
+      service.save({
+        originalname: 'cv.pdf',
+        mimetype: 'application/pdf',
+        size: buffer.length,
+        buffer,
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
