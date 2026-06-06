@@ -3480,6 +3480,15 @@ Verificacion realizada en este hito:
 - `npm.cmd audit --audit-level=moderate` falla con 2 vulnerabilidades moderadas `next/postcss`.
 - `npm.cmd ls postcss --workspace apps/web` confirma que el override deja `postcss@8.4.31` invalido bajo `next`.
 
+### Build web tras preview A4 ampliado
+
+- Ejecutado build de produccion del frontend despues de anadir proyectos destacados al preview A4.
+- Next compila rutas publicas y privadas sin errores de TypeScript ni build.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
