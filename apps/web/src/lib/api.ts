@@ -679,5 +679,8 @@ export const mediaClient = {
   },
   upload(data: FormData) {
     return apiUpload<MediaAsset>("/media/upload", data);
+  },
+  delete(id: string) {
+    return apiFetch<MediaAsset>(`/media/${id}`, { method: "DELETE" });
   }
 };

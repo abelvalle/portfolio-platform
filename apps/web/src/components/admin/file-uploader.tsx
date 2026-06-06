@@ -1,9 +1,10 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { CheckCircle2, RefreshCw, Upload } from "lucide-react";
+import { CheckCircle2, RefreshCw, Trash2, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { getApiUrl, mediaClient, type MediaAsset, type MediaStorageStatus } from "@/lib/api";
 
@@ -16,6 +17,8 @@ export function FileUploader() {
   const [message, setMessage] = useState("Listo para subir archivos.");
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [pendingDeleteAsset, setPendingDeleteAsset] = useState<MediaAsset | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     void loadMedia();
@@ -62,6 +65,20 @@ export function FileUploader() {
       setMessage("No se pudo subir el archivo. Comprueba sesion, tipo y tamano permitido.");
     } finally {
       setIsUploading(false);
+    }
+  }
+
+  async function deleteAsset(asset: MediaAsset) {
+    setBusyId(asset.id);
+    try {
+      await mediaClient.delete(asset.id);
+      setAssets((current) => current.filter((item) => item.id !== asset.id));
+      setPendingDeleteAsset(null);
+      setMessage(`Asset eliminado: ${asset.originalName || asset.filename}.`);
+    } catch {
+      setMessage("No se pudo eliminar el asset.");
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -128,10 +145,23 @@ export function FileUploader() {
                       <p className="font-medium">{asset.originalName || asset.filename}</p>
                       <p className="text-sm text-muted-foreground">{asset.mimeType} - {formatSize(asset.size)}</p>
                     </div>
-                    <a className="inline-flex items-center gap-2 text-sm text-primary" href={getApiUrl(`/media/${asset.id}/download`)}>
-                      <CheckCircle2 className="size-4" aria-hidden="true" />
-                      Descargar
-                    </a>
+                    <div className="flex flex-wrap gap-2 md:justify-end">
+                      <a className="inline-flex items-center gap-2 text-sm text-primary" href={getApiUrl(`/media/${asset.id}/download`)}>
+                        <CheckCircle2 className="size-4" aria-hidden="true" />
+                        Descargar
+                      </a>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        aria-label={`Eliminar ${asset.originalName || asset.filename}`}
+                        onClick={() => setPendingDeleteAsset(asset)}
+                        disabled={busyId === asset.id}
+                      >
+                        <Trash2 data-icon="inline-start" />
+                        Eliminar
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -141,6 +171,24 @@ export function FileUploader() {
           </div>
         </div>
       </div>
+      <Dialog open={Boolean(pendingDeleteAsset)} onOpenChange={(open) => !open && setPendingDeleteAsset(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar borrado</DialogTitle>
+            <DialogDescription>
+              Esta accion dara de baja el asset {pendingDeleteAsset?.originalName || pendingDeleteAsset?.filename}. El registro queda oculto de la biblioteca.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingDeleteAsset(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => pendingDeleteAsset && deleteAsset(pendingDeleteAsset)}>
+              Eliminar asset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

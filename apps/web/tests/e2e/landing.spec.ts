@@ -362,6 +362,36 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route("**/api/v1/media/storage/status", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        provider: "local",
+        storageDir: "storage",
+        maxFileSizeMb: 10,
+        allowedMimeTypes: ["application/pdf"],
+        uploadEndpoint: "/api/v1/media/upload",
+        downloadPattern: "/api/v1/media/:id/download"
+      })
+    });
+  });
+  await page.route(/\/api\/v1\/media(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "media-1",
+          filename: "cv-demo.pdf",
+          originalName: "CV Demo.pdf",
+          mimeType: "application/pdf",
+          size: 2048,
+          url: "/media/uploads/cv-demo.pdf",
+          type: "cv-manual",
+          updatedAt: "2026-06-06T08:00:00.000Z"
+        }
+      ])
+    });
+  });
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
@@ -499,6 +529,13 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/settings/modules");
   await expect(page.getByRole("heading", { name: "Modulos de la plataforma" })).toBeVisible();
+
+  await page.goto("/admin/media");
+  await expect(page.getByRole("heading", { name: "Biblioteca media" })).toBeVisible();
+  await expect(page.getByText("CV Demo.pdf")).toBeVisible();
+  await page.getByRole("button", { name: "Eliminar CV Demo.pdf" }).click();
+  await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancelar" }).click();
 
   await page.goto("/admin/messages");
   await expect(page.getByRole("heading", { name: "Mensajes de contacto" })).toBeVisible();

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 06:37 CEST.
+Estado actualizado: 2026-06-06 06:42 CEST.
 
 ## Hitos completados
 
@@ -1225,6 +1225,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Baja soft-delete en biblioteca Media
+
+- `/admin/media` muestra accion de eliminar por asset registrado.
+- La accion abre modal de confirmacion antes de llamar a `DELETE /api/v1/media/:id`.
+- Tras borrar, el asset se retira de la lista local y se muestra feedback con nombre de archivo.
+- Añadida cobertura e2e para abrir y cancelar el modal con `CV Demo.pdf`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1258,7 +1272,7 @@ Verificacion realizada en este hito:
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.
 - Restauración por entidad CMS: existe restore para tema visual y perfil público; falta restaurar otras entidades cuando entren al workflow draft/publish.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
-- Media lifecycle: falta borrado físico diferido, cuotas, antivirus y auditoría granular de subidas.
+- Media lifecycle: la biblioteca ya permite baja soft-delete con confirmación; falta borrado físico diferido, cuotas, antivirus y auditoría granular de subidas.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 - NPM audit: quedan 2 vulnerabilidades moderadas reportadas por `npm install`; no se aplica `audit fix --force` para evitar cambios de versiones fuera de hito.
 
