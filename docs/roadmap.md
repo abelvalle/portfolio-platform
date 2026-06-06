@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 05:31 CEST.
+Estado actualizado: 2026-06-06 05:34 CEST.
 
 ## Hitos completados
 
@@ -999,6 +999,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Diff inline de resumen en comparador CV
+
+- `/admin/cv/compare` muestra palabras nuevas, retiradas y comunes para el resumen profesional.
+- El diff textual se calcula desde tokens del resumen base/adaptado sin alterar los datos originales.
+- Se mantiene el diff por chips para listas de skills, experiencias y secciones.
+- Añadida cobertura e2e para validar el bloque `Palabras nuevas`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1013,7 +1027,6 @@ Verificacion realizada en este hito:
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
 - Adaptación CV a versión final: el wizard ya propone datos desde API; falta aceptar/rechazar cambios por bloque y crear/publicar una `CvVersion` adaptada desde la propuesta.
-- Comparador CV avanzado: la comparación muestra diff visual por campo y acceso directo a edición de versión adaptada; falta resaltado inline palabra a palabra.
 - Permisos por acción: existe matriz de permisos, pero los guards todavía se basan en roles por endpoint.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.

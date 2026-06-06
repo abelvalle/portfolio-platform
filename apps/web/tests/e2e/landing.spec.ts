@@ -273,6 +273,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/cv/compare");
   await expect(page.getByRole("heading", { name: "Comparar CV" })).toBeVisible();
   await page.getByRole("button", { name: "Comparar versiones" }).click();
+  await expect(page.getByText("Palabras nuevas")).toBeVisible();
   await expect(page.getByText("Solo en adaptado").first()).toBeVisible();
   await expect(page.getByText("KPIs", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Editar JSON adaptado" }).click();

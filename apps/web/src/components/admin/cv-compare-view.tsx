@@ -22,6 +22,26 @@ function listDiff(base?: string[], adapted?: string[]) {
   };
 }
 
+function textDiff(base?: string, adapted?: string) {
+  const baseWords = textTokens(base);
+  const adaptedWords = textTokens(adapted);
+  const baseSet = new Set(baseWords.map(normalizeWord));
+  const adaptedSet = new Set(adaptedWords.map(normalizeWord));
+  return {
+    common: adaptedWords.filter((word) => baseSet.has(normalizeWord(word))),
+    added: adaptedWords.filter((word) => !baseSet.has(normalizeWord(word))),
+    removed: baseWords.filter((word) => !adaptedSet.has(normalizeWord(word)))
+  };
+}
+
+function textTokens(value?: string) {
+  return (value || "").split(/\s+/).map((word) => word.trim()).filter(Boolean);
+}
+
+function normalizeWord(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
 export function CvCompareView() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
   const [baseId, setBaseId] = useState("");
@@ -154,6 +174,7 @@ export function CvCompareView() {
         ].map(({ title, base, adapted, type, rawBase, rawAdapted }) => {
           const changed = base !== adapted;
           const diff = type === "list" ? listDiff(rawBase, rawAdapted) : null;
+          const inlineDiff = type === "text" && changed ? textDiff(base, adapted) : null;
 
           return (
           <Card key={title}>
@@ -172,12 +193,23 @@ export function CvCompareView() {
                 <p className="font-medium text-foreground">Adaptado</p>
                 <p className="mt-1">{adapted || "Sin datos."}</p>
               </div>
+              {inlineDiff ? <TextDiffSummary common={inlineDiff.common} added={inlineDiff.added} removed={inlineDiff.removed} /> : null}
               {diff ? <ListDiffSummary common={diff.common} added={diff.added} removed={diff.removed} /> : null}
             </CardContent>
           </Card>
           );
         })}
       </section>
+    </div>
+  );
+}
+
+function TextDiffSummary({ common, added, removed }: { common: string[]; added: string[]; removed: string[] }) {
+  return (
+    <div className="grid gap-3 rounded-lg border border-border p-3">
+      <DiffGroup label="Palabras nuevas" items={added} variant="default" />
+      <DiffGroup label="Palabras retiradas" items={removed} variant="destructive" />
+      <DiffGroup label="Palabras comunes" items={common} variant="outline" />
     </div>
   );
 }
