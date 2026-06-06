@@ -3382,6 +3382,15 @@ Verificacion realizada en este hito:
 - `Test-NetConnection localhost:5432` confirma puerto abierto.
 - `RUN_DB_E2E=true DATABASE_URL=postgresql://portfolio:portfolio@localhost:5432/portfolio_platform?schema=public npm.cmd run test:e2e:db` falla por autenticacion Postgres.
 
+### Contrato compartido de metadatos de formacion
+
+- `packages/shared` actualiza `EducationSeed` con `url` y `credentialId` opcionales.
+- El contrato compartido queda alineado con el editor CV, preview/export y futuras seeds sin modificar datos reales existentes.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.

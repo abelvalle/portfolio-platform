@@ -37,7 +37,9 @@ export type EducationSeed = {
   date: string;
   type: "study" | "certification" | "course";
   description: string;
+  url?: string;
   certificateUrl?: string;
+  credentialId?: string;
 };
 
 export type SkillSeed = {
