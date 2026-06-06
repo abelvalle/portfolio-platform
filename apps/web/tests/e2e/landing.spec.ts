@@ -1132,6 +1132,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Crear version borrador" }).click();
   await createAdaptedVersionRequestPromise;
   await expect(page.getByText(/Version borrador creada/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Comparar version" })).toHaveAttribute("href", /\/admin\/cv\/compare\?baseId=cv-base&adaptedId=cv-adapted-new/);
+  await expect(page.getByRole("link", { name: "Editar version" })).toHaveAttribute("href", /\/admin\/cv\/versions\?versionId=cv-adapted-new/);
+  await page.getByRole("link", { name: "Comparar version" }).click();
+  await expect(page).toHaveURL(/\/admin\/cv\/compare\?baseId=cv-base&adaptedId=cv-adapted-new/);
+  await expect(page.getByRole("heading", { name: "Comparar CV" })).toBeVisible();
 
   await page.goto("/admin/cv/compare");
   await expect(page.getByRole("heading", { name: "Comparar CV" })).toBeVisible();

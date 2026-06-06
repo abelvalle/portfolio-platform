@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, WandSparkles } from "lucide-react";
+import Link from "next/link";
+import { Edit3, GitCompare, RefreshCw, WandSparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +35,7 @@ export function CvAdaptationWizard() {
   const [acceptedBlocks, setAcceptedBlocks] = useState(defaultAcceptedBlocks);
   const [acceptedSkillNames, setAcceptedSkillNames] = useState<Record<string, boolean>>({});
   const [acceptedExperienceKeys, setAcceptedExperienceKeys] = useState<Record<string, boolean>>({});
+  const [createdReview, setCreatedReview] = useState<{ baseId: string; adaptedId: string; name: string } | null>(null);
   const [message, setMessage] = useState("Cargando versiones base.");
   const [isLoading, setIsLoading] = useState(true);
   const [isAdapting, setIsAdapting] = useState(false);
@@ -78,6 +80,7 @@ export function CvAdaptationWizard() {
       setAcceptedBlocks(defaultAcceptedBlocks);
       setAcceptedSkillNames(skillReviewState(nextResult.proposed.skills || []));
       setAcceptedExperienceKeys(experienceReviewState(nextResult.proposed.experiences || []));
+      setCreatedReview(null);
       setMessage("Propuesta generada. Revisa antes de aprobar o convertirla en version.");
     } catch {
       setMessage("No se pudo generar la adaptacion.");
@@ -195,6 +198,7 @@ export function CvAdaptationWizard() {
           }
         }
       });
+      setCreatedReview({ baseId: selectedVersion.id, adaptedId: created.id, name: created.name });
       setBaseCvVersionId(created.id);
       await loadVersions();
       setMessage(`Version borrador creada: ${created.name}. Revisala en Versiones de CV antes de publicar.`);
@@ -346,6 +350,21 @@ export function CvAdaptationWizard() {
             <Button type="button" onClick={createAdaptedVersion} disabled={isCreatingVersion}>
               {isCreatingVersion ? "Creando version..." : "Crear version borrador"}
             </Button>
+            {createdReview ? (
+              <div className="grid gap-3 rounded-lg border border-border p-3">
+                <p className="font-medium text-foreground">Revision pendiente: {createdReview.name}</p>
+                <div className="flex flex-wrap gap-2">
+                  <Link className={buttonVariants()} href={`/admin/cv/compare?baseId=${encodeURIComponent(createdReview.baseId)}&adaptedId=${encodeURIComponent(createdReview.adaptedId)}`}>
+                    <GitCompare data-icon="inline-start" />
+                    Comparar version
+                  </Link>
+                  <Link className={buttonVariants({ variant: "outline" })} href={`/admin/cv/versions?versionId=${encodeURIComponent(createdReview.adaptedId)}`}>
+                    <Edit3 data-icon="inline-start" />
+                    Editar version
+                  </Link>
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : (
           <p className="mt-4 text-sm text-muted-foreground">La propuesta aparecera aqui antes de crear una nueva version.</p>

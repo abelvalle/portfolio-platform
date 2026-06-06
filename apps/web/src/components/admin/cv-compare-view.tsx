@@ -42,6 +42,17 @@ function normalizeWord(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
+function getInitialCompareIds() {
+  if (typeof window === "undefined") {
+    return { baseId: "", adaptedId: "" };
+  }
+  const params = new URLSearchParams(window.location.search);
+  return {
+    baseId: params.get("baseId") || "",
+    adaptedId: params.get("adaptedId") || ""
+  };
+}
+
 export function CvCompareView() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
   const [baseId, setBaseId] = useState("");
@@ -63,9 +74,10 @@ export function CvCompareView() {
     setIsLoading(true);
     try {
       const nextVersions = await cvClient.versions();
+      const initialIds = getInitialCompareIds();
       setVersions(nextVersions);
-      setBaseId((current) => current || nextVersions[0]?.id || "");
-      setAdaptedId((current) => current || nextVersions[1]?.id || nextVersions[0]?.id || "");
+      setBaseId((current) => current || initialIds.baseId || nextVersions[0]?.id || "");
+      setAdaptedId((current) => current || initialIds.adaptedId || nextVersions[1]?.id || nextVersions[0]?.id || "");
       setMessage(nextVersions.length ? "Selecciona versiones para comparar." : "Sin versiones disponibles.");
     } catch {
       setMessage("No se pudieron cargar versiones. Comprueba la sesion admin.");
