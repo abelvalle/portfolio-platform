@@ -345,6 +345,9 @@ export function CvVersionTable() {
   const [templates, setTemplates] = useState<CvTemplateItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [auditActionFilter, setAuditActionFilter] = useState("");
+  const [auditFromDate, setAuditFromDate] = useState("");
+  const [auditToDate, setAuditToDate] = useState("");
+  const [auditUserId, setAuditUserId] = useState("");
   const [auditMessage, setAuditMessage] = useState("");
   const [draft, setDraft] = useState(emptyDraft);
   const [message, setMessage] = useState("Cargando versiones de CV.");
@@ -410,7 +413,12 @@ export function CvVersionTable() {
       const [nextVersions, nextTemplates, nextAuditLogs] = await Promise.all([
         cvClient.versions(),
         cvClient.templates().catch(() => []),
-        cvClient.versionAuditLog(auditActionFilter || undefined).catch(() => [])
+        cvClient.versionAuditLog({
+          action: auditActionFilter || undefined,
+          from: auditFromDate || undefined,
+          to: auditToDate || undefined,
+          userId: auditUserId.trim() || undefined
+        }).catch(() => [])
       ]);
       setVersions(nextVersions);
       setTemplates(nextTemplates);
@@ -423,7 +431,7 @@ export function CvVersionTable() {
     } finally {
       setIsLoading(false);
     }
-  }, [auditActionFilter, syncJsonEditor]);
+  }, [auditActionFilter, auditFromDate, auditToDate, auditUserId, syncJsonEditor]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -941,6 +949,18 @@ export function CvVersionTable() {
                   <option key={action || "all"} value={action}>{action || "Todas"}</option>
                 ))}
               </select>
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="auditFromDate">Desde</Label>
+              <Input id="auditFromDate" type="date" value={auditFromDate} onChange={(event) => setAuditFromDate(event.target.value)} />
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="auditToDate">Hasta</Label>
+              <Input id="auditToDate" type="date" value={auditToDate} onChange={(event) => setAuditToDate(event.target.value)} />
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="auditUserId">Usuario auditoria</Label>
+              <Input id="auditUserId" value={auditUserId} onChange={(event) => setAuditUserId(event.target.value)} placeholder="user id" />
             </div>
             <Button type="button" variant="outline" onClick={exportAuditCsv} disabled={!auditLogs.length}>
               <Download data-icon="inline-start" />

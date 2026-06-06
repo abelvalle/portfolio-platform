@@ -3,6 +3,13 @@ import { PublishStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CvExportService } from './cv-export.service';
 
+type CvVersionAuditTrailFilters = {
+  action?: string;
+  userId?: string;
+  from?: string;
+  to?: string;
+};
+
 @Injectable()
 export class CvVersionService {
   constructor(
@@ -25,11 +32,22 @@ export class CvVersionService {
     return version;
   }
 
-  auditTrail(action?: string) {
+  auditTrail(filters: CvVersionAuditTrailFilters = {}) {
+    const createdAt: { gte?: Date; lte?: Date } = {};
+    const from = this.auditDate(filters.from);
+    const to = this.auditDate(filters.to, true);
+    if (from) {
+      createdAt.gte = from;
+    }
+    if (to) {
+      createdAt.lte = to;
+    }
     return this.prisma.auditLog.findMany({
       where: {
         resource: 'cv-version',
-        ...(action ? { action } : {}),
+        ...(filters.action ? { action: filters.action } : {}),
+        ...(filters.userId ? { userId: filters.userId } : {}),
+        ...(Object.keys(createdAt).length ? { createdAt } : {}),
       },
       orderBy: { createdAt: 'desc' },
       take: 20,
@@ -210,6 +228,20 @@ export class CvVersionService {
     return Object.keys(data).filter(
       (field) => JSON.stringify(before[field]) !== JSON.stringify(data[field]),
     );
+  }
+
+  private auditDate(value?: string, endOfDay = false) {
+    if (!value) {
+      return undefined;
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return undefined;
+    }
+    if (endOfDay && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      date.setUTCHours(23, 59, 59, 999);
+    }
+    return date;
   }
 
   private audit(

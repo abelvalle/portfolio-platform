@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/guards/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
@@ -30,8 +30,17 @@ export class CvVersionsController {
   }
 
   @Get('audit-log')
-  auditTrail(@Query('action') action?: string) {
-    return this.cvVersionService.auditTrail(action);
+  @ApiQuery({ name: 'action', required: false })
+  @ApiQuery({ name: 'userId', required: false })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to', required: false })
+  auditTrail(
+    @Query('action') action?: string,
+    @Query('userId') userId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.cvVersionService.auditTrail({ action, userId, from, to });
   }
 
   @Get(':id')

@@ -313,9 +313,8 @@ export const cvClient = {
   versions() {
     return apiFetch<CvVersionItem[]>("/cv-versions");
   },
-  versionAuditLog(action?: string) {
-    const query = action ? `?action=${encodeURIComponent(action)}` : "";
-    return apiFetch<AuditLogItem[]>(`/cv-versions/audit-log${query}`);
+  versionAuditLog(filters?: CvVersionAuditFilters) {
+    return apiFetch<AuditLogItem[]>(withQuery("/cv-versions/audit-log", filters));
   },
   createVersion(data: CvVersionMutation) {
     return apiFetch<CvVersionItem>("/cv-versions", { method: "POST", body: JSON.stringify(data) });
@@ -393,6 +392,13 @@ export type AuditLogItem = {
   resourceId?: string | null;
   metadata?: Record<string, unknown> | null;
   createdAt: string;
+};
+
+export type CvVersionAuditFilters = {
+  action?: string;
+  userId?: string;
+  from?: string;
+  to?: string;
 };
 
 export type AdminDashboard = {
