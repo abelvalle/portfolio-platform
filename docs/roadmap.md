@@ -3576,6 +3576,15 @@ Verificacion realizada en este hito:
 
 - `npm.cmd --prefix apps/api run test -- cv-export.service.spec.ts`
 
+### Build API tras contrato contacto A4
+
+- Ejecutado build de produccion del backend despues de alinear el contrato de contacto A4 server-side.
+- Nest compila sin errores de TypeScript.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build:api`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
