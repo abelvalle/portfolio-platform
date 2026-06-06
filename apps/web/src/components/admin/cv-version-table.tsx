@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Archive, Copy, Eye, FileText, RefreshCw, Save, Star, Trash2 } from "lucide-react";
+import { Archive, Copy, Download, Eye, FileText, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -289,6 +289,24 @@ function auditMetadata(metadata?: Record<string, unknown> | null) {
     .join(" · ");
 }
 
+function csvCell(value: string) {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+function buildAuditCsv(logs: AuditLogItem[]) {
+  const rows = [
+    ["action", "resource", "resourceId", "createdAt", "metadata"],
+    ...logs.map((log) => [
+      log.action,
+      log.resource,
+      log.resourceId || "",
+      log.createdAt,
+      JSON.stringify(log.metadata || {})
+    ])
+  ];
+  return rows.map((row) => row.map(csvCell).join(",")).join("\n");
+}
+
 function getInitialVersionId() {
   if (typeof window === "undefined") {
     return "";
@@ -327,6 +345,7 @@ export function CvVersionTable() {
   const [templates, setTemplates] = useState<CvTemplateItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [auditActionFilter, setAuditActionFilter] = useState("");
+  const [auditMessage, setAuditMessage] = useState("");
   const [draft, setDraft] = useState(emptyDraft);
   const [message, setMessage] = useState("Cargando versiones de CV.");
   const [jsonVersionId, setJsonVersionId] = useState("");
@@ -538,6 +557,21 @@ export function CvVersionTable() {
     } finally {
       setBusyId(null);
     }
+  }
+
+  function exportAuditCsv() {
+    if (!auditLogs.length) {
+      setAuditMessage("No hay eventos de auditoria CV para exportar.");
+      return;
+    }
+    const blob = new Blob([buildAuditCsv(auditLogs)], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `cv-version-audit${auditActionFilter ? `-${auditActionFilter}` : ""}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setAuditMessage("CSV de auditoria CV generado.");
   }
 
   function selectJsonVersion(id: string) {
@@ -908,9 +942,14 @@ export function CvVersionTable() {
                 ))}
               </select>
             </div>
+            <Button type="button" variant="outline" onClick={exportAuditCsv} disabled={!auditLogs.length}>
+              <Download data-icon="inline-start" />
+              Exportar auditoria CSV
+            </Button>
             <Badge variant="outline">{auditLogs.length} eventos</Badge>
           </div>
         </div>
+        <p className="text-sm text-muted-foreground" aria-live="polite">{auditMessage}</p>
         {auditLogs.length ? (
           <div className="grid gap-2">
             {auditLogs.slice(0, 6).map((log) => (

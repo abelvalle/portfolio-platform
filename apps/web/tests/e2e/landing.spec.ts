@@ -948,6 +948,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("heading", { name: "Detalle auditoria CV" })).toBeHidden();
   await page.getByLabel("Accion").selectOption("update");
   await expect(page.getByLabel("Evento update")).toBeVisible();
+  const auditDownloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Exportar auditoria CSV" }).click();
+  const auditDownload = await auditDownloadPromise;
+  expect(auditDownload.suggestedFilename()).toBe("cv-version-audit-update.csv");
+  await expect(page.getByText("CSV de auditoria CV generado.")).toBeVisible();
   await expect(page.getByLabel("Plantilla", { exact: true })).toBeVisible();
   await expect(page.getByLabel("JSON estructurado")).toBeVisible();
   await expect(page.locator("#structuredJsonVersion")).toHaveValue("cv-base");
