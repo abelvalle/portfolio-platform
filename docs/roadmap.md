@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:46 CEST.
+Estado actualizado: 2026-06-06 04:49 CEST.
 
 ## Hitos completados
 
@@ -849,6 +849,21 @@ Verificacion realizada en este hito:
 - `/admin` permite seleccionar fechas y recargar el dashboard con filtros de API.
 - Añadidos tests unitarios para rango aplicado y rango invertido.
 - `docs/api.md` documenta los query params del dashboard.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
+### DTO validado para tema visual
+
+- Añadido `UpdateThemeDto` para `PATCH /api/v1/theme`.
+- El endpoint acepta solo tokens visuales, `draftJson` y `publishedAt`.
+- Colores validados como hex `#RRGGBB`; `cardStyle` y `colorMode` quedan limitados a valores conocidos.
+- Añadidos tests del `ValidationPipe` para whitelist, color invalido y campos no nulos.
+- `docs/api.md` documenta la validacion del endpoint de tema.
 
 Verificacion realizada en este hito:
 

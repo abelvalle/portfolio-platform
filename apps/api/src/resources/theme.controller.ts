@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { Roles } from '../common/guards/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { ResourcesService } from './resources.service';
+import { UpdateThemeDto } from './theme.dto';
 
 @ApiTags('theme')
 @Controller('theme')
@@ -20,7 +21,7 @@ export class ThemeController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin, UserRole.editor)
   @Patch()
-  updateTheme(@Body() body: Record<string, unknown>) {
+  updateTheme(@Body() body: UpdateThemeDto) {
     return this.resourcesService.updateTheme(body);
   }
 }

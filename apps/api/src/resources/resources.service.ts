@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { UpdateProfileDto } from './profile.dto';
+import type { UpdateThemeDto } from './theme.dto';
 
 const DATE_KEYS = new Set([
   'startDate',
@@ -109,7 +110,7 @@ export class ResourcesService {
     return this.prisma.themeSettings.findFirst();
   }
 
-  async updateTheme(data: Record<string, unknown>) {
+  async updateTheme(data: UpdateThemeDto) {
     const existing = await this.prisma.themeSettings.findFirst();
     if (!existing) {
       return this.prisma.themeSettings.create({ data: data as never });

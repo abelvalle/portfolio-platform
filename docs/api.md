@@ -220,6 +220,8 @@ El workflow draft/publish real está conectado a `ThemeSettings` y `Profile`, qu
 
 `PATCH /profile` usa DTO validado: solo acepta campos propios del perfil, `draftJson` y `publishedAt`; campos desconocidos se descartan por whitelist y el email debe tener formato válido.
 
+`PATCH /theme` usa DTO validado: solo acepta tokens visuales del tema, `draftJson` y `publishedAt`; los colores deben usar formato hex `#RRGGBB` y `cardStyle`/`colorMode` se limitan a valores conocidos.
+
 - `GET /admin/publication/theme/review`: protegido para `admin`, `editor` y `viewer`; devuelve comparación campo a campo entre tema publicado y borrador.
 - `POST /admin/publication/theme/publish`: protegido para `admin` y `editor`; publica el borrador, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
 - `GET /admin/publication/profile/review`: protegido para `admin`, `editor` y `viewer`; devuelve comparación campo a campo entre perfil publicado y borrador.
