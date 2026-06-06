@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 18:42 CEST.
+Estado actualizado: 2026-06-06 17:30 CEST.
 
 ## Hitos completados
 
@@ -2820,12 +2820,30 @@ Verificacion realizada en este hito:
 - `npm.cmd run lint`
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
+### PDF server-side desde HTML/CSS A4
+
+- `CvExportService.generatePdf` reutiliza el HTML A4 server-side y genera PDF con Playwright.
+- La salida PDF usa A4, `printBackground`, `preferCSSPageSize` y margenes cero para respetar `@page`.
+- El paquete API declara `playwright` como dependencia runtime y elimina `pdfkit`/`@types/pdfkit`.
+- `STORAGE_DIR` puede ser relativo o absoluto para facilitar tests temporales y despliegue.
+- Anadida cobertura unitaria que mockea Playwright y verifica que `page.setContent` recibe el HTML `.cv-page` y que `page.pdf` se invoca con opciones A4.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- cv-export.service.spec.ts`
+- `npm.cmd run build:api`
+- `npm.cmd --prefix apps/api run lint`
 
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
-- Renderer fiel al preview: el HTML server-side ya renderiza secciones estructuradas, aplica tokens de plantilla, usa contenedor/CSS A4 y se acerca al preview publico con header/contacto/foto/chips; PDF/DOCX ya incluyen proyectos y secciones personalizadas, pero todavia no generan desde ese mismo HTML/CSS A4 ni tienen comparacion pixel-perfect.
+- Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright; DOCX sigue usando renderer propio y falta comparacion pixel-perfect entre preview publico/admin y PDF generado.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; falta prueba con DB real que genere archivos desde una version persistida y valide descarga.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
@@ -2852,10 +2870,10 @@ Verificacion realizada en este hito:
 - Restauración por entidad CMS: existe restore para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; falta exponer affordances especificas por entidad en UI mas alla del changelog general.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete, purga fisica diferida y bloqueo local de firma EICAR; falta integracion antivirus externa real.
-- NPM audit: quedan 2 vulnerabilidades moderadas reportadas por `npm install`; no se aplica `audit fix --force` para evitar cambios de versiones fuera de hito.
+- NPM audit: quedan 2 vulnerabilidades moderadas en la cadena `next`/`postcss` confirmadas con `npm.cmd audit --audit-level=moderate`; no se aplica `audit fix --force` porque propone un cambio de versión no seguro para este hito.
 
 ## Próximos hitos priorizados
 
-1. Generar PDF desde HTML/CSS A4 server-side con Playwright/Puppeteer o equivalente.
-2. Formularios avanzados por bloque en Versiones CV.
-3. Draft/publish de metadatos no JSON en Versiones CV.
+1. Formularios avanzados por bloque en Versiones CV.
+2. Draft/publish de metadatos no JSON en Versiones CV.
+3. Comparacion pixel-perfect entre preview A4 publico/admin y PDF generado.

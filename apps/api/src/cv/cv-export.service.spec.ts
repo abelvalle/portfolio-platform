@@ -1,4 +1,14 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { chromium } from 'playwright';
 import { CvExportService } from './cv-export.service';
+
+jest.mock('playwright', () => ({
+  chromium: {
+    launch: jest.fn(),
+  },
+}));
 
 describe('CvExportService', () => {
   it('prepares projects and custom sections for binary exports', () => {
@@ -122,5 +132,55 @@ describe('CvExportService', () => {
       },
     );
     expect(noPhotoHtml).not.toContain('class="cv-photo"');
+  });
+
+  it('generates PDFs from server-side A4 HTML with Playwright', async () => {
+    const page = {
+      setContent: jest.fn().mockResolvedValue(undefined),
+      pdf: jest.fn().mockResolvedValue(undefined),
+    };
+    const browser = {
+      newPage: jest.fn().mockResolvedValue(page),
+      close: jest.fn().mockResolvedValue(undefined),
+    };
+    jest.mocked(chromium).launch.mockResolvedValue(browser as never);
+
+    const storageDir = mkdtempSync(join(tmpdir(), 'cv-export-'));
+    const service = new CvExportService();
+    service.storageDir = storageDir;
+
+    try {
+      const result = await service.generatePdf(
+        'version-1',
+        {
+          profile: { fullName: 'Abel Valle Rosa' },
+          summary: 'Resumen exportado',
+        },
+        {
+          template: {
+            name: 'Minimalista',
+            slug: 'minimalista',
+            config: { primaryColor: '#0f766e' },
+          },
+        },
+      );
+
+      expect(result.filename).toBe('version-1-minimalista.pdf');
+      expect(page.setContent).toHaveBeenCalledWith(
+        expect.stringContaining('class="cv-page" data-page-size="A4"'),
+        { waitUntil: 'networkidle' },
+      );
+      expect(page.pdf).toHaveBeenCalledWith(
+        expect.objectContaining({
+          path: result.path,
+          format: 'A4',
+          printBackground: true,
+          preferCSSPageSize: true,
+        }),
+      );
+      expect(browser.close).toHaveBeenCalled();
+    } finally {
+      rmSync(storageDir, { recursive: true, force: true });
+    }
   });
 });

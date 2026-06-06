@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
-import PDFDocument from 'pdfkit';
-import { createWriteStream, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync } from 'node:fs';
+import { isAbsolute, join } from 'node:path';
+import { chromium } from 'playwright';
 
 type CvStructuredData = {
   profile?: {
@@ -141,87 +141,10 @@ export class CvExportService {
     data: CvStructuredData,
     options: CvTemplateExportOptions = {},
   ) {
-    const template = this.resolveTemplateOptions(options);
     const outDir = this.ensureCvDir();
     const filename = this.generatedFilename(versionId, 'pdf', options);
     const outPath = join(outDir, filename);
-
-    await new Promise<void>((resolve, reject) => {
-      const doc = new PDFDocument({
-        margin: options.ats || template.density === 'compact' ? 42 : 48,
-        size: 'A4',
-      });
-      const stream = createWriteStream(outPath);
-      doc.pipe(stream);
-      doc
-        .fontSize(template.density === 'compact' ? 21 : 24)
-        .fillColor(template.primaryColor)
-        .text(data.profile?.fullName || 'Abel Valle Rosa');
-      doc
-        .fontSize(12)
-        .fillColor(options.ats ? '#111827' : '#334155')
-        .text(
-          data.profile?.headline || 'IT Project Manager | Delivery Manager',
-        );
-      doc
-        .moveDown(0.5)
-        .fontSize(9)
-        .fillColor('#475569')
-        .text(this.contactLine(data));
-      this.pdfSection(
-        doc,
-        'Resumen profesional',
-        [data.summary || ''],
-        template,
-      );
-      this.pdfSection(
-        doc,
-        options.ats ? 'Experiencia profesional' : 'Experiencia',
-        (data.experiences || []).map(
-          (exp) =>
-            `${exp.role} - ${exp.company}\n${exp.description || ''}\n${[...(exp.responsibilities || []), ...(exp.achievements || [])].join('\n')}`,
-        ),
-        template,
-      );
-      this.pdfSection(
-        doc,
-        'Formacion y certificaciones',
-        [...(data.education || []), ...(data.certifications || [])].map(
-          (item) =>
-            [item.title, item.institution, item.date]
-              .filter(Boolean)
-              .join(' - '),
-        ),
-        template,
-      );
-      this.pdfSection(
-        doc,
-        'Skills',
-        [(data.skills || []).map((skill) => skill.name).join(' - ')],
-        template,
-      );
-      this.pdfSection(
-        doc,
-        'Idiomas',
-        [
-          (data.languages || [])
-            .map((language) =>
-              language.level
-                ? `${language.name}: ${language.level}`
-                : language.name,
-            )
-            .join(' - '),
-        ],
-        template,
-      );
-      this.pdfSection(doc, 'Proyectos', this.projectRows(data), template);
-      for (const section of this.customSectionRows(data)) {
-        this.pdfSection(doc, section.title, section.rows, template);
-      }
-      doc.end();
-      stream.on('finish', resolve);
-      stream.on('error', reject);
-    });
+    await this.writePdfFromHtml(this.renderHtml(data, options), outPath);
 
     return { filename, path: outPath, url: `/media/generated/${filename}` };
   }
@@ -392,7 +315,10 @@ export class CvExportService {
   }
 
   private ensureCvDir() {
-    const dir = join(process.cwd(), this.storageDir, 'cv');
+    const baseDir = isAbsolute(this.storageDir)
+      ? this.storageDir
+      : join(process.cwd(), this.storageDir);
+    const dir = join(baseDir, 'cv');
     mkdirSync(dir, { recursive: true });
     return dir;
   }
@@ -494,26 +420,6 @@ export class CvExportService {
     ]);
   }
 
-  private pdfSection(
-    doc: PDFKit.PDFDocument,
-    title: string,
-    rows: string[],
-    template: ResolvedTemplateOptions,
-  ) {
-    doc
-      .moveDown(1)
-      .fontSize(13)
-      .fillColor(template.primaryColor)
-      .text(title, { underline: true });
-    rows.filter(Boolean).forEach((row) => {
-      doc
-        .moveDown(template.density === 'compact' ? 0.25 : 0.4)
-        .fontSize(template.density === 'compact' ? 8 : 9)
-        .fillColor('#111827')
-        .text(row, { lineGap: 3 });
-    });
-  }
-
   private generatedFilename(
     versionId: string,
     extension: 'pdf' | 'docx',
@@ -559,6 +465,25 @@ export class CvExportService {
 
   private safeFilename(value: string) {
     return value.toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+  }
+
+  private async writePdfFromHtml(html: string, outPath: string) {
+    const browser = await chromium.launch({ headless: true });
+    try {
+      const page = await browser.newPage({
+        viewport: { width: 794, height: 1123 },
+      });
+      await page.setContent(html, { waitUntil: 'networkidle' });
+      await page.pdf({
+        path: outPath,
+        format: 'A4',
+        printBackground: true,
+        preferCSSPageSize: true,
+        margin: { top: '0', right: '0', bottom: '0', left: '0' },
+      });
+    } finally {
+      await browser.close();
+    }
   }
 
   private hexColor(value: string) {
