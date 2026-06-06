@@ -9,18 +9,17 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../common/guards/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Roles } from '../common/guards/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/guards/permissions.decorator';
 import { CreateUserDto, UpdateUserDto } from './users.dto';
 import { UsersService } from './users.service';
 
 @ApiTags('users')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.admin)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequirePermissions('manage_users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

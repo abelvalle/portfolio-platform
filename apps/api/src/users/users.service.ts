@@ -6,21 +6,9 @@ import {
 } from '@nestjs/common';
 import { User, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { permissionMatrix } from '../common/permissions/permission-matrix';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto, UpdateUserDto } from './users.dto';
-
-const permissionMatrix: Record<UserRole, string[]> = {
-  admin: [
-    'manage_users',
-    'manage_settings',
-    'manage_portfolio',
-    'manage_cv',
-    'read_messages',
-    'read_analytics',
-  ],
-  editor: ['manage_portfolio', 'manage_cv', 'read_messages', 'read_analytics'],
-  viewer: ['read_dashboard', 'read_portfolio', 'read_cv', 'read_analytics'],
-};
 
 @Injectable()
 export class UsersService {

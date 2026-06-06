@@ -453,7 +453,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/cv/versions");
   await expect(page.getByRole("heading", { name: "Versiones de CV" })).toBeVisible();
-  await expect(page.getByLabel("Plantilla")).toBeVisible();
+  await expect(page.getByLabel("Plantilla", { exact: true })).toBeVisible();
   await expect(page.getByLabel("JSON estructurado")).toBeVisible();
   await expect(page.locator("#structuredJsonVersion")).toHaveValue("cv-base");
   await page.getByLabel("JSON estructurado").fill("[]");

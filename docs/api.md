@@ -56,6 +56,10 @@ Los cambios de estado MFA se registran en `AuditLog` con acciones `auth.mfa.setu
 
 MFA no está activado por defecto en seed para evitar bloquear el primer acceso admin.
 
+## Permisos
+
+La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por accion. El primer guard por permiso se aplica a `/users` con `manage_users`; esto permite evolucionar endpoints hacia permisos granulares sin cambiar el contrato JWT.
+
 ## Endpoints principales
 
 - `GET /profile`, `PATCH /profile`
@@ -79,9 +83,9 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `POST /admin/publication/changelog/:id/restore`
 - `GET /app-modules`
 - `PATCH /app-modules/:id`
-- `GET|POST /users`
-- `PATCH|DELETE /users/:id`
-- `GET /users/permissions`
+- `GET|POST /users` (`manage_users`)
+- `PATCH|DELETE /users/:id` (`manage_users`)
+- `GET /users/permissions` (`manage_users`)
 - `GET /integrations/linkedin/status`
 - `GET /integrations/linkedin/share-url`
 - `GET /integrations/linkedin/auth-url`
