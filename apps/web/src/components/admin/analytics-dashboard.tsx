@@ -11,6 +11,7 @@ import {
   type AnalyticsChannels,
   type AnalyticsEvent,
   type AnalyticsFunnel,
+  type AnalyticsLabels,
   type AnalyticsPrivacyStatus,
   type AnalyticsSummary,
   type AnalyticsTimeSeriesPoint
@@ -28,7 +29,8 @@ const eventTypeOptions = [
   { label: "Visita landing", value: "landing_visit" },
   { label: "Descarga CV", value: "cv_download" },
   { label: "Formulario contacto", value: "contact_submit" },
-  { label: "Vista proyecto", value: "project_view" }
+  { label: "Vista proyecto", value: "project_view" },
+  { label: "Adaptacion CV", value: "cv_adaptation" }
 ];
 
 export function AnalyticsDashboard() {
@@ -36,6 +38,7 @@ export function AnalyticsDashboard() {
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [timeSeries, setTimeSeries] = useState<AnalyticsTimeSeriesPoint[]>([]);
   const [channels, setChannels] = useState<AnalyticsChannels | null>(null);
+  const [labels, setLabels] = useState<AnalyticsLabels | null>(null);
   const [funnel, setFunnel] = useState<AnalyticsFunnel | null>(null);
   const [privacy, setPrivacy] = useState<AnalyticsPrivacyStatus | null>(null);
   const [fromDate, setFromDate] = useState("");
@@ -49,11 +52,12 @@ export function AnalyticsDashboard() {
     setIsLoading(true);
     try {
       const filters = { from: fromDate || undefined, to: toDate || undefined };
-      const [nextSummary, nextEvents, nextTimeSeries, nextChannels, nextFunnel, nextPrivacy] = await Promise.all([
+      const [nextSummary, nextEvents, nextTimeSeries, nextChannels, nextLabels, nextFunnel, nextPrivacy] = await Promise.all([
         adminClient.analyticsSummary(filters),
         adminClient.analyticsEvents({ ...filters, type: eventType || undefined }),
         adminClient.analyticsTimeSeries({ ...filters, type: eventType || undefined }),
         adminClient.analyticsChannels({ ...filters, type: eventType || undefined }),
+        adminClient.analyticsLabels({ ...filters, type: "cv_adaptation" }),
         adminClient.analyticsFunnel(filters),
         adminClient.analyticsPrivacy()
       ]);
@@ -61,6 +65,7 @@ export function AnalyticsDashboard() {
       setEvents(nextEvents);
       setTimeSeries(nextTimeSeries);
       setChannels(nextChannels);
+      setLabels(nextLabels);
       setFunnel(nextFunnel);
       setPrivacy(nextPrivacy);
       setMessage("Analitica sincronizada con filtros de API.");
@@ -274,6 +279,17 @@ export function AnalyticsDashboard() {
           <SegmentList title="Fuentes" items={channels?.sources || []} empty="Sin fuentes atribuidas." />
           <SegmentList title="Canales" items={channels?.channels || []} empty="Sin canales atribuidos." />
         </div>
+      </section>
+
+      <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-mono text-sm text-primary">Roles objetivo CV</p>
+            <h2 className="mt-1 text-xl font-semibold">Uso de adaptaciones</h2>
+          </div>
+          <Badge variant="outline">cv_adaptation</Badge>
+        </div>
+        <SegmentList title="Roles mas usados" items={labels?.labels || []} empty="Sin adaptaciones CV registradas." />
       </section>
 
       <section className="overflow-x-auto rounded-lg border border-border">

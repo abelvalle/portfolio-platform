@@ -667,6 +667,17 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route(/\/api\/v1\/analytics\/labels(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        labels: [
+          { name: "Delivery Manager", count: 2 },
+          { name: "IT Project Manager", count: 1 }
+        ]
+      })
+    });
+  });
   await page.route(/\/api\/v1\/analytics\/funnel(\?.*)?$/, async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -1943,6 +1954,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Fuentes y canales")).toBeVisible();
   await expect(page.getByText("linkedin")).toBeVisible();
   await expect(page.getByText("social")).toBeVisible();
+  await expect(page.getByText("Roles objetivo CV")).toBeVisible();
+  await expect(page.getByText("Delivery Manager").first()).toBeVisible();
   await expect(page.getByText("2026-06-06").first()).toBeVisible();
   await expect(page.getByText("landing_visit").first()).toBeVisible();
   await page.getByLabel("Tipo de evento").selectOption("cv_download");
