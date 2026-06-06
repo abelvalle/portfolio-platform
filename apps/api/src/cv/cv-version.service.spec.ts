@@ -97,10 +97,10 @@ describe('CvVersionService', () => {
     const prisma = mockPrisma();
     const service = new CvVersionService(prisma as never, {} as never);
 
-    const result = await service.auditTrail();
+    const result = await service.auditTrail('generate_pdf');
 
     expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
-      where: { resource: 'cv-version' },
+      where: { resource: 'cv-version', action: 'generate_pdf' },
       orderBy: { createdAt: 'desc' },
       take: 20,
     });

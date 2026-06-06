@@ -30,6 +30,8 @@ const emptyDraft: CvVersionDraft = {
   templateId: ""
 };
 
+const auditActionOptions = ["", "create", "update", "archive", "set_primary", "generate_pdf", "generate_docx"];
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -311,6 +313,7 @@ export function CvVersionTable() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
   const [templates, setTemplates] = useState<CvTemplateItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+  const [auditActionFilter, setAuditActionFilter] = useState("");
   const [draft, setDraft] = useState(emptyDraft);
   const [message, setMessage] = useState("Cargando versiones de CV.");
   const [jsonVersionId, setJsonVersionId] = useState("");
@@ -374,7 +377,7 @@ export function CvVersionTable() {
       const [nextVersions, nextTemplates, nextAuditLogs] = await Promise.all([
         cvClient.versions(),
         cvClient.templates().catch(() => []),
-        cvClient.versionAuditLog().catch(() => [])
+        cvClient.versionAuditLog(auditActionFilter || undefined).catch(() => [])
       ]);
       setVersions(nextVersions);
       setTemplates(nextTemplates);
@@ -387,7 +390,7 @@ export function CvVersionTable() {
     } finally {
       setIsLoading(false);
     }
-  }, [syncJsonEditor]);
+  }, [auditActionFilter, syncJsonEditor]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -872,18 +875,33 @@ export function CvVersionTable() {
       </section>
 
       <section className="grid gap-3 rounded-lg border border-border bg-card p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="font-mono text-sm text-primary">AuditLog</p>
             <h2 className="text-xl font-semibold">Auditoria reciente CV</h2>
           </div>
-          <Badge variant="outline">{auditLogs.length} eventos</Badge>
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="grid gap-1">
+              <Label htmlFor="auditActionFilter">Accion</Label>
+              <select
+                id="auditActionFilter"
+                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                value={auditActionFilter}
+                onChange={(event) => setAuditActionFilter(event.target.value)}
+              >
+                {auditActionOptions.map((action) => (
+                  <option key={action || "all"} value={action}>{action || "Todas"}</option>
+                ))}
+              </select>
+            </div>
+            <Badge variant="outline">{auditLogs.length} eventos</Badge>
+          </div>
         </div>
         {auditLogs.length ? (
           <div className="grid gap-2">
             {auditLogs.slice(0, 6).map((log) => (
               <div key={log.id} className="grid gap-1 rounded-lg border border-border p-3 text-sm md:grid-cols-[160px_1fr_160px]">
-                <span className="font-medium">{log.action}</span>
+                <span className="font-medium" aria-label={`Evento ${log.action}`}>{log.action}</span>
                 <span className="text-muted-foreground">{auditMetadata(log.metadata) || log.resourceId || "Sin metadata."}</span>
                 <span className="text-xs text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</span>
               </div>

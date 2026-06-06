@@ -249,17 +249,18 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
-  await page.route("**/api/v1/cv-versions/audit-log", async (route) => {
+  await page.route(/\/api\/v1\/cv-versions\/audit-log(\?.*)?$/, async (route) => {
+    const action = new URL(route.request().url()).searchParams.get("action") || "generate_pdf";
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify([
         {
           id: "audit-cv-1",
           userId: "user-1",
-          action: "generate_pdf",
+          action,
           resource: "cv-version",
           resourceId: "cv-base",
-          metadata: { mediaAssetId: "media-1" },
+          metadata: action === "update" ? { changedFields: ["status"] } : { mediaAssetId: "media-1" },
           createdAt: "2026-06-06T08:35:00.000Z"
         }
       ])
@@ -937,7 +938,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/cv/versions");
   await expect(page.getByRole("heading", { name: "Versiones de CV" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Auditoria reciente CV" })).toBeVisible();
-  await expect(page.getByText("generate_pdf")).toBeVisible();
+  await expect(page.getByLabel("Evento generate_pdf")).toBeVisible();
+  await page.getByLabel("Accion").selectOption("update");
+  await expect(page.getByLabel("Evento update")).toBeVisible();
   await expect(page.getByLabel("Plantilla", { exact: true })).toBeVisible();
   await expect(page.getByLabel("JSON estructurado")).toBeVisible();
   await expect(page.locator("#structuredJsonVersion")).toHaveValue("cv-base");

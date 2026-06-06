@@ -25,9 +25,12 @@ export class CvVersionService {
     return version;
   }
 
-  auditTrail() {
+  auditTrail(action?: string) {
     return this.prisma.auditLog.findMany({
-      where: { resource: 'cv-version' },
+      where: {
+        resource: 'cv-version',
+        ...(action ? { action } : {}),
+      },
       orderBy: { createdAt: 'desc' },
       take: 20,
     });

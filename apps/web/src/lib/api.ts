@@ -313,8 +313,9 @@ export const cvClient = {
   versions() {
     return apiFetch<CvVersionItem[]>("/cv-versions");
   },
-  versionAuditLog() {
-    return apiFetch<AuditLogItem[]>("/cv-versions/audit-log");
+  versionAuditLog(action?: string) {
+    const query = action ? `?action=${encodeURIComponent(action)}` : "";
+    return apiFetch<AuditLogItem[]>(`/cv-versions/audit-log${query}`);
   },
   createVersion(data: CvVersionMutation) {
     return apiFetch<CvVersionItem>("/cv-versions", { method: "POST", body: JSON.stringify(data) });

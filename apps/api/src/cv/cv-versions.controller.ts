@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -29,8 +30,8 @@ export class CvVersionsController {
   }
 
   @Get('audit-log')
-  auditTrail() {
-    return this.cvVersionService.auditTrail();
+  auditTrail(@Query('action') action?: string) {
+    return this.cvVersionService.auditTrail(action);
   }
 
   @Get(':id')
