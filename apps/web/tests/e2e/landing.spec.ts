@@ -918,6 +918,29 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/admin/publication/experiences/experience-1/review", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        entityType: "experience",
+        entityId: "experience-1",
+        hasDraft: true,
+        publishedAt: "2026-06-06T08:00:00.000Z",
+        fields: [
+          { field: "role", before: "IT Project Manager", after: "Delivery Manager", changed: true },
+          { field: "description", before: "Experiencia demo", after: "Experiencia ampliada en delivery y reporting.", changed: true },
+          { field: "technologies", before: [], after: ["Next.js", "NestJS"], changed: true }
+        ],
+        latestChanges: []
+      })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/experiences/experience-1/publish", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ changedFields: ["role", "description", "technologies"] })
+    });
+  });
   await page.route("**/api/v1/media/storage/status", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -1002,8 +1025,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Cargo experiencia").fill("Delivery Manager");
   await page.getByLabel("Descripcion experiencia").fill("Experiencia ampliada en delivery y reporting.");
   await page.getByLabel("technologies experiencia").fill("Next.js\nNestJS");
-  await page.getByRole("button", { name: "Guardar experiencia" }).click();
-  await expect(page.getByText("Experiencia actualizada: Demo Company Updated.")).toBeVisible();
+  await page.getByRole("button", { name: "Guardar borrador" }).click();
+  await expect(page.getByText("Borrador de experiencia guardado: Demo Company Updated.")).toBeVisible();
+  await expect(page.getByText("Revision borrador experiencia")).toBeVisible();
+  await page.getByRole("button", { name: "Publicar borrador" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Borrador de experiencia publicado. Campos modificados: role, description, technologies.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Demo Company" })).toBeVisible();
   await page.getByRole("button", { name: "Subir Demo Company" }).click();
   await expect(page.getByText("Experiencia reordenada: Demo Company.")).toBeVisible();

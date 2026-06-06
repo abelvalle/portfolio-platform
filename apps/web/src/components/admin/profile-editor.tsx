@@ -232,8 +232,8 @@ export function ProfileEditor() {
           {review?.fields.length ? review.fields.map((field) => (
             <div key={field.field} className="grid grid-cols-[180px_1fr_1fr_100px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <span className="font-medium">{field.field}</span>
-              <span className="truncate text-muted-foreground">{field.before || "-"}</span>
-              <span className="truncate text-muted-foreground">{field.after || "-"}</span>
+              <span className="truncate text-muted-foreground">{formatPublicationValue(field.before)}</span>
+              <span className="truncate text-muted-foreground">{formatPublicationValue(field.after)}</span>
               <span>{field.changed ? <Badge>cambio</Badge> : <Badge variant="outline">igual</Badge>}</span>
             </div>
           )) : (
@@ -243,4 +243,17 @@ export function ProfileEditor() {
       </section>
     </div>
   );
+}
+
+function formatPublicationValue(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return String(value);
 }

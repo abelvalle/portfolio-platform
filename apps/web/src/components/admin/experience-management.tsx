@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Save, Star, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Rocket, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { adminClient, type ExperienceItem, type ExperienceMutation } from "@/lib/api";
+import { adminClient, type ExperienceItem, type ExperienceMutation, type PublicationExperienceReview } from "@/lib/api";
 
 type DraftExperience = {
   company: string;
@@ -109,6 +109,9 @@ export function ExperienceManagement() {
   const [pendingDeleteExperience, setPendingDeleteExperience] = useState<ExperienceItem | null>(null);
   const [editingExperience, setEditingExperience] = useState<ExperienceItem | null>(null);
   const [editDraft, setEditDraft] = useState<DraftExperience>(emptyDraft);
+  const [experienceReview, setExperienceReview] = useState<PublicationExperienceReview | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isPublishingDraft, setIsPublishingDraft] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -180,6 +183,7 @@ export function ExperienceManagement() {
   function openEditExperience(item: ExperienceItem) {
     setEditingExperience(item);
     setEditDraft(experienceToDraft(item));
+    setExperienceReview(null);
   }
 
   async function updateEditingExperience() {
@@ -202,6 +206,65 @@ export function ExperienceManagement() {
       setMessage("No se pudo actualizar la experiencia.");
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function saveEditingDraft() {
+    if (!editingExperience) {
+      return;
+    }
+    const payload = buildMutation(editDraft, editingExperience.order);
+    if (!payload.company || !payload.role || !payload.startDate || !payload.description) {
+      setMessage("Empresa, cargo, fecha inicio y descripcion son obligatorios.");
+      return;
+    }
+
+    setIsSavingDraft(true);
+    try {
+      await adminClient.updateExperience(editingExperience.id, { draftJson: payload });
+      const review = await adminClient.publicationExperienceReview(editingExperience.id);
+      setExperienceReview(review);
+      setMessage(`Borrador de experiencia guardado: ${payload.company}.`);
+    } catch {
+      setMessage("No se pudo guardar el borrador de experiencia.");
+    } finally {
+      setIsSavingDraft(false);
+    }
+  }
+
+  async function reviewEditingDraft() {
+    if (!editingExperience) {
+      return;
+    }
+
+    setBusyId(editingExperience.id);
+    try {
+      const review = await adminClient.publicationExperienceReview(editingExperience.id);
+      setExperienceReview(review);
+      setMessage(review.hasDraft ? "Borrador de experiencia pendiente de publicacion." : "No hay borrador de experiencia pendiente.");
+    } catch {
+      setMessage("No se pudo revisar el borrador de experiencia.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function publishEditingDraft() {
+    if (!editingExperience) {
+      return;
+    }
+
+    setIsPublishingDraft(true);
+    try {
+      const result = await adminClient.publishExperienceDraft(editingExperience.id);
+      setExperienceReview(null);
+      setEditingExperience(null);
+      await loadExperiences();
+      setMessage(`Borrador de experiencia publicado. Campos modificados: ${result.changedFields.join(", ")}.`);
+    } catch {
+      setMessage("No se pudo publicar el borrador de experiencia.");
+    } finally {
+      setIsPublishingDraft(false);
     }
   }
 
@@ -322,7 +385,7 @@ export function ExperienceManagement() {
       </section>
 
       <Dialog open={Boolean(editingExperience)} onOpenChange={(open) => !open && setEditingExperience(null)}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar experiencia</DialogTitle>
             <DialogDescription>
@@ -376,9 +439,44 @@ export function ExperienceManagement() {
               </Button>
             </div>
           </div>
+          {experienceReview ? (
+            <section className="grid gap-3 rounded-lg border border-border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="font-semibold">Revision borrador experiencia</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {experienceReview.hasDraft ? "Cambios pendientes antes de publicar." : "Sin cambios pendientes."}
+                  </p>
+                </div>
+                <Badge variant={experienceReview.hasDraft ? "default" : "outline"}>
+                  {experienceReview.fields.filter((field) => field.changed).length} cambios
+                </Badge>
+              </div>
+              <div className="grid gap-2">
+                {experienceReview.fields.filter((field) => field.changed).slice(0, 6).map((field) => (
+                  <div key={field.field} className="grid gap-1 rounded-md bg-muted/40 p-2 text-sm md:grid-cols-[140px_1fr_1fr]">
+                    <span className="font-medium">{field.field}</span>
+                    <span className="truncate text-muted-foreground">{formatPublicationValue(field.before)}</span>
+                    <span className="truncate">{formatPublicationValue(field.after)}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setEditingExperience(null)}>
               Cancelar
+            </Button>
+            <Button type="button" variant="outline" onClick={saveEditingDraft} disabled={isSavingDraft}>
+              <Save data-icon="inline-start" />
+              {isSavingDraft ? "Guardando borrador..." : "Guardar borrador"}
+            </Button>
+            <Button type="button" variant="outline" onClick={reviewEditingDraft} disabled={Boolean(editingExperience && busyId === editingExperience.id)}>
+              Revisar borrador
+            </Button>
+            <Button type="button" onClick={publishEditingDraft} disabled={!experienceReview?.hasDraft || isPublishingDraft}>
+              <Rocket data-icon="inline-start" />
+              {isPublishingDraft ? "Publicando..." : "Publicar borrador"}
             </Button>
             <Button type="button" onClick={updateEditingExperience} disabled={Boolean(editingExperience && busyId === editingExperience.id)}>
               Guardar experiencia
@@ -407,4 +505,17 @@ export function ExperienceManagement() {
       </Dialog>
     </div>
   );
+}
+
+function formatPublicationValue(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return String(value);
 }

@@ -136,11 +136,17 @@ export const adminClient = {
   publicationProfileReview() {
     return apiFetch<PublicationProfileReview>("/admin/publication/profile/review");
   },
+  publicationExperienceReview(id: string) {
+    return apiFetch<PublicationExperienceReview>(`/admin/publication/experiences/${id}/review`);
+  },
   publishThemeDraft() {
     return apiFetch<{ changedFields: string[] }>("/admin/publication/theme/publish", { method: "POST" });
   },
   publishProfileDraft() {
     return apiFetch<{ changedFields: string[] }>("/admin/publication/profile/publish", { method: "POST" });
+  },
+  publishExperienceDraft(id: string) {
+    return apiFetch<{ changedFields: string[] }>(`/admin/publication/experiences/${id}/publish`, { method: "POST" });
   },
   restorePublicationChange(id: string) {
     return apiFetch<{ changedFields: string[] }>(`/admin/publication/changelog/${id}/restore`, { method: "POST" });
@@ -391,8 +397,8 @@ export type PublicationThemeReview = {
   publishedAt: string | null;
   fields: Array<{
     field: string;
-    before: string | null;
-    after: string | null;
+    before: unknown;
+    after: unknown;
     changed: boolean;
   }>;
   latestChanges: ChangeLogItem[];
@@ -400,6 +406,10 @@ export type PublicationThemeReview = {
 
 export type PublicationProfileReview = Omit<PublicationThemeReview, "entityType"> & {
   entityType: "profile";
+};
+
+export type PublicationExperienceReview = Omit<PublicationThemeReview, "entityType"> & {
+  entityType: "experience";
 };
 
 export type ChangeLogItem = {
@@ -551,6 +561,8 @@ export type ExperienceItem = {
   order: number;
   visible: boolean;
   featured: boolean;
+  draftJson?: Partial<ExperienceMutation> | null;
+  publishedAt?: string | null;
 };
 
 export type ExperienceMutation = Omit<ExperienceItem, "id">;
