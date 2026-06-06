@@ -38,6 +38,7 @@ export class MediaStorageService {
       provider: this.provider,
       storageDir: this.storageDir,
       maxFileSizeMb: this.maxFileSizeMb,
+      quotaMb: this.quotaMb,
       allowedMimeTypes: this.allowedMimeTypes,
       uploadEndpoint: '/api/v1/media/upload',
       downloadPattern: '/api/v1/media/:id/download',
@@ -145,6 +146,13 @@ export class MediaStorageService {
 
   private get maxFileSizeBytes() {
     return this.maxFileSizeMb * 1024 * 1024;
+  }
+
+  private get quotaMb() {
+    const configured = Number(
+      this.configService.get<string>('MEDIA_STORAGE_QUOTA_MB') || 0,
+    );
+    return Number.isFinite(configured) && configured > 0 ? configured : null;
   }
 
   private get allowedMimeTypes() {

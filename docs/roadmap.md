@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 06:45 CEST.
+Estado actualizado: 2026-06-06 06:49 CEST.
 
 ## Hitos completados
 
@@ -1253,6 +1253,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Cuota opcional de storage Media
+
+- Añadida variable `MEDIA_STORAGE_QUOTA_MB` para configurar cuota total de assets activos.
+- `MediaService.upload` rechaza subidas que superarian la cuota antes de escribir el archivo.
+- `GET /api/v1/media/storage/status` expone `quotaMb` cuando esta configurada.
+- `/admin/media` muestra badge de cuota y `docs/api.md` documenta la variable nueva.
+- Añadidos tests unitarios de cuota y cobertura e2e del badge.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1286,7 +1301,7 @@ Verificacion realizada en este hito:
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.
 - Restauración por entidad CMS: existe restore para tema visual y perfil público; falta restaurar otras entidades cuando entren al workflow draft/publish.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
-- Media lifecycle: la biblioteca ya permite baja soft-delete con confirmación y muestra métricas de uso; falta borrado físico diferido, enforcement de cuotas, antivirus y auditoría granular de subidas.
+- Media lifecycle: la biblioteca ya permite baja soft-delete con confirmación, métricas de uso y cuota opcional; falta borrado físico diferido, antivirus y auditoría granular de subidas.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 - NPM audit: quedan 2 vulnerabilidades moderadas reportadas por `npm install`; no se aplica `audit fix --force` para evitar cambios de versiones fuera de hito.
 

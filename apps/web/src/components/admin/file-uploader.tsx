@@ -132,6 +132,7 @@ export function FileUploader() {
             <div className="flex flex-wrap gap-2">
               <Badge>storage: {storageStatus.provider}</Badge>
               <Badge variant="outline">max {storageStatus.maxFileSizeMb} MB</Badge>
+              {storageStatus.quotaMb ? <Badge variant="outline">cuota {storageStatus.quotaMb} MB</Badge> : null}
               <Badge variant="outline">assets {storageStatus.assetCount ?? assets.length}</Badge>
               <Badge variant="outline">uso {formatSize(storageStatus.usedBytes)}</Badge>
               <Badge variant="outline">{storageStatus.storageDir}</Badge>

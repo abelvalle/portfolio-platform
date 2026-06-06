@@ -198,6 +198,7 @@ Variables principales:
 - `STORAGE_DIR`: directorio base local.
 - `MEDIA_STORAGE_PROVIDER`: proveedor activo. Actualmente soportado: `local`.
 - `MEDIA_MAX_FILE_SIZE_MB`: tamaño máximo por archivo.
+- `MEDIA_STORAGE_QUOTA_MB`: cuota total opcional para assets activos.
 - `MEDIA_ALLOWED_MIME_TYPES`: lista separada por comas.
 
 Endpoints:
@@ -205,7 +206,7 @@ Endpoints:
 - `GET /media`: lista assets no eliminados.
 - `GET /media/:id`: obtiene metadata de un asset.
 - `GET /media/:id/download`: descarga el binario asociado a `storageKey`.
-- `GET /media/storage/status`: protegido para `admin` y `editor`; devuelve proveedor, límites, MIME types y métricas `assetCount`/`usedBytes`.
+- `GET /media/storage/status`: protegido para `admin` y `editor`; devuelve proveedor, límites, cuota opcional, MIME types y métricas `assetCount`/`usedBytes`.
 - `POST /media/upload`: protegido para `admin` y `editor`; acepta `multipart/form-data` con `file`, `altText` opcional y `type` opcional.
 - `POST|PATCH|DELETE /media`: protegido para `admin` y `editor`; mantiene registro manual/edición/soft delete de metadata.
 

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateMediaAssetDto,
@@ -57,6 +61,7 @@ export class MediaService {
   }
 
   async upload(file: UploadedMediaFile, data: UploadMediaDto) {
+    await this.assertWithinQuota(file.size);
     const stored = await this.storage.save(file);
     return this.prisma.mediaAsset.create({
       data: {
@@ -95,5 +100,23 @@ export class MediaService {
     const asset = await this.findOne(id);
     const stream = await this.storage.createReadStream(asset.storageKey);
     return { asset, stream };
+  }
+
+  private async assertWithinQuota(incomingBytes: number) {
+    const status = this.storage.getStatus();
+    if (!status.quotaMb) {
+      return;
+    }
+
+    const aggregate = await this.prisma.mediaAsset.aggregate({
+      where: { deletedAt: null },
+      _sum: { size: true },
+    });
+    const usedBytes = aggregate._sum.size || 0;
+    const quotaBytes = status.quotaMb * 1024 * 1024;
+
+    if (usedBytes + incomingBytes > quotaBytes) {
+      throw new BadRequestException('Media storage quota exceeded');
+    }
   }
 }

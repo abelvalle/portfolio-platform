@@ -574,6 +574,7 @@ export type MediaStorageStatus = {
   provider: string;
   storageDir: string;
   maxFileSizeMb: number;
+  quotaMb?: number | null;
   assetCount?: number;
   usedBytes?: number;
   usedMb?: number;

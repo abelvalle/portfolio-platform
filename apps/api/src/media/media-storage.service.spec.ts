@@ -10,8 +10,17 @@ describe('MediaStorageService', () => {
       provider: 'local',
       storageDir: 'storage',
       maxFileSizeMb: 10,
+      quotaMb: null,
       uploadEndpoint: '/api/v1/media/upload',
     });
+  });
+
+  it('reports optional storage quota', () => {
+    const service = new MediaStorageService(
+      mockConfig({ MEDIA_STORAGE_QUOTA_MB: '250' }),
+    );
+
+    expect(service.getStatus()).toMatchObject({ quotaMb: 250 });
   });
 
   it('rejects unsupported media types before writing files', async () => {
