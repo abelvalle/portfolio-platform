@@ -1785,6 +1785,15 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("heading", { name: "Editor de CV" })).toBeVisible();
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-page-size", "A4");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-renderer", "web-preview");
+  const a4PreviewMetrics = await page.locator("[data-cv-preview='a4']").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      aspectDelta: Math.abs(rect.width / rect.height - 210 / 297),
+      horizontalOverflow: element.scrollWidth - element.clientWidth
+    };
+  });
+  expect(a4PreviewMetrics.aspectDelta).toBeLessThan(0.02);
+  expect(a4PreviewMetrics.horizontalOverflow).toBeLessThanOrEqual(2);
   await expect(page.getByLabel("Plantilla preview admin")).toHaveValue("ats-friendly");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "ats-friendly");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-density", "compact");
