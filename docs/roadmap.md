@@ -3771,6 +3771,15 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run test` (`24` suites y `114` tests API, mas smoke web)
 
+### Build raiz tras hitos A4/page-break
+
+- Ejecutado build completo de produccion tras cerrar la tanda A4/page-break.
+- Nest compila el API y Next compila las rutas publicas/privadas sin errores de TypeScript.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3808,4 +3817,4 @@ Verificacion realizada en este hito:
 
 1. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
 2. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.
-3. Revalidar builds completos antes del siguiente bloque funcional grande.
+3. Preparar el siguiente bloque funcional no dependiente de Docker/Postgres real.
