@@ -4,12 +4,14 @@ import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import { Eye, Palette, Save } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { adminClient } from "@/lib/api";
+import { getThemeContrastChecks } from "@/lib/theme-contrast";
 
 type ThemeTokens = {
   primaryColor: string;
@@ -38,6 +40,8 @@ const defaultTheme: ThemeTokens = {
 export function ThemeEditor({ initialTheme }: { initialTheme?: Partial<ThemeTokens> }) {
   const [theme, setTheme] = useState<ThemeTokens>(() => normalizeTheme(initialTheme));
   const [saving, setSaving] = useState<"draft" | "publish" | null>(null);
+  const contrastChecks = useMemo(() => getThemeContrastChecks(theme), [theme]);
+  const criticalContrastFailures = contrastChecks.filter((check) => !check.passes && check.severity === "critical");
 
   const previewStyle = useMemo<CSSProperties>(() => ({
     backgroundColor: theme.backgroundColor,
@@ -58,6 +62,11 @@ export function ThemeEditor({ initialTheme }: { initialTheme?: Partial<ThemeToke
   };
 
   async function save(mode: "draft" | "publish") {
+    if (mode === "publish" && criticalContrastFailures.length > 0) {
+      toast.error("No se puede publicar: revisa el contraste critico del tema.");
+      return;
+    }
+
     setSaving(mode);
     try {
       const payload = mode === "draft"
@@ -146,12 +155,56 @@ export function ThemeEditor({ initialTheme }: { initialTheme?: Partial<ThemeToke
             />
           </div>
 
+          <section className="grid gap-3 rounded-lg border border-border p-4" aria-live="polite">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-semibold">Contraste y accesibilidad</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Validacion WCAG AA para los colores principales antes de publicar.
+                </p>
+              </div>
+              <Badge variant={criticalContrastFailures.length > 0 ? "destructive" : "secondary"}>
+                {criticalContrastFailures.length > 0 ? "Revisar" : "AA critico OK"}
+              </Badge>
+            </div>
+            <div className="grid gap-2">
+              {contrastChecks.map((check) => (
+                <div
+                  key={check.id}
+                  className="grid gap-2 rounded-lg border border-border/70 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{check.label}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{check.description}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {formatRatio(check.ratio)} / {check.requiredRatio}:1
+                    </span>
+                    <Badge variant={check.passes ? "outline" : "destructive"}>
+                      {check.passes ? "Pasa" : "Falla"}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {criticalContrastFailures.length > 0 ? (
+              <p className="text-sm text-destructive">
+                La publicacion queda bloqueada hasta corregir texto/fondo o texto/card.
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Los contrastes criticos cumplen AA; revisa tambien acentos y texto secundario.
+              </p>
+            )}
+          </section>
+
           <div className="flex flex-wrap gap-3">
             <Button type="button" variant="outline" disabled={Boolean(saving)} onClick={() => save("draft")}>
               <Save data-icon="inline-start" />
               {saving === "draft" ? "Guardando..." : "Guardar borrador"}
             </Button>
-            <Button type="button" disabled={Boolean(saving)} onClick={() => save("publish")}>
+            <Button type="button" disabled={Boolean(saving) || criticalContrastFailures.length > 0} onClick={() => save("publish")}>
               <Eye data-icon="inline-start" />
               {saving === "publish" ? "Publicando..." : "Publicar tema"}
             </Button>
@@ -224,4 +277,8 @@ function normalizeAnimationIntensity(value?: string) {
 
 function withAlpha(hex: string, alpha: string) {
   return /^#[0-9A-Fa-f]{6}$/.test(hex) ? `${hex}${alpha}` : hex;
+}
+
+function formatRatio(ratio: number | null) {
+  return ratio === null ? "N/A" : `${ratio.toFixed(1)}:1`;
 }

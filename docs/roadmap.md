@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:20 CEST.
+Estado actualizado: 2026-06-06 04:27 CEST.
 
 ## Hitos completados
 
@@ -781,6 +781,20 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Validacion visual de contraste en tema
+
+- Añadida utilidad frontend para calcular ratio de contraste WCAG desde tokens de tema.
+- `/admin/portfolio/theme` muestra checks para texto/fondo, texto secundario, acento/fondo, texto/card y acento/card.
+- La publicacion del tema queda bloqueada si fallan contrastes criticos de texto, manteniendo libre el guardado de borrador.
+- Añadida cobertura e2e para asegurar que el editor de tema expone la validacion de contraste.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -790,7 +804,6 @@ Verificación realizada en este hito:
 - Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
 - MFA QR visual: existe UI funcional con secret, otpauth URL y regeneración controlada de recovery codes; falta QR visual local.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
-- Tema global desde API: rutas públicas y shell admin aplican tokens publicados; falta validación visual avanzada de contraste.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
 - ATS por oferta concreta: el score actual valida estructura general; falta comparar contra keywords de una oferta específica.

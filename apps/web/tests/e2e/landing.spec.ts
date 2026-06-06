@@ -62,6 +62,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/portfolio");
   await expect(page.getByRole("heading", { name: "Perfil publico" })).toBeVisible();
 
+  await page.goto("/admin/portfolio/theme");
+  await expect(page.getByText("Editor visual de estilos")).toBeVisible();
+  await expect(page.getByText("Contraste y accesibilidad")).toBeVisible();
+  await expect(page.getByText("Texto / fondo")).toBeVisible();
+
   await page.goto("/admin/portfolio/experience");
   await expect(page.getByRole("heading", { name: "Experiencia profesional" })).toBeVisible();
 
