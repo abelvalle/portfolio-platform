@@ -116,9 +116,14 @@ describe('CvExportService', () => {
     expect(html).toContain('padding:36px');
     expect(html).toContain('@page{size:A4;margin:0}');
     expect(html).toContain('class="cv-page" data-page-size="A4"');
+    expect(html).toContain('data-cv-renderer="server-html"');
+    expect(html).toContain('data-cv-density="compact"');
+    expect(html).toContain('data-cv-template="ejecutiva"');
     expect(html).toContain('width:210mm;min-height:297mm');
     expect(html).toContain('@media screen');
     expect(html).toContain('class="cv-header"');
+    expect(html).toContain('data-cv-section="summary"');
+    expect(html).toContain('data-cv-section="skills"');
     expect(html).toContain('class="cv-contact"');
     expect(html).toContain('class="cv-photo" src="/media/abel.png"');
     expect(html).toContain('class="cv-chips"');

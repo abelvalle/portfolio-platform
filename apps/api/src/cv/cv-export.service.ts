@@ -178,7 +178,11 @@ export class CvExportService {
       .join('');
     const customSections = (data.sections || [])
       .map((section) =>
-        this.htmlSection(section.title, this.htmlParagraph(section.content)),
+        this.htmlSection(
+          section.title,
+          this.htmlParagraph(section.content),
+          'sections',
+        ),
       )
       .join('');
     const subtitle = data.profile?.subtitle || data.summary || '';
@@ -187,31 +191,36 @@ export class CvExportService {
       summary: this.htmlSection(
         'Resumen profesional',
         this.htmlParagraph(data.summary),
+        'summary',
       ),
       experiences: this.htmlSection(
         options.ats ? 'Experiencia profesional' : 'Experiencia',
         experienceBody,
+        'experiences',
       ),
       formation: this.htmlSection(
         'Formacion y certificaciones',
         formationBody ? `<ul>${formationBody}</ul>` : '',
+        'formation',
       ),
       skills: this.htmlSection(
         'Skills',
         skillChips ? `<div class="cv-chips">${skillChips}</div>` : '',
+        'skills',
       ),
       languages: this.htmlSection(
         'Idiomas',
         languageRows ? `<ul>${languageRows}</ul>` : '',
+        'languages',
       ),
-      projects: this.htmlSection('Proyectos', projectBody),
+      projects: this.htmlSection('Proyectos', projectBody, 'projects'),
       sections: customSections,
     };
     const orderedSections = this.orderedSectionKeys(data)
       .map((key) => sections[key])
       .join('');
 
-    return `<!doctype html><html><head><meta charset="utf-8"><style>${this.htmlStyles(template, pagePadding)}</style></head><body><main class="cv-page" data-page-size="A4"><header class="cv-header"><div><p class="cv-eyebrow">${this.html(data.profile?.headline || '')}</p><h1>${this.html(data.profile?.fullName || 'Abel Valle Rosa')}</h1>${this.htmlParagraph(subtitle, 'cv-subtitle')}</div>${this.htmlPhoto(data, template)}</header><section class="cv-contact">${this.htmlContactItems(data)}</section>${orderedSections}</main></body></html>`;
+    return `<!doctype html><html><head><meta charset="utf-8"><style>${this.htmlStyles(template, pagePadding)}</style></head><body><main class="cv-page" data-page-size="A4" data-cv-renderer="server-html" data-cv-density="${template.density}" data-cv-template="${this.html(options.template?.slug || 'default')}"><header class="cv-header" data-cv-section="header"><div><p class="cv-eyebrow">${this.html(data.profile?.headline || '')}</p><h1>${this.html(data.profile?.fullName || 'Abel Valle Rosa')}</h1>${this.htmlParagraph(subtitle, 'cv-subtitle')}</div>${this.htmlPhoto(data, template)}</header><section class="cv-contact" data-cv-section="contact">${this.htmlContactItems(data)}</section>${orderedSections}</main></body></html>`;
   }
 
   private html(value: unknown) {
@@ -255,9 +264,12 @@ export class CvExportService {
     return `<article>${body}</article>`;
   }
 
-  private htmlSection(title: string, body: string) {
+  private htmlSection(title: string, body: string, section?: string) {
+    const sectionAttribute = section
+      ? ` data-cv-section="${this.html(section)}"`
+      : '';
     return body.trim()
-      ? `<section><h2>${this.html(title)}</h2>${body}</section>`
+      ? `<section${sectionAttribute}><h2>${this.html(title)}</h2>${body}</section>`
       : '';
   }
 

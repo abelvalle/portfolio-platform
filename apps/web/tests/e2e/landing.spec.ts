@@ -47,6 +47,10 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await expect(page.getByText("/cv/templates/minimalista")).toBeVisible();
   await expect(page.getByRole("link", { name: "Todas las plantillas" })).toHaveAttribute("href", "/cv/templates");
   await expect(page.getByRole("link", { name: "Descargar CV" })).toHaveAttribute("href", /\/api\/v1\/cv\/download\?template=minimalista$/);
+  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-page-size", "A4");
+  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-renderer", "web-preview");
+  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "minimalista");
+  await expect(page.locator("[data-cv-section='summary']")).toBeVisible();
 
   await page.goto("/en/cv/templates/ats-friendly");
   await expect(page.getByRole("heading", { name: "ATS-friendly" })).toBeVisible();
@@ -54,6 +58,8 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await expect(page.getByText("/en/cv/templates/ats-friendly")).toBeVisible();
   await expect(page.getByRole("link", { name: "All templates" })).toHaveAttribute("href", "/en/cv/templates");
   await expect(page.getByRole("link", { name: "Download resume" })).toHaveAttribute("href", /\/api\/v1\/cv\/download\?template=ats-friendly$/);
+  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "ats-friendly");
+  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-density", "normal");
 });
 
 test("admin publication page is reachable behind the session proxy", async ({ context, page }) => {
@@ -1655,6 +1661,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/cv/editor");
   await expect(page.getByRole("heading", { name: "Editor de CV" })).toBeVisible();
+  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-page-size", "A4");
+  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-renderer", "web-preview");
+  await expect(page.locator("[data-cv-section='experiences']")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Validacion ATS" })).toBeVisible();
   await page.getByRole("button", { name: "Generar reporte ATS" }).click();
   await expect(page.getByText("Score 88 - strong")).toBeVisible();
