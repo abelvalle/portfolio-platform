@@ -1576,8 +1576,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("Titulo educacion CV")).toHaveValue("Project Management");
   await page.getByLabel("Tipo educacion CV").fill("curso");
   await page.getByLabel("Descripcion educacion CV").fill("Formacion demo pendiente de validacion.");
+  await page.getByLabel("URL educacion CV").fill("https://example.com/formacion");
   await page.getByRole("button", { name: "Aplicar educacion granular" }).click();
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"type\": \"curso\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"url\": \"https:\/\/example\.com\/formacion\"/);
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Formacion demo pendiente de validacion/);
   await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");

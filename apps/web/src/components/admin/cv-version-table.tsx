@@ -55,6 +55,7 @@ type EducationFormDraft = {
   date: string;
   type: string;
   description: string;
+  url: string;
 };
 
 type CertificationFormDraft = {
@@ -108,7 +109,8 @@ const emptyEducationFormDraft: EducationFormDraft = {
   institution: "",
   date: "",
   type: "",
-  description: ""
+  description: "",
+  url: ""
 };
 
 const emptyCertificationFormDraft: CertificationFormDraft = {
@@ -506,7 +508,8 @@ function educationFormFromStructuredJson(value: unknown, index = 0): EducationFo
     institution: textField(data, "institution"),
     date: textField(data, "date"),
     type: textField(data, "type"),
-    description: textField(data, "description")
+    description: textField(data, "description"),
+    url: textField(data, "url")
   };
 }
 
@@ -1287,6 +1290,7 @@ export function CvVersionTable() {
     const date = educationFormDraft.date.trim();
     const type = educationFormDraft.type.trim();
     const description = educationFormDraft.description.trim();
+    const url = educationFormDraft.url.trim();
 
     if (institution) {
       nextEducationItem.institution = institution;
@@ -1307,6 +1311,11 @@ export function CvVersionTable() {
       nextEducationItem.description = description;
     } else {
       delete nextEducationItem.description;
+    }
+    if (url) {
+      nextEducationItem.url = url;
+    } else {
+      delete nextEducationItem.url;
     }
 
     nextEducation[index] = nextEducationItem;
@@ -2878,6 +2887,14 @@ export function CvVersionTable() {
                 rows={3}
                 value={educationFormDraft.description}
                 onChange={(event) => setEducationFormDraft((current) => ({ ...current, description: event.target.value }))}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="educationFormUrl">URL educacion CV</Label>
+              <Input
+                id="educationFormUrl"
+                value={educationFormDraft.url}
+                onChange={(event) => setEducationFormDraft((current) => ({ ...current, url: event.target.value }))}
               />
             </div>
           </div>
