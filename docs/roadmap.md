@@ -3469,6 +3469,17 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run lint`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "public CV template detail|admin publication"`
 
+### Revalidacion de deuda NPM audit
+
+- Revalidado `npm audit --audit-level=moderate` tras actualizar el lockfile con `jszip`.
+- La deuda sigue abierta por `next@16.2.7` y su dependencia interna `postcss@8.4.31`.
+- Se probo un override especifico `next -> postcss@8.5.10`, pero `npm ls postcss --workspace apps/web` dejo el arbol invalido; el intento se retiro sin cambios.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd audit --audit-level=moderate` falla con 2 vulnerabilidades moderadas `next/postcss`.
+- `npm.cmd ls postcss --workspace apps/web` confirma que el override deja `postcss@8.4.31` invalido bajo `next`.
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
