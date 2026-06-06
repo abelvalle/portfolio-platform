@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { adminClient, type CertificationItem, type CertificationMutation } from "@/lib/api";
+import { adminClient, mediaClient, type CertificationItem, type CertificationMutation, type MediaAsset } from "@/lib/api";
 
 const emptyDraft = {
   title: "",
@@ -34,8 +34,13 @@ function certificationToDraft(item: CertificationItem): CertificationDraft {
   };
 }
 
+function mediaAssetLabel(asset: MediaAsset) {
+  return asset.originalName || asset.filename;
+}
+
 export function CertificationManagement() {
   const [items, setItems] = useState<CertificationItem[]>([]);
+  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
   const [draft, setDraft] = useState(emptyDraft);
   const [message, setMessage] = useState("Cargando certificaciones.");
   const [isLoading, setIsLoading] = useState(true);
@@ -55,8 +60,12 @@ export function CertificationManagement() {
   async function loadCertifications() {
     setIsLoading(true);
     try {
-      const nextItems = await adminClient.certifications();
+      const [nextItems, nextMediaAssets] = await Promise.all([
+        adminClient.certifications(),
+        mediaClient.list()
+      ]);
       setItems(nextItems);
+      setMediaAssets(nextMediaAssets);
       setMessage(nextItems.length ? "Certificaciones sincronizadas con la API." : "Sin certificaciones registradas.");
     } catch {
       setMessage("No se pudieron cargar certificaciones. Comprueba la sesion admin.");
@@ -153,6 +162,9 @@ export function CertificationManagement() {
     }
   }
 
+  const selectedDraftAttachment = mediaAssets.some((asset) => asset.id === draft.attachmentId) ? draft.attachmentId : "";
+  const selectedEditAttachment = mediaAssets.some((asset) => asset.id === editDraft.attachmentId) ? editDraft.attachmentId : "";
+
   return (
     <div className="grid gap-6">
       <section className="rounded-lg border border-border bg-card p-6">
@@ -192,6 +204,20 @@ export function CertificationManagement() {
         <div className="grid gap-2">
           <Label htmlFor="certificationAttachment">Adjunto ID</Label>
           <Input id="certificationAttachment" value={draft.attachmentId} onChange={(event) => setDraft((current) => ({ ...current, attachmentId: event.target.value }))} />
+        </div>
+        <div className="grid gap-2 md:col-span-2">
+          <Label htmlFor="certificationAttachmentMedia">Adjunto media</Label>
+          <select
+            id="certificationAttachmentMedia"
+            className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+            value={selectedDraftAttachment}
+            onChange={(event) => setDraft((current) => ({ ...current, attachmentId: event.target.value }))}
+          >
+            <option value="">{mediaAssets.length ? "Seleccionar asset" : "Sin assets en media"}</option>
+            {mediaAssets.map((asset) => (
+              <option key={asset.id} value={asset.id}>{mediaAssetLabel(asset)}</option>
+            ))}
+          </select>
         </div>
         <div className="grid gap-2 md:col-span-3">
           <Label htmlFor="certificationDescription">Descripcion</Label>
@@ -275,6 +301,20 @@ export function CertificationManagement() {
             <div className="grid gap-2 md:col-span-2">
               <Label htmlFor="editCertificationAttachment">Adjunto ID certificacion</Label>
               <Input id="editCertificationAttachment" value={editDraft.attachmentId} onChange={(event) => setEditDraft((current) => ({ ...current, attachmentId: event.target.value }))} />
+            </div>
+            <div className="grid gap-2 md:col-span-2">
+              <Label htmlFor="editCertificationAttachmentMedia">Adjunto media certificacion</Label>
+              <select
+                id="editCertificationAttachmentMedia"
+                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                value={selectedEditAttachment}
+                onChange={(event) => setEditDraft((current) => ({ ...current, attachmentId: event.target.value }))}
+              >
+                <option value="">{mediaAssets.length ? "Seleccionar asset" : "Sin assets en media"}</option>
+                {mediaAssets.map((asset) => (
+                  <option key={asset.id} value={asset.id}>{mediaAssetLabel(asset)}</option>
+                ))}
+              </select>
             </div>
             <div className="grid gap-2 md:col-span-2">
               <Label htmlFor="editCertificationDescription">Descripcion certificacion</Label>

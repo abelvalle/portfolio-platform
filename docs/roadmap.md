@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 11:53 CEST.
+Estado actualizado: 2026-06-06 11:56 CEST.
 
 ## Hitos completados
 
@@ -1954,6 +1954,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Selector de media para adjuntos de Certificaciones
+
+- `/admin/portfolio/certifications` carga la biblioteca media desde `GET /api/v1/media` junto con certificaciones.
+- Los formularios de crear y editar certificacion mantienen el campo manual `attachmentId` y añaden selector de assets media.
+- Al elegir un asset, la UI copia su `id` al campo enviado como `attachmentId`.
+- Añadida cobertura e2e del flujo editar certificacion -> seleccionar adjunto media -> guardar.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1973,7 +1987,7 @@ Verificacion realizada en este hito:
 - Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media y reordenado por botones; falta drag/drop.
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias y selector de niveles; falta orden drag/drop.
 - Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; falta drag/drop.
-- Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo y reordenado por botones; faltan selector de adjuntos/media y drag/drop.
+- Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; falta drag/drop.
 - Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima y confirmación para cambios grandes; falta edición por bloques.
 - Editor CV por bloques: el editor principal está conectado a campos básicos; faltan bloques estructurados para experiencia, educación, certificaciones, skills, proyectos, idiomas y secciones personalizadas.
 - Preview A4 admin avanzado: el preview está sincronizado; falta render fiel a la plantilla seleccionada, paginación real y comparación pixel-perfect con exportación PDF.
