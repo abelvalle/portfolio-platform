@@ -37,6 +37,14 @@ type SkillFormDraft = {
   level: string;
 };
 
+type ProjectFormDraft = {
+  index: number;
+  name: string;
+  category: string;
+  status: string;
+  description: string;
+};
+
 const emptyDraft: CvVersionDraft = {
   name: "",
   description: "",
@@ -62,6 +70,14 @@ const emptySkillFormDraft: SkillFormDraft = {
   name: "",
   category: "",
   level: ""
+};
+
+const emptyProjectFormDraft: ProjectFormDraft = {
+  index: 0,
+  name: "",
+  category: "",
+  status: "",
+  description: ""
 };
 
 const auditActionOptions = ["", "create", "update", "archive", "set_primary", "generate_pdf", "generate_docx"];
@@ -181,6 +197,14 @@ function projectsFromStructuredJson(value: unknown) {
     })
     .filter(Boolean)
     .join("\n");
+}
+
+function projectListFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return [];
+  }
+  const projects = (value as Record<string, unknown>).projects;
+  return Array.isArray(projects) ? projects : [];
 }
 
 function educationFromStructuredJson(value: unknown) {
@@ -335,6 +359,21 @@ function skillFormFromStructuredJson(value: unknown, index = 0): SkillFormDraft 
   };
 }
 
+function projectFormFromStructuredJson(value: unknown, index = 0): ProjectFormDraft {
+  const selected = projectListFromStructuredJson(value)[index];
+  if (!selected || typeof selected !== "object" || Array.isArray(selected)) {
+    return { ...emptyProjectFormDraft, index };
+  }
+  const data = selected as Record<string, unknown>;
+  return {
+    index,
+    name: textField(data, "name"),
+    category: textField(data, "category") || textField(data, "categoryName"),
+    status: textField(data, "status"),
+    description: textField(data, "description")
+  };
+}
+
 function experienceFormFromStructuredJson(value: unknown, index = 0): ExperienceFormDraft {
   const selected = experienceListFromStructuredJson(value)[index];
   if (!selected || typeof selected !== "object" || Array.isArray(selected)) {
@@ -474,6 +513,7 @@ export function CvVersionTable() {
   const [skillFormDraft, setSkillFormDraft] = useState(emptySkillFormDraft);
   const [languagesDraft, setLanguagesDraft] = useState("");
   const [projectsDraft, setProjectsDraft] = useState("");
+  const [projectFormDraft, setProjectFormDraft] = useState(emptyProjectFormDraft);
   const [educationDraft, setEducationDraft] = useState("");
   const [certificationsDraft, setCertificationsDraft] = useState("");
   const [experiencesDraft, setExperiencesDraft] = useState("");
@@ -504,6 +544,7 @@ export function CvVersionTable() {
       setSkillFormDraft(emptySkillFormDraft);
       setLanguagesDraft("");
       setProjectsDraft("");
+      setProjectFormDraft(emptyProjectFormDraft);
       setEducationDraft("");
       setCertificationsDraft("");
       setExperiencesDraft("");
@@ -521,6 +562,7 @@ export function CvVersionTable() {
       setSkillFormDraft(skillFormFromStructuredJson(selectedVersion.structuredJson));
       setLanguagesDraft(languagesFromStructuredJson(selectedVersion.structuredJson));
       setProjectsDraft(projectsFromStructuredJson(selectedVersion.structuredJson));
+      setProjectFormDraft(projectFormFromStructuredJson(selectedVersion.structuredJson));
       setEducationDraft(educationFromStructuredJson(selectedVersion.structuredJson));
       setCertificationsDraft(certificationsFromStructuredJson(selectedVersion.structuredJson));
       setExperiencesDraft(experiencesFromStructuredJson(selectedVersion.structuredJson));
@@ -736,6 +778,7 @@ export function CvVersionTable() {
     setSkillFormDraft(skillFormFromStructuredJson(selectedVersion?.structuredJson));
     setLanguagesDraft(languagesFromStructuredJson(selectedVersion?.structuredJson));
     setProjectsDraft(projectsFromStructuredJson(selectedVersion?.structuredJson));
+    setProjectFormDraft(projectFormFromStructuredJson(selectedVersion?.structuredJson));
     setEducationDraft(educationFromStructuredJson(selectedVersion?.structuredJson));
     setCertificationsDraft(certificationsFromStructuredJson(selectedVersion?.structuredJson));
     setExperiencesDraft(experiencesFromStructuredJson(selectedVersion?.structuredJson));
@@ -918,7 +961,74 @@ export function CvVersionTable() {
       delete nextStructuredJson.projects;
     }
     setJsonDraft(formatJson(nextStructuredJson));
+    setProjectFormDraft(projectFormFromStructuredJson(nextStructuredJson, Math.min(projectFormDraft.index, Math.max(nextProjects.length - 1, 0))));
     setJsonMessage("Bloque proyectos aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function selectProjectFormIndex(index: number) {
+    try {
+      setProjectFormDraft(projectFormFromStructuredJson(JSON.parse(jsonDraft), index));
+    } catch {
+      setProjectFormDraft((current) => ({ ...current, index }));
+    }
+  }
+
+  function applyProjectFormBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el bloque.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const name = projectFormDraft.name.trim();
+    if (!name) {
+      setJsonMessage("El nombre de proyecto es obligatorio para aplicar el formulario granular.");
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const existingProjects = listField(nextStructuredJson, "projects");
+    const nextProjects = existingProjects.map((item) =>
+      item && typeof item === "object" && !Array.isArray(item) ? { ...(item as Record<string, unknown>) } : { name: String(item || "") }
+    );
+    const index = Math.min(Math.max(projectFormDraft.index, 0), nextProjects.length);
+    const nextProject: Record<string, unknown> = {
+      ...(nextProjects[index] || {}),
+      name
+    };
+    const category = projectFormDraft.category.trim();
+    const status = projectFormDraft.status.trim();
+    const description = projectFormDraft.description.trim();
+
+    if (category) {
+      nextProject.category = category;
+    } else {
+      delete nextProject.category;
+    }
+    if (status) {
+      nextProject.status = status;
+    } else {
+      delete nextProject.status;
+    }
+    if (description) {
+      nextProject.description = description;
+    } else {
+      delete nextProject.description;
+    }
+
+    nextProjects[index] = nextProject;
+    nextStructuredJson.projects = nextProjects.filter((project) => textField(project, "name"));
+    setJsonDraft(formatJson(nextStructuredJson));
+    setProjectsDraft(projectsFromStructuredJson(nextStructuredJson));
+    setProjectFormDraft(projectFormFromStructuredJson(nextStructuredJson, index));
+    setJsonMessage("Formulario granular de proyecto aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
   function applyEducationBlock() {
@@ -1312,6 +1422,7 @@ export function CvVersionTable() {
 
   const skillOptions = splitBlockLines(skillsDraft);
   const experienceOptions = splitBlockLines(experiencesDraft);
+  const projectOptions = splitBlockLines(projectsDraft);
 
   return (
     <div className="grid gap-6">
@@ -1842,6 +1953,64 @@ export function CvVersionTable() {
           <Button type="button" variant="outline" className="w-fit" onClick={applyProjectsBlock} disabled={!jsonVersionId}>
             Aplicar proyectos
           </Button>
+          <div className="grid gap-3 border-t border-border pt-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="grid min-w-[220px] gap-2">
+                <Label htmlFor="projectFormIndex">Proyecto granular</Label>
+                <select
+                  id="projectFormIndex"
+                  className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                  value={String(projectFormDraft.index)}
+                  onChange={(event) => selectProjectFormIndex(Number(event.target.value))}
+                  disabled={!jsonVersionId}
+                >
+                  {projectOptions.length ? projectOptions.map((project, index) => (
+                    <option key={`${project}-${index}`} value={index}>{project}</option>
+                  )) : (
+                    <option value="0">Nuevo proyecto</option>
+                  )}
+                </select>
+              </div>
+              <Button type="button" variant="outline" onClick={applyProjectFormBlock} disabled={!jsonVersionId}>
+                Aplicar proyecto granular
+              </Button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-2">
+                <Label htmlFor="projectFormName">Nombre proyecto CV</Label>
+                <Input
+                  id="projectFormName"
+                  value={projectFormDraft.name}
+                  onChange={(event) => setProjectFormDraft((current) => ({ ...current, name: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="projectFormCategory">Categoria proyecto CV</Label>
+                <Input
+                  id="projectFormCategory"
+                  value={projectFormDraft.category}
+                  onChange={(event) => setProjectFormDraft((current) => ({ ...current, category: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="projectFormStatus">Estado proyecto CV</Label>
+                <Input
+                  id="projectFormStatus"
+                  value={projectFormDraft.status}
+                  onChange={(event) => setProjectFormDraft((current) => ({ ...current, status: event.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="projectFormDescription">Descripcion proyecto CV</Label>
+              <Textarea
+                id="projectFormDescription"
+                rows={3}
+                value={projectFormDraft.description}
+                onChange={(event) => setProjectFormDraft((current) => ({ ...current, description: event.target.value }))}
+              />
+            </div>
+          </div>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="educationBlock">Educacion CV</Label>

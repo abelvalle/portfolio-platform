@@ -1450,6 +1450,14 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Aplicar proyectos" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"name\": \"Portfolio Platform\"/);
+  await expect(page.getByLabel("Nombre proyecto CV")).toHaveValue("Portfolio Platform");
+  await page.getByLabel("Categoria proyecto CV").fill("Portfolio");
+  await page.getByLabel("Estado proyecto CV").fill("published");
+  await page.getByLabel("Descripcion proyecto CV").fill("Plataforma profesional de portfolio y CV.");
+  await page.getByRole("button", { name: "Aplicar proyecto granular" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"category\": \"Portfolio\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"status\": \"published\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Plataforma profesional de portfolio y CV/);
   await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
   await confirmJsonSaveIfNeeded();
