@@ -1,0 +1,2 @@
+ALTER TABLE "Skill" ADD COLUMN "draftJson" JSONB;
+ALTER TABLE "Skill" ADD COLUMN "publishedAt" TIMESTAMP(3);

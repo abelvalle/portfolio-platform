@@ -120,6 +120,21 @@ const REQUIRED_PROJECT_FIELDS = new Set<ProjectField>([
 
 const PROJECT_STATUSES = new Set<string>(Object.values(PublishStatus));
 
+const SKILL_FIELDS = [
+  'name',
+  'categoryId',
+  'categoryName',
+  'level',
+  'order',
+  'visible',
+] as const;
+
+type SkillField = (typeof SKILL_FIELDS)[number];
+type SkillValue = string | number | boolean | null;
+type SkillValues = Record<SkillField, SkillValue>;
+
+const REQUIRED_SKILL_FIELDS = new Set<SkillField>(['name']);
+
 @Injectable()
 export class AdminPublicationService {
   constructor(private readonly prisma: PrismaService) {}
@@ -271,6 +286,41 @@ export class AdminPublicationService {
       entityId: project.id,
       hasDraft: fields.some((field) => field.changed),
       publishedAt: project.publishedAt,
+      fields,
+      latestChanges,
+    };
+  }
+
+  async skillReview(id: string) {
+    const [skill, latestChanges] = await Promise.all([
+      this.prisma.skill.findUnique({ where: { id } }),
+      this.latestChanges('skill'),
+    ]);
+
+    if (!skill || skill.deletedAt) {
+      throw new NotFoundException('Skill not found');
+    }
+
+    const published = this.pickSkillValues(skill);
+    const draft = this.readSkillDraft(skill.draftJson);
+    const fields = SKILL_FIELDS.map((field) => {
+      const before = published[field];
+      const hasDraftValue =
+        draft && Object.prototype.hasOwnProperty.call(draft, field);
+      const after = hasDraftValue ? (draft[field] ?? null) : before;
+      return {
+        field,
+        before,
+        after,
+        changed: !this.samePublicationValue(before, after),
+      };
+    });
+
+    return {
+      entityType: 'skill',
+      entityId: skill.id,
+      hasDraft: fields.some((field) => field.changed),
+      publishedAt: skill.publishedAt,
       fields,
       latestChanges,
     };
@@ -532,6 +582,73 @@ export class AdminPublicationService {
     };
   }
 
+  async publishSkillDraft(id: string, actorUserId?: string) {
+    const skill = await this.prisma.skill.findUnique({
+      where: { id },
+    });
+    if (!skill || skill.deletedAt) {
+      throw new NotFoundException('Skill not found');
+    }
+
+    const draft = this.readSkillDraft(skill.draftJson);
+    if (!draft) {
+      throw new BadRequestException('Skill draft not found');
+    }
+
+    const before = this.pickSkillValues(skill);
+    const after: SkillValues = { ...before, ...draft };
+    const changedFields = SKILL_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    const missingRequiredFields = [...REQUIRED_SKILL_FIELDS].filter(
+      (field) => !String(after[field] ?? '').trim(),
+    );
+    if (missingRequiredFields.length) {
+      throw new BadRequestException(
+        `Skill draft is missing required fields: ${missingRequiredFields.join(', ')}`,
+      );
+    }
+    if (!changedFields.length) {
+      throw new BadRequestException('Skill draft has no changes');
+    }
+
+    const published = await this.prisma.skill.update({
+      where: { id: skill.id },
+      data: {
+        ...this.buildSkillUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'skill',
+        entityId: skill.id,
+        action: 'publish',
+        summary: `Published skill draft (${changedFields.join(', ')})`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'publish',
+        resource: 'skill',
+        resourceId: skill.id,
+        metadata: { changedFields } as never,
+      },
+    });
+
+    return {
+      published,
+      changedFields,
+    };
+  }
+
   async restoreThemeChange(changeLogId: string, actorUserId?: string) {
     const change = await this.prisma.changeLog.findUnique({
       where: { id: changeLogId },
@@ -565,6 +682,10 @@ export class AdminPublicationService {
 
     if (change.entityType === 'project') {
       return this.restoreProjectSnapshot(change, actorUserId);
+    }
+
+    if (change.entityType === 'skill') {
+      return this.restoreSkillSnapshot(change, actorUserId);
     }
 
     throw new NotFoundException('Publication change not found');
@@ -821,6 +942,69 @@ export class AdminPublicationService {
         action: 'restore',
         resource: 'project',
         resourceId: project.id,
+        metadata: { changeLogId: change.id, changedFields } as never,
+      },
+    });
+
+    return {
+      restored,
+      changedFields,
+    };
+  }
+
+  private async restoreSkillSnapshot(change: ChangeLog, actorUserId?: string) {
+    if (!change.entityId) {
+      throw new NotFoundException('Skill change not found');
+    }
+
+    const restoreValues = this.readSkillDraft(change.beforeJson);
+    if (!restoreValues) {
+      throw new BadRequestException('Skill change cannot be restored');
+    }
+
+    const skill = await this.prisma.skill.findUnique({
+      where: { id: change.entityId },
+    });
+    if (!skill || skill.deletedAt) {
+      throw new NotFoundException('Skill not found');
+    }
+
+    const before = this.pickSkillValues(skill);
+    const after: SkillValues = { ...before, ...restoreValues };
+    const changedFields = SKILL_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    if (!changedFields.length) {
+      throw new BadRequestException('Skill is already at this version');
+    }
+
+    const restored = await this.prisma.skill.update({
+      where: { id: skill.id },
+      data: {
+        ...this.buildSkillUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'skill',
+        entityId: skill.id,
+        action: 'restore',
+        summary: `Restored skill change ${change.id}`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'restore',
+        resource: 'skill',
+        resourceId: skill.id,
         metadata: { changeLogId: change.id, changedFields } as never,
       },
     });
@@ -1104,6 +1288,71 @@ export class AdminPublicationService {
       }
       return current;
     }, {} as Partial<ProjectValues>);
+
+    return Object.keys(values).length ? values : null;
+  }
+
+  private pickSkillValues(skill: Record<string, unknown>): SkillValues {
+    return {
+      name: this.stringValue(skill.name),
+      categoryId:
+        typeof skill.categoryId === 'string' ? skill.categoryId : null,
+      categoryName:
+        typeof skill.categoryName === 'string' ? skill.categoryName : null,
+      level: typeof skill.level === 'string' ? skill.level : null,
+      order: typeof skill.order === 'number' ? skill.order : 0,
+      visible: skill.visible !== false,
+    };
+  }
+
+  private buildSkillUpdateData(values: SkillValues): Prisma.SkillUpdateInput {
+    const data: Prisma.SkillUpdateInput = {
+      name: String(values.name ?? ''),
+      categoryName: values.categoryName ? String(values.categoryName) : null,
+      level: values.level ? String(values.level) : null,
+      order: typeof values.order === 'number' ? values.order : 0,
+      visible: Boolean(values.visible),
+    };
+
+    data.category = values.categoryId
+      ? { connect: { id: String(values.categoryId) } }
+      : { disconnect: true };
+
+    return data;
+  }
+
+  private readSkillDraft(draftJson: unknown): Partial<SkillValues> | null {
+    if (
+      !draftJson ||
+      typeof draftJson !== 'object' ||
+      Array.isArray(draftJson)
+    ) {
+      return null;
+    }
+
+    const draft = draftJson as Record<string, unknown>;
+    const values = SKILL_FIELDS.reduce((current, field) => {
+      const value = draft[field];
+      if (value === undefined) {
+        return current;
+      }
+      if (field === 'visible') {
+        if (typeof value === 'boolean') {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (field === 'order') {
+        if (typeof value === 'number') {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (typeof value === 'string' || value === null) {
+        current[field] = value;
+      }
+      return current;
+    }, {} as Partial<SkillValues>);
 
     return Object.keys(values).length ? values : null;
   }

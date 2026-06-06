@@ -34,6 +34,11 @@ export class AdminPublicationController {
     return this.publicationService.projectReview(id);
   }
 
+  @Get('skills/:id/review')
+  skillReview(@Param('id') id: string) {
+    return this.publicationService.skillReview(id);
+  }
+
   @Get('changelog')
   changeLog() {
     return this.publicationService.latestChanges();
@@ -67,6 +72,12 @@ export class AdminPublicationController {
     @CurrentUser() user: { id?: string },
   ) {
     return this.publicationService.publishProjectDraft(id, user?.id);
+  }
+
+  @RequirePermissions('manage_publication')
+  @Post('skills/:id/publish')
+  publishSkill(@Param('id') id: string, @CurrentUser() user: { id?: string }) {
+    return this.publicationService.publishSkillDraft(id, user?.id);
   }
 
   @RequirePermissions('manage_publication')

@@ -251,6 +251,62 @@ describe('AdminPublicationService', () => {
     );
   });
 
+  it('builds a field-level skill draft review', async () => {
+    const service = new AdminPublicationService(
+      mockPrisma({
+        skill: skillFixture({
+          level: 'Avanzado',
+          draftJson: { level: 'Experto', visible: false },
+        }),
+      }),
+    );
+
+    const review = await service.skillReview('skill-1');
+
+    expect(review.hasDraft).toBe(true);
+    expect(review.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: 'level',
+          before: 'Avanzado',
+          after: 'Experto',
+          changed: true,
+        }),
+      ]),
+    );
+  });
+
+  it('publishes skill drafts and logs changed fields', async () => {
+    const prisma = mockPrisma({
+      skill: skillFixture({
+        level: 'Avanzado',
+        draftJson: { level: 'Experto', visible: false },
+      }),
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.publishSkillDraft('skill-1', 'user-1');
+
+    expect(result.changedFields).toEqual(['level', 'visible']);
+    expect(prisma.skill.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          level: 'Experto',
+          visible: false,
+          draftJson: expect.anything(),
+        }),
+      }),
+    );
+    expect(prisma.changeLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          entityType: 'skill',
+          action: 'publish',
+        }),
+      }),
+    );
+  });
+
   it('restores theme values from a changelog entry', async () => {
     const prisma = mockPrisma({
       theme: {
@@ -343,6 +399,31 @@ describe('AdminPublicationService', () => {
       }),
     );
   });
+
+  it('restores skill values from a changelog entry', async () => {
+    const prisma = mockPrisma({
+      skill: skillFixture({ level: 'Experto' }),
+      change: {
+        id: 'change-skill-1',
+        entityType: 'skill',
+        entityId: 'skill-1',
+        beforeJson: skillSnapshot({ level: 'Avanzado' }),
+      },
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.restorePublicationChange(
+      'change-skill-1',
+      'user-1',
+    );
+
+    expect(result.changedFields).toEqual(['level']);
+    expect(prisma.skill.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ level: 'Avanzado' }),
+      }),
+    );
+  });
 });
 
 function mockPrisma({
@@ -350,12 +431,14 @@ function mockPrisma({
   profile,
   experience,
   project,
+  skill,
   change,
 }: {
   theme?: Record<string, unknown>;
   profile?: Record<string, unknown>;
   experience?: Record<string, unknown>;
   project?: Record<string, unknown>;
+  skill?: Record<string, unknown>;
   change?: Record<string, unknown>;
 }) {
   return {
@@ -376,6 +459,10 @@ function mockPrisma({
     project: {
       findUnique: jest.fn().mockResolvedValue(project),
       update: jest.fn().mockResolvedValue(project),
+    },
+    skill: {
+      findUnique: jest.fn().mockResolvedValue(skill),
+      update: jest.fn().mockResolvedValue(skill),
     },
     changeLog: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -477,6 +564,29 @@ function projectSnapshot(overrides: Record<string, unknown> = {}) {
     imageUrl: null,
     publicUrl: null,
     repositoryUrl: null,
+    ...overrides,
+  };
+}
+
+function skillFixture(overrides: Record<string, unknown> = {}) {
+  return {
+    ...skillSnapshot(),
+    id: 'skill-1',
+    order: 0,
+    visible: true,
+    draftJson: null,
+    publishedAt: null,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+function skillSnapshot(overrides: Record<string, unknown> = {}) {
+  return {
+    name: 'Scrum',
+    categoryId: null,
+    categoryName: 'Agile',
+    level: 'Avanzado',
     ...overrides,
   };
 }
