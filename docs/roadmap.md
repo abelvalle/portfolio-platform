@@ -3507,6 +3507,15 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run test` (`24` suites y `109` tests API, mas smoke web)
 
+### Documentacion de contrato A4 web
+
+- `docs/api.md` documenta que los previews A4 publico/admin exponen `data-cv-section` tambien para `projects`.
+- La nota alinea la documentacion con el componente compartido `CvA4Preview`.
+
+Verificacion realizada en este hito:
+
+- `git diff --check`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
