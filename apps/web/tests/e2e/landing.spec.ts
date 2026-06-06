@@ -203,10 +203,33 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route(/\/api\/v1\/admin\/dashboard(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        cards: {
+          totalVisits: 10,
+          publishedProjects: 3,
+          visibleExperiences: 4,
+          receivedMessages: 2,
+          primaryCv: "CV Base",
+          cvUpdatedAt: "2026-06-06T08:00:00.000Z"
+        },
+        latestChanges: [],
+        modules: [
+          { id: "module-1", key: "dashboard", name: "Dashboard", enabled: true, order: 1 },
+          { id: "module-2", key: "analytics", name: "Analitica", enabled: true, order: 2 },
+          { id: "module-3", key: "media", name: "Media", enabled: false, order: 3 }
+        ]
+      })
+    });
+  });
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
   await expect(page.getByText("Visitas landing")).toBeVisible();
+  await expect(page.getByText("Pulso operativo")).toBeVisible();
+  await expect(page.getByText("Conversion contacto")).toBeVisible();
   await expect(page.getByRole("link", { name: /Ver eventos/ })).toHaveAttribute("href", "/admin/analytics");
 
   await page.goto("/admin/settings/publication");

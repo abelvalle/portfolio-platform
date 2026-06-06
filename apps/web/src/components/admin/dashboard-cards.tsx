@@ -48,6 +48,7 @@ export function DashboardCards() {
       { label: "Ultima actualizacion CV", value: formatDate(values?.cvUpdatedAt), href: "/admin/cv/versions", action: "Ver versiones" }
     ];
   }, [dashboard]);
+  const operationalPulse = useMemo(() => buildOperationalPulse(dashboard), [dashboard]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -96,6 +97,26 @@ export function DashboardCards() {
           </Link>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pulso operativo</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-3">
+          {operationalPulse.map((item) => (
+            <div key={item.label} className="rounded-lg border border-border p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-muted-foreground">{item.label}</p>
+                <Badge variant="outline">{item.value}</Badge>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${item.percent}%` }} />
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">{item.detail}</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
@@ -160,6 +181,43 @@ function ModuleRow({ module }: { module: AdminDashboard["modules"][number] }) {
       {content}
     </Link>
   );
+}
+
+function buildOperationalPulse(dashboard: AdminDashboard | null) {
+  const visits = dashboard?.cards.totalVisits ?? 0;
+  const messages = dashboard?.cards.receivedMessages ?? 0;
+  const projects = dashboard?.cards.publishedProjects ?? 0;
+  const experiences = dashboard?.cards.visibleExperiences ?? 0;
+  const modules = dashboard?.modules ?? [];
+  const activeModules = modules.filter((module) => module.enabled).length;
+
+  return [
+    {
+      label: "Conversion contacto",
+      value: `${percent(messages, visits)}%`,
+      percent: percent(messages, visits),
+      detail: `${messages} mensajes sobre ${visits} visitas`
+    },
+    {
+      label: "Contenido visible",
+      value: String(projects + experiences),
+      percent: Math.min((projects + experiences) * 10, 100),
+      detail: `${projects} proyectos y ${experiences} experiencias`
+    },
+    {
+      label: "Modulos activos",
+      value: `${activeModules}/${modules.length}`,
+      percent: percent(activeModules, modules.length),
+      detail: "Cobertura de modulos habilitados"
+    }
+  ];
+}
+
+function percent(value: number, total: number) {
+  if (!total) {
+    return 0;
+  }
+  return Math.round((value / total) * 100);
 }
 
 function moduleHref(key: string) {

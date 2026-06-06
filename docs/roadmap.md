@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 05:28 CEST.
+Estado actualizado: 2026-06-06 05:31 CEST.
 
 ## Hitos completados
 
@@ -985,6 +985,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Pulso operativo en dashboard admin
+
+- `/admin` añade widgets derivados para conversion contacto/visita, contenido visible y modulos activos.
+- Los widgets usan barras proporcionales y datos del endpoint existente `/admin/dashboard`.
+- La seccion respeta filtros temporales ya presentes porque se recalcula con el resumen filtrado.
+- Añadida cobertura e2e con dashboard mockeado para validar el pulso operativo.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1005,7 +1019,7 @@ Verificacion realizada en este hito:
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle y respuesta `mailto`; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha, exportación CSV y tendencias básicas; faltan segmentación avanzada por evento, retención/anonimización configurable y series históricas más profundas.
-- Dashboard avanzado: el resumen está conectado con drill-downs y filtros temporales de API; faltan widgets de tendencia y segmentación.
+- Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API y pulso operativo; falta segmentación avanzada.
 - Experiencias UI avanzada: el CRUD básico está conectado; faltan edición completa en formulario, reordenado drag/drop, confirmación modal de borrado y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD básico está conectado; faltan edición completa en formulario, selector de media, categorías gestionadas visualmente, orden drag/drop y confirmación modal de borrado.
 - Skills UI avanzada: el CRUD básico está conectado; faltan edición completa inline, categorías gestionadas como entidad, orden drag/drop y niveles con selector consistente.
