@@ -151,7 +151,7 @@ Variables de privacidad:
 - `POST /cv/:id/generate-ats-docx` (`manage_cv`)
 - `POST /cv/:id/set-primary` (`manage_cv`)
 - `GET /cv-versions` y `GET /cv-versions/:id` (`read_cv`)
-- `GET /cv-versions/audit-log?action=&from=&to=&userId=` (`read_cv`)
+- `GET /cv-versions/audit-log?action=&from=&to=&userId=&page=&limit=` (`read_cv`)
 - `POST|PATCH|DELETE /cv-versions` (`manage_cv`)
 - `POST /cv-versions/:id/generate-pdf` (`manage_cv`)
 - `POST /cv-versions/:id/generate-docx` (`manage_cv`)
@@ -206,7 +206,7 @@ Devuelve `matchScore`, `jobKeywords`, `matchedKeywords`, `missingKeywords` y rec
 
 `POST /cv-versions/:id/set-primary` marca una versión como principal dentro de su CV, limpia `isPrimary` del resto de versiones del mismo `cvId` y publica la versión seleccionada.
 
-`GET /cv-versions/audit-log` devuelve las ultimas trazas `AuditLog` de versiones CV. Los filtros opcionales `action`, `from`, `to` y `userId` permiten revisar acciones concretas, rangos de fecha y actividad de un usuario admin sin exponer secretos.
+`GET /cv-versions/audit-log` devuelve trazas `AuditLog` de versiones CV ordenadas por fecha descendente. Los filtros opcionales `action`, `from`, `to`, `userId`, `page` y `limit` permiten revisar acciones concretas, rangos de fecha y actividad de un usuario admin sin exponer secretos. `limit` se limita a 100 eventos por pagina.
 
 La exportación aplica:
 

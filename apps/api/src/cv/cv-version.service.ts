@@ -8,6 +8,8 @@ type CvVersionAuditTrailFilters = {
   userId?: string;
   from?: string;
   to?: string;
+  page?: string;
+  limit?: string;
 };
 
 @Injectable()
@@ -36,6 +38,8 @@ export class CvVersionService {
     const createdAt: { gte?: Date; lte?: Date } = {};
     const from = this.auditDate(filters.from);
     const to = this.auditDate(filters.to, true);
+    const page = this.auditPage(filters.page);
+    const take = this.auditLimit(filters.limit);
     if (from) {
       createdAt.gte = from;
     }
@@ -50,7 +54,8 @@ export class CvVersionService {
         ...(Object.keys(createdAt).length ? { createdAt } : {}),
       },
       orderBy: { createdAt: 'desc' },
-      take: 20,
+      skip: (page - 1) * take,
+      take,
     });
   }
 
@@ -242,6 +247,19 @@ export class CvVersionService {
       date.setUTCHours(23, 59, 59, 999);
     }
     return date;
+  }
+
+  private auditPage(value?: string) {
+    const page = Number(value || 1);
+    return Number.isInteger(page) && page > 0 ? page : 1;
+  }
+
+  private auditLimit(value?: string) {
+    const limit = Number(value || 20);
+    if (!Number.isInteger(limit) || limit < 1) {
+      return 20;
+    }
+    return Math.min(limit, 100);
   }
 
   private audit(

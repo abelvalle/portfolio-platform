@@ -399,6 +399,8 @@ export type CvVersionAuditFilters = {
   userId?: string;
   from?: string;
   to?: string;
+  page?: string;
+  limit?: string;
 };
 
 export type AdminDashboard = {

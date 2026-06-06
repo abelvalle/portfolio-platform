@@ -31,6 +31,7 @@ const emptyDraft: CvVersionDraft = {
 };
 
 const auditActionOptions = ["", "create", "update", "archive", "set_primary", "generate_pdf", "generate_docx"];
+const auditPageSize = 6;
 
 function slugify(value: string) {
   return value
@@ -348,6 +349,7 @@ export function CvVersionTable() {
   const [auditFromDate, setAuditFromDate] = useState("");
   const [auditToDate, setAuditToDate] = useState("");
   const [auditUserId, setAuditUserId] = useState("");
+  const [auditPage, setAuditPage] = useState(1);
   const [auditMessage, setAuditMessage] = useState("");
   const [draft, setDraft] = useState(emptyDraft);
   const [message, setMessage] = useState("Cargando versiones de CV.");
@@ -417,7 +419,9 @@ export function CvVersionTable() {
           action: auditActionFilter || undefined,
           from: auditFromDate || undefined,
           to: auditToDate || undefined,
-          userId: auditUserId.trim() || undefined
+          userId: auditUserId.trim() || undefined,
+          page: String(auditPage),
+          limit: String(auditPageSize)
         }).catch(() => [])
       ]);
       setVersions(nextVersions);
@@ -431,7 +435,7 @@ export function CvVersionTable() {
     } finally {
       setIsLoading(false);
     }
-  }, [auditActionFilter, auditFromDate, auditToDate, auditUserId, syncJsonEditor]);
+  }, [auditActionFilter, auditFromDate, auditPage, auditToDate, auditUserId, syncJsonEditor]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -943,7 +947,10 @@ export function CvVersionTable() {
                 id="auditActionFilter"
                 className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
                 value={auditActionFilter}
-                onChange={(event) => setAuditActionFilter(event.target.value)}
+                onChange={(event) => {
+                  setAuditActionFilter(event.target.value);
+                  setAuditPage(1);
+                }}
               >
                 {auditActionOptions.map((action) => (
                   <option key={action || "all"} value={action}>{action || "Todas"}</option>
@@ -952,15 +959,39 @@ export function CvVersionTable() {
             </div>
             <div className="grid gap-1">
               <Label htmlFor="auditFromDate">Desde</Label>
-              <Input id="auditFromDate" type="date" value={auditFromDate} onChange={(event) => setAuditFromDate(event.target.value)} />
+              <Input
+                id="auditFromDate"
+                type="date"
+                value={auditFromDate}
+                onChange={(event) => {
+                  setAuditFromDate(event.target.value);
+                  setAuditPage(1);
+                }}
+              />
             </div>
             <div className="grid gap-1">
               <Label htmlFor="auditToDate">Hasta</Label>
-              <Input id="auditToDate" type="date" value={auditToDate} onChange={(event) => setAuditToDate(event.target.value)} />
+              <Input
+                id="auditToDate"
+                type="date"
+                value={auditToDate}
+                onChange={(event) => {
+                  setAuditToDate(event.target.value);
+                  setAuditPage(1);
+                }}
+              />
             </div>
             <div className="grid gap-1">
               <Label htmlFor="auditUserId">Usuario auditoria</Label>
-              <Input id="auditUserId" value={auditUserId} onChange={(event) => setAuditUserId(event.target.value)} placeholder="user id" />
+              <Input
+                id="auditUserId"
+                value={auditUserId}
+                onChange={(event) => {
+                  setAuditUserId(event.target.value);
+                  setAuditPage(1);
+                }}
+                placeholder="user id"
+              />
             </div>
             <Button type="button" variant="outline" onClick={exportAuditCsv} disabled={!auditLogs.length}>
               <Download data-icon="inline-start" />
@@ -969,10 +1000,19 @@ export function CvVersionTable() {
             <Badge variant="outline">{auditLogs.length} eventos</Badge>
           </div>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" variant="outline" size="sm" aria-label="Anterior auditoria" onClick={() => setAuditPage((current) => Math.max(1, current - 1))} disabled={auditPage === 1 || isLoading}>
+            Anterior
+          </Button>
+          <Badge variant="secondary">Pagina {auditPage}</Badge>
+          <Button type="button" variant="outline" size="sm" aria-label="Siguiente auditoria" onClick={() => setAuditPage((current) => current + 1)} disabled={isLoading}>
+            Siguiente
+          </Button>
+        </div>
         <p className="text-sm text-muted-foreground" aria-live="polite">{auditMessage}</p>
         {auditLogs.length ? (
           <div className="grid gap-2">
-            {auditLogs.slice(0, 6).map((log) => (
+            {auditLogs.map((log) => (
               <div key={log.id} className="grid gap-2 rounded-lg border border-border p-3 text-sm md:grid-cols-[160px_1fr_160px_110px]">
                 <span className="font-medium" aria-label={`Evento ${log.action}`}>{log.action}</span>
                 <span className="text-muted-foreground">{auditMetadata(log.metadata) || log.resourceId || "Sin metadata."}</span>

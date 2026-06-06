@@ -960,6 +960,18 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Hasta").fill("2026-06-06");
   await page.getByLabel("Usuario auditoria").fill("user-1");
   await auditFilterRequestPromise;
+  await expect(page.getByText("Pagina 1")).toBeVisible();
+  const auditPageRequestPromise = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return url.pathname.endsWith("/api/v1/cv-versions/audit-log")
+      && url.searchParams.get("action") === "update"
+      && url.searchParams.get("page") === "2"
+      && url.searchParams.get("limit") === "6";
+  });
+  await expect(page.getByRole("button", { name: "Siguiente auditoria" })).toBeEnabled();
+  await page.getByRole("button", { name: "Siguiente auditoria" }).click();
+  await auditPageRequestPromise;
+  await expect(page.getByText("Pagina 2")).toBeVisible();
   const auditDownloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Exportar auditoria CSV" }).click();
   const auditDownload = await auditDownloadPromise;

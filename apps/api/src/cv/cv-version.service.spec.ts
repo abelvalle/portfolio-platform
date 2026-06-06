@@ -102,6 +102,8 @@ describe('CvVersionService', () => {
       userId: 'user-1',
       from: '2026-06-01',
       to: '2026-06-06',
+      page: '2',
+      limit: '6',
     });
 
     expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
@@ -115,7 +117,8 @@ describe('CvVersionService', () => {
         },
       },
       orderBy: { createdAt: 'desc' },
-      take: 20,
+      skip: 6,
+      take: 6,
     });
     expect(result).toEqual([{ id: 'audit-1', action: 'generate_pdf' }]);
   });

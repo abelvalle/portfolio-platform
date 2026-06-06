@@ -34,13 +34,24 @@ export class CvVersionsController {
   @ApiQuery({ name: 'userId', required: false })
   @ApiQuery({ name: 'from', required: false })
   @ApiQuery({ name: 'to', required: false })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
   auditTrail(
     @Query('action') action?: string,
     @Query('userId') userId?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.cvVersionService.auditTrail({ action, userId, from, to });
+    return this.cvVersionService.auditTrail({
+      action,
+      userId,
+      from,
+      to,
+      page,
+      limit,
+    });
   }
 
   @Get(':id')
