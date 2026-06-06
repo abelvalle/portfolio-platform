@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Eye, EyeOff, RefreshCw, Save, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +27,7 @@ export function CertificationManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDeleteCertification, setPendingDeleteCertification] = useState<CertificationItem | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -93,11 +95,12 @@ export function CertificationManagement() {
     }
   }
 
-  async function deleteCertification(id: string) {
-    setBusyId(id);
+  async function deleteCertification(item: CertificationItem) {
+    setBusyId(item.id);
     try {
-      await adminClient.deleteCertification(id);
-      setMessage("Certificacion eliminada.");
+      await adminClient.deleteCertification(item.id);
+      setPendingDeleteCertification(null);
+      setMessage(`Certificacion eliminada: ${item.title}.`);
       await loadCertifications();
     } catch {
       setMessage("No se pudo eliminar la certificacion.");
@@ -186,7 +189,7 @@ export function CertificationManagement() {
                 <Button type="button" variant="outline" size="icon" onClick={() => patchCertification(item.id, { order: item.order + 1 })} disabled={busyId === item.id}>
                   <ArrowDown />
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => deleteCertification(item.id)} disabled={busyId === item.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Eliminar ${item.title}`} onClick={() => setPendingDeleteCertification(item)} disabled={busyId === item.id}>
                   <Trash2 />
                 </Button>
               </span>
@@ -196,6 +199,25 @@ export function CertificationManagement() {
           )}
         </div>
       </section>
+
+      <Dialog open={Boolean(pendingDeleteCertification)} onOpenChange={(open) => !open && setPendingDeleteCertification(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar borrado</DialogTitle>
+            <DialogDescription>
+              Esta accion eliminara la certificacion {pendingDeleteCertification?.title}. Puedes ocultarla si solo quieres retirarla de la landing.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingDeleteCertification(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => pendingDeleteCertification && deleteCertification(pendingDeleteCertification)}>
+              Eliminar certificacion
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

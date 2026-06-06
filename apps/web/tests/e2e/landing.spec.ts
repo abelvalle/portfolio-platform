@@ -299,6 +299,24 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route(/\/api\/v1\/certifications(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "certification-1",
+          title: "Scrum Master",
+          institution: "Demo Academy",
+          date: "2025",
+          description: "Certificacion demo",
+          certificateUrl: null,
+          attachmentId: null,
+          order: 0,
+          visible: true
+        }
+      ])
+    });
+  });
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
@@ -345,6 +363,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/portfolio/certifications");
   await expect(page.getByRole("heading", { name: "Certificaciones" })).toBeVisible();
+  await expect(page.getByRole("main").getByText("Scrum Master")).toBeVisible();
+  await page.getByRole("button", { name: "Eliminar Scrum Master" }).click();
+  await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancelar" }).click();
 
   await page.goto("/admin/cv/versions");
   await expect(page.getByRole("heading", { name: "Versiones de CV" })).toBeVisible();
