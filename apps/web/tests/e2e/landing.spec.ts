@@ -1104,18 +1104,25 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Descripcion de oferta").fill("Buscamos Delivery Manager con KPIs, UAT, stakeholders, reporting y gestion de cliente en entornos cloud.");
   await page.getByRole("button", { name: "Proponer adaptacion" }).click();
   await expect(page.getByText("Resumen orientado a Delivery Manager.")).toBeVisible();
-  const acceptSkills = page.getByRole("checkbox", { name: "Aceptar skills" });
-  await acceptSkills.click();
-  await expect(acceptSkills).not.toBeChecked();
+  const acceptKpis = page.getByRole("checkbox", { name: "Aceptar skill KPIs" });
+  await acceptKpis.click();
+  await expect(acceptKpis).not.toBeChecked();
+  const acceptExperiences = page.getByRole("checkbox", { name: "Aceptar experiencias" });
+  await acceptExperiences.click();
+  await expect(acceptExperiences).not.toBeChecked();
   const createAdaptedVersionRequestPromise = page.waitForRequest((request) => {
     if (!request.url().endsWith("/api/v1/cv-versions") || request.method() !== "POST") {
       return false;
     }
     const data = JSON.parse(request.postData() || "{}");
     const structuredJson = data.structuredJson || {};
-    return !("skills" in structuredJson)
-      && structuredJson.adaptationMeta?.rejectedBlocks?.includes("skills")
-      && structuredJson.adaptationMeta?.acceptedBlocks?.includes("summary");
+    const skillNames = structuredJson.skills?.map((skill: { name?: string }) => skill.name) || [];
+    return !("experiences" in structuredJson)
+      && skillNames.includes("UAT")
+      && !skillNames.includes("KPIs")
+      && structuredJson.adaptationMeta?.rejectedBlocks?.includes("experiences")
+      && structuredJson.adaptationMeta?.rejectedSkills?.includes("KPIs")
+      && structuredJson.adaptationMeta?.acceptedSkills?.includes("UAT");
   });
   await page.getByRole("button", { name: "Crear version borrador" }).click();
   await createAdaptedVersionRequestPromise;

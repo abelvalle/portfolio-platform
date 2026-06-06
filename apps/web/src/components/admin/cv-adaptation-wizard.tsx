@@ -32,6 +32,7 @@ export function CvAdaptationWizard() {
   const [jobDescription, setJobDescription] = useState("");
   const [result, setResult] = useState<CvAdaptationResult | null>(null);
   const [acceptedBlocks, setAcceptedBlocks] = useState(defaultAcceptedBlocks);
+  const [acceptedSkillNames, setAcceptedSkillNames] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState("Cargando versiones base.");
   const [isLoading, setIsLoading] = useState(true);
   const [isAdapting, setIsAdapting] = useState(false);
@@ -74,6 +75,7 @@ export function CvAdaptationWizard() {
       });
       setResult(nextResult);
       setAcceptedBlocks(defaultAcceptedBlocks);
+      setAcceptedSkillNames(skillReviewState(nextResult.proposed.skills || []));
       setMessage("Propuesta generada. Revisa antes de aprobar o convertirla en version.");
     } catch {
       setMessage("No se pudo generar la adaptacion.");
@@ -86,6 +88,10 @@ export function CvAdaptationWizard() {
 
   function setBlockAccepted(key: AdaptationBlockKey, checked: boolean) {
     setAcceptedBlocks((current) => ({ ...current, [key]: checked }));
+  }
+
+  function setSkillAccepted(name: string, checked: boolean) {
+    setAcceptedSkillNames((current) => ({ ...current, [name]: checked }));
   }
 
   function buildReviewedProposal(nextResult: CvAdaptationResult) {
@@ -101,11 +107,33 @@ export function CvAdaptationWizard() {
       delete nextProposal[key];
     }
 
-    nextProposal.adaptationMeta = {
+    const nextMeta: Record<string, unknown> = {
       ...(nextResult.proposed.adaptationMeta || {}),
       acceptedBlocks: accepted,
       rejectedBlocks: rejected
     };
+
+    if (acceptedBlocks.skills && Array.isArray(nextResult.proposed.skills)) {
+      const acceptedSkills = nextResult.proposed.skills
+        .map((skill) => skill.name || "")
+        .filter((name) => name && acceptedSkillNames[name] !== false);
+      const rejectedSkills = nextResult.proposed.skills
+        .map((skill) => skill.name || "")
+        .filter((name) => name && acceptedSkillNames[name] === false);
+      const filteredSkills = nextResult.proposed.skills.filter((skill) => {
+        const name = skill.name || "";
+        return !name || acceptedSkillNames[name] !== false;
+      });
+      if (filteredSkills.length) {
+        nextProposal.skills = filteredSkills;
+      } else {
+        delete nextProposal.skills;
+      }
+      nextMeta.acceptedSkills = acceptedSkills;
+      nextMeta.rejectedSkills = rejectedSkills;
+    }
+
+    nextProposal.adaptationMeta = nextMeta;
 
     return nextProposal;
   }
@@ -242,7 +270,27 @@ export function CvAdaptationWizard() {
             </div>
             <div>
               <p className="font-medium text-foreground">Skills priorizadas</p>
-              <p className="mt-1">{result.proposed.skills?.slice(0, 8).map((skill) => skill.name).join(", ") || "Sin skills."}</p>
+              {result.proposed.skills?.length ? (
+                <div className="mt-2 grid gap-2">
+                  {result.proposed.skills.slice(0, 8).map((skill, index) => {
+                    const name = skill.name || `Skill ${index + 1}`;
+                    const id = `accept-skill-${buildVersionSlug(name) || index}`;
+                    return (
+                      <div key={`${name}-${index}`} className="flex items-center gap-2">
+                        <Checkbox
+                          id={id}
+                          checked={acceptedSkillNames[name] !== false}
+                          disabled={!acceptedBlocks.skills}
+                          onCheckedChange={(checked) => setSkillAccepted(name, Boolean(checked))}
+                        />
+                        <Label htmlFor={id}>Aceptar skill {name}</Label>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="mt-1">Sin skills.</p>
+              )}
             </div>
             <div>
               <p className="font-medium text-foreground">Experiencias priorizadas</p>
@@ -269,4 +317,13 @@ function buildVersionSlug(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
+}
+
+function skillReviewState(skills: Array<{ name?: string }>) {
+  return Object.fromEntries(
+    skills
+      .map((skill) => skill.name || "")
+      .filter(Boolean)
+      .map((name) => [name, true])
+  );
 }

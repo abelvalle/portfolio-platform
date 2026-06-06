@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 13:46 CEST.
+Estado actualizado: 2026-06-06 13:52 CEST.
 
 ## Hitos completados
 
@@ -2274,6 +2274,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Revision granular de skills en Adaptar CV
+
+- `/admin/cv/adapt` añade checkboxes por cada skill propuesta.
+- Al crear la version draft, las skills rechazadas se eliminan de `structuredJson.skills`.
+- `adaptationMeta` registra `acceptedSkills` y `rejectedSkills` junto a la revision por bloques.
+- El flujo permite combinar rechazo de bloques completos con rechazo de skills concretas.
+- Añadida cobertura e2e para rechazar `KPIs`, mantener `UAT` y rechazar el bloque de experiencias.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -2282,7 +2297,7 @@ Verificacion realizada en este hito:
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
-- Aceptar/rechazar sugerencias IA desde UI: el wizard ya permite aceptar/rechazar bloques principales y registra trazabilidad; falta revision granular item a item dentro de skills/experiencias.
+- Aceptar/rechazar sugerencias IA desde UI: el wizard ya permite aceptar/rechazar bloques principales y skills individuales con trazabilidad; falta revision granular item a item dentro de experiencias.
 - Adaptación CV a versión final: el wizard ya propone datos desde API y crea una `CvVersion` draft revisada por bloques desde la propuesta; falta publicar tras revisión y enlazar comparador antes de aprobar.
 - Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, fecha y usuario, con detalle por evento y exportacion CSV de trazas visibles; falta exportacion server-side del historico completo.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
