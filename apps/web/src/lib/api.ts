@@ -112,6 +112,21 @@ export const adminClient = {
   changeLog() {
     return apiFetch<ChangeLogItem[]>("/admin/publication/changelog");
   },
+  users() {
+    return apiFetch<AdminUser[]>("/users");
+  },
+  userPermissions() {
+    return apiFetch<Record<AdminUserRole, string[]>>("/users/permissions");
+  },
+  createUser(data: { email: string; name?: string; role: AdminUserRole; password: string }) {
+    return apiFetch<AdminUser>("/users", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateUser(id: string, data: { name?: string; role?: AdminUserRole; password?: string }) {
+    return apiFetch<AdminUser>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteUser(id: string) {
+    return apiFetch<AdminUser>(`/users/${id}`, { method: "DELETE" });
+  },
   updateTheme(data: unknown) {
     return apiFetch("/theme", { method: "PATCH", body: JSON.stringify(data) });
   },
@@ -162,6 +177,18 @@ export type ChangeLogItem = {
   action: string;
   summary: string;
   createdAt: string;
+};
+
+export type AdminUserRole = "admin" | "editor" | "viewer";
+
+export type AdminUser = {
+  id: string;
+  email: string;
+  name?: string | null;
+  role: AdminUserRole;
+  mfaEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type MediaAsset = {

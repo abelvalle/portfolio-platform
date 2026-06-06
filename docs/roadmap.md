@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 02:22 CEST.
+Estado actualizado: 2026-06-06 02:27 CEST.
 
 ## Hitos completados
 
@@ -292,6 +292,25 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Usuarios UI CRUD conectado a API
+
+- Reemplazada la vista estática `/admin/settings/users` por un gestor conectado a `/api/v1/users`.
+- El panel lista usuarios, roles y estado MFA desde la API.
+- Añadido formulario para crear usuarios con email, nombre, rol y password inicial.
+- Añadida edición rápida de rol por usuario con `PATCH /api/v1/users/:id`.
+- Añadida baja/desactivación con `DELETE /api/v1/users/:id`.
+- La matriz de permisos se carga desde `GET /api/v1/users/permissions`.
+- Añadida cobertura e2e desktop/mobile de la ruta admin de usuarios tras proxy de sesión.
+
+Verificación realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -308,7 +327,7 @@ Verificación realizada en este hito:
 - ATS por oferta concreta: el score actual valida estructura general; falta comparar contra keywords de una oferta específica.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
-- Usuarios UI CRUD: existe API y vista de matriz de permisos, pero falta tabla conectada a API para crear/editar/desactivar usuarios desde el panel.
+- Usuarios UI avanzada: el CRUD básico está conectado; faltan edición de nombre/password inline, búsqueda, paginación y confirmación modal de baja.
 - Permisos por acción: existe matriz de permisos, pero los guards todavía se basan en roles por endpoint.
 - Webhooks admin UI: falta pantalla para configurar/testear webhooks desde el panel; ahora se gestionan por variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
