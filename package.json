@@ -20,6 +20,7 @@
     "lint": "npm --prefix apps/api run lint && npm --prefix apps/web run lint",
     "test": "npm --prefix apps/api run test && npm --prefix apps/web run test",
     "test:e2e": "npm --prefix apps/api run test:e2e && npm --prefix apps/web run test:e2e",
+    "test:e2e:db": "npm --prefix apps/api run test:e2e:db",
     "format": "npm --prefix apps/api run format",
     "db:generate": "npm --prefix apps/api run db:generate",
     "db:migrate": "npm --prefix apps/api run db:migrate",

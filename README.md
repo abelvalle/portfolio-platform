@@ -77,6 +77,25 @@ npm run db:seed
 
 El seed usa los CVs adjuntos como fuente inicial y marca proyectos inventados como `sample/demo`.
 
+## Pruebas
+
+```bash
+npm run build
+npm run lint
+npm run test
+npm run test:e2e
+```
+
+E2E opcional con PostgreSQL real para generacion/descarga de CV:
+
+```powershell
+$env:DATABASE_URL="postgresql://portfolio:portfolio@localhost:5432/portfolio_platform?schema=e2e_cv"
+$env:RUN_DB_E2E="true"
+npm run test:e2e:db
+```
+
+Sin `RUN_DB_E2E=true`, esta prueba se salta para no romper entornos sin Postgres disponible.
+
 ## Admin
 
 Login: `/login`

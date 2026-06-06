@@ -3207,13 +3207,28 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Harness opcional e2e PostgreSQL para CV
+
+- Anadido e2e API opcional `cv-version-db.e2e-spec.ts`, activado solo con `RUN_DB_E2E=true`.
+- Anadidos scripts `test:e2e:db` en raiz y API para ejecutar el contrato DB bajo demanda.
+- El test crea CV, plantilla y version en PostgreSQL, genera un PDF mediante exporter controlado, persiste `MediaAsset`/`CvGeneratedFile`, valida `generatedPdfId` y descarga por HTTP.
+- README documenta el comando PowerShell y mantiene el test saltado por defecto para CI/local sin Postgres.
+- Intento de validacion real: Docker CLI existe pero Docker Desktop daemon no estaba levantado; la instancia local en `localhost:5432` no acepto las credenciales de ejemplo. Queda pendiente validarlo con credenciales Postgres reales.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/api run build`
+- `npm.cmd --prefix apps/api run test:e2e`
+- `npm.cmd --prefix apps/api run test:e2e:db` sin `RUN_DB_E2E` confirma skip seguro.
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
 - Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder` y existe contrato `data-*` compartido con preview web; DOCX sigue usando renderer propio aunque comparte orden de bloques, y falta diff visual automatizado contra PDF generado.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
-- ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; servicios y contrato HTTP cubren MediaAsset generado descargable desde storage local con version persistida en memoria; falta prueba con DB real que genere archivos desde una version persistida y valide descarga HTTP contra PostgreSQL aislado.
+- ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; servicios y contrato HTTP cubren MediaAsset generado descargable desde storage local con version persistida en memoria; existe harness opcional `RUN_DB_E2E=true`, pero falta validarlo con credenciales Postgres reales porque Docker daemon no estaba disponible y la instancia local no acepto las credenciales de ejemplo.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: el wizard ya permite aceptar/rechazar bloques principales, skills individuales y experiencias individuales con trazabilidad; falta revision granular de campos internos de cada experiencia.
 - Roles objetivo CV: la pantalla admin permite CRUD, el wizard los usa como precarga y el backend persiste el rol elegido; falta analytics agregada de uso por rol objetivo.
