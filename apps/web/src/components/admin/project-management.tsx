@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Archive, Eye, EyeOff, Pencil, RefreshCw, Save, Star, Trash2 } from "lucide-react";
+import { Archive, ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -179,12 +179,12 @@ export function ProjectManagement() {
     }
   }
 
-  async function patchProject(id: string, data: Partial<ProjectMutation>) {
+  async function patchProject(id: string, data: Partial<ProjectMutation>, successMessage = "Proyecto actualizado.") {
     setBusyId(id);
     try {
       await adminClient.updateProject(id, data);
-      setMessage("Proyecto actualizado.");
       await loadProjects();
+      setMessage(successMessage);
     } catch {
       setMessage("No se pudo actualizar el proyecto.");
     } finally {
@@ -344,7 +344,7 @@ export function ProjectManagement() {
 
       <section className="overflow-x-auto rounded-lg border border-border">
         <div className="min-w-[980px]">
-          <div className="grid grid-cols-[1.2fr_1fr_130px_140px_220px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+          <div className="grid grid-cols-[1.2fr_1fr_130px_140px_300px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
             <span>Proyecto</span>
             <span>Categoria</span>
             <span>Estado</span>
@@ -352,7 +352,7 @@ export function ProjectManagement() {
             <span>Acciones</span>
           </div>
           {items.length ? items.map((item) => (
-            <div key={item.id} className="grid grid-cols-[1.2fr_1fr_130px_140px_220px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+            <div key={item.id} className="grid grid-cols-[1.2fr_1fr_130px_140px_300px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <span>
                 <span className="block font-medium">{item.name}</span>
                 <span className="block text-muted-foreground">{item.slug}</span>
@@ -376,6 +376,12 @@ export function ProjectManagement() {
                 </Button>
                 <Button type="button" variant="outline" size="icon" onClick={() => patchProject(item.id, { status: item.status === "published" ? "archived" : "published" })} disabled={busyId === item.id}>
                   <Archive />
+                </Button>
+                <Button type="button" variant="outline" size="icon" aria-label={`Subir ${item.name}`} onClick={() => patchProject(item.id, { order: item.order - 1 }, `Proyecto reordenado: ${item.name}.`)} disabled={busyId === item.id}>
+                  <ArrowUp />
+                </Button>
+                <Button type="button" variant="outline" size="icon" aria-label={`Bajar ${item.name}`} onClick={() => patchProject(item.id, { order: item.order + 1 }, `Proyecto reordenado: ${item.name}.`)} disabled={busyId === item.id}>
+                  <ArrowDown />
                 </Button>
                 <Button type="button" variant="outline" size="icon" aria-label={`Eliminar ${item.name}`} onClick={() => setPendingDeleteProject(item)} disabled={busyId === item.id}>
                   <Trash2 />

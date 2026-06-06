@@ -768,6 +768,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Tecnologias proyecto").fill("Next.js\nNestJS\nPrisma");
   await page.getByRole("button", { name: "Guardar proyecto" }).click();
   await expect(page.getByText("Proyecto actualizado: Portfolio Platform Pro.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Bajar Portfolio Platform" })).toBeVisible();
+  await page.getByRole("button", { name: "Subir Portfolio Platform" }).click();
+  await expect(page.getByText("Proyecto reordenado: Portfolio Platform.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Portfolio Platform" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();
