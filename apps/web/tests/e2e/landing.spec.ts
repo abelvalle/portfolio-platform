@@ -318,6 +318,18 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route(/\/api\/v1\/analytics\/funnel(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        steps: [
+          { key: "landing_visit", label: "Visitas landing", count: 20, rateFromStart: 100, rateFromPrevious: 100 },
+          { key: "cv_download", label: "Descargas CV", count: 5, rateFromStart: 25, rateFromPrevious: 25 },
+          { key: "contact_submit", label: "Formularios contacto", count: 2, rateFromStart: 10, rateFromPrevious: 40 }
+        ]
+      })
+    });
+  });
   await page.route("**/api/v1/analytics/privacy", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -717,6 +729,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("Desde")).toBeVisible();
   await expect(page.getByLabel("Hasta")).toBeVisible();
   await expect(page.getByLabel("Tipo de evento")).toBeVisible();
+  await expect(page.getByText("Embudo conversion")).toBeVisible();
+  await expect(page.getByText("Landing a CV y contacto")).toBeVisible();
+  await expect(page.getByText("25% desde landing")).toBeVisible();
   await expect(page.getByText("Tendencias", { exact: true })).toBeVisible();
   await expect(page.getByText("Privacidad analytics")).toBeVisible();
   await expect(page.getByText("retencion 30 dias")).toBeVisible();

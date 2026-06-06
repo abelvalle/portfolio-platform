@@ -104,6 +104,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /analytics/privacy` (`read_analytics`)
 - `GET /analytics/timeseries?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
 - `GET /analytics/channels?from=YYYY-MM-DD&to=YYYY-MM-DD&type=landing_visit` (`read_analytics`)
+- `GET /analytics/funnel?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_analytics`)
 - `POST /analytics/retention/prune` (`manage_analytics`)
 - `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
 
@@ -116,6 +117,8 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 `POST /analytics/events` registra eventos anonimos de landing, descarga de CV, contacto y proyectos. La IP se guarda como hash SHA-256 y puede saltearse con `ANALYTICS_IP_HASH_SALT`.
 
 `GET /analytics/channels` agrega eventos por fuente y canal usando `metadata.source/channel` o parametros UTM (`utm_source`, `utm_medium`) presentes en `path`. Devuelve los 8 segmentos principales de cada grupo.
+
+`GET /analytics/funnel` devuelve un embudo fijo de conversion landing -> descarga CV -> formulario contacto, con ratio desde landing y desde el paso anterior.
 
 Variables de privacidad:
 

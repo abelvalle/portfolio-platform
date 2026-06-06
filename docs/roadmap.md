@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 08:54 CEST.
+Estado actualizado: 2026-06-06 08:59 CEST.
 
 ## Hitos completados
 
@@ -1715,6 +1715,22 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Embudo basico de conversion Analytics
+
+- Añadido `GET /api/v1/analytics/funnel` con filtros temporales `from` y `to`.
+- El endpoint calcula el embudo fijo landing -> descarga CV -> formulario contacto.
+- Cada paso devuelve conteo, ratio desde landing y ratio desde el paso anterior.
+- `/admin/analytics` muestra el bloque `Embudo conversion` junto al resumen y tendencias.
+- `docs/api.md` documenta el endpoint y sus ratios.
+- Añadidos tests unitarios del calculo y cobertura e2e del panel.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1728,7 +1744,7 @@ Verificacion realizada en este hito:
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: hay trazabilidad persistente y vista admin de entregas/test; falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto` y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
-- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención y segmentación fuente/canal desde UI; faltan embudos avanzados.
+- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal y embudo básico desde UI; faltan embudos configurables/multicanal.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo y segmentación operativa; faltan cohorts.
 - Experiencias UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, reordenado drag/drop y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, selector de media, categorías gestionadas visualmente y orden drag/drop.

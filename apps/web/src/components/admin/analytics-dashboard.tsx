@@ -10,6 +10,7 @@ import {
   adminClient,
   type AnalyticsChannels,
   type AnalyticsEvent,
+  type AnalyticsFunnel,
   type AnalyticsPrivacyStatus,
   type AnalyticsSummary,
   type AnalyticsTimeSeriesPoint
@@ -35,6 +36,7 @@ export function AnalyticsDashboard() {
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [timeSeries, setTimeSeries] = useState<AnalyticsTimeSeriesPoint[]>([]);
   const [channels, setChannels] = useState<AnalyticsChannels | null>(null);
+  const [funnel, setFunnel] = useState<AnalyticsFunnel | null>(null);
   const [privacy, setPrivacy] = useState<AnalyticsPrivacyStatus | null>(null);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -47,17 +49,19 @@ export function AnalyticsDashboard() {
     setIsLoading(true);
     try {
       const filters = { from: fromDate || undefined, to: toDate || undefined };
-      const [nextSummary, nextEvents, nextTimeSeries, nextChannels, nextPrivacy] = await Promise.all([
+      const [nextSummary, nextEvents, nextTimeSeries, nextChannels, nextFunnel, nextPrivacy] = await Promise.all([
         adminClient.analyticsSummary(filters),
         adminClient.analyticsEvents({ ...filters, type: eventType || undefined }),
         adminClient.analyticsTimeSeries({ ...filters, type: eventType || undefined }),
         adminClient.analyticsChannels({ ...filters, type: eventType || undefined }),
+        adminClient.analyticsFunnel(filters),
         adminClient.analyticsPrivacy()
       ]);
       setSummary(nextSummary);
       setEvents(nextEvents);
       setTimeSeries(nextTimeSeries);
       setChannels(nextChannels);
+      setFunnel(nextFunnel);
       setPrivacy(nextPrivacy);
       setMessage("Analitica sincronizada con filtros de API.");
     } catch {
@@ -157,6 +161,30 @@ export function AnalyticsDashboard() {
             <p className="mt-2 text-3xl font-semibold">{summary?.[key] ?? 0}</p>
           </div>
         ))}
+      </section>
+
+      <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-mono text-sm text-primary">Embudo conversion</p>
+            <h2 className="mt-1 text-xl font-semibold">Landing a CV y contacto</h2>
+          </div>
+          <Badge variant="outline">basico</Badge>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {(funnel?.steps || []).map((step) => (
+            <div key={step.key} className="rounded-lg border border-border p-4">
+              <p className="text-sm text-muted-foreground">{step.label}</p>
+              <p className="mt-2 text-3xl font-semibold">{step.count}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {formatPercent(step.rateFromStart)} desde landing · {formatPercent(step.rateFromPrevious)} desde anterior
+              </p>
+            </div>
+          ))}
+          {funnel?.steps.length ? null : (
+            <p className="text-sm text-muted-foreground">Sin datos de embudo para los filtros actuales.</p>
+          )}
+        </div>
       </section>
 
       <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
@@ -292,6 +320,10 @@ function formatDate(value: string) {
     return value;
   }
   return new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
+function formatPercent(value: number) {
+  return `${value.toLocaleString("es-ES", { maximumFractionDigits: 1 })}%`;
 }
 
 function buildAnalyticsTrend(points: AnalyticsTimeSeriesPoint[]) {

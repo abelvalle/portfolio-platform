@@ -137,6 +137,39 @@ export class AnalyticsService {
     };
   }
 
+  async funnel(filters: AnalyticsDateRangeQueryDto = {}) {
+    const summary = await this.summary(filters);
+    const steps = [
+      {
+        key: 'landing_visit',
+        label: 'Visitas landing',
+        count: summary.totalVisits,
+      },
+      {
+        key: 'cv_download',
+        label: 'Descargas CV',
+        count: summary.cvDownloads,
+      },
+      {
+        key: 'contact_submit',
+        label: 'Formularios contacto',
+        count: summary.contactSubmits,
+      },
+    ];
+    const firstCount = steps[0].count;
+
+    return {
+      steps: steps.map((step, index) => ({
+        ...step,
+        rateFromStart: this.percent(step.count, firstCount),
+        rateFromPrevious:
+          index === 0
+            ? this.percent(step.count, firstCount)
+            : this.percent(step.count, steps[index - 1].count),
+      })),
+    };
+  }
+
   private eventWhere(filters: AnalyticsEventsQueryDto) {
     return {
       ...this.dateRangeWhere(filters),
@@ -266,6 +299,13 @@ export class AnalyticsService {
           right.count - left.count || left.name.localeCompare(right.name),
       )
       .slice(0, 8);
+  }
+
+  private percent(value: number, total: number) {
+    if (!total) {
+      return 0;
+    }
+    return Math.round((value / total) * 1000) / 10;
   }
 }
 

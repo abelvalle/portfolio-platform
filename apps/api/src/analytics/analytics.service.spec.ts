@@ -202,6 +202,47 @@ describe('AnalyticsService filters', () => {
       ],
     });
   });
+
+  it('builds a landing to CV/contact conversion funnel', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsEvent.count
+      .mockResolvedValueOnce(20)
+      .mockResolvedValueOnce(5)
+      .mockResolvedValueOnce(2)
+      .mockResolvedValueOnce(3);
+    const service = createService(prisma);
+
+    const result = await service.funnel({
+      from: '2026-06-01',
+      to: '2026-06-02',
+    });
+
+    expect(result).toEqual({
+      steps: [
+        {
+          key: 'landing_visit',
+          label: 'Visitas landing',
+          count: 20,
+          rateFromStart: 100,
+          rateFromPrevious: 100,
+        },
+        {
+          key: 'cv_download',
+          label: 'Descargas CV',
+          count: 5,
+          rateFromStart: 25,
+          rateFromPrevious: 25,
+        },
+        {
+          key: 'contact_submit',
+          label: 'Formularios contacto',
+          count: 2,
+          rateFromStart: 10,
+          rateFromPrevious: 40,
+        },
+      ],
+    });
+  });
 });
 
 function createService(
