@@ -3647,6 +3647,15 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run lint`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 
+### Build web tras analytics de roles objetivo
+
+- Ejecutado build de produccion del frontend despues de mostrar roles objetivo CV en `/admin/analytics`.
+- Next compila el panel privado y las rutas publicas sin errores de TypeScript.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
