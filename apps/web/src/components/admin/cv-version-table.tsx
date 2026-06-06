@@ -51,6 +51,33 @@ function summaryFromStructuredJson(value: unknown) {
   return typeof summary === "string" ? summary : "";
 }
 
+function skillsFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return "";
+  }
+  const skills = (value as Record<string, unknown>).skills;
+  if (!Array.isArray(skills)) {
+    return "";
+  }
+  return skills
+    .map((skill) => {
+      if (typeof skill === "string") {
+        return skill;
+      }
+      if (skill && typeof skill === "object" && "name" in skill) {
+        const name = (skill as { name?: unknown }).name;
+        return typeof name === "string" ? name : "";
+      }
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+function splitBlockLines(value: string) {
+  return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
+}
+
 function getInitialVersionId() {
   if (typeof window === "undefined") {
     return "";
@@ -92,6 +119,7 @@ export function CvVersionTable() {
   const [jsonVersionId, setJsonVersionId] = useState("");
   const [jsonDraft, setJsonDraft] = useState("{}");
   const [summaryDraft, setSummaryDraft] = useState("");
+  const [skillsDraft, setSkillsDraft] = useState("");
   const [jsonMessage, setJsonMessage] = useState("Selecciona una version para editar su JSON estructurado.");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -108,6 +136,7 @@ export function CvVersionTable() {
       setJsonVersionId("");
       setJsonDraft("{}");
       setSummaryDraft("");
+      setSkillsDraft("");
       setJsonMessage("Sin versiones disponibles para editar.");
       return;
     }
@@ -115,6 +144,7 @@ export function CvVersionTable() {
       setJsonVersionId(selectedVersion.id);
       setJsonDraft(formatJson(selectedVersion.structuredJson));
       setSummaryDraft(summaryFromStructuredJson(selectedVersion.structuredJson));
+      setSkillsDraft(skillsFromStructuredJson(selectedVersion.structuredJson));
       setJsonMessage(
         requestedVersionId === selectedVersion.id
           ? "Version enlazada desde el comparador cargada para edicion."
@@ -253,6 +283,7 @@ export function CvVersionTable() {
     setJsonVersionId(id);
     setJsonDraft(formatJson(selectedVersion?.structuredJson));
     setSummaryDraft(summaryFromStructuredJson(selectedVersion?.structuredJson));
+    setSkillsDraft(skillsFromStructuredJson(selectedVersion?.structuredJson));
     setJsonMessage(selectedVersion ? "JSON estructurado cargado desde la version seleccionada." : "Version no encontrada.");
   }
 
@@ -279,6 +310,31 @@ export function CvVersionTable() {
     }
     setJsonDraft(formatJson(nextStructuredJson));
     setJsonMessage("Bloque resumen aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function applySkillsBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el bloque.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const nextSkills = splitBlockLines(skillsDraft).map((name) => ({ name }));
+    if (nextSkills.length) {
+      nextStructuredJson.skills = nextSkills;
+    } else {
+      delete nextStructuredJson.skills;
+    }
+    setJsonDraft(formatJson(nextStructuredJson));
+    setJsonMessage("Bloque skills aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
   async function saveStructuredJson() {
@@ -428,6 +484,18 @@ export function CvVersionTable() {
           />
           <Button type="button" variant="outline" className="w-fit" onClick={applySummaryBlock} disabled={!jsonVersionId}>
             Aplicar resumen
+          </Button>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="skillsBlock">Skills CV</Label>
+          <Textarea
+            id="skillsBlock"
+            rows={4}
+            value={skillsDraft}
+            onChange={(event) => setSkillsDraft(event.target.value)}
+          />
+          <Button type="button" variant="outline" className="w-fit" onClick={applySkillsBlock} disabled={!jsonVersionId}>
+            Aplicar skills
           </Button>
         </div>
         <div className="grid gap-2">
