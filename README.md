@@ -63,6 +63,11 @@ Variables opcionales de media:
 
 - `MEDIA_SIGNATURE_SCAN_ENABLED=false`: desactiva el bloqueo local de firmas EICAR en uploads.
 
+Variables opcionales de contacto:
+
+- `CONTACT_IP_HASH_SALT`: sal para hashes de IP en mensajes de contacto.
+- `CONTACT_STORE_USER_AGENT=false`: evita guardar user-agent en mensajes de contacto.
+
 ## Migraciones y seed
 
 ```bash

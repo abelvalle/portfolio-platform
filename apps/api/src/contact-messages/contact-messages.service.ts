@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import sanitizeHtml from 'sanitize-html';
@@ -18,6 +19,7 @@ export class ContactMessagesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly webhookService: ContactWebhookService,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(dto: CreateContactMessageDto, ip?: string, userAgent?: string) {
@@ -28,7 +30,7 @@ export class ContactMessagesService {
         subject: dto.subject ? this.clean(dto.subject) : null,
         message: this.clean(dto.message),
         ipHash: ip ? this.hash(ip) : null,
-        userAgent,
+        userAgent: this.storeUserAgent() ? userAgent : null,
       },
     });
     void this.webhookService.dispatch(message);
@@ -80,7 +82,16 @@ export class ContactMessagesService {
   }
 
   private hash(value: string) {
-    return createHash('sha256').update(value).digest('hex');
+    const salt = this.configService.get<string>('CONTACT_IP_HASH_SALT');
+    return createHash('sha256')
+      .update(salt ? `${salt}:${value}` : value)
+      .digest('hex');
+  }
+
+  private storeUserAgent() {
+    return (
+      this.configService.get<string>('CONTACT_STORE_USER_AGENT') !== 'false'
+    );
   }
 
   private dateRangeWhere(query: ContactMessageQueryDto): {

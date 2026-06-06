@@ -24,6 +24,8 @@ Variables:
 - `ADMIN_PASSWORD`
 - `STORAGE_DIR`
 - `MEDIA_SIGNATURE_SCAN_ENABLED` opcional para activar/desactivar el bloqueo local de firmas EICAR
+- `CONTACT_IP_HASH_SALT` opcional para saltear hashes de IP en contacto
+- `CONTACT_STORE_USER_AGENT=false` opcional para no guardar user-agent en contacto
 - `ANALYTICS_IP_HASH_SALT` opcional para saltear hashes de IP
 - `ANALYTICS_STORE_USER_AGENT=false` opcional para no guardar user-agent
 - `ANALYTICS_RETENTION_DAYS` opcional para purgar eventos antiguos

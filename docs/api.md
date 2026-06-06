@@ -219,6 +219,11 @@ Las exportaciones ATS siguen priorizando compatibilidad: fuerzan color textual y
 
 Si `CONTACT_WEBHOOK_URL` está configurado, cada mensaje guardado dispara un `POST` externo con evento `contact.message.created`. Si `CONTACT_WEBHOOK_SECRET` existe, se añade firma HMAC SHA-256 en `X-Portfolio-Signature`.
 
+Privacidad de contacto:
+
+- `CONTACT_IP_HASH_SALT`: sal opcional para el hash de IP.
+- `CONTACT_STORE_USER_AGENT=false`: evita persistir user-agent en nuevos mensajes.
+
 Endpoints admin de webhook:
 
 - `GET /contact-messages/webhook/status`: protegido para `admin`, `editor` y `viewer`; indica si URL/secret están configurados sin exponer valores.
