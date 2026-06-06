@@ -393,7 +393,7 @@ export class CvExportService {
     const profile = data.profile || {};
     return [profile.email, profile.phone, profile.location, profile.linkedin]
       .filter(Boolean)
-      .map((item) => `<span>${this.html(item)}</span>`)
+      .map((item) => `<span data-cv-contact-item="true">${this.html(item)}</span>`)
       .join('');
   }
 

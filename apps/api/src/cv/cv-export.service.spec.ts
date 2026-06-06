@@ -159,6 +159,7 @@ describe('CvExportService', () => {
     expect(html).toContain('data-cv-section="summary"');
     expect(html).toContain('data-cv-section="skills"');
     expect(html).toContain('class="cv-contact"');
+    expect(html).toContain('data-cv-contact-item="true">abel@example.com');
     expect(html).toContain('class="cv-photo" src="/media/abel.png"');
     expect(html).toContain('class="cv-chips"');
     expect(html).toContain('class="cv-chip">KPIs</span>');

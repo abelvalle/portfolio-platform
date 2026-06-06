@@ -3566,6 +3566,16 @@ Verificacion realizada en este hito:
 
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "public CV template detail"`
 
+### Contrato de contacto A4 server-side
+
+- `CvExportService.renderHtml` expone `data-cv-contact-item="true"` en los items de contacto.
+- El contrato queda alineado con `CvA4Preview` para futuros checks de paridad preview/export.
+- `docs/api.md` documenta el atributo compartido y el filtrado de campos vacios.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- cv-export.service.spec.ts`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
