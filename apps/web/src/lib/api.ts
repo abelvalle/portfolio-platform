@@ -259,6 +259,12 @@ export const cvClient = {
   updateVersion(id: string, data: Partial<CvVersionMutation>) {
     return apiFetch<CvVersionItem>(`/cv-versions/${id}`, { method: "PATCH", body: JSON.stringify(data) });
   },
+  generateVersionPdf(id: string) {
+    return apiFetch<CvGeneratedFileResult>(`/cv-versions/${id}/generate-pdf`, { method: "POST" });
+  },
+  generateVersionDocx(id: string) {
+    return apiFetch<CvGeneratedFileResult>(`/cv-versions/${id}/generate-docx`, { method: "POST" });
+  },
   deleteVersion(id: string) {
     return apiFetch<CvVersionItem>(`/cv-versions/${id}`, { method: "DELETE" });
   },
@@ -543,6 +549,18 @@ export type CvVersionItem = {
   isPrimary: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type CvGeneratedFileResult = {
+  media: MediaAsset;
+  generated: {
+    id: string;
+    cvVersionId?: string | null;
+    mediaAssetId?: string | null;
+    type: "pdf" | "docx";
+    url: string;
+    createdAt: string;
+  };
 };
 
 export type CvItem = {

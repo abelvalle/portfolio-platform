@@ -46,6 +46,18 @@ export class CvVersionsController {
   }
 
   @Roles(UserRole.admin, UserRole.editor)
+  @Post(':id/generate-pdf')
+  generatePdf(@Param('id') id: string) {
+    return this.cvVersionService.generatePdf(id);
+  }
+
+  @Roles(UserRole.admin, UserRole.editor)
+  @Post(':id/generate-docx')
+  generateDocx(@Param('id') id: string) {
+    return this.cvVersionService.generateDocx(id);
+  }
+
+  @Roles(UserRole.admin, UserRole.editor)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.cvVersionService.remove(id);

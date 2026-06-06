@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Archive, RefreshCw, Save, Trash2 } from "lucide-react";
+import { Archive, FileText, RefreshCw, Save, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cvClient, type CvVersionItem, type CvVersionMutation } from "@/lib/api";
+import { cvClient, getApiUrl, type CvVersionItem, type CvVersionMutation } from "@/lib/api";
 
 type CvVersionDraft = {
   name: string;
@@ -130,6 +130,24 @@ export function CvVersionTable() {
     }
   }
 
+  async function generateVersionFile(id: string, type: "pdf" | "docx") {
+    setBusyId(id);
+    setMessage(`Generando ${type.toUpperCase()} de la version seleccionada.`);
+    try {
+      if (type === "pdf") {
+        await cvClient.generateVersionPdf(id);
+      } else {
+        await cvClient.generateVersionDocx(id);
+      }
+      setMessage(`${type.toUpperCase()} generado y registrado como asset de media.`);
+      await loadVersions();
+    } catch {
+      setMessage(`No se pudo generar el ${type.toUpperCase()} de esta version.`);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <div className="grid gap-6">
       <section className="rounded-lg border border-border bg-card p-6">
@@ -185,7 +203,7 @@ export function CvVersionTable() {
 
       <section className="overflow-x-auto rounded-lg border border-border">
         <div className="min-w-[900px]">
-          <div className="grid grid-cols-[1.2fr_1fr_100px_130px_120px_150px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+          <div className="grid grid-cols-[1.2fr_1fr_90px_120px_110px_270px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
             <span>Nombre</span>
             <span>Objetivo</span>
             <span>Idioma</span>
@@ -194,20 +212,36 @@ export function CvVersionTable() {
             <span>Acciones</span>
           </div>
           {versions.length ? versions.map((version) => (
-            <div key={version.id} className="grid grid-cols-[1.2fr_1fr_100px_130px_120px_150px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+            <div key={version.id} className="grid grid-cols-[1.2fr_1fr_90px_120px_110px_270px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <span>
                 <span className="block font-medium">{version.name}</span>
                 <span className="block text-muted-foreground">{version.slug}</span>
+                <span className="mt-2 flex flex-wrap gap-1">
+                  {version.generatedPdfId ? <Badge variant="outline">PDF listo</Badge> : null}
+                  {version.generatedDocxId ? <Badge variant="outline">DOCX listo</Badge> : null}
+                </span>
+                <span className="mt-2 flex flex-wrap gap-3 text-xs">
+                  {version.generatedPdfId ? <a className="text-primary hover:underline" href={getApiUrl(`/media/${version.generatedPdfId}/download`)}>Descargar PDF</a> : null}
+                  {version.generatedDocxId ? <a className="text-primary hover:underline" href={getApiUrl(`/media/${version.generatedDocxId}/download`)}>Descargar DOCX</a> : null}
+                </span>
               </span>
               <span className="text-muted-foreground">{version.targetRole}</span>
               <span className="text-muted-foreground">{version.language}</span>
               <span><Badge variant={version.status === "published" ? "default" : "secondary"}>{version.status}</Badge></span>
               <span>{version.isPrimary ? <Badge>principal</Badge> : <Badge variant="outline">no</Badge>}</span>
-              <span className="flex gap-1">
-                <Button type="button" variant="outline" size="icon" onClick={() => patchVersion(version.id, { status: version.status === "published" ? "archived" : "published" })} disabled={busyId === version.id}>
+              <span className="flex flex-wrap gap-1">
+                <Button type="button" variant="outline" size="sm" onClick={() => generateVersionFile(version.id, "pdf")} disabled={busyId === version.id}>
+                  <FileText data-icon="inline-start" />
+                  PDF
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => generateVersionFile(version.id, "docx")} disabled={busyId === version.id}>
+                  <FileText data-icon="inline-start" />
+                  DOCX
+                </Button>
+                <Button type="button" variant="outline" size="icon" aria-label="Cambiar estado" onClick={() => patchVersion(version.id, { status: version.status === "published" ? "archived" : "published" })} disabled={busyId === version.id}>
                   <Archive />
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => deleteVersion(version.id)} disabled={busyId === version.id}>
+                <Button type="button" variant="outline" size="icon" aria-label="Archivar version" onClick={() => deleteVersion(version.id)} disabled={busyId === version.id}>
                   <Trash2 />
                 </Button>
               </span>
