@@ -3049,6 +3049,24 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Preview A4 admin por plantilla
+
+- `/admin/cv/editor` carga plantillas de CV desde la API junto al CV principal y snapshot publico.
+- Anadido selector `Plantilla preview admin` para aplicar color, tipografia, densidad y foto al componente A4 compartido.
+- El preview puede volver al modo base sin plantilla.
+- Anadida cobertura e2e desktop/mobile para verificar `data-cv-template` y `data-cv-density` al cambiar plantilla.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- QA funcional Playwright fallback en `/admin/cv/editor` desktop/mobile; Browser integrado no expuso herramienta navegable en esta sesion.
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3073,7 +3091,7 @@ Verificacion realizada en este hito:
 - Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples, bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, formularios granulares de experiencia/skills/proyectos/educacion/certificaciones con alta y borrado de items, orden exportable `sectionOrder`, duplicado y reordenado de secciones personalizadas, borrador/revision/publicacion para `structuredJson` y draft/publish de metadatos no JSON; falta drag/drop visual.
 - Editor CV por bloques: el editor principal está conectado a campos básicos y Versiones CV ya tiene bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, duplicado de versiones, orden de bloques exportable, alta/borrado granular multi-item y edición granular de una experiencia, una skill, un proyecto, un item de educacion y una certificacion; falta duplicado por item para el resto de listas y granularidad equivalente en campos internos multiples.
-- Preview A4 admin avanzado: el preview está sincronizado y comparte componente/contrato A4 con previews publicas; falta render fiel a la plantilla seleccionada en admin, paginación real y comparacion pixel-perfect con exportacion PDF.
+- Preview A4 admin avanzado: el preview está sincronizado, comparte componente/contrato A4 con previews publicas y permite seleccionar plantilla; faltan paginación real y comparacion pixel-perfect con exportacion PDF.
 - LinkedIn OAuth persistente: el callback ya intercambia `code` y obtiene `userinfo` sanitizado; falta persistir/sincronizar perfil con una entidad segura de integración y credenciales reales.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; falta extenderlo a otros futuros módulos.

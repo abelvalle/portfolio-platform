@@ -1672,6 +1672,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("heading", { name: "Editor de CV" })).toBeVisible();
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-page-size", "A4");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-renderer", "web-preview");
+  await expect(page.getByLabel("Plantilla preview admin")).toHaveValue("ats-friendly");
+  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "ats-friendly");
+  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-density", "compact");
+  await page.getByLabel("Plantilla preview admin").selectOption("");
+  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "default");
   await expect(page.locator("[data-cv-section='experiences']")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Validacion ATS" })).toBeVisible();
   await page.getByRole("button", { name: "Generar reporte ATS" }).click();
