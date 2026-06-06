@@ -272,7 +272,7 @@ export const cvClient = {
     return apiFetch<CvAdaptationResult>("/cv/adapt-to-role", { method: "POST", body: JSON.stringify(data) });
   },
   compare(baseCvVersionId: string, adaptedCvVersionId: string) {
-    return apiFetch("/cv/compare-versions", {
+    return apiFetch<CvCompareResult>("/cv/compare-versions", {
       method: "POST",
       body: JSON.stringify({ baseCvVersionId, adaptedCvVersionId })
     });
@@ -577,6 +577,13 @@ export type CvAdaptationResult = {
       guardrail?: string;
     };
   };
+};
+
+export type CvCompareResult = {
+  summary?: { base?: string; adapted?: string };
+  skillsOrder?: { base?: string[]; adapted?: string[] };
+  highlightedExperience?: { base?: string[]; adapted?: string[] };
+  sectionOrder?: { base?: string[]; adapted?: string[] };
 };
 
 export const mediaClient = {
