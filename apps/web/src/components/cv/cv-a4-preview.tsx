@@ -62,6 +62,7 @@ export function CvA4Preview({
   const visibleProjects = snapshot.projects
     .filter((project) => project.status === "published" || project.featured)
     .slice(0, 1);
+  const contactItems = [snapshot.profile.email, snapshot.profile.phone, snapshot.profile.location].filter((item): item is string => Boolean(item));
 
   return (
     <article
@@ -101,9 +102,11 @@ export function CvA4Preview({
 
       <div className={cn("grid gap-6 pt-6", isCompact ? "text-[11px] leading-5" : "text-xs leading-6")}>
         <PreviewSection title={copy.contact} color={color} section="contact">
-          <p>{snapshot.profile.email}</p>
-          <p>{snapshot.profile.phone}</p>
-          <p>{snapshot.profile.location}</p>
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            {contactItems.map((item) => (
+              <span key={item} data-cv-contact-item="true">{item}</span>
+            ))}
+          </div>
         </PreviewSection>
 
         <PreviewSection title={copy.summary} color={color} section="summary">

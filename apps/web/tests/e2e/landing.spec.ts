@@ -63,6 +63,7 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-page-size", "A4");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-renderer", "web-preview");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "minimalista");
+  await expect(page.locator("[data-cv-section='contact'] [data-cv-contact-item='true']")).toHaveCount(3);
   await expect(page.locator("[data-cv-section='summary']")).toBeVisible();
   await expect(page.locator("[data-cv-section='languages']")).toContainText("Inglés B1");
   await expect(page.locator("[data-cv-section='projects']")).toContainText("Portfolio Platform");
@@ -1816,6 +1817,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-density", "compact");
   await page.getByLabel("Plantilla preview admin").selectOption("");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "default");
+  const adminContactTexts = await page.locator("[data-cv-section='contact'] [data-cv-contact-item='true']").allTextContents();
+  expect(adminContactTexts.every((text) => text.trim().length > 0)).toBeTruthy();
   await expect(page.locator("[data-cv-section='experiences']")).toBeVisible();
   await expect(page.locator("[data-cv-section='formation']")).toContainText("Formación superior en desarrollo de aplicaciones.");
   await expect(page.locator("[data-cv-section='formation']")).toContainText("Certificación incluida en el CV actual.");

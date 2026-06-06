@@ -3537,6 +3537,17 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run lint`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "public CV template detail|admin publication"`
 
+### Contacto filtrado en preview A4
+
+- `CvA4Preview` renderiza los datos de contacto desde una lista filtrada para evitar items vacios cuando telefono u otros campos llegan nulos.
+- Los items visibles exponen `data-cv-contact-item` para QA del contrato A4.
+- La cobertura e2e valida conteo de contacto publico y ausencia de items vacios en preview admin.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "public CV template detail|admin publication"`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
