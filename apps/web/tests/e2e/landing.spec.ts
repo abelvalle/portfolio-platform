@@ -866,6 +866,16 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           visible: true,
           draftJson: null,
           publishedAt: null
+        },
+        {
+          id: "skill-2",
+          name: "Sample Reporting",
+          categoryName: "Demo",
+          level: "Intermedio",
+          order: 1,
+          visible: false,
+          draftJson: null,
+          publishedAt: null
         }
       ])
     });
@@ -1318,6 +1328,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.keyboard.press("Enter");
   await expect(page.getByText("Borrador de skill publicado. Campos modificados: name, level.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Scrum" })).toBeVisible();
+  await expect(page.locator("[data-cms-skill-id='skill-1']")).toHaveAttribute("draggable", "true");
+  await expect(page.locator("[data-cms-skill-id='skill-2']")).toHaveAttribute("draggable", "true");
   await page.getByRole("button", { name: "Subir Scrum" }).click();
   await expect(page.getByText("Skill reordenada: Scrum.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Scrum" }).click();

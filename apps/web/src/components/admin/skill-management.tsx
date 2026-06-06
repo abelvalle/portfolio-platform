@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Rocket, Save, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, GripVertical, Pencil, RefreshCw, Rocket, Save, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -56,6 +56,7 @@ export function SkillManagement() {
   const [skillReview, setSkillReview] = useState<PublicationSkillReview | null>(null);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isPublishingDraft, setIsPublishingDraft] = useState(false);
+  const [draggedSkillIndex, setDraggedSkillIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -153,6 +154,23 @@ export function SkillManagement() {
     } finally {
       setBusyId(null);
     }
+  }
+
+  function moveSkillToIndex(fromIndex: number, toIndex: number) {
+    const item = items[fromIndex];
+    if (!item || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) {
+      return;
+    }
+    const direction = toIndex > fromIndex ? 1 : -1;
+    void patchSkill(item.id, { order: item.order + direction }, `Skill reordenada: ${item.name}.`);
+  }
+
+  function handleSkillDrop(toIndex: number) {
+    if (draggedSkillIndex === null) {
+      return;
+    }
+    moveSkillToIndex(draggedSkillIndex, toIndex);
+    setDraggedSkillIndex(null);
   }
 
   async function deleteSkill(skill: SkillItem) {
@@ -359,15 +377,28 @@ export function SkillManagement() {
 
       <section className="overflow-x-auto rounded-lg border border-border">
         <div className="min-w-[820px]">
-          <div className="grid grid-cols-[1.2fr_1fr_120px_120px_220px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+          <div className="grid grid-cols-[40px_1.2fr_1fr_120px_120px_220px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+            <span aria-hidden="true" />
             <span>Nombre</span>
             <span>Categoria</span>
             <span>Nivel</span>
             <span>Estado</span>
             <span>Acciones</span>
           </div>
-          {items.length ? items.map((item) => (
-            <div key={item.id} className="grid grid-cols-[1.2fr_1fr_120px_120px_220px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+          {items.length ? items.map((item, index) => (
+            <div
+              key={item.id}
+              className="grid grid-cols-[40px_1.2fr_1fr_120px_120px_220px] gap-3 border-b border-border p-3 text-sm last:border-b-0"
+              data-cms-skill-id={item.id}
+              draggable={busyId !== item.id}
+              onDragStart={() => setDraggedSkillIndex(index)}
+              onDragEnd={() => setDraggedSkillIndex(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => handleSkillDrop(index)}
+            >
+              <span className="flex items-center text-muted-foreground" aria-hidden="true">
+                <GripVertical className="h-4 w-4" />
+              </span>
               <span className="font-medium">{item.name}</span>
               <span className="text-muted-foreground">{item.categoryName || "-"}</span>
               <span className="text-muted-foreground">{item.level || "-"}</span>
