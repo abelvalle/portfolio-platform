@@ -105,6 +105,15 @@ export function AnalyticsDashboard() {
     setMessage("CSV de eventos filtrados generado.");
   }
 
+  function exportApiCsv() {
+    window.location.href = adminClient.analyticsExportUrl({
+      from: fromDate || undefined,
+      to: toDate || undefined,
+      type: eventType || undefined
+    });
+    setMessage("Descarga CSV desde API iniciada.");
+  }
+
   async function pruneRetention() {
     setIsPruning(true);
     try {
@@ -130,6 +139,10 @@ export function AnalyticsDashboard() {
             <Button type="button" variant="outline" onClick={exportCsv} disabled={!filteredEvents.length}>
               <Download data-icon="inline-start" />
               Exportar CSV
+            </Button>
+            <Button type="button" variant="outline" onClick={exportApiCsv}>
+              <Download data-icon="inline-start" />
+              CSV API
             </Button>
             <Button type="button" variant="outline" onClick={loadAnalytics} disabled={isLoading}>
               <RefreshCw className={isLoading ? "animate-spin" : ""} data-icon="inline-start" />

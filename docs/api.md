@@ -116,6 +116,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /analytics/funnel/channels?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_analytics`)
 - `POST /analytics/retention/prune` (`manage_analytics`)
 - `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
+- `GET /analytics/export?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`, CSV)
 
 ## Analytics
 
@@ -152,6 +153,8 @@ Variables de privacidad:
 `GET /analytics/timeseries` agrupa eventos por dia y tipo. Si se envian `from` y `to`, devuelve tambien dias intermedios sin eventos con `total: 0`.
 
 `POST /analytics/retention/prune` borra eventos anteriores a la retencion configurada y requiere `manage_analytics`.
+
+`GET /analytics/export` devuelve los eventos filtrados en CSV server-side con columnas `type,path,label,createdAt`.
 
 ## CV
 

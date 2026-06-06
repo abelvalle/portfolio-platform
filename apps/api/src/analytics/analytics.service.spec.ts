@@ -72,6 +72,30 @@ describe('AnalyticsService filters', () => {
     });
   });
 
+  it('exports filtered events as CSV', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsEvent.findMany.mockResolvedValue([
+      {
+        type: 'cv_download',
+        path: '/cv?template=ats',
+        label: 'CV "ATS"',
+        createdAt: new Date('2026-06-06T08:00:00.000Z'),
+      },
+    ]);
+    const service = createService(prisma);
+
+    const result = await service.exportCsv({ type: 'cv_download' });
+
+    expect(prisma.analyticsEvent.findMany).toHaveBeenCalledWith({
+      where: { type: 'cv_download' },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+    expect(result).toBe(
+      '"type","path","label","createdAt"\n"cv_download","/cv?template=ats","CV ""ATS""","2026-06-06T08:00:00.000Z"',
+    );
+  });
+
   it('rejects inverted date ranges', async () => {
     const service = createService(mockPrisma());
 

@@ -91,6 +91,20 @@ export class AnalyticsService {
     });
   }
 
+  async exportCsv(filters: AnalyticsEventsQueryDto = {}) {
+    const events = await this.list(filters);
+    const rows = [
+      ['type', 'path', 'label', 'createdAt'],
+      ...events.map((event) => [
+        event.type,
+        event.path || '',
+        event.label || '',
+        event.createdAt.toISOString(),
+      ]),
+    ];
+    return rows.map((row) => row.map(csvCell).join(',')).join('\n');
+  }
+
   async timeSeries(filters: AnalyticsEventsQueryDto = {}) {
     const events = await this.prisma.analyticsEvent.findMany({
       where: this.eventWhere(filters),
@@ -455,4 +469,8 @@ function startOfDayUtc(value: string) {
 
 function endOfDayUtc(value: string) {
   return new Date(`${value}T23:59:59.999Z`);
+}
+
+function csvCell(value: string) {
+  return `"${value.replace(/"/g, '""')}"`;
 }

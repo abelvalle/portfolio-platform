@@ -304,6 +304,9 @@ export const adminClient = {
   analyticsEvents(filters?: AnalyticsEventFilters) {
     return apiFetch<AnalyticsEvent[]>(withQuery("/analytics", filters));
   },
+  analyticsExportUrl(filters?: AnalyticsEventFilters) {
+    return getApiUrl(withQuery("/analytics/export", filters));
+  },
   analyticsTimeSeries(filters?: AnalyticsEventFilters) {
     return apiFetch<AnalyticsTimeSeriesPoint[]>(withQuery("/analytics/timeseries", filters));
   },

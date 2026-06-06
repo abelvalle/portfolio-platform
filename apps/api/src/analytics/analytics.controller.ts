@@ -5,10 +5,11 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermissions } from '../common/guards/permissions.decorator';
@@ -95,6 +96,22 @@ export class AnalyticsController {
   @Post('retention/prune')
   pruneRetention() {
     return this.analyticsService.pruneRetention();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_analytics')
+  @Get('export')
+  async exportCsv(
+    @Query() query: AnalyticsEventsQueryDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    response.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    response.setHeader(
+      'Content-Disposition',
+      'attachment; filename="analytics-events.csv"',
+    );
+    return this.analyticsService.exportCsv(query);
   }
 
   @ApiBearerAuth()

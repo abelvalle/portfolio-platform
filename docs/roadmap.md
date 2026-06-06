@@ -3889,6 +3889,21 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 - `npm.cmd run build:web`
 
+### Export CSV analytics server-side
+
+- `GET /analytics/export` genera CSV desde API con los mismos filtros `from/to/type` de la tabla de eventos.
+- `/admin/analytics` incorpora accion `CSV API` para iniciar la descarga desde backend, manteniendo tambien el CSV client-side existente.
+- La exportacion evita depender solo del estado cargado en el navegador.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- analytics.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
