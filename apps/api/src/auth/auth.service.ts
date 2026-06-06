@@ -102,6 +102,9 @@ export class AuthService {
         mfaRecoveryCodeHashes: [],
       },
     });
+    await this.auditMfa(user.id, 'auth.mfa.setup_started', {
+      status: 'pending_confirmation',
+    });
 
     return {
       secret,
@@ -133,6 +136,9 @@ export class AuthService {
         mfaRecoveryCodeHashes: recoveryCodeHashes,
       },
     });
+    await this.auditMfa(user.id, 'auth.mfa.confirmed', {
+      recoveryCodesIssued: recoveryCodes.length,
+    });
 
     return {
       enabled: true,
@@ -160,6 +166,7 @@ export class AuthService {
         mfaRecoveryCodeHashes: [],
       },
     });
+    await this.auditMfa(user.id, 'auth.mfa.disabled');
 
     return { enabled: false };
   }
@@ -186,6 +193,7 @@ export class AuthService {
       where: { id: user.id },
       data: { mfaLastUsedAt: new Date() },
     });
+    await this.auditMfa(user.id, 'auth.mfa.login_verified');
 
     const tokens = await this.createTokens(user);
     await this.storeRefreshToken(user.id, tokens.refreshToken);
@@ -259,6 +267,22 @@ export class AuthService {
       this.configService.get<string>('JWT_ACCESS_SECRET') ||
       'change-me-access-secret'
     );
+  }
+
+  private auditMfa(
+    userId: string,
+    action: string,
+    metadata: Record<string, unknown> = {},
+  ) {
+    return this.prisma.auditLog.create({
+      data: {
+        userId,
+        action,
+        resource: 'User',
+        resourceId: userId,
+        metadata: metadata as never,
+      },
+    });
   }
 
   private async verifyMfaCode(user: User, code: string) {

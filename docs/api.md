@@ -49,6 +49,8 @@ Endpoints protegidos para preparar MFA:
 - `POST /auth/mfa/confirm`
 - `POST /auth/mfa/disable`
 
+Los cambios de estado MFA se registran en `AuditLog` con acciones `auth.mfa.setup_started`, `auth.mfa.confirmed`, `auth.mfa.disabled` y `auth.mfa.login_verified`. El log no almacena secretos TOTP, códigos ni recovery codes.
+
 MFA no está activado por defecto en seed para evitar bloquear el primer acceso admin.
 
 ## Endpoints principales

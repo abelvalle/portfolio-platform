@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:03 CEST.
+Estado actualizado: 2026-06-06 04:07 CEST.
 
 ## Hitos completados
 
@@ -710,6 +710,21 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Auditoría granular MFA
+
+- `AuthService` registra eventos MFA en `AuditLog` para setup iniciado, confirmación, desactivación y login MFA verificado.
+- La auditoría usa `resource=User` y `resourceId=userId`.
+- La metadata evita almacenar secretos TOTP, códigos de verificación o recovery codes.
+- Añadidos tests unitarios de auditoría para setup, confirmación y desactivación.
+- `docs/api.md` documenta las acciones de auditoría MFA.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -719,7 +734,6 @@ Verificación realizada en este hito:
 - Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
 - MFA QR/regeneración: existe UI funcional con secret, otpauth URL y recovery codes; falta QR visual local y regeneración controlada de recovery codes.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
-- Auditoría MFA granular: conviene registrar setup/confirm/disable en `AuditLog`.
 - Tema global desde API: el editor persiste tokens, pero falta aplicar automáticamente esos tokens a las variables CSS de la landing/admin en runtime.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
