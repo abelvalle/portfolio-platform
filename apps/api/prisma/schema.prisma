@@ -67,6 +67,8 @@ model Profile {
   primaryLanguage String @default("es")
   ctaPrimary   String   @default("Descargar CV")
   ctaSecondary String   @default("Contactar")
+  draftJson    Json?
+  publishedAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

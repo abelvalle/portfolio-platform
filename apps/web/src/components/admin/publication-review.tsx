@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { RefreshCw, Rocket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { adminClient, type PublicationThemeReview } from "@/lib/api";
+import { adminClient, type ChangeLogItem, type PublicationThemeReview } from "@/lib/api";
 
 export function PublicationReview() {
   const [review, setReview] = useState<PublicationThemeReview | null>(null);
+  const [changes, setChanges] = useState<ChangeLogItem[]>([]);
   const [message, setMessage] = useState("Cargando revision de publicacion.");
   const [isLoading, setIsLoading] = useState(true);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -20,8 +21,12 @@ export function PublicationReview() {
   async function loadReview() {
     setIsLoading(true);
     try {
-      const nextReview = await adminClient.publicationThemeReview();
+      const [nextReview, nextChanges] = await Promise.all([
+        adminClient.publicationThemeReview(),
+        adminClient.changeLog()
+      ]);
       setReview(nextReview);
+      setChanges(nextChanges);
       setMessage(nextReview.hasDraft ? "Borrador pendiente de revision." : "No hay cambios pendientes.");
     } catch {
       setMessage("No se pudo cargar la revision. Comprueba la sesion admin.");
@@ -66,7 +71,7 @@ export function PublicationReview() {
             <p className="font-mono text-sm text-primary">Draft / Publish</p>
             <h1 className="mt-2 text-3xl font-semibold">Revision de publicacion</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Primer workflow granular conectado a tema visual, ChangeLog y AuditLog.
+              Workflows granulares conectados a tema visual, perfil publico, ChangeLog y AuditLog.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -110,7 +115,7 @@ export function PublicationReview() {
       <section className="rounded-lg border border-border bg-card p-6">
         <h2 className="text-xl font-semibold">Ultimos cambios</h2>
         <div className="mt-4 grid gap-3">
-          {review?.latestChanges.length ? review.latestChanges.map((change) => (
+          {changes.length ? changes.map((change) => (
             <div key={change.id} className="grid gap-3 rounded-lg border border-border p-3 text-sm md:grid-cols-[1fr_auto] md:items-center">
               <div>
                 <p className="font-medium">{change.summary}</p>
@@ -121,7 +126,7 @@ export function PublicationReview() {
                 variant="outline"
                 size="sm"
                 onClick={() => restoreChange(change.id)}
-                disabled={change.entityType !== "theme" || restoringId === change.id}
+                disabled={!["theme", "profile"].includes(change.entityType) || restoringId === change.id}
               >
                 {restoringId === change.id ? "Restaurando..." : "Restaurar"}
               </Button>

@@ -20,6 +20,11 @@ export class AdminPublicationController {
     return this.publicationService.themeReview();
   }
 
+  @Get('profile/review')
+  profileReview() {
+    return this.publicationService.profileReview();
+  }
+
   @Get('changelog')
   changeLog() {
     return this.publicationService.latestChanges();
@@ -32,8 +37,14 @@ export class AdminPublicationController {
   }
 
   @Roles(UserRole.admin, UserRole.editor)
+  @Post('profile/publish')
+  publishProfile(@CurrentUser() user: { id?: string }) {
+    return this.publicationService.publishProfileDraft(user?.id);
+  }
+
+  @Roles(UserRole.admin, UserRole.editor)
   @Post('changelog/:id/restore')
   restoreChange(@Param('id') id: string, @CurrentUser() user: { id?: string }) {
-    return this.publicationService.restoreThemeChange(id, user?.id);
+    return this.publicationService.restorePublicationChange(id, user?.id);
   }
 }

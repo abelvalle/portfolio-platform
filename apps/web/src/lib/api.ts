@@ -115,8 +115,14 @@ export const adminClient = {
   publicationThemeReview() {
     return apiFetch<PublicationThemeReview>("/admin/publication/theme/review");
   },
+  publicationProfileReview() {
+    return apiFetch<PublicationProfileReview>("/admin/publication/profile/review");
+  },
   publishThemeDraft() {
     return apiFetch<{ changedFields: string[] }>("/admin/publication/theme/publish", { method: "POST" });
+  },
+  publishProfileDraft() {
+    return apiFetch<{ changedFields: string[] }>("/admin/publication/profile/publish", { method: "POST" });
   },
   restorePublicationChange(id: string) {
     return apiFetch<{ changedFields: string[] }>(`/admin/publication/changelog/${id}/restore`, { method: "POST" });
@@ -160,6 +166,12 @@ export const adminClient = {
   analyticsEvents() {
     return apiFetch<AnalyticsEvent[]>("/analytics");
   },
+  profile() {
+    return apiFetch<ProfileSettings>("/profile");
+  },
+  updateProfile(data: unknown) {
+    return apiFetch<ProfileSettings>("/profile", { method: "PATCH", body: JSON.stringify(data) });
+  },
   updateTheme(data: unknown) {
     return apiFetch("/theme", { method: "PATCH", body: JSON.stringify(data) });
   },
@@ -196,11 +208,15 @@ export type PublicationThemeReview = {
   publishedAt: string | null;
   fields: Array<{
     field: string;
-    before: string;
-    after: string;
+    before: string | null;
+    after: string | null;
     changed: boolean;
   }>;
   latestChanges: ChangeLogItem[];
+};
+
+export type PublicationProfileReview = Omit<PublicationThemeReview, "entityType"> & {
+  entityType: "profile";
 };
 
 export type ChangeLogItem = {
@@ -277,6 +293,32 @@ export type AnalyticsEvent = {
   path?: string | null;
   label?: string | null;
   createdAt: string;
+};
+
+export type ProfileSettings = {
+  id: string;
+  fullName: string;
+  headline: string;
+  subtitle: string;
+  shortBio: string;
+  longBio: string;
+  location: string;
+  availability: string;
+  email: string;
+  phone?: string | null;
+  linkedin?: string | null;
+  github?: string | null;
+  website?: string | null;
+  avatarUrl?: string | null;
+  cvUrl?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  ogImageUrl?: string | null;
+  primaryLanguage: string;
+  ctaPrimary: string;
+  ctaSecondary: string;
+  publishedAt?: string | null;
+  draftJson?: Record<string, string | null> | null;
 };
 
 export type MediaAsset = {

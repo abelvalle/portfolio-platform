@@ -66,6 +66,8 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `GET /admin/dashboard`
 - `GET /admin/publication/theme/review`
 - `POST /admin/publication/theme/publish`
+- `GET /admin/publication/profile/review`
+- `POST /admin/publication/profile/publish`
 - `GET /admin/publication/changelog`
 - `POST /admin/publication/changelog/:id/restore`
 - `GET|POST /users`
@@ -197,12 +199,14 @@ type=cv-manual
 
 ## Publicación Admin
 
-El primer workflow draft/publish real está conectado a `ThemeSettings`, que ya guarda `draftJson` y `publishedAt`.
+El workflow draft/publish real está conectado a `ThemeSettings` y `Profile`, que guardan `draftJson` y `publishedAt`.
 
 - `GET /admin/publication/theme/review`: protegido para `admin`, `editor` y `viewer`; devuelve comparación campo a campo entre tema publicado y borrador.
 - `POST /admin/publication/theme/publish`: protegido para `admin` y `editor`; publica el borrador, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
+- `GET /admin/publication/profile/review`: protegido para `admin`, `editor` y `viewer`; devuelve comparación campo a campo entre perfil publicado y borrador.
+- `POST /admin/publication/profile/publish`: protegido para `admin` y `editor`; publica el borrador del perfil, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
 - `GET /admin/publication/changelog`: protegido para `admin`, `editor` y `viewer`; lista cambios recientes.
-- `POST /admin/publication/changelog/:id/restore`: protegido para `admin` y `editor`; restaura un cambio de tema usando `beforeJson` y registra una nueva entrada `restore`.
+- `POST /admin/publication/changelog/:id/restore`: protegido para `admin` y `editor`; restaura cambios de tema o perfil usando `beforeJson` y registra una nueva entrada `restore`.
 
 Ejemplo de respuesta de revisión:
 

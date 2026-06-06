@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 02:44 CEST.
+Estado actualizado: 2026-06-06 02:54 CEST.
 
 ## Hitos completados
 
@@ -385,6 +385,27 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Draft/publish de perfil público
+
+- Añadida migración Prisma `000003_add_profile_publication`.
+- `Profile` ahora soporta `draftJson` y `publishedAt`.
+- Añadidos endpoints protegidos `GET /api/v1/admin/publication/profile/review` y `POST /api/v1/admin/publication/profile/publish`.
+- La restauración de changelog ahora soporta cambios de `theme` y `profile`.
+- Reemplazada `/admin/portfolio` placeholder por `ProfileEditor` conectado a API.
+- El editor permite cargar perfil, guardar borrador, revisar diferencias y publicar perfil.
+- La publicación rechaza borradores que dejen vacíos campos obligatorios del perfil.
+- La pantalla de publicación muestra historial global y puede restaurar tema o perfil.
+- Añadidos tests unitarios de revisión/publicación de perfil y cobertura e2e de la ruta admin.
+- `docs/api.md` actualizado con los nuevos endpoints.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run db:generate`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -409,8 +430,9 @@ Verificación realizada en este hito:
 - Analítica avanzada: el panel está conectado a eventos; faltan filtros por fecha, series temporales, exportación y retención/anonimización configurable.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
-- Publicación por entidad CMS: existe workflow granular real para tema visual, pero falta extenderlo a profile, experiencias, proyectos, skills y CV.
-- Restauración por entidad CMS: existe restore para tema visual, pero falta restaurar otras entidades cuando entren al workflow draft/publish.
+- Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.
+- Restauración por entidad CMS: existe restore para tema visual y perfil público; falta restaurar otras entidades cuando entren al workflow draft/publish.
+- DTOs de perfil: el flujo está conectado, pero `PATCH /profile` sigue aceptando payload genérico; falta validación específica para borradores y campos publicados.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: falta borrado físico diferido, cuotas, antivirus y auditoría granular de subidas.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
