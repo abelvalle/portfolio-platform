@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { adminClient, type ProjectCategoryItem, type ProjectItem, type ProjectMutation } from "@/lib/api";
+import { adminClient, mediaClient, type MediaAsset, type ProjectCategoryItem, type ProjectItem, type ProjectMutation } from "@/lib/api";
 
 type ProjectDraft = {
   name: string;
@@ -85,9 +85,14 @@ function projectToDraft(project: ProjectItem): ProjectDraft {
   };
 }
 
+function mediaAssetLabel(asset: MediaAsset) {
+  return asset.originalName || asset.filename;
+}
+
 export function ProjectManagement() {
   const [items, setItems] = useState<ProjectItem[]>([]);
   const [categories, setCategories] = useState<ProjectCategoryItem[]>([]);
+  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
   const [draft, setDraft] = useState<ProjectDraft>(emptyDraft);
   const [categoryDraft, setCategoryDraft] = useState({ name: "", order: 0, visible: true });
   const [message, setMessage] = useState("Cargando proyectos.");
@@ -108,12 +113,14 @@ export function ProjectManagement() {
   async function loadProjects() {
     setIsLoading(true);
     try {
-      const [nextItems, nextCategories] = await Promise.all([
+      const [nextItems, nextCategories, nextMediaAssets] = await Promise.all([
         adminClient.projects(),
-        adminClient.projectCategories()
+        adminClient.projectCategories(),
+        mediaClient.list()
       ]);
       setItems(nextItems);
       setCategories(nextCategories);
+      setMediaAssets(nextMediaAssets);
       setMessage(nextItems.length ? "Proyectos sincronizados con la API." : "Sin proyectos registrados.");
     } catch {
       setMessage("No se pudieron cargar proyectos. Comprueba la sesion admin.");
@@ -234,6 +241,8 @@ export function ProjectManagement() {
     }
   }
 
+  const imageAssets = mediaAssets.filter((asset) => asset.mimeType.startsWith("image/"));
+
   return (
     <div className="grid gap-6">
       <section className="rounded-lg border border-border bg-card p-6">
@@ -311,6 +320,20 @@ export function ProjectManagement() {
         <div className="grid gap-2">
           <Label htmlFor="imageUrl">Imagen</Label>
           <Input id="imageUrl" value={draft.imageUrl} onChange={(event) => setDraft((current) => ({ ...current, imageUrl: event.target.value }))} />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="projectImageMedia">Imagen media</Label>
+          <select
+            id="projectImageMedia"
+            className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+            value={imageAssets.some((asset) => asset.url === draft.imageUrl) ? draft.imageUrl : ""}
+            onChange={(event) => setDraft((current) => ({ ...current, imageUrl: event.target.value }))}
+          >
+            <option value="">{imageAssets.length ? "Seleccionar asset" : "Sin imagenes en media"}</option>
+            {imageAssets.map((asset) => (
+              <option key={asset.id} value={asset.url}>{mediaAssetLabel(asset)}</option>
+            ))}
+          </select>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="publicUrl">URL publica</Label>
@@ -422,6 +445,20 @@ export function ProjectManagement() {
             <div className="grid gap-2">
               <Label htmlFor="editProjectImage">Imagen proyecto</Label>
               <Input id="editProjectImage" value={editDraft.imageUrl} onChange={(event) => setEditDraft((current) => ({ ...current, imageUrl: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editProjectImageMedia">Imagen media proyecto</Label>
+              <select
+                id="editProjectImageMedia"
+                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                value={imageAssets.some((asset) => asset.url === editDraft.imageUrl) ? editDraft.imageUrl : ""}
+                onChange={(event) => setEditDraft((current) => ({ ...current, imageUrl: event.target.value }))}
+              >
+                <option value="">{imageAssets.length ? "Seleccionar asset" : "Sin imagenes en media"}</option>
+                {imageAssets.map((asset) => (
+                  <option key={asset.id} value={asset.url}>{mediaAssetLabel(asset)}</option>
+                ))}
+              </select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="editProjectPublicUrl">URL publica proyecto</Label>

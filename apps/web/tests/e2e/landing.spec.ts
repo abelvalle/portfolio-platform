@@ -706,6 +706,16 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           url: "/media/uploads/cv-demo.pdf",
           type: "cv-manual",
           updatedAt: "2026-06-06T08:00:00.000Z"
+        },
+        {
+          id: "media-2",
+          filename: "portfolio-cover.jpg",
+          originalName: "Portfolio Cover.jpg",
+          mimeType: "image/jpeg",
+          size: 4096,
+          url: "/media/uploads/portfolio-cover.jpg",
+          type: "project-image",
+          updatedAt: "2026-06-06T08:05:00.000Z"
         }
       ])
     });
@@ -766,6 +776,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Nombre proyecto").fill("Portfolio Platform Pro");
   await page.getByLabel("Descripcion proyecto").fill("Proyecto portfolio ampliado.");
   await page.getByLabel("Tecnologias proyecto").fill("Next.js\nNestJS\nPrisma");
+  await page.getByLabel("Imagen media proyecto").selectOption("/media/uploads/portfolio-cover.jpg");
+  await expect(page.getByLabel("Imagen proyecto")).toHaveValue("/media/uploads/portfolio-cover.jpg");
   await page.getByRole("button", { name: "Guardar proyecto" }).click();
   await expect(page.getByText("Proyecto actualizado: Portfolio Platform Pro.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Portfolio Platform" })).toBeVisible();
