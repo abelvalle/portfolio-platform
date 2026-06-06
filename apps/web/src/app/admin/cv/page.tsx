@@ -17,6 +17,7 @@ export default function CvManagerPage() {
             <Link className={cn(buttonVariants({ variant: "outline" }))} href="/admin/cv/editor">Editor</Link>
             <Link className={cn(buttonVariants({ variant: "outline" }))} href="/admin/cv/templates">Plantillas</Link>
             <Link className={cn(buttonVariants({ variant: "outline" }))} href="/admin/cv/versions">Versiones</Link>
+            <Link className={cn(buttonVariants({ variant: "outline" }))} href="/admin/cv/target-roles">Roles objetivo</Link>
             <Link className={cn(buttonVariants({ variant: "outline" }))} href="/admin/cv/adapt">Adaptar CV</Link>
             <Link className={cn(buttonVariants({ variant: "outline" }))} href="/admin/cv/compare">Comparar</Link>
           </CardContent>

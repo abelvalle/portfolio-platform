@@ -469,6 +469,51 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route(/\/api\/v1\/cv-target-roles(\?.*)?$/, async (route) => {
+    if (route.request().method() === "POST") {
+      const data = JSON.parse(route.request().postData() || "{}");
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "target-role-new",
+          name: data.name,
+          description: data.description ?? null,
+          keywords: data.keywords || [],
+          createdAt: "2026-06-06T09:00:00.000Z",
+          updatedAt: "2026-06-06T09:00:00.000Z"
+        })
+      });
+      return;
+    }
+
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "target-role-1",
+          name: "Delivery Manager",
+          description: "Delivery y cliente.",
+          keywords: ["delivery", "uat", "kpi"],
+          createdAt: "2026-06-01T08:00:00.000Z",
+          updatedAt: "2026-06-01T08:00:00.000Z"
+        }
+      ])
+    });
+  });
+  await page.route("**/api/v1/cv-target-roles/target-role-1", async (route) => {
+    const data = JSON.parse(route.request().postData() || "{}");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "target-role-1",
+        name: data.name || "Delivery Manager",
+        description: data.description ?? "Delivery y cliente.",
+        keywords: data.keywords || ["delivery", "uat", "kpi"],
+        createdAt: "2026-06-01T08:00:00.000Z",
+        updatedAt: "2026-06-06T09:10:00.000Z"
+      })
+    });
+  });
   await page.route("**/api/v1/cv/compare-versions", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -1253,6 +1298,20 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Eliminar ATS-friendly" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();
+
+  await page.goto("/admin/cv/target-roles");
+  await expect(page.getByRole("heading", { name: "Roles objetivo CV" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Delivery Manager" })).toBeVisible();
+  await page.getByLabel("Nombre rol").fill("Cloud Delivery Manager");
+  await page.getByLabel("Keywords rol").fill("cloud\naws\nuat");
+  await page.getByRole("button", { name: "Crear rol objetivo" }).click();
+  await expect(page.getByText("Rol objetivo creado: Cloud Delivery Manager.")).toBeVisible();
+  await page.getByLabel("Nombre de Delivery Manager").fill("Delivery Manager Senior");
+  await page.getByLabel("Keywords de Delivery Manager").fill("delivery\nuat\nreporting");
+  await page.getByRole("button", { name: "Guardar rol" }).first().click();
+  await expect(page.getByText("Rol objetivo actualizado: Delivery Manager Senior.")).toBeVisible();
+  await page.getByRole("button", { name: "Archivar rol" }).first().click();
+  await expect(page.getByText("Rol objetivo archivado: Delivery Manager.")).toBeVisible();
 
   await page.goto("/admin/cv/adapt");
   await expect(page.getByRole("heading", { name: "Adaptar CV" })).toBeVisible();

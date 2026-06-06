@@ -192,6 +192,8 @@ En admin, `/admin/cv/editor` consume estos endpoints para mostrar el reporte ATS
 
 En admin, `/admin/cv/versions` permite filtrar la auditoria por version concreta usando `resourceId`, muestra una timeline visual para ese filtro, conserva `resourceId` en la exportacion historica CSV y ofrece un acceso directo al historial agregado de publicaciones CV (`action=set_primary`).
 
+En admin, `/admin/cv/target-roles` consume `GET|POST|PATCH|DELETE /cv-target-roles` para gestionar perfiles objetivo y keywords reutilizables en futuras adaptaciones de CV.
+
 `POST /cv/:id/ats-role-report` compara la versión primaria contra una descripción de oferta concreta:
 
 ```json

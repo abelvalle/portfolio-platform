@@ -361,6 +361,18 @@ export const cvClient = {
   deleteTemplate(id: string) {
     return apiFetch<CvTemplateItem>(`/cv-templates/${id}`, { method: "DELETE" });
   },
+  targetRoles() {
+    return apiFetch<CvTargetRoleItem[]>("/cv-target-roles");
+  },
+  createTargetRole(data: CvTargetRoleMutation) {
+    return apiFetch<CvTargetRoleItem>("/cv-target-roles", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateTargetRole(id: string, data: Partial<CvTargetRoleMutation>) {
+    return apiFetch<CvTargetRoleItem>(`/cv-target-roles/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteTargetRole(id: string) {
+    return apiFetch<CvTargetRoleItem>(`/cv-target-roles/${id}`, { method: "DELETE" });
+  },
   adapt(data: { baseCvVersionId: string; targetRole: string; targetCompany?: string; jobDescription: string }) {
     return apiFetch<CvAdaptationResult>("/cv/adapt-to-role", { method: "POST", body: JSON.stringify(data) });
   },
@@ -825,6 +837,19 @@ export type CvTemplateItem = {
 };
 
 export type CvTemplateMutation = Omit<CvTemplateItem, "id">;
+
+export type CvTargetRoleItem = {
+  id: string;
+  name: string;
+  description?: string | null;
+  keywords: string[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type CvTargetRoleMutation = Pick<CvTargetRoleItem, "name" | "keywords"> & {
+  description?: string | null;
+};
 
 export type CvAdaptationResult = {
   request: {

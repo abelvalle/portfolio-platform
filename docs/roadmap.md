@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 15:04 CEST.
+Estado actualizado: 2026-06-06 15:18 CEST.
 
 ## Hitos completados
 
@@ -2491,6 +2491,27 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Gestion admin de roles objetivo CV
+
+- Anadida ruta protegida `/admin/cv/target-roles`.
+- El CV Manager enlaza la gestion de roles objetivo desde `/admin/cv`.
+- La UI consume `GET|POST|PATCH|DELETE /api/v1/cv-target-roles`.
+- Permite crear, editar y archivar perfiles objetivo con keywords reutilizables.
+- Los mensajes de exito se conservan tras refrescar datos desde la API.
+- `docs/api.md` documenta el consumo admin del recurso.
+- Anadida cobertura e2e desktop/mobile de crear, guardar y archivar roles objetivo.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- QA visual Playwright fallback en `/admin/cv/target-roles` desktop con mocks de roles objetivo; Browser integrado no expuso herramienta navegable en esta sesion.
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -2500,6 +2521,7 @@ Verificacion realizada en este hito:
 - ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; falta prueba con DB real que genere archivos desde una version persistida y valide descarga.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: el wizard ya permite aceptar/rechazar bloques principales, skills individuales y experiencias individuales con trazabilidad; falta revision granular de campos internos de cada experiencia.
+- Roles objetivo CV: la pantalla admin ya permite CRUD de perfiles y keywords; falta usarlos para precargar el wizard de adaptacion y sugerir keywords sin duplicar datos.
 - Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; el historial agregado de publicaciones CV queda visible desde Versiones CV.
 - Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, version/recurso, fecha y usuario, con timeline visual por version, historial agregado de publicaciones CV, detalle por evento, exportacion CSV visible y exportacion server-side del historico filtrado; falta analitica comparativa avanzada de cambios entre publicaciones.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
@@ -2525,5 +2547,6 @@ Verificacion realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. Extender draft/publish a entidades CMS principales.
-2. Renderer HTML/CSS server-side fiel al preview A4 público.
+1. Usar roles objetivo guardados en el wizard Adaptar CV.
+2. Extender draft/publish a entidades CMS principales.
+3. Renderer HTML/CSS server-side fiel al preview A4 público.
