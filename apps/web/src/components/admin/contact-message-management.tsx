@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Eye, MailOpen, RefreshCw, Trash2 } from "lucide-react";
+import { Eye, MailOpen, RefreshCw, Reply, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,6 +119,13 @@ export function ContactMessageManagement() {
           </div>
           <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{selectedMessage.message}</p>
           <div className="mt-5 flex flex-wrap gap-2">
+            <a
+              href={buildReplyMailto(selectedMessage)}
+              className="inline-flex h-7 items-center justify-center gap-1 rounded-lg border border-border bg-background px-2.5 text-[0.8rem] font-medium transition-colors hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <Reply data-icon="inline-start" />
+              Responder email
+            </a>
             <Button type="button" variant="outline" size="sm" onClick={() => setStatus(selectedMessage, selectedMessage.status === "unread" ? "read" : "unread")}>
               <MailOpen data-icon="inline-start" />
               {selectedMessage.status === "unread" ? "Marcar leido" : "Marcar no leido"}
@@ -188,4 +195,18 @@ function formatDate(value: string) {
     return value;
   }
   return new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
+function buildReplyMailto(item: ContactMessage) {
+  const subject = item.subject ? `Re: ${item.subject}` : "Re: contacto desde portfolio";
+  const body = [
+    `Hola ${item.name},`,
+    "",
+    "",
+    "---",
+    `Mensaje original (${formatDate(item.createdAt)}):`,
+    item.message
+  ].join("\n");
+
+  return `mailto:${encodeURIComponent(item.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:49 CEST.
+Estado actualizado: 2026-06-06 04:53 CEST.
 
 ## Hitos completados
 
@@ -872,6 +872,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Preparacion de respuesta email en mensajes
+
+- El detalle de mensajes en `/admin/messages` incluye accion `Responder email`.
+- El enlace usa `mailto` con destinatario, asunto `Re:` y cuerpo con mensaje original.
+- No se añade proveedor externo ni secretos de email; queda como preparacion visual segura.
+- Añadida cobertura e2e con mensaje mockeado para validar el enlace de respuesta.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -891,7 +905,7 @@ Verificacion realizada en este hito:
 - Permisos por acción: existe matriz de permisos, pero los guards todavía se basan en roles por endpoint.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
-- Mensajes UI avanzada: la bandeja está conectada con filtro por fecha y vista detalle; falta preparación visual de integración email.
+- Mensajes UI avanzada: la bandeja está conectada con filtro por fecha, vista detalle y respuesta `mailto`; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha y exportación CSV; faltan series temporales, segmentación por evento y retención/anonimización configurable.
 - Dashboard avanzado: el resumen está conectado con drill-downs y filtros temporales de API; faltan widgets de tendencia y segmentación.
 - Experiencias UI avanzada: el CRUD básico está conectado; faltan edición completa en formulario, reordenado drag/drop, confirmación modal de borrado y asociación visual con skills/tecnologías.
