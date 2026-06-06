@@ -45,6 +45,15 @@ type ProjectFormDraft = {
   description: string;
 };
 
+type EducationFormDraft = {
+  index: number;
+  title: string;
+  institution: string;
+  date: string;
+  type: string;
+  description: string;
+};
+
 const emptyDraft: CvVersionDraft = {
   name: "",
   description: "",
@@ -77,6 +86,15 @@ const emptyProjectFormDraft: ProjectFormDraft = {
   name: "",
   category: "",
   status: "",
+  description: ""
+};
+
+const emptyEducationFormDraft: EducationFormDraft = {
+  index: 0,
+  title: "",
+  institution: "",
+  date: "",
+  type: "",
   description: ""
 };
 
@@ -232,6 +250,14 @@ function educationFromStructuredJson(value: unknown) {
     .join("\n");
 }
 
+function educationListFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return [];
+  }
+  const education = (value as Record<string, unknown>).education;
+  return Array.isArray(education) ? education : [];
+}
+
 function certificationsFromStructuredJson(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return "";
@@ -370,6 +396,22 @@ function projectFormFromStructuredJson(value: unknown, index = 0): ProjectFormDr
     name: textField(data, "name"),
     category: textField(data, "category") || textField(data, "categoryName"),
     status: textField(data, "status"),
+    description: textField(data, "description")
+  };
+}
+
+function educationFormFromStructuredJson(value: unknown, index = 0): EducationFormDraft {
+  const selected = educationListFromStructuredJson(value)[index];
+  if (!selected || typeof selected !== "object" || Array.isArray(selected)) {
+    return { ...emptyEducationFormDraft, index };
+  }
+  const data = selected as Record<string, unknown>;
+  return {
+    index,
+    title: textField(data, "title"),
+    institution: textField(data, "institution"),
+    date: textField(data, "date"),
+    type: textField(data, "type"),
     description: textField(data, "description")
   };
 }
@@ -515,6 +557,7 @@ export function CvVersionTable() {
   const [projectsDraft, setProjectsDraft] = useState("");
   const [projectFormDraft, setProjectFormDraft] = useState(emptyProjectFormDraft);
   const [educationDraft, setEducationDraft] = useState("");
+  const [educationFormDraft, setEducationFormDraft] = useState(emptyEducationFormDraft);
   const [certificationsDraft, setCertificationsDraft] = useState("");
   const [experiencesDraft, setExperiencesDraft] = useState("");
   const [experienceFormDraft, setExperienceFormDraft] = useState(emptyExperienceFormDraft);
@@ -546,6 +589,7 @@ export function CvVersionTable() {
       setProjectsDraft("");
       setProjectFormDraft(emptyProjectFormDraft);
       setEducationDraft("");
+      setEducationFormDraft(emptyEducationFormDraft);
       setCertificationsDraft("");
       setExperiencesDraft("");
       setExperienceFormDraft(emptyExperienceFormDraft);
@@ -564,6 +608,7 @@ export function CvVersionTable() {
       setProjectsDraft(projectsFromStructuredJson(selectedVersion.structuredJson));
       setProjectFormDraft(projectFormFromStructuredJson(selectedVersion.structuredJson));
       setEducationDraft(educationFromStructuredJson(selectedVersion.structuredJson));
+      setEducationFormDraft(educationFormFromStructuredJson(selectedVersion.structuredJson));
       setCertificationsDraft(certificationsFromStructuredJson(selectedVersion.structuredJson));
       setExperiencesDraft(experiencesFromStructuredJson(selectedVersion.structuredJson));
       setExperienceFormDraft(experienceFormFromStructuredJson(selectedVersion.structuredJson));
@@ -780,6 +825,7 @@ export function CvVersionTable() {
     setProjectsDraft(projectsFromStructuredJson(selectedVersion?.structuredJson));
     setProjectFormDraft(projectFormFromStructuredJson(selectedVersion?.structuredJson));
     setEducationDraft(educationFromStructuredJson(selectedVersion?.structuredJson));
+    setEducationFormDraft(educationFormFromStructuredJson(selectedVersion?.structuredJson));
     setCertificationsDraft(certificationsFromStructuredJson(selectedVersion?.structuredJson));
     setExperiencesDraft(experiencesFromStructuredJson(selectedVersion?.structuredJson));
     setExperienceFormDraft(experienceFormFromStructuredJson(selectedVersion?.structuredJson));
@@ -1065,7 +1111,80 @@ export function CvVersionTable() {
       delete nextStructuredJson.education;
     }
     setJsonDraft(formatJson(nextStructuredJson));
+    setEducationFormDraft(educationFormFromStructuredJson(nextStructuredJson, Math.min(educationFormDraft.index, Math.max(nextEducation.length - 1, 0))));
     setJsonMessage("Bloque educacion aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function selectEducationFormIndex(index: number) {
+    try {
+      setEducationFormDraft(educationFormFromStructuredJson(JSON.parse(jsonDraft), index));
+    } catch {
+      setEducationFormDraft((current) => ({ ...current, index }));
+    }
+  }
+
+  function applyEducationFormBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el bloque.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const title = educationFormDraft.title.trim();
+    if (!title) {
+      setJsonMessage("El titulo de educacion es obligatorio para aplicar el formulario granular.");
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const existingEducation = listField(nextStructuredJson, "education");
+    const nextEducation = existingEducation.map((item) =>
+      item && typeof item === "object" && !Array.isArray(item) ? { ...(item as Record<string, unknown>) } : { title: String(item || "") }
+    );
+    const index = Math.min(Math.max(educationFormDraft.index, 0), nextEducation.length);
+    const nextEducationItem: Record<string, unknown> = {
+      ...(nextEducation[index] || {}),
+      title
+    };
+    const institution = educationFormDraft.institution.trim();
+    const date = educationFormDraft.date.trim();
+    const type = educationFormDraft.type.trim();
+    const description = educationFormDraft.description.trim();
+
+    if (institution) {
+      nextEducationItem.institution = institution;
+    } else {
+      delete nextEducationItem.institution;
+    }
+    if (date) {
+      nextEducationItem.date = date;
+    } else {
+      delete nextEducationItem.date;
+    }
+    if (type) {
+      nextEducationItem.type = type;
+    } else {
+      delete nextEducationItem.type;
+    }
+    if (description) {
+      nextEducationItem.description = description;
+    } else {
+      delete nextEducationItem.description;
+    }
+
+    nextEducation[index] = nextEducationItem;
+    nextStructuredJson.education = nextEducation.filter((item) => textField(item, "title"));
+    setJsonDraft(formatJson(nextStructuredJson));
+    setEducationDraft(educationFromStructuredJson(nextStructuredJson));
+    setEducationFormDraft(educationFormFromStructuredJson(nextStructuredJson, index));
+    setJsonMessage("Formulario granular de educacion aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
   function applyCertificationsBlock() {
@@ -1423,6 +1542,7 @@ export function CvVersionTable() {
   const skillOptions = splitBlockLines(skillsDraft);
   const experienceOptions = splitBlockLines(experiencesDraft);
   const projectOptions = splitBlockLines(projectsDraft);
+  const educationOptions = splitBlockLines(educationDraft);
 
   return (
     <div className="grid gap-6">
@@ -2023,6 +2143,72 @@ export function CvVersionTable() {
           <Button type="button" variant="outline" className="w-fit" onClick={applyEducationBlock} disabled={!jsonVersionId}>
             Aplicar educacion
           </Button>
+          <div className="grid gap-3 border-t border-border pt-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="grid min-w-[220px] gap-2">
+                <Label htmlFor="educationFormIndex">Educacion granular</Label>
+                <select
+                  id="educationFormIndex"
+                  className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                  value={String(educationFormDraft.index)}
+                  onChange={(event) => selectEducationFormIndex(Number(event.target.value))}
+                  disabled={!jsonVersionId}
+                >
+                  {educationOptions.length ? educationOptions.map((item, index) => (
+                    <option key={`${item}-${index}`} value={index}>{item}</option>
+                  )) : (
+                    <option value="0">Nueva educacion</option>
+                  )}
+                </select>
+              </div>
+              <Button type="button" variant="outline" onClick={applyEducationFormBlock} disabled={!jsonVersionId}>
+                Aplicar educacion granular
+              </Button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-4">
+              <div className="grid gap-2">
+                <Label htmlFor="educationFormTitle">Titulo educacion CV</Label>
+                <Input
+                  id="educationFormTitle"
+                  value={educationFormDraft.title}
+                  onChange={(event) => setEducationFormDraft((current) => ({ ...current, title: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="educationFormInstitution">Institucion educacion CV</Label>
+                <Input
+                  id="educationFormInstitution"
+                  value={educationFormDraft.institution}
+                  onChange={(event) => setEducationFormDraft((current) => ({ ...current, institution: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="educationFormDate">Fecha educacion CV</Label>
+                <Input
+                  id="educationFormDate"
+                  value={educationFormDraft.date}
+                  onChange={(event) => setEducationFormDraft((current) => ({ ...current, date: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="educationFormType">Tipo educacion CV</Label>
+                <Input
+                  id="educationFormType"
+                  value={educationFormDraft.type}
+                  onChange={(event) => setEducationFormDraft((current) => ({ ...current, type: event.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="educationFormDescription">Descripcion educacion CV</Label>
+              <Textarea
+                id="educationFormDescription"
+                rows={3}
+                value={educationFormDraft.description}
+                onChange={(event) => setEducationFormDraft((current) => ({ ...current, description: event.target.value }))}
+              />
+            </div>
+          </div>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="certificationsBlock">Certificaciones CV</Label>

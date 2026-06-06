@@ -1461,10 +1461,16 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
   await confirmJsonSaveIfNeeded();
-  await page.getByLabel("Educacion CV").fill("Project Management - Demo Institute - 2026");
-  await page.getByRole("button", { name: "Aplicar educacion" }).focus();
+  await page.getByLabel("Educacion CV", { exact: true }).fill("Project Management - Demo Institute - 2026");
+  await page.getByRole("button", { name: "Aplicar educacion", exact: true }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Project Management\"/);
+  await expect(page.getByLabel("Titulo educacion CV")).toHaveValue("Project Management");
+  await page.getByLabel("Tipo educacion CV").fill("curso");
+  await page.getByLabel("Descripcion educacion CV").fill("Formacion demo pendiente de validacion.");
+  await page.getByRole("button", { name: "Aplicar educacion granular" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"type\": \"curso\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Formacion demo pendiente de validacion/);
   await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
   await confirmJsonSaveIfNeeded();
