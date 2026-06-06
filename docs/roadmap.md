@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 05:59 CEST.
+Estado actualizado: 2026-06-06 06:09 CEST.
 
 ## Hitos completados
 
@@ -1103,6 +1103,20 @@ Verificacion realizada en este hito:
 - Se añade modal de confirmacion con nombre de plantilla y recomendacion de ocultarla si solo debe retirarse de previews publicas y exportaciones.
 - El boton de papelera tiene `aria-label` descriptivo para navegacion accesible.
 - Añadida cobertura e2e para abrir y cancelar el modal con una plantilla mockeada desde `/api/v1/cv-templates`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
+### Confirmacion de archivado en versiones CV
+
+- `/admin/cv/versions` ya no archiva versiones directamente desde el boton de papelera.
+- Se añade modal de confirmacion con nombre de version y explicacion de la alternativa de cambiar estado.
+- El boton destructivo tiene `aria-label` con el nombre de la version para navegacion accesible.
+- Añadida cobertura e2e para abrir y cancelar el modal de archivado con `CV Adaptado`.
 
 Verificacion realizada en este hito:
 

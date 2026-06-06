@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Archive, FileText, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,6 +81,7 @@ export function CvVersionTable() {
   const [isSaving, setIsSaving] = useState(false);
   const [isJsonSaving, setIsJsonSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingArchiveVersion, setPendingArchiveVersion] = useState<CvVersionItem | null>(null);
 
   const syncJsonEditor = useCallback((nextVersions: CvVersionItem[]) => {
     const requestedVersionId = getInitialVersionId();
@@ -181,11 +183,12 @@ export function CvVersionTable() {
     }
   }
 
-  async function deleteVersion(id: string) {
-    setBusyId(id);
+  async function deleteVersion(version: CvVersionItem) {
+    setBusyId(version.id);
     try {
-      await cvClient.deleteVersion(id);
-      setMessage("Version archivada.");
+      await cvClient.deleteVersion(version.id);
+      setPendingArchiveVersion(null);
+      setMessage(`Version archivada: ${version.name}.`);
       await loadVersions();
     } catch {
       setMessage("No se pudo archivar la version.");
@@ -432,7 +435,7 @@ export function CvVersionTable() {
                 <Button type="button" variant="outline" size="icon" aria-label="Cambiar estado" onClick={() => patchVersion(version.id, { status: version.status === "published" ? "archived" : "published" })} disabled={busyId === version.id}>
                   <Archive />
                 </Button>
-                <Button type="button" variant="outline" size="icon" aria-label="Archivar version" onClick={() => deleteVersion(version.id)} disabled={busyId === version.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Archivar ${version.name}`} onClick={() => setPendingArchiveVersion(version)} disabled={busyId === version.id}>
                   <Trash2 />
                 </Button>
               </span>
@@ -442,6 +445,25 @@ export function CvVersionTable() {
           )}
         </div>
       </section>
+
+      <Dialog open={Boolean(pendingArchiveVersion)} onOpenChange={(open) => !open && setPendingArchiveVersion(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar archivado</DialogTitle>
+            <DialogDescription>
+              Esta accion archivara la version {pendingArchiveVersion?.name}. Puedes cambiar su estado si solo quieres retirarla como version publicada.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingArchiveVersion(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => pendingArchiveVersion && deleteVersion(pendingArchiveVersion)}>
+              Archivar version
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
