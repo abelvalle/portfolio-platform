@@ -144,6 +144,22 @@ export function DashboardCards() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Cohorts mensuales</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {dashboard?.segments?.cohorts?.length ? (
+            <SegmentGroup
+              title="Visitas landing"
+              items={dashboard.segments.cohorts.map((cohort) => [cohort.period, cohort.count] as [string, number])}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">Sin cohorts de visitas para los filtros actuales.</p>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>

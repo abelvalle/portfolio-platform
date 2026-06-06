@@ -20,6 +20,7 @@ export class AdminService {
       primaryCv,
       changes,
       modules,
+      landingCohortEvents,
     ] = await Promise.all([
       this.prisma.analyticsEvent.count({
         where: { ...dateWhere, type: 'landing_visit' },
@@ -52,6 +53,12 @@ export class AdminService {
         take: 10,
       }),
       this.prisma.appModule.findMany({ orderBy: { order: 'asc' } }),
+      this.prisma.analyticsEvent.findMany({
+        where: { ...dateWhere, type: 'landing_visit' },
+        select: { createdAt: true },
+        orderBy: { createdAt: 'asc' },
+        take: 1000,
+      }),
     ]);
 
     return {
@@ -76,6 +83,7 @@ export class AdminService {
           activeModules: modules.filter((module) => module.enabled).length,
           totalModules: modules.length,
         },
+        cohorts: this.monthlyCohorts(landingCohortEvents),
       },
       latestChanges: changes,
       modules,
@@ -101,6 +109,19 @@ export class AdminService {
     }
 
     return Object.keys(createdAt).length ? { createdAt } : {};
+  }
+
+  private monthlyCohorts(events: Array<{ createdAt: Date }>) {
+    const cohorts = new Map<string, number>();
+    for (const event of events) {
+      const period = event.createdAt.toISOString().slice(0, 7);
+      cohorts.set(period, (cohorts.get(period) || 0) + 1);
+    }
+
+    return [...cohorts.entries()]
+      .map(([period, count]) => ({ period, count }))
+      .sort((left, right) => left.period.localeCompare(right.period))
+      .slice(-6);
   }
 }
 

@@ -110,7 +110,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 
 ## Analytics
 
-`GET /admin/dashboard` devuelve `cards`, `latestChanges`, `modules` y `segments`. `segments.analytics` agrupa eventos clave (`landingVisits`, `cvDownloads`, `contactSubmits`, `projectViews`) con los mismos filtros temporales; `segments.content` resume proyectos, experiencias y modulos activos.
+`GET /admin/dashboard` devuelve `cards`, `latestChanges`, `modules` y `segments`. `segments.analytics` agrupa eventos clave (`landingVisits`, `cvDownloads`, `contactSubmits`, `projectViews`) con los mismos filtros temporales; `segments.content` resume proyectos, experiencias y modulos activos; `segments.cohorts` agrupa visitas landing por mes (`YYYY-MM`) hasta 6 periodos recientes.
 
 `GET /media/storage/status` incluye `signatureScanEnabled`. Los uploads locales bloquean la firma de prueba EICAR antes de escribir archivos si `MEDIA_SIGNATURE_SCAN_ENABLED` no es `false`; esto es una puerta basica de seguridad, no sustituye un antivirus externo.
 

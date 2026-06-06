@@ -385,6 +385,7 @@ export type AdminDashboard = {
       activeModules: number;
       totalModules: number;
     };
+    cohorts?: Array<{ period: string; count: number }>;
   };
   latestChanges: ChangeLogItem[];
   modules: Array<{

@@ -21,6 +21,11 @@ describe('AdminService dashboard filters', () => {
       { id: 'module-1', enabled: true },
       { id: 'module-2', enabled: false },
     ]);
+    prisma.analyticsEvent.findMany.mockResolvedValue([
+      { createdAt: new Date('2026-05-30T10:00:00.000Z') },
+      { createdAt: new Date('2026-06-01T10:00:00.000Z') },
+      { createdAt: new Date('2026-06-02T10:00:00.000Z') },
+    ]);
     const service = new AdminService(prisma as never);
 
     const result = await service.dashboard({
@@ -47,6 +52,10 @@ describe('AdminService dashboard filters', () => {
         activeModules: 1,
         totalModules: 2,
       },
+      cohorts: [
+        { period: '2026-05', count: 1 },
+        { period: '2026-06', count: 2 },
+      ],
     });
     expect(prisma.analyticsEvent.count).toHaveBeenCalledWith({
       where: { createdAt, type: 'landing_visit' },
@@ -61,6 +70,12 @@ describe('AdminService dashboard filters', () => {
       where: { createdAt },
       orderBy: { createdAt: 'desc' },
       take: 10,
+    });
+    expect(prisma.analyticsEvent.findMany).toHaveBeenCalledWith({
+      where: { createdAt, type: 'landing_visit' },
+      select: { createdAt: true },
+      orderBy: { createdAt: 'asc' },
+      take: 1000,
     });
   });
 
@@ -77,6 +92,7 @@ function mockPrisma() {
   return {
     analyticsEvent: {
       count: jest.fn(),
+      findMany: jest.fn(),
     },
     project: {
       count: jest.fn(),

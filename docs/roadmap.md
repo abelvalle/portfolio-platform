@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 08:59 CEST.
+Estado actualizado: 2026-06-06 09:04 CEST.
 
 ## Hitos completados
 
@@ -1731,6 +1731,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Cohorts mensuales en Dashboard admin
+
+- `GET /api/v1/admin/dashboard` devuelve `segments.cohorts` con visitas landing agrupadas por mes.
+- Los cohorts respetan filtros temporales `from` y `to` y se limitan a los 6 periodos recientes.
+- `/admin` muestra una card `Cohorts mensuales` con barras de visitas por periodo.
+- `docs/api.md` documenta el nuevo campo del payload de dashboard.
+- Añadidos tests unitarios del servicio admin y cobertura e2e del dashboard.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1745,7 +1760,7 @@ Verificacion realizada en este hito:
 - Reintentos webhooks: hay trazabilidad persistente y vista admin de entregas/test; falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto` y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal y embudo básico desde UI; faltan embudos configurables/multicanal.
-- Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo y segmentación operativa; faltan cohorts.
+- Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa y cohorts mensuales; faltan cohorts avanzados por fuente/canal.
 - Experiencias UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, reordenado drag/drop y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, selector de media, categorías gestionadas visualmente y orden drag/drop.
 - Skills UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa inline, categorías gestionadas como entidad, orden drag/drop y niveles con selector consistente.

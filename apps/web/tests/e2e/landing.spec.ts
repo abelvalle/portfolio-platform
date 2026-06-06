@@ -387,7 +387,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
             visibleExperiences: 4,
             activeModules: 2,
             totalModules: 3
-          }
+          },
+          cohorts: [
+            { period: "2026-05", count: 4 },
+            { period: "2026-06", count: 6 }
+          ]
         },
         latestChanges: [],
         modules: [
@@ -558,6 +562,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Visitas landing")).toBeVisible();
   await expect(page.getByText("Pulso operativo")).toBeVisible();
   await expect(page.getByText("Segmentacion operativa")).toBeVisible();
+  await expect(page.getByText("Cohorts mensuales")).toBeVisible();
+  await expect(page.getByText("2026-06")).toBeVisible();
   await expect(page.getByText("cv_download")).toBeVisible();
   await expect(page.getByText("Conversion contacto")).toBeVisible();
   await expect(page.getByRole("link", { name: /Ver eventos/ })).toHaveAttribute("href", "/admin/analytics");
