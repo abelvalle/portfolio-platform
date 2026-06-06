@@ -458,6 +458,20 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route("**/api/v1/skills/skill-1", async (route) => {
+    const data = JSON.parse(route.request().postData() || "{}");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "skill-1",
+        name: data.name || "Scrum",
+        categoryName: data.categoryName || "Agile",
+        level: data.level || "Avanzado",
+        order: data.order ?? 0,
+        visible: data.visible ?? true
+      })
+    });
+  });
   await page.route(/\/api\/v1\/education(\?.*)?$/, async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -597,6 +611,13 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/portfolio/skills");
   await expect(page.getByRole("heading", { name: "Skills" })).toBeVisible();
   await expect(page.getByRole("main").getByText("Scrum")).toBeVisible();
+  await page.getByRole("button", { name: "Editar Scrum" }).click();
+  await expect(page.getByRole("heading", { name: "Editar skill" })).toBeVisible();
+  await page.getByLabel("Nombre skill").fill("Scrum avanzado");
+  await page.getByLabel("Categoria skill").fill("Agile");
+  await page.getByLabel("Nivel skill").fill("Experto");
+  await page.getByRole("button", { name: "Guardar skill" }).click();
+  await expect(page.getByText("Skill actualizada: Scrum avanzado.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Scrum" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();

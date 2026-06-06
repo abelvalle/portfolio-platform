@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, RefreshCw, Save, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Save, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,6 +25,8 @@ export function SkillManagement() {
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingDeleteSkill, setPendingDeleteSkill] = useState<SkillItem | null>(null);
+  const [editingSkill, setEditingSkill] = useState<SkillItem | null>(null);
+  const [editDraft, setEditDraft] = useState(emptyDraft);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -103,6 +105,46 @@ export function SkillManagement() {
     }
   }
 
+  function openEditSkill(skill: SkillItem) {
+    setEditingSkill(skill);
+    setEditDraft({
+      name: skill.name,
+      categoryName: skill.categoryName || "",
+      level: skill.level || "",
+      order: skill.order,
+      visible: skill.visible
+    });
+  }
+
+  async function updateEditingSkill() {
+    if (!editingSkill) {
+      return;
+    }
+    const payload = {
+      name: editDraft.name.trim(),
+      categoryName: editDraft.categoryName.trim() || null,
+      level: editDraft.level.trim() || null,
+      order: editDraft.order,
+      visible: editDraft.visible
+    };
+    if (!payload.name || !payload.categoryName) {
+      setMessage("Nombre y categoria son obligatorios.");
+      return;
+    }
+
+    setBusyId(editingSkill.id);
+    try {
+      await adminClient.updateSkill(editingSkill.id, payload);
+      setEditingSkill(null);
+      await loadSkills();
+      setMessage(`Skill actualizada: ${payload.name}.`);
+    } catch {
+      setMessage("No se pudo actualizar la skill.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <div className="grid gap-6">
       <section className="rounded-lg border border-border bg-card p-6">
@@ -147,8 +189,8 @@ export function SkillManagement() {
       </section>
 
       <section className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-[760px]">
-          <div className="grid grid-cols-[1.2fr_1fr_120px_120px_180px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+        <div className="min-w-[820px]">
+          <div className="grid grid-cols-[1.2fr_1fr_120px_120px_220px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
             <span>Nombre</span>
             <span>Categoria</span>
             <span>Nivel</span>
@@ -156,12 +198,15 @@ export function SkillManagement() {
             <span>Acciones</span>
           </div>
           {items.length ? items.map((item) => (
-            <div key={item.id} className="grid grid-cols-[1.2fr_1fr_120px_120px_180px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+            <div key={item.id} className="grid grid-cols-[1.2fr_1fr_120px_120px_220px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <span className="font-medium">{item.name}</span>
               <span className="text-muted-foreground">{item.categoryName || "-"}</span>
               <span className="text-muted-foreground">{item.level || "-"}</span>
               <span><Badge variant={item.visible ? "default" : "secondary"}>{item.visible ? "visible" : "oculta"}</Badge></span>
               <span className="flex gap-1">
+                <Button type="button" variant="outline" size="icon" aria-label={`Editar ${item.name}`} onClick={() => openEditSkill(item)} disabled={busyId === item.id}>
+                  <Pencil />
+                </Button>
                 <Button type="button" variant="outline" size="icon" onClick={() => patchSkill(item.id, { visible: !item.visible })} disabled={busyId === item.id}>
                   {item.visible ? <EyeOff /> : <Eye />}
                 </Button>
@@ -181,6 +226,46 @@ export function SkillManagement() {
           )}
         </div>
       </section>
+
+      <Dialog open={Boolean(editingSkill)} onOpenChange={(open) => !open && setEditingSkill(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar skill</DialogTitle>
+            <DialogDescription>
+              Actualiza nombre, categoria, nivel, orden y visibilidad de la skill.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="editSkillName">Nombre skill</Label>
+              <Input id="editSkillName" value={editDraft.name} onChange={(event) => setEditDraft((current) => ({ ...current, name: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editSkillCategory">Categoria skill</Label>
+              <Input id="editSkillCategory" value={editDraft.categoryName} onChange={(event) => setEditDraft((current) => ({ ...current, categoryName: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editSkillLevel">Nivel skill</Label>
+              <Input id="editSkillLevel" value={editDraft.level} onChange={(event) => setEditDraft((current) => ({ ...current, level: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editSkillOrder">Orden skill</Label>
+              <Input id="editSkillOrder" type="number" value={editDraft.order} onChange={(event) => setEditDraft((current) => ({ ...current, order: Number(event.target.value) }))} />
+            </div>
+            <Button type="button" variant={editDraft.visible ? "default" : "outline"} onClick={() => setEditDraft((current) => ({ ...current, visible: !current.visible }))}>
+              {editDraft.visible ? "Visible" : "Oculta"}
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditingSkill(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={updateEditingSkill} disabled={Boolean(editingSkill && busyId === editingSkill.id)}>
+              Guardar skill
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(pendingDeleteSkill)} onOpenChange={(open) => !open && setPendingDeleteSkill(null)}>
         <DialogContent>
