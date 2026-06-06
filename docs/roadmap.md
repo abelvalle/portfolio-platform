@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 18:18 CEST.
+Estado actualizado: 2026-06-06 18:42 CEST.
 
 ## Hitos completados
 
@@ -2716,6 +2716,26 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 - QA visual Playwright fallback en `/admin/portfolio/education` con dialogo de borrador visible y sin errores de consola; Browser integrado no expuso herramienta navegable en esta sesion.
 
+### Draft/publish API para certificaciones
+
+- Anadidos `draftJson` y `publishedAt` al modelo `Certification`.
+- Anadida migracion `000009_add_certification_publication`.
+- `GET /api/v1/admin/publication/certifications/:id/review` devuelve diffs campo a campo.
+- `POST /api/v1/admin/publication/certifications/:id/publish` publica el borrador, limpia `draftJson` y actualiza `publishedAt`.
+- La publicacion valida campos obligatorios de certificacion: titulo, institucion y fecha.
+- `ChangeLog` y `AuditLog` registran publicaciones de certificaciones.
+- `POST /api/v1/admin/publication/changelog/:id/restore` soporta restaurar certificaciones desde `beforeJson`.
+- Anadida cobertura unitaria para review, publish y restore de certificacion.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run db:generate`
+- `npm.cmd --prefix apps/api run test -- admin-publication.service.spec.ts`
+- `npm.cmd run build:api`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/api run test`
+- `npm.cmd --prefix apps/api run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -2737,20 +2757,20 @@ Verificacion realizada en este hito:
 - Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones y draft/publish desde UI; falta drag/drop.
-- Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; falta drag/drop.
+- Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; faltan drag/drop y draft/publish desde UI.
 - Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples y bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones; faltan formularios avanzados por bloque.
 - Editor CV por bloques: el editor principal está conectado a campos básicos y Versiones CV ya tiene bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones y duplicado de versiones; falta duplicado por bloque y edición granular de responsabilidades/logros.
 - Preview A4 admin avanzado: el preview está sincronizado; falta render fiel a la plantilla seleccionada, paginación real y comparación pixel-perfect con exportación PDF.
 - LinkedIn OAuth persistente: el callback ya intercambia `code` y obtiene `userinfo` sanitizado; falta persistir/sincronizar perfil con una entidad segura de integración y credenciales reales.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
-- Publicación por entidad CMS: existe workflow granular real para tema visual, perfil público, experiencias, proyectos, skills y estudios; falta extenderlo a certificaciones y CV.
-- Restauración por entidad CMS: existe restore para tema visual, perfil público, experiencias, proyectos, skills y estudios; falta restaurar certificaciones y CV cuando entren al workflow draft/publish.
+- Publicación por entidad CMS: existe workflow granular real para tema visual, perfil público, experiencias, proyectos, skills, estudios y certificaciones; falta extenderlo a CV.
+- Restauración por entidad CMS: existe restore para tema visual, perfil público, experiencias, proyectos, skills, estudios y certificaciones; falta restaurar CV cuando entre al workflow draft/publish.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete, purga fisica diferida y bloqueo local de firma EICAR; falta integracion antivirus externa real.
 - NPM audit: quedan 2 vulnerabilidades moderadas reportadas por `npm install`; no se aplica `audit fix --force` para evitar cambios de versiones fuera de hito.
 
 ## Próximos hitos priorizados
 
-1. Extender draft/publish API a certificaciones.
-2. UI draft/publish para certificaciones.
+1. UI draft/publish para certificaciones.
+2. Workflow draft/publish para CV Manager.
 3. Renderer HTML/CSS server-side fiel al preview A4 público.

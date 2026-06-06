@@ -44,6 +44,11 @@ export class AdminPublicationController {
     return this.publicationService.educationReview(id);
   }
 
+  @Get('certifications/:id/review')
+  certificationReview(@Param('id') id: string) {
+    return this.publicationService.certificationReview(id);
+  }
+
   @Get('changelog')
   changeLog() {
     return this.publicationService.latestChanges();
@@ -92,6 +97,15 @@ export class AdminPublicationController {
     @CurrentUser() user: { id?: string },
   ) {
     return this.publicationService.publishEducationDraft(id, user?.id);
+  }
+
+  @RequirePermissions('manage_publication')
+  @Post('certifications/:id/publish')
+  publishCertification(
+    @Param('id') id: string,
+    @CurrentUser() user: { id?: string },
+  ) {
+    return this.publicationService.publishCertificationDraft(id, user?.id);
   }
 
   @RequirePermissions('manage_publication')

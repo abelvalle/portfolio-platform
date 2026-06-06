@@ -366,6 +366,68 @@ describe('AdminPublicationService', () => {
     );
   });
 
+  it('builds a field-level certification draft review', async () => {
+    const service = new AdminPublicationService(
+      mockPrisma({
+        certification: certificationFixture({
+          title: 'Scrum Master',
+          draftJson: { title: 'Scrum Master avanzado' },
+        }),
+      }),
+    );
+
+    const review = await service.certificationReview('certification-1');
+
+    expect(review.hasDraft).toBe(true);
+    expect(review.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: 'title',
+          before: 'Scrum Master',
+          after: 'Scrum Master avanzado',
+          changed: true,
+        }),
+      ]),
+    );
+  });
+
+  it('publishes certification drafts and logs changed fields', async () => {
+    const prisma = mockPrisma({
+      certification: certificationFixture({
+        title: 'Scrum Master',
+        draftJson: {
+          title: 'Scrum Master avanzado',
+          description: 'Certificacion ampliada de agilidad.',
+        },
+      }),
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.publishCertificationDraft(
+      'certification-1',
+      'user-1',
+    );
+
+    expect(result.changedFields).toEqual(['title', 'description']);
+    expect(prisma.certification.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          title: 'Scrum Master avanzado',
+          description: 'Certificacion ampliada de agilidad.',
+          draftJson: expect.anything(),
+        }),
+      }),
+    );
+    expect(prisma.changeLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          entityType: 'certification',
+          action: 'publish',
+        }),
+      }),
+    );
+  });
+
   it('restores theme values from a changelog entry', async () => {
     const prisma = mockPrisma({
       theme: {
@@ -508,6 +570,31 @@ describe('AdminPublicationService', () => {
       }),
     );
   });
+
+  it('restores certification values from a changelog entry', async () => {
+    const prisma = mockPrisma({
+      certification: certificationFixture({ title: 'Scrum Master avanzado' }),
+      change: {
+        id: 'change-certification-1',
+        entityType: 'certification',
+        entityId: 'certification-1',
+        beforeJson: certificationSnapshot({ title: 'Scrum Master' }),
+      },
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.restorePublicationChange(
+      'change-certification-1',
+      'user-1',
+    );
+
+    expect(result.changedFields).toEqual(['title']);
+    expect(prisma.certification.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ title: 'Scrum Master' }),
+      }),
+    );
+  });
 });
 
 function mockPrisma({
@@ -517,6 +604,7 @@ function mockPrisma({
   project,
   skill,
   education,
+  certification,
   change,
 }: {
   theme?: Record<string, unknown>;
@@ -525,6 +613,7 @@ function mockPrisma({
   project?: Record<string, unknown>;
   skill?: Record<string, unknown>;
   education?: Record<string, unknown>;
+  certification?: Record<string, unknown>;
   change?: Record<string, unknown>;
 }) {
   return {
@@ -553,6 +642,10 @@ function mockPrisma({
     education: {
       findUnique: jest.fn().mockResolvedValue(education),
       update: jest.fn().mockResolvedValue(education),
+    },
+    certification: {
+      findUnique: jest.fn().mockResolvedValue(certification),
+      update: jest.fn().mockResolvedValue(certification),
     },
     changeLog: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -701,6 +794,31 @@ function educationSnapshot(overrides: Record<string, unknown> = {}) {
     date: '2025',
     description: 'Formacion demo.',
     type: 'course',
+    certificateUrl: null,
+    attachmentId: null,
+    ...overrides,
+  };
+}
+
+function certificationFixture(overrides: Record<string, unknown> = {}) {
+  return {
+    ...certificationSnapshot(),
+    id: 'certification-1',
+    order: 0,
+    visible: true,
+    draftJson: null,
+    publishedAt: null,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+function certificationSnapshot(overrides: Record<string, unknown> = {}) {
+  return {
+    title: 'Scrum Master',
+    institution: 'Demo Academy',
+    date: '2025',
+    description: 'Certificacion demo.',
     certificateUrl: null,
     attachmentId: null,
     ...overrides,

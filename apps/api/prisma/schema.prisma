@@ -152,6 +152,8 @@ model Certification {
   attachmentId String?
   order       Int       @default(0)
   visible     Boolean   @default(true)
+  draftJson   Json?
+  publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?

@@ -158,6 +158,27 @@ const REQUIRED_EDUCATION_FIELDS = new Set<EducationField>([
   'type',
 ]);
 
+const CERTIFICATION_FIELDS = [
+  'title',
+  'institution',
+  'date',
+  'description',
+  'certificateUrl',
+  'attachmentId',
+  'order',
+  'visible',
+] as const;
+
+type CertificationField = (typeof CERTIFICATION_FIELDS)[number];
+type CertificationValue = string | number | boolean | null;
+type CertificationValues = Record<CertificationField, CertificationValue>;
+
+const REQUIRED_CERTIFICATION_FIELDS = new Set<CertificationField>([
+  'title',
+  'institution',
+  'date',
+]);
+
 @Injectable()
 export class AdminPublicationService {
   constructor(private readonly prisma: PrismaService) {}
@@ -379,6 +400,41 @@ export class AdminPublicationService {
       entityId: education.id,
       hasDraft: fields.some((field) => field.changed),
       publishedAt: education.publishedAt,
+      fields,
+      latestChanges,
+    };
+  }
+
+  async certificationReview(id: string) {
+    const [certification, latestChanges] = await Promise.all([
+      this.prisma.certification.findUnique({ where: { id } }),
+      this.latestChanges('certification'),
+    ]);
+
+    if (!certification || certification.deletedAt) {
+      throw new NotFoundException('Certification not found');
+    }
+
+    const published = this.pickCertificationValues(certification);
+    const draft = this.readCertificationDraft(certification.draftJson);
+    const fields = CERTIFICATION_FIELDS.map((field) => {
+      const before = published[field];
+      const hasDraftValue =
+        draft && Object.prototype.hasOwnProperty.call(draft, field);
+      const after = hasDraftValue ? (draft[field] ?? null) : before;
+      return {
+        field,
+        before,
+        after,
+        changed: !this.samePublicationValue(before, after),
+      };
+    });
+
+    return {
+      entityType: 'certification',
+      entityId: certification.id,
+      hasDraft: fields.some((field) => field.changed),
+      publishedAt: certification.publishedAt,
       fields,
       latestChanges,
     };
@@ -774,6 +830,73 @@ export class AdminPublicationService {
     };
   }
 
+  async publishCertificationDraft(id: string, actorUserId?: string) {
+    const certification = await this.prisma.certification.findUnique({
+      where: { id },
+    });
+    if (!certification || certification.deletedAt) {
+      throw new NotFoundException('Certification not found');
+    }
+
+    const draft = this.readCertificationDraft(certification.draftJson);
+    if (!draft) {
+      throw new BadRequestException('Certification draft not found');
+    }
+
+    const before = this.pickCertificationValues(certification);
+    const after: CertificationValues = { ...before, ...draft };
+    const changedFields = CERTIFICATION_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    const missingRequiredFields = [...REQUIRED_CERTIFICATION_FIELDS].filter(
+      (field) => !String(after[field] ?? '').trim(),
+    );
+    if (missingRequiredFields.length) {
+      throw new BadRequestException(
+        `Certification draft is missing required fields: ${missingRequiredFields.join(', ')}`,
+      );
+    }
+    if (!changedFields.length) {
+      throw new BadRequestException('Certification draft has no changes');
+    }
+
+    const published = await this.prisma.certification.update({
+      where: { id: certification.id },
+      data: {
+        ...this.buildCertificationUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'certification',
+        entityId: certification.id,
+        action: 'publish',
+        summary: `Published certification draft (${changedFields.join(', ')})`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'publish',
+        resource: 'certification',
+        resourceId: certification.id,
+        metadata: { changedFields } as never,
+      },
+    });
+
+    return {
+      published,
+      changedFields,
+    };
+  }
+
   async restoreThemeChange(changeLogId: string, actorUserId?: string) {
     const change = await this.prisma.changeLog.findUnique({
       where: { id: changeLogId },
@@ -815,6 +938,10 @@ export class AdminPublicationService {
 
     if (change.entityType === 'education') {
       return this.restoreEducationSnapshot(change, actorUserId);
+    }
+
+    if (change.entityType === 'certification') {
+      return this.restoreCertificationSnapshot(change, actorUserId);
     }
 
     throw new NotFoundException('Publication change not found');
@@ -1200,6 +1327,72 @@ export class AdminPublicationService {
         action: 'restore',
         resource: 'education',
         resourceId: education.id,
+        metadata: { changeLogId: change.id, changedFields } as never,
+      },
+    });
+
+    return {
+      restored,
+      changedFields,
+    };
+  }
+
+  private async restoreCertificationSnapshot(
+    change: ChangeLog,
+    actorUserId?: string,
+  ) {
+    if (!change.entityId) {
+      throw new NotFoundException('Certification change not found');
+    }
+
+    const restoreValues = this.readCertificationDraft(change.beforeJson);
+    if (!restoreValues) {
+      throw new BadRequestException('Certification change cannot be restored');
+    }
+
+    const certification = await this.prisma.certification.findUnique({
+      where: { id: change.entityId },
+    });
+    if (!certification || certification.deletedAt) {
+      throw new NotFoundException('Certification not found');
+    }
+
+    const before = this.pickCertificationValues(certification);
+    const after: CertificationValues = { ...before, ...restoreValues };
+    const changedFields = CERTIFICATION_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    if (!changedFields.length) {
+      throw new BadRequestException('Certification is already at this version');
+    }
+
+    const restored = await this.prisma.certification.update({
+      where: { id: certification.id },
+      data: {
+        ...this.buildCertificationUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'certification',
+        entityId: certification.id,
+        action: 'restore',
+        summary: `Restored certification change ${change.id}`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'restore',
+        resource: 'certification',
+        resourceId: certification.id,
         metadata: { changeLogId: change.id, changedFields } as never,
       },
     });
@@ -1629,6 +1822,85 @@ export class AdminPublicationService {
       }
       return current;
     }, {} as Partial<EducationValues>);
+
+    return Object.keys(values).length ? values : null;
+  }
+
+  private pickCertificationValues(
+    certification: Record<string, unknown>,
+  ): CertificationValues {
+    return {
+      title: this.stringValue(certification.title),
+      institution: this.stringValue(certification.institution),
+      date: this.stringValue(certification.date),
+      description:
+        typeof certification.description === 'string'
+          ? certification.description
+          : null,
+      certificateUrl:
+        typeof certification.certificateUrl === 'string'
+          ? certification.certificateUrl
+          : null,
+      attachmentId:
+        typeof certification.attachmentId === 'string'
+          ? certification.attachmentId
+          : null,
+      order: typeof certification.order === 'number' ? certification.order : 0,
+      visible: certification.visible !== false,
+    };
+  }
+
+  private buildCertificationUpdateData(
+    values: CertificationValues,
+  ): Prisma.CertificationUpdateInput {
+    return {
+      title: String(values.title ?? ''),
+      institution: String(values.institution ?? ''),
+      date: String(values.date ?? ''),
+      description: values.description ? String(values.description) : null,
+      certificateUrl: values.certificateUrl
+        ? String(values.certificateUrl)
+        : null,
+      attachmentId: values.attachmentId ? String(values.attachmentId) : null,
+      order: typeof values.order === 'number' ? values.order : 0,
+      visible: Boolean(values.visible),
+    };
+  }
+
+  private readCertificationDraft(
+    draftJson: unknown,
+  ): Partial<CertificationValues> | null {
+    if (
+      !draftJson ||
+      typeof draftJson !== 'object' ||
+      Array.isArray(draftJson)
+    ) {
+      return null;
+    }
+
+    const draft = draftJson as Record<string, unknown>;
+    const values = CERTIFICATION_FIELDS.reduce((current, field) => {
+      const value = draft[field];
+      if (value === undefined) {
+        return current;
+      }
+      if (field === 'visible') {
+        if (typeof value === 'boolean') {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (field === 'order') {
+        if (typeof value === 'number') {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (typeof value === 'string' || value === null) {
+        current[field] = value;
+      }
+      return current;
+    }, {} as Partial<CertificationValues>);
 
     return Object.keys(values).length ? values : null;
   }
