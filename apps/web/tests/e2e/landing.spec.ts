@@ -1657,6 +1657,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Aplicar proyectos" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Mantener detalle de proyecto/);
+  await page.getByLabel("Tecnologias proyecto CV").fill("Next.js\nNestJS");
+  await page.getByRole("button", { name: "Aplicar proyecto granular" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"technologies\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Next\.js[\s\S]*NestJS/);
   await page.getByLabel("JSON estructurado").fill("[]");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue("[]");
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });

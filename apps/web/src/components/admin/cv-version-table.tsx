@@ -45,6 +45,7 @@ type ProjectFormDraft = {
   category: string;
   status: string;
   description: string;
+  technologies: string;
 };
 
 type EducationFormDraft = {
@@ -97,7 +98,8 @@ const emptyProjectFormDraft: ProjectFormDraft = {
   name: "",
   category: "",
   status: "",
-  description: ""
+  description: "",
+  technologies: ""
 };
 
 const emptyEducationFormDraft: EducationFormDraft = {
@@ -487,7 +489,8 @@ function projectFormFromStructuredJson(value: unknown, index = 0): ProjectFormDr
     name: textField(data, "name"),
     category: textField(data, "category") || textField(data, "categoryName"),
     status: textField(data, "status"),
-    description: textField(data, "description")
+    description: textField(data, "description"),
+    technologies: stringListField(data, "technologies").join("\n")
   };
 }
 
@@ -1173,6 +1176,7 @@ export function CvVersionTable() {
     const category = projectFormDraft.category.trim();
     const status = projectFormDraft.status.trim();
     const description = projectFormDraft.description.trim();
+    const technologies = splitBlockLines(projectFormDraft.technologies);
 
     if (category) {
       nextProject.category = category;
@@ -1188,6 +1192,11 @@ export function CvVersionTable() {
       nextProject.description = description;
     } else {
       delete nextProject.description;
+    }
+    if (technologies.length) {
+      nextProject.technologies = technologies;
+    } else {
+      delete nextProject.technologies;
     }
 
     nextProjects[index] = nextProject;
@@ -2769,6 +2778,15 @@ export function CvVersionTable() {
                 rows={3}
                 value={projectFormDraft.description}
                 onChange={(event) => setProjectFormDraft((current) => ({ ...current, description: event.target.value }))}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="projectFormTechnologies">Tecnologias proyecto CV</Label>
+              <Textarea
+                id="projectFormTechnologies"
+                rows={2}
+                value={projectFormDraft.technologies}
+                onChange={(event) => setProjectFormDraft((current) => ({ ...current, technologies: event.target.value }))}
               />
             </div>
           </div>
