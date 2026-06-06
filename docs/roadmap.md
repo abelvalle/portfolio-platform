@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 01:59 CEST.
+Estado actualizado: 2026-06-06 02:04 CEST.
 
 ## Hitos completados
 
@@ -215,13 +215,31 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Preview A4 y URLs compartibles por plantilla de CV
+
+- Añadidas rutas públicas `/cv/templates/:slug` y `/en/cv/templates/:slug`.
+- Cada plantilla tiene URL compartible visible dentro de su detalle.
+- Añadida previsualización A4 responsive con datos reales/fallback del CV.
+- El preview aplica configuración de plantilla: color principal, tipografía, densidad, foto e iconos.
+- La galería pública enlaza cada card con su preview.
+- Añadida carga compartida de plantillas para evitar duplicación entre rutas ES/EN.
+- Añadida cobertura e2e desktop/mobile para detalle ES y EN.
+
+Verificación realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - `html lang` global sigue configurado en `es`; para accesibilidad perfecta conviene migrar a rutas con layout por locale.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
-- Preview A4 por plantilla: la galería pública muestra configuración y disponibilidad, pero falta renderizar una previsualización visual real de cada plantilla.
-- Selección pública de plantilla: el cambio de plantilla sigue siendo una acción de admin/CV Manager; falta selector público con URLs compartibles por plantilla y versión.
+- Exportación por plantilla: el preview A4 existe, pero PDF/DOCX todavía no aplican la plantilla seleccionada por slug público.
 - MFA UI avanzada: falta pantalla de configuración con QR visual, copia de recovery codes y regeneración controlada desde admin.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
 - Auditoría MFA granular: conviene registrar setup/confirm/disable en `AuditLog`.
@@ -244,5 +262,5 @@ Verificación realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. Preview A4 y URLs compartibles por plantilla de CV.
-2. Workflow granular draft/publish con revisión de cambios por entidad.
+1. Workflow granular draft/publish con revisión de cambios por entidad.
+2. Exportación PDF/DOCX aplicando plantilla seleccionada.

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, Download, Eye, LayoutTemplate } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { getCvPath, getPortfolioPath, type Locale } from "@/lib/i18n";
+import { getCvPath, getCvTemplatePath, getPortfolioPath, type Locale } from "@/lib/i18n";
 import { getCvTemplateFeatures, type CvTemplateItem } from "@/lib/cv-templates";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ const copyByLocale = {
     back: "Volver al portfolio",
     cv: "Ver CV online",
     download: "Descargar CV",
+    preview: "Ver preview",
     available: "Gestionable desde el panel admin",
     updated: "Actualizada"
   },
@@ -26,6 +27,7 @@ const copyByLocale = {
     back: "Back to portfolio",
     cv: "View resume online",
     download: "Download resume",
+    preview: "View preview",
     available: "Managed from the admin panel",
     updated: "Updated"
   }
@@ -94,7 +96,9 @@ export function CvTemplatesPage({
                 </div>
                 <div className="flex items-center justify-between border-t border-border pt-4 text-sm text-muted-foreground">
                   <span>{copy.available}</span>
-                  {template.updatedAt ? <span>{copy.updated}</span> : null}
+                  <Link className="font-medium text-primary" href={getCvTemplatePath(locale, template.slug)}>
+                    {copy.preview}
+                  </Link>
                 </div>
               </div>
             </article>

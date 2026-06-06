@@ -33,3 +33,17 @@ test("public CV template galleries work in Spanish and English", async ({ page }
   await expect(page.getByText("ATS-friendly")).toBeVisible();
   await expect(page.getByRole("link", { name: "View resume online" })).toHaveAttribute("href", "/en/cv");
 });
+
+test("public CV template detail previews are shareable", async ({ page }) => {
+  await page.goto("/cv/templates/minimalista");
+  await expect(page.getByRole("heading", { name: "Minimalista" })).toBeVisible();
+  await expect(page.getByText("Preview A4")).toBeVisible();
+  await expect(page.getByText("/cv/templates/minimalista")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Todas las plantillas" })).toHaveAttribute("href", "/cv/templates");
+
+  await page.goto("/en/cv/templates/ats-friendly");
+  await expect(page.getByRole("heading", { name: "ATS-friendly" })).toBeVisible();
+  await expect(page.getByText("A4 preview")).toBeVisible();
+  await expect(page.getByText("/en/cv/templates/ats-friendly")).toBeVisible();
+  await expect(page.getByRole("link", { name: "All templates" })).toHaveAttribute("href", "/en/cv/templates");
+});

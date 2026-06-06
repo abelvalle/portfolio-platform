@@ -253,6 +253,10 @@ export function getCvTemplatesPath(locale: Locale) {
   return locale === "en" ? "/en/cv/templates" : "/cv/templates";
 }
 
+export function getCvTemplatePath(locale: Locale, slug: string) {
+  return `${getCvTemplatesPath(locale)}/${slug}`;
+}
+
 export function getContactPath(locale: Locale) {
   return locale === "en" ? "/en/contact" : "/contact";
 }

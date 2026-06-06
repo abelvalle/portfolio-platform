@@ -1,18 +1,10 @@
 import { CvTemplatesPage } from "@/components/public/cv-templates-page";
-import { cvClient, portfolioClient } from "@/lib/api";
-import { cvTemplateFallbacks, normalizeCvTemplates } from "@/lib/cv-templates";
+import { getPublicCvTemplates } from "@/app/cv/templates/template-data";
+import { portfolioClient } from "@/lib/api";
 
 export default async function EnglishCvTemplatesRoute() {
-  const [snapshot, templates] = await Promise.all([portfolioClient.snapshot("en"), getTemplates()]);
+  const [snapshot, templates] = await Promise.all([portfolioClient.snapshot("en"), getPublicCvTemplates()]);
   const cvUrl = snapshot.profile.cvUrl || snapshot.cv.url;
 
   return <CvTemplatesPage templates={templates} locale="en" cvUrl={cvUrl} />;
-}
-
-async function getTemplates() {
-  try {
-    return normalizeCvTemplates(await cvClient.templates());
-  } catch {
-    return cvTemplateFallbacks;
-  }
 }
