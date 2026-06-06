@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AnalyticsModule } from '../analytics/analytics.module';
 import { CvController } from './cv.controller';
 import { CvAdaptationService } from './cv-adaptation.service';
 import { CvAtsService } from './cv-ats.service';
@@ -11,7 +12,7 @@ import { CvVersionsController } from './cv-versions.controller';
 import { CvTemplatesModule } from './cv-templates.controller';
 
 @Module({
-  imports: [CvTemplatesModule],
+  imports: [AnalyticsModule, CvTemplatesModule],
   controllers: [CvController, CvVersionsController],
   providers: [
     CvService,

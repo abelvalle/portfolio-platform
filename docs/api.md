@@ -153,7 +153,7 @@ Variables de privacidad:
 
 ### Adaptación de CV
 
-`GET /cv/download?template=ats-friendly` genera y descarga el PDF de la version primaria usando la plantilla publica solicitada. Si `template` se omite, usa la plantilla asociada a la version primaria. El override se guarda como `MediaAsset` y `CvGeneratedFile`, pero no reemplaza la referencia canonica `generatedPdfId` de la version.
+`GET /cv/download?template=ats-friendly` genera y descarga el PDF de la version primaria usando la plantilla publica solicitada. Si `template` se omite, usa la plantilla asociada a la version primaria. El override se guarda como `MediaAsset` y `CvGeneratedFile`, pero no reemplaza la referencia canonica `generatedPdfId` de la version. Cada descarga registra `cv_download` en analytics desde backend.
 
 `POST /cv/adapt-to-role` usa el motor por reglas por defecto. Si `CV_AI_ADAPTER_URL` está configurado, el backend consulta un proveedor IA externo opcional y guarda sus sugerencias en `adaptationMeta.aiSuggestion`.
 

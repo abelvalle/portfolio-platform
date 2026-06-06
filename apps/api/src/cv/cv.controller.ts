@@ -7,13 +7,15 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
   StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { createReadStream } from 'node:fs';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
+import { AnalyticsService } from '../analytics/analytics.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermissions } from '../common/guards/permissions.decorator';
@@ -33,6 +35,7 @@ export class CvController {
   constructor(
     private readonly cvService: CvService,
     private readonly adaptationService: CvAdaptationService,
+    private readonly analyticsService: AnalyticsService,
   ) {}
 
   @Get()
@@ -43,9 +46,23 @@ export class CvController {
   @Get('download')
   async downloadPrimaryPdf(
     @Query() query: DownloadCvQueryDto,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
     const result = await this.cvService.generatePublicPdf(query.template);
+    void this.analyticsService
+      .record(
+        {
+          type: 'cv_download',
+          label: query.template || 'primary_cv',
+          path: query.template
+            ? `/cv/download?template=${query.template}`
+            : '/cv/download',
+        },
+        request.ip,
+        request.headers['user-agent'],
+      )
+      .catch(() => undefined);
     response.setHeader('Content-Type', result.download.mimeType);
     response.setHeader(
       'Content-Disposition',
