@@ -1,8 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { createHash } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import sanitizeHtml from 'sanitize-html';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateContactMessageDto } from './contact-message.dto';
+import {
+  ContactMessageQueryDto,
+  CreateContactMessageDto,
+} from './contact-message.dto';
 import { ContactWebhookService } from './contact-webhook.service';
 
 @Injectable()
@@ -27,9 +35,13 @@ export class ContactMessagesService {
     return message;
   }
 
-  list(status?: string) {
+  list(query: ContactMessageQueryDto = {}) {
     return this.prisma.contactMessage.findMany({
-      where: { deletedAt: null, ...(status ? { status } : {}) },
+      where: {
+        ...this.dateRangeWhere(query),
+        deletedAt: null,
+        ...(query.status ? { status: query.status } : {}),
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -70,4 +82,33 @@ export class ContactMessagesService {
   private hash(value: string) {
     return createHash('sha256').update(value).digest('hex');
   }
+
+  private dateRangeWhere(query: ContactMessageQueryDto): {
+    createdAt?: Prisma.DateTimeFilter;
+  } {
+    const from = query.from ? startOfDayUtc(query.from) : null;
+    const to = query.to ? endOfDayUtc(query.to) : null;
+
+    if (from && to && from.getTime() > to.getTime()) {
+      throw new BadRequestException('Invalid contact message date range');
+    }
+
+    const createdAt: Prisma.DateTimeFilter = {};
+    if (from) {
+      createdAt.gte = from;
+    }
+    if (to) {
+      createdAt.lte = to;
+    }
+
+    return Object.keys(createdAt).length ? { createdAt } : {};
+  }
+}
+
+function startOfDayUtc(value: string) {
+  return new Date(`${value}T00:00:00.000Z`);
+}
+
+function endOfDayUtc(value: string) {
+  return new Date(`${value}T23:59:59.999Z`);
 }

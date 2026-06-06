@@ -66,6 +66,7 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `GET|POST|PATCH|DELETE /skills`
 - `GET|POST|PATCH|DELETE /projects`
 - `POST /contact-messages`
+- `GET /contact-messages?status=unread&from=YYYY-MM-DD&to=YYYY-MM-DD`
 - `GET /contact-messages/webhook/status`
 - `POST /contact-messages/webhook/test`
 - `GET /admin/dashboard`

@@ -17,7 +17,10 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { Roles } from '../common/guards/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { CreateContactMessageDto } from './contact-message.dto';
+import {
+  ContactMessageQueryDto,
+  CreateContactMessageDto,
+} from './contact-message.dto';
 import { ContactMessagesService } from './contact-messages.service';
 import { ContactWebhookService } from './contact-webhook.service';
 
@@ -59,8 +62,8 @@ export class ContactMessagesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin, UserRole.editor, UserRole.viewer)
   @Get()
-  list(@Query('status') status?: string) {
-    return this.contactMessagesService.list(status);
+  list(@Query() query: ContactMessageQueryDto) {
+    return this.contactMessagesService.list(query);
   }
 
   @ApiBearerAuth()

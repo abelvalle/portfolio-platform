@@ -26,15 +26,19 @@ export function ContactMessageManagement() {
   const loadMessages = useCallback(async (status = filter) => {
     setIsLoading(true);
     try {
-      const nextMessages = await adminClient.contactMessages(status || undefined);
+      const nextMessages = await adminClient.contactMessages({
+        status: status || undefined,
+        from: fromDate || undefined,
+        to: toDate || undefined
+      });
       setMessages(nextMessages);
-      setMessage(nextMessages.length ? "Mensajes sincronizados." : "No hay mensajes para este filtro.");
+      setMessage(nextMessages.length ? "Mensajes sincronizados con filtros de API." : "No hay mensajes para este filtro.");
     } catch {
       setMessage("No se pudieron cargar mensajes. Comprueba sesion admin.");
     } finally {
       setIsLoading(false);
     }
-  }, [filter]);
+  }, [filter, fromDate, toDate]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

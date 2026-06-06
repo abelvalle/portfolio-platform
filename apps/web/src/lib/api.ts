@@ -165,8 +165,8 @@ export const adminClient = {
   testContactWebhook() {
     return apiFetch<ContactWebhookTestResult>("/contact-messages/webhook/test", { method: "POST" });
   },
-  contactMessages(status?: string) {
-    return apiFetch<ContactMessage[]>(`/contact-messages${status ? `?status=${encodeURIComponent(status)}` : ""}`);
+  contactMessages(filters?: ContactMessageFilters) {
+    return apiFetch<ContactMessage[]>(withQuery("/contact-messages", filters));
   },
   updateContactMessageStatus(id: string, status: string) {
     return apiFetch<ContactMessage>(`/contact-messages/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
@@ -411,6 +411,10 @@ export type ContactMessage = {
   message: string;
   status: string;
   createdAt: string;
+};
+
+export type ContactMessageFilters = DateRangeFilters & {
+  status?: string;
 };
 
 export type ExperienceItem = {
