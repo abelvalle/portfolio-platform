@@ -313,6 +313,9 @@ export const cvClient = {
   atsReport(id: string) {
     return apiFetch<CvAtsReport>(`/cv/${id}/ats-report`);
   },
+  atsRoleReport(id: string, data: { targetRole?: string; jobDescription: string }) {
+    return apiFetch<CvAtsRoleReport>(`/cv/${id}/ats-role-report`, { method: "POST", body: JSON.stringify(data) });
+  },
   generateAtsPdf(id: string) {
     return apiFetch<CvGeneratedFileResult>(`/cv/${id}/generate-ats-pdf`, { method: "POST" });
   },
@@ -779,6 +782,15 @@ export type CvAtsReport = {
   }>;
   keywords: string[];
   recommendations: string[];
+};
+
+export type CvAtsRoleReport = CvAtsReport & {
+  targetRole?: string;
+  matchScore: number;
+  jobKeywords: string[];
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  roleRecommendations: string[];
 };
 
 export type CvItem = {

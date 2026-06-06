@@ -279,6 +279,27 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/cv/cv-1/ats-role-report", async (route) => {
+    const data = JSON.parse(route.request().postData() || "{}");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        score: 88,
+        status: "strong",
+        targetRole: data.targetRole,
+        matchScore: 67,
+        checks: [
+          { key: "contact", label: "Contacto legible", passed: true, weight: 15, detail: "Contacto en texto plano." }
+        ],
+        keywords: ["KPIs", "UAT", "Cloud"],
+        recommendations: [],
+        jobKeywords: ["delivery", "uat", "aws"],
+        matchedKeywords: ["uat"],
+        missingKeywords: ["aws"],
+        roleRecommendations: ['Revisar si "aws" existe en la experiencia real antes de incorporarlo.']
+      })
+    });
+  });
   await page.route("**/api/v1/cv/cv-1/generate-ats-pdf", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -1265,6 +1286,21 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Generar PDF ATS" }).click();
   await expect(page.getByText("PDF ATS generado.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Descargar ultimo ATS" })).toHaveAttribute("href", /\/api\/v1\/media\/media-ats-pdf\/download/);
+  await page.getByLabel("Puesto ATS objetivo").fill("Cloud Delivery Manager");
+  await page.getByLabel("Descripcion de oferta ATS").fill("Oferta para Delivery Manager con UAT, gobierno cloud, reporting ejecutivo, stakeholders y AWS.");
+  const atsRoleReportRequest = page.waitForRequest((request) => {
+    if (!request.url().endsWith("/api/v1/cv/cv-1/ats-role-report") || request.method() !== "POST") {
+      return false;
+    }
+    const data = JSON.parse(request.postData() || "{}");
+    return data.targetRole === "Cloud Delivery Manager" && data.jobDescription.includes("AWS");
+  });
+  await page.getByRole("button", { name: "Comparar con oferta ATS" }).click();
+  await atsRoleReportRequest;
+  await expect(page.getByText("Match oferta")).toBeVisible();
+  await expect(page.getByText("67")).toBeVisible();
+  await expect(page.getByText("aws", { exact: true })).toBeVisible();
+  await expect(page.getByText(/existe en la experiencia real/)).toBeVisible();
 
   await page.goto("/admin/settings/users");
   await expect(page.getByRole("heading", { name: "Usuarios y permisos" })).toBeVisible();
