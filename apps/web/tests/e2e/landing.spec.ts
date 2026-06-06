@@ -81,6 +81,32 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route("**/api/v1/users", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "user-1",
+          email: "editor@example.com",
+          name: "Editor Demo",
+          role: "editor",
+          mfaEnabled: false,
+          createdAt: "2026-06-01T08:00:00.000Z",
+          updatedAt: "2026-06-01T08:00:00.000Z"
+        }
+      ])
+    });
+  });
+  await page.route("**/api/v1/users/permissions", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        admin: ["manage_users"],
+        editor: ["manage_portfolio"],
+        viewer: ["read_dashboard"]
+      })
+    });
+  });
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
@@ -133,6 +159,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/settings/users");
   await expect(page.getByRole("heading", { name: "Usuarios y permisos" })).toBeVisible();
+  await expect(page.getByLabel("Buscar usuarios")).toBeVisible();
+  await page.getByLabel("Buscar usuarios").fill("editor");
+  await expect(page.getByText("editor@example.com")).toBeVisible();
+  await page.getByRole("button", { name: "Baja" }).click();
+  await expect(page.getByRole("heading", { name: "Confirmar baja" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancelar" }).click();
 
   await page.goto("/admin/settings");
   await expect(page.getByText("Seguridad admin")).toBeVisible();

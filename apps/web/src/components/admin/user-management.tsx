@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { RefreshCw, Save, Trash2, UserPlus } from "lucide-react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { RefreshCw, Save, Search, Trash2, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { adminClient, type AdminUser, type AdminUserRole } from "@/lib/api";
 
@@ -17,6 +18,16 @@ export function UserManagement() {
   const [isCreating, setIsCreating] = useState(false);
   const [draftUser, setDraftUser] = useState({ email: "", name: "", role: "viewer" as AdminUserRole, password: "" });
   const [roleDrafts, setRoleDrafts] = useState<Record<string, AdminUserRole>>({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [pendingDeleteUser, setPendingDeleteUser] = useState<AdminUser | null>(null);
+
+  const filteredUsers = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return users;
+    return users.filter((user) =>
+      [user.email, user.name || "", user.role].some((value) => value.toLowerCase().includes(query))
+    );
+  }, [searchTerm, users]);
 
   useEffect(() => {
     void loadUsers();
@@ -78,6 +89,7 @@ export function UserManagement() {
     try {
       await adminClient.deleteUser(user.id);
       setUsers((current) => current.filter((item) => item.id !== user.id));
+      setPendingDeleteUser(null);
       setMessage(`Usuario desactivado: ${user.email}.`);
     } catch {
       setMessage("No se pudo desactivar el usuario.");
@@ -119,13 +131,25 @@ export function UserManagement() {
 
       <section className="overflow-x-auto rounded-lg border border-border">
         <div className="min-w-[760px]">
+          <div className="border-b border-border p-3">
+            <div className="grid max-w-sm grid-cols-[auto_1fr] items-center gap-2 rounded-lg border border-input px-2.5">
+              <Search className="size-4 text-muted-foreground" />
+              <Input
+                aria-label="Buscar usuarios"
+                className="border-0 px-0 shadow-none focus-visible:ring-0"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Buscar por email, nombre o rol"
+              />
+            </div>
+          </div>
           <div className="grid grid-cols-[1.4fr_120px_120px_180px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
             <span>Usuario</span>
             <span>Rol</span>
             <span>MFA</span>
             <span>Acciones</span>
           </div>
-          {users.length ? users.map((user) => (
+          {filteredUsers.length ? filteredUsers.map((user) => (
             <div key={user.id} className="grid grid-cols-[1.4fr_120px_120px_180px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <div className="min-w-0">
                 <p className="truncate font-medium">{user.email}</p>
@@ -144,14 +168,14 @@ export function UserManagement() {
                   <Save data-icon="inline-start" />
                   Guardar
                 </Button>
-                <Button type="button" variant="destructive" size="sm" onClick={() => deleteUser(user)}>
+                <Button type="button" variant="destructive" size="sm" onClick={() => setPendingDeleteUser(user)}>
                   <Trash2 data-icon="inline-start" />
                   Baja
                 </Button>
               </div>
             </div>
           )) : (
-            <div className="p-8 text-center text-sm text-muted-foreground">Sin usuarios cargados.</div>
+            <div className="p-8 text-center text-sm text-muted-foreground">Sin usuarios para la busqueda actual.</div>
           )}
         </div>
       </section>
@@ -169,6 +193,25 @@ export function UserManagement() {
           </div>
         ))}
       </section>
+
+      <Dialog open={Boolean(pendingDeleteUser)} onOpenChange={(open) => !open && setPendingDeleteUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar baja</DialogTitle>
+            <DialogDescription>
+              Esta accion desactiva el usuario {pendingDeleteUser?.email}. Podras crear otro acceso si hace falta.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingDeleteUser(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => pendingDeleteUser && deleteUser(pendingDeleteUser)}>
+              Confirmar baja
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

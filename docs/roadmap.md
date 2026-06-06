@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:58 CEST.
+Estado actualizado: 2026-06-06 05:02 CEST.
 
 ## Hitos completados
 
@@ -901,6 +901,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Busqueda y confirmacion de baja de usuarios
+
+- `/admin/settings/users` permite buscar usuarios por email, nombre o rol.
+- La baja de usuario abre un dialogo de confirmacion antes de llamar a la API.
+- La lista muestra estado vacio especifico para la busqueda activa.
+- Añadida cobertura e2e con usuarios mockeados para buscar y abrir/cancelar confirmacion.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -916,7 +930,7 @@ Verificacion realizada en este hito:
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
 - Adaptación CV a versión final: el wizard ya propone datos desde API; falta aceptar/rechazar cambios por bloque y crear/publicar una `CvVersion` adaptada desde la propuesta.
 - Comparador CV avanzado: la comparación está conectada; faltan diff visual por campo, resaltado inline y enlaces directos para editar la versión adaptada.
-- Usuarios UI avanzada: el CRUD básico está conectado; faltan edición de nombre/password inline, búsqueda, paginación y confirmación modal de baja.
+- Usuarios UI avanzada: el CRUD básico está conectado con busqueda y confirmacion de baja; faltan edición de nombre/password inline y paginación.
 - Permisos por acción: existe matriz de permisos, pero los guards todavía se basan en roles por endpoint.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
