@@ -17,14 +17,25 @@ type CvStructuredData = {
   experiences?: Array<{
     role: string;
     company: string;
-    description: string;
+    period?: string;
+    description?: string;
     responsibilities?: string[];
     achievements?: string[];
   }>;
-  education?: Array<{ title: string; institution: string; date: string }>;
-  certifications?: Array<{ title: string; institution: string; date: string }>;
-  skills?: Array<{ name: string; category: string }>;
-  languages?: Array<{ name: string; level: string }>;
+  education?: Array<{ title: string; institution?: string; date?: string }>;
+  certifications?: Array<{
+    title: string;
+    institution?: string;
+    date?: string;
+  }>;
+  skills?: Array<{ name: string; category?: string }>;
+  languages?: Array<{ name: string; level?: string }>;
+  projects?: Array<{
+    name: string;
+    description?: string;
+    technologies?: string[];
+  }>;
+  sections?: Array<{ title: string; content?: string }>;
 };
 
 type CvTemplateExportOptions = {
@@ -81,7 +92,10 @@ export class CvExportService {
             this.heading('Formacion y certificaciones', 18, template),
             ...this.simpleList(
               [...(data.education || []), ...(data.certifications || [])],
-              (item) => `${item.title} - ${item.institution} - ${item.date}`,
+              (item) =>
+                [item.title, item.institution, item.date]
+                  .filter(Boolean)
+                  .join(' - '),
               template,
             ),
             this.heading('Skills', 18, template),
@@ -92,7 +106,11 @@ export class CvExportService {
             this.heading('Idiomas', 18, template),
             this.text(
               (data.languages || [])
-                .map((language) => `${language.name}: ${language.level}`)
+                .map((language) =>
+                  language.level
+                    ? `${language.name}: ${language.level}`
+                    : language.name,
+                )
                 .join(' - '),
               template,
             ),
@@ -151,7 +169,7 @@ export class CvExportService {
         options.ats ? 'Experiencia profesional' : 'Experiencia',
         (data.experiences || []).map(
           (exp) =>
-            `${exp.role} - ${exp.company}\n${exp.description}\n${[...(exp.responsibilities || []), ...(exp.achievements || [])].join('\n')}`,
+            `${exp.role} - ${exp.company}\n${exp.description || ''}\n${[...(exp.responsibilities || []), ...(exp.achievements || [])].join('\n')}`,
         ),
         template,
       );
@@ -159,7 +177,10 @@ export class CvExportService {
         doc,
         'Formacion y certificaciones',
         [...(data.education || []), ...(data.certifications || [])].map(
-          (item) => `${item.title} - ${item.institution} - ${item.date}`,
+          (item) =>
+            [item.title, item.institution, item.date]
+              .filter(Boolean)
+              .join(' - '),
         ),
         template,
       );
@@ -174,7 +195,11 @@ export class CvExportService {
         'Idiomas',
         [
           (data.languages || [])
-            .map((language) => `${language.name}: ${language.level}`)
+            .map((language) =>
+              language.level
+                ? `${language.name}: ${language.level}`
+                : language.name,
+            )
             .join(' - '),
         ],
         template,
@@ -189,7 +214,106 @@ export class CvExportService {
 
   renderHtml(data: CvStructuredData, options: CvTemplateExportOptions = {}) {
     const template = this.resolveTemplateOptions(options);
-    return `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:${template.fontFamily},Arial,sans-serif;color:#0f172a;padding:${template.density === 'compact' ? '36px' : '48px'}}h1{font-size:32px;color:${template.primaryColor}}h2{font-size:16px;border-top:1px solid #cbd5e1;padding-top:14px;color:${template.primaryColor}}</style></head><body><h1>${data.profile?.fullName || 'Abel Valle Rosa'}</h1><p>${data.profile?.headline || ''}</p><h2>Resumen profesional</h2><p>${data.summary || ''}</p></body></html>`;
+    const experienceBody = (data.experiences || [])
+      .map((experience) =>
+        this.htmlArticle(
+          `${experience.role} - ${experience.company}`,
+          [experience.period, experience.description],
+          [
+            ...(experience.responsibilities || []),
+            ...(experience.achievements || []),
+          ],
+        ),
+      )
+      .join('');
+    const formationRows = [
+      ...(data.education || []),
+      ...(data.certifications || []),
+    ]
+      .map((item) =>
+        this.htmlListItem(
+          [item.title, item.institution, item.date].filter(Boolean).join(' - '),
+        ),
+      )
+      .join('');
+    const skillRows = (data.skills || [])
+      .map((skill) =>
+        this.htmlListItem(
+          skill.category ? `${skill.name} - ${skill.category}` : skill.name,
+        ),
+      )
+      .join('');
+    const languageRows = (data.languages || [])
+      .map((language) =>
+        this.htmlListItem(
+          language.level
+            ? `${language.name}: ${language.level}`
+            : language.name,
+        ),
+      )
+      .join('');
+    const projectBody = (data.projects || [])
+      .map((project) =>
+        this.htmlArticle(
+          project.name,
+          [project.description],
+          project.technologies || [],
+        ),
+      )
+      .join('');
+    const customSections = (data.sections || [])
+      .map((section) =>
+        this.htmlSection(section.title, this.htmlParagraph(section.content)),
+      )
+      .join('');
+
+    return `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:${template.fontFamily},Arial,sans-serif;color:#0f172a;padding:${template.density === 'compact' ? '36px' : '48px'};line-height:1.45}h1{font-size:32px;color:${template.primaryColor};margin:0 0 6px}h2{font-size:16px;border-top:1px solid #cbd5e1;padding-top:14px;color:${template.primaryColor};margin-top:20px}article{margin:0 0 14px}h3{font-size:13px;margin:0 0 4px}p{margin:0 0 8px}ul{margin:0 0 10px 18px;padding:0}li{margin:0 0 4px}</style></head><body><h1>${this.html(data.profile?.fullName || 'Abel Valle Rosa')}</h1><p>${this.html(data.profile?.headline || '')}</p><p>${this.html(this.contactLine(data))}</p>${this.htmlSection('Resumen profesional', this.htmlParagraph(data.summary))}${this.htmlSection(options.ats ? 'Experiencia profesional' : 'Experiencia', experienceBody)}${this.htmlSection('Formacion y certificaciones', formationRows ? `<ul>${formationRows}</ul>` : '')}${this.htmlSection('Skills', skillRows ? `<ul>${skillRows}</ul>` : '')}${this.htmlSection('Idiomas', languageRows ? `<ul>${languageRows}</ul>` : '')}${this.htmlSection('Proyectos', projectBody)}${customSections}</body></html>`;
+  }
+
+  private html(value: unknown) {
+    const text =
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+        ? String(value)
+        : '';
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  private htmlParagraph(value: unknown) {
+    const text = this.html(value);
+    return text ? `<p>${text}</p>` : '';
+  }
+
+  private htmlListItem(value: unknown) {
+    const text = this.html(value);
+    return text ? `<li>${text}</li>` : '';
+  }
+
+  private htmlArticle(
+    title: string,
+    paragraphs: unknown[],
+    bullets: unknown[],
+  ) {
+    const body = [
+      `<h3>${this.html(title)}</h3>`,
+      ...paragraphs.map((paragraph) => this.htmlParagraph(paragraph)),
+      bullets.length
+        ? `<ul>${bullets.map((bullet) => this.htmlListItem(bullet)).join('')}</ul>`
+        : '',
+    ].join('');
+    return `<article>${body}</article>`;
+  }
+
+  private htmlSection(title: string, body: string) {
+    return body.trim()
+      ? `<section><h2>${this.html(title)}</h2>${body}</section>`
+      : '';
   }
 
   private ensureCvDir() {
@@ -245,7 +369,7 @@ export class CvExportService {
   ) {
     return (data.experiences || []).flatMap((experience) => [
       this.text(`${experience.role} - ${experience.company}`, template, true),
-      this.text(experience.description, template),
+      this.text(experience.description || '', template),
       ...this.simpleList(
         [
           ...(experience.responsibilities || []),

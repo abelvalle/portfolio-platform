@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 12:52 CEST.
+Estado actualizado: 2026-06-06 12:58 CEST.
 
 ## Hitos completados
 
@@ -2145,11 +2145,25 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Renderer HTML de CV con secciones estructuradas
+
+- `CvExportService.renderHtml` ya renderiza resumen, experiencia, formacion/certificaciones, skills, idiomas, proyectos y secciones personalizadas.
+- El HTML aplica tokens de plantilla existentes: tipografia, color principal y densidad.
+- Añadido escape HTML basico para contenido de CV antes de renderizar en server-side HTML.
+- Añadida cobertura unitaria para secciones estructuradas y escaping.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
-- Renderer fiel al preview: PDF/DOCX aplican tokens de plantilla, pero todavía no generan desde el mismo HTML/CSS A4 del preview público.
+- Renderer fiel al preview: el HTML server-side ya renderiza secciones estructuradas y aplica tokens de plantilla; PDF/DOCX todavía no generan desde ese mismo HTML/CSS A4 del preview público.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
