@@ -3762,6 +3762,15 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
 
+### Suite raiz tras hitos A4/page-break
+
+- Ejecutada la suite raiz despues de diff visual PDF, paginacion A4, marcadores, saltos manuales y `sectionOrder` primario.
+- Pasan los tests unitarios del API y el smoke test del frontend.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test` (`24` suites y `114` tests API, mas smoke web)
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3799,4 +3808,4 @@ Verificacion realizada en este hito:
 
 1. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
 2. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.
-3. Ejecutar una suite raiz completa tras los hitos A4/page-break recientes.
+3. Revalidar builds completos antes del siguiente bloque funcional grande.
