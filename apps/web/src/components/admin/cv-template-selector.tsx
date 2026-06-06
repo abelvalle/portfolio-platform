@@ -21,6 +21,8 @@ const emptyDraft = {
   visible: true
 };
 
+const templateDensities = ["normal", "compact"] as const;
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -34,10 +36,20 @@ function buildConfig(draft: typeof emptyDraft) {
   return {
     primaryColor: draft.primaryColor.trim() || "#111827",
     fontFamily: draft.fontFamily.trim() || "Inter",
-    density: draft.density.trim() || "normal",
+    density: templateDensities.includes(draft.density.trim() as (typeof templateDensities)[number]) ? draft.density.trim() : "normal",
     showPhoto: draft.showPhoto,
     showIcons: draft.showIcons
   };
+}
+
+function validateTemplateDraft(draft: typeof emptyDraft) {
+  if (!/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(draft.primaryColor.trim())) {
+    return "Color principal debe ser HEX (#RRGGBB).";
+  }
+  if (!templateDensities.includes(draft.density.trim() as (typeof templateDensities)[number])) {
+    return "Densidad debe ser normal o compact.";
+  }
+  return "";
 }
 
 export function CvTemplateSelector() {
@@ -81,6 +93,12 @@ export function CvTemplateSelector() {
   }
 
   async function createTemplate() {
+    const validationMessage = validateTemplateDraft(draft);
+    if (validationMessage) {
+      setMessage(validationMessage);
+      return;
+    }
+
     const payload = buildMutation(templates.length);
     if (!payload.name || !payload.slug) {
       setMessage("Nombre de plantilla obligatorio.");
@@ -161,7 +179,16 @@ export function CvTemplateSelector() {
         </div>
         <div className="grid gap-2">
           <Label htmlFor="density">Densidad</Label>
-          <Input id="density" value={draft.density} onChange={(event) => setDraft((current) => ({ ...current, density: event.target.value }))} />
+          <select
+            id="density"
+            className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+            value={draft.density}
+            onChange={(event) => setDraft((current) => ({ ...current, density: event.target.value }))}
+          >
+            {templateDensities.map((density) => (
+              <option key={density} value={density}>{density}</option>
+            ))}
+          </select>
         </div>
         <div className="grid gap-2 md:col-span-2">
           <Label htmlFor="templateDescription">Descripcion</Label>

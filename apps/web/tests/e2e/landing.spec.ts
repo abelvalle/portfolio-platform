@@ -437,6 +437,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/cv/templates");
   await expect(page.getByRole("heading", { name: "Plantillas de CV" })).toBeVisible();
+  await page.getByLabel("Densidad").selectOption("compact");
+  await page.getByLabel("Nombre").fill("Plantilla invalida");
+  await page.getByLabel("Color principal").fill("teal");
+  await page.getByRole("button", { name: "Crear plantilla" }).click();
+  await expect(page.getByText("Color principal debe ser HEX (#RRGGBB).")).toBeVisible();
   await expect(page.getByRole("heading", { name: "ATS-friendly" })).toBeVisible();
   await page.getByRole("button", { name: "Eliminar ATS-friendly" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
