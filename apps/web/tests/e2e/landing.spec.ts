@@ -1065,12 +1065,23 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(auditDialog.getByText("media-1", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "Detalle auditoria CV" })).toBeHidden();
+  const versionAuditRequestPromise = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return url.pathname.endsWith("/api/v1/cv-versions/audit-log")
+      && url.searchParams.get("resourceId") === "cv-base"
+      && url.searchParams.get("page") === "1";
+  });
+  await page.getByRole("button", { name: "Ver auditoria CV Base" }).click({ force: true });
+  await versionAuditRequestPromise;
+  await expect(page.getByLabel("Version auditoria")).toHaveValue("cv-base");
+  await expect(page.getByText("Auditoria filtrada por version: CV Base.")).toBeVisible();
   await page.getByLabel("Accion").selectOption("update");
   await expect(page.getByLabel("Evento update")).toBeVisible();
   const auditFilterRequestPromise = page.waitForRequest((request) => {
     const url = new URL(request.url());
     return url.pathname.endsWith("/api/v1/cv-versions/audit-log")
       && url.searchParams.get("action") === "update"
+      && url.searchParams.get("resourceId") === "cv-base"
       && url.searchParams.get("from") === "2026-06-01"
       && url.searchParams.get("to") === "2026-06-06"
       && url.searchParams.get("userId") === "user-1";
@@ -1099,6 +1110,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   const auditHistoryHref = await page.getByRole("link", { name: "Exportar historico CSV" }).getAttribute("href");
   expect(auditHistoryHref).toContain("/api/v1/cv-versions/audit-log/export");
   expect(auditHistoryHref).toContain("action=update");
+  expect(auditHistoryHref).toContain("resourceId=cv-base");
   expect(auditHistoryHref).toContain("from=2026-06-01");
   expect(auditHistoryHref).toContain("to=2026-06-06");
   expect(auditHistoryHref).toContain("userId=user-1");
@@ -1200,7 +1212,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
-  await page.getByRole("button", { name: "Archivar CV Adaptado" }).click({ force: true });
+  const archiveAdaptedButton = page.getByRole("button", { name: "Archivar CV Adaptado" });
+  await archiveAdaptedButton.scrollIntoViewIfNeeded();
+  await archiveAdaptedButton.focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Confirmar archivado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click({ force: true });
 

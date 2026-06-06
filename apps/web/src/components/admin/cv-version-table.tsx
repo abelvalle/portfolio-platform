@@ -346,6 +346,7 @@ export function CvVersionTable() {
   const [templates, setTemplates] = useState<CvTemplateItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [auditActionFilter, setAuditActionFilter] = useState("");
+  const [auditResourceId, setAuditResourceId] = useState("");
   const [auditFromDate, setAuditFromDate] = useState("");
   const [auditToDate, setAuditToDate] = useState("");
   const [auditUserId, setAuditUserId] = useState("");
@@ -417,6 +418,7 @@ export function CvVersionTable() {
         cvClient.templates().catch(() => []),
         cvClient.versionAuditLog({
           action: auditActionFilter || undefined,
+          resourceId: auditResourceId.trim() || undefined,
           from: auditFromDate || undefined,
           to: auditToDate || undefined,
           userId: auditUserId.trim() || undefined,
@@ -435,7 +437,7 @@ export function CvVersionTable() {
     } finally {
       setIsLoading(false);
     }
-  }, [auditActionFilter, auditFromDate, auditPage, auditToDate, auditUserId, syncJsonEditor]);
+  }, [auditActionFilter, auditFromDate, auditPage, auditResourceId, auditToDate, auditUserId, syncJsonEditor]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -584,6 +586,12 @@ export function CvVersionTable() {
     link.click();
     URL.revokeObjectURL(url);
     setAuditMessage("CSV de auditoria CV generado.");
+  }
+
+  function viewVersionAudit(version: CvVersionItem) {
+    setAuditResourceId(version.id);
+    setAuditPage(1);
+    setAuditMessage(`Auditoria filtrada por version: ${version.name}.`);
   }
 
   function selectJsonVersion(id: string) {
@@ -958,6 +966,18 @@ export function CvVersionTable() {
               </select>
             </div>
             <div className="grid gap-1">
+              <Label htmlFor="auditResourceId">Version auditoria</Label>
+              <Input
+                id="auditResourceId"
+                value={auditResourceId}
+                onChange={(event) => {
+                  setAuditResourceId(event.target.value);
+                  setAuditPage(1);
+                }}
+                placeholder="cv-version id"
+              />
+            </div>
+            <div className="grid gap-1">
               <Label htmlFor="auditFromDate">Desde</Label>
               <Input
                 id="auditFromDate"
@@ -1001,6 +1021,7 @@ export function CvVersionTable() {
               className={buttonVariants({ variant: "outline" })}
               href={cvClient.versionAuditExportUrl({
                 action: auditActionFilter || undefined,
+                resourceId: auditResourceId.trim() || undefined,
                 from: auditFromDate || undefined,
                 to: auditToDate || undefined,
                 userId: auditUserId.trim() || undefined
@@ -1220,8 +1241,8 @@ export function CvVersionTable() {
       </section>
 
       <section className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-[1100px]">
-          <div className="grid grid-cols-[1.1fr_1fr_90px_120px_110px_390px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+        <div className="min-w-[1180px]">
+          <div className="grid grid-cols-[1.1fr_1fr_90px_120px_110px_470px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
             <span>Nombre</span>
             <span>Objetivo</span>
             <span>Idioma</span>
@@ -1230,7 +1251,7 @@ export function CvVersionTable() {
             <span>Acciones</span>
           </div>
           {versions.length ? versions.map((version) => (
-            <div key={version.id} className="grid grid-cols-[1.1fr_1fr_90px_120px_110px_390px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+            <div key={version.id} className="grid grid-cols-[1.1fr_1fr_90px_120px_110px_470px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <span>
                 <span className="block font-medium">{version.name}</span>
                 <span className="block text-muted-foreground">{version.slug}</span>
@@ -1273,6 +1294,10 @@ export function CvVersionTable() {
                 <Button type="button" variant="outline" size="sm" onClick={() => duplicateVersion(version)} disabled={busyId === version.id}>
                   <Copy data-icon="inline-start" />
                   Duplicar
+                </Button>
+                <Button type="button" variant="outline" size="sm" aria-label={`Ver auditoria ${version.name}`} onClick={() => viewVersionAudit(version)} disabled={isLoading}>
+                  <Eye data-icon="inline-start" />
+                  Auditoria
                 </Button>
                 {!version.isPrimary ? (
                   <Button type="button" variant="outline" size="sm" onClick={() => setPrimaryVersion(version.id)} disabled={busyId === version.id}>
