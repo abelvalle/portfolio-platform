@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 06:33 CEST.
+Estado actualizado: 2026-06-06 06:37 CEST.
 
 ## Hitos completados
 
@@ -1210,6 +1210,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Callback OAuth de LinkedIn
+
+- `GET /api/v1/integrations/linkedin/callback` intercambia `code` por token cuando LinkedIn OAuth esta configurado.
+- El callback consulta OpenID `userinfo` y devuelve perfil sanitizado sin exponer el access token.
+- El endpoint queda protegido para admin igual que `auth-url`.
+- `docs/api.md` y `/admin/settings` documentan el callback.
+- Añadidos tests unitarios con `fetch` mockeado para token/userinfo y cobertura e2e de visibilidad del endpoint.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1238,7 +1253,7 @@ Verificacion realizada en este hito:
 - Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima y confirmación para cambios grandes; falta edición por bloques.
 - Editor CV por bloques: el editor principal está conectado a campos básicos; faltan bloques estructurados para experiencia, educación, certificaciones, skills, proyectos, idiomas y secciones personalizadas.
 - Preview A4 admin avanzado: el preview está sincronizado; falta render fiel a la plantilla seleccionada, paginación real y comparación pixel-perfect con exportación PDF.
-- LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
+- LinkedIn OAuth persistente: el callback ya intercambia `code` y obtiene `userinfo` sanitizado; falta persistir/sincronizar perfil con una entidad segura de integración y credenciales reales.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.
 - Restauración por entidad CMS: existe restore para tema visual y perfil público; falta restaurar otras entidades cuando entren al workflow draft/publish.

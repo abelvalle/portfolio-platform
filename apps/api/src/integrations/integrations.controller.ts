@@ -24,6 +24,17 @@ export class IntegrationsController {
     return this.linkedinService.authUrl(state);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.admin)
+  @Get('linkedin/callback')
+  linkedinCallback(
+    @Query('code') code?: string,
+    @Query('state') state?: string,
+  ) {
+    return this.linkedinService.callback(code, state);
+  }
+
   @Get('linkedin/share-url')
   linkedinShareUrl(@Query('path') path = '/') {
     return this.linkedinService.shareUrl(path);

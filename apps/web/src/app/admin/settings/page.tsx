@@ -29,6 +29,7 @@ export default function SettingsPage() {
           <DataTable rows={[
             { flujo: "Estado", endpoint: "GET /api/v1/integrations/linkedin/status", acceso: "publico" },
             { flujo: "Auth URL", endpoint: "GET /api/v1/integrations/linkedin/auth-url", acceso: "admin" },
+            { flujo: "Callback", endpoint: "GET /api/v1/integrations/linkedin/callback", acceso: "admin" },
             { flujo: "Share URL", endpoint: "GET /api/v1/integrations/linkedin/share-url", acceso: "publico" }
           ]} />
         </CardContent>
