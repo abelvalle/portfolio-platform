@@ -3489,6 +3489,15 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run build:web`
 
+### Build API tras specs de exportacion CV
+
+- Ejecutado build de produccion del backend tras declarar `jszip` y ampliar los smokes PDF/DOCX.
+- Nest compila el API sin errores de TypeScript ni resolucion de dependencias.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build:api`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
