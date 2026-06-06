@@ -19,6 +19,7 @@ export function CvAdaptationWizard() {
   const [message, setMessage] = useState("Cargando versiones base.");
   const [isLoading, setIsLoading] = useState(true);
   const [isAdapting, setIsAdapting] = useState(false);
+  const [isCreatingVersion, setIsCreatingVersion] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -65,6 +66,46 @@ export function CvAdaptationWizard() {
   }
 
   const selectedVersion = versions.find((version) => version.id === baseCvVersionId);
+
+  async function createAdaptedVersion() {
+    if (!result || !selectedVersion) {
+      setMessage("Genera una propuesta y selecciona una version base antes de crear el borrador.");
+      return;
+    }
+
+    setIsCreatingVersion(true);
+    try {
+      const role = result.request.targetRole || targetRole.trim();
+      const created = await cvClient.createVersion({
+        cvId: selectedVersion.cvId,
+        name: `CV adaptado - ${role}`,
+        slug: buildVersionSlug(`${role}-${Date.now().toString(36)}`),
+        description: result.request.targetCompany
+          ? `Adaptado para ${result.request.targetCompany}`
+          : "Adaptado desde propuesta pendiente de revision.",
+        targetRole: role,
+        targetCompany: result.request.targetCompany || null,
+        language: selectedVersion.language || "es",
+        status: "draft",
+        templateId: selectedVersion.templateId || null,
+        structuredJson: {
+          ...(result.proposed as Record<string, unknown>),
+          adaptationMeta: {
+            ...(result.proposed.adaptationMeta || {}),
+            createdFromRequestId: result.request.id,
+            pendingReview: true
+          }
+        }
+      });
+      setBaseCvVersionId(created.id);
+      await loadVersions();
+      setMessage(`Version borrador creada: ${created.name}. Revisala en Versiones de CV antes de publicar.`);
+    } catch {
+      setMessage("No se pudo crear la version adaptada.");
+    } finally {
+      setIsCreatingVersion(false);
+    }
+  }
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
@@ -146,6 +187,9 @@ export function CvAdaptationWizard() {
               <p className="mt-1">{result.proposed.experiences?.slice(0, 5).map((experience) => `${experience.role} - ${experience.company}`).join(", ") || "Sin experiencias."}</p>
             </div>
             <p>{result.proposed.adaptationMeta?.guardrail}</p>
+            <Button type="button" onClick={createAdaptedVersion} disabled={isCreatingVersion}>
+              {isCreatingVersion ? "Creando version..." : "Crear version borrador"}
+            </Button>
           </div>
         ) : (
           <p className="mt-4 text-sm text-muted-foreground">La propuesta aparecera aqui antes de crear una nueva version.</p>
@@ -153,4 +197,14 @@ export function CvAdaptationWizard() {
       </aside>
     </div>
   );
+}
+
+function buildVersionSlug(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
 }

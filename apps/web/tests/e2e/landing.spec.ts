@@ -176,12 +176,55 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     });
   });
   await page.route("**/api/v1/cv-versions", async (route) => {
+    if (route.request().method() === "POST") {
+      const data = JSON.parse(route.request().postData() || "{}");
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "cv-adapted-new",
+          cvId: data.cvId,
+          name: data.name,
+          slug: data.slug,
+          targetRole: data.targetRole,
+          language: data.language,
+          status: "draft",
+          isPrimary: false,
+          structuredJson: data.structuredJson,
+          updatedAt: "2026-06-06T08:30:00.000Z"
+        })
+      });
+      return;
+    }
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify([
-        { id: "cv-base", name: "CV Base", status: "published", language: "es", isPrimary: true, updatedAt: "2026-06-01T08:00:00.000Z" },
-        { id: "cv-adapted", name: "CV Adaptado", status: "draft", language: "es", isPrimary: false, updatedAt: "2026-06-02T08:00:00.000Z" }
+        { id: "cv-base", cvId: "cv-1", name: "CV Base", status: "published", language: "es", isPrimary: true, updatedAt: "2026-06-01T08:00:00.000Z" },
+        { id: "cv-adapted", cvId: "cv-1", name: "CV Adaptado", status: "draft", language: "es", isPrimary: false, updatedAt: "2026-06-02T08:00:00.000Z" }
       ])
+    });
+  });
+  await page.route("**/api/v1/cv/adapt-to-role", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        request: {
+          id: "adaptation-1",
+          targetRole: "Delivery Manager",
+          targetCompany: null,
+          status: "pending_review"
+        },
+        proposed: {
+          summary: "Resumen orientado a Delivery Manager.",
+          skills: [{ name: "KPIs", category: "Reporting" }, { name: "UAT", category: "Delivery" }],
+          experiences: [{ role: "IT Project Manager", company: "Demo Company" }],
+          adaptationMeta: {
+            mode: "rules",
+            pendingReview: true,
+            keywords: ["delivery", "kpi"],
+            guardrail: "No se han inventado datos."
+          }
+        }
+      })
     });
   });
   await page.route(/\/api\/v1\/cv-templates(\?.*)?$/, async (route) => {
@@ -530,6 +573,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/cv/adapt");
   await expect(page.getByRole("heading", { name: "Adaptar CV" })).toBeVisible();
+  await page.getByLabel("Puesto objetivo").fill("Delivery Manager");
+  await page.getByLabel("Descripcion de oferta").fill("Buscamos Delivery Manager con KPIs, UAT, stakeholders, reporting y gestion de cliente en entornos cloud.");
+  await page.getByRole("button", { name: "Proponer adaptacion" }).click();
+  await expect(page.getByText("Resumen orientado a Delivery Manager.")).toBeVisible();
+  await page.getByRole("button", { name: "Crear version borrador" }).click();
+  await expect(page.getByText(/Version borrador creada/)).toBeVisible();
 
   await page.goto("/admin/cv/compare");
   await expect(page.getByRole("heading", { name: "Comparar CV" })).toBeVisible();

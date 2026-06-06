@@ -692,6 +692,7 @@ export type CvAdaptationResult = {
       pendingReview?: boolean;
       guardrail?: string;
     };
+    [key: string]: unknown;
   };
 };
 
