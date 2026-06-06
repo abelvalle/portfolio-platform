@@ -269,7 +269,7 @@ export const cvClient = {
     return apiFetch<CvTemplateItem>(`/cv-templates/${id}`, { method: "DELETE" });
   },
   adapt(data: { baseCvVersionId: string; targetRole: string; targetCompany?: string; jobDescription: string }) {
-    return apiFetch("/cv/adapt-to-role", { method: "POST", body: JSON.stringify(data) });
+    return apiFetch<CvAdaptationResult>("/cv/adapt-to-role", { method: "POST", body: JSON.stringify(data) });
   },
   compare(baseCvVersionId: string, adaptedCvVersionId: string) {
     return apiFetch("/cv/compare-versions", {
@@ -558,6 +558,26 @@ export type CvTemplateItem = {
 };
 
 export type CvTemplateMutation = Omit<CvTemplateItem, "id">;
+
+export type CvAdaptationResult = {
+  request: {
+    id: string;
+    targetRole: string;
+    targetCompany?: string | null;
+    status: string;
+  };
+  proposed: {
+    summary?: string;
+    skills?: Array<{ name?: string; category?: string }>;
+    experiences?: Array<{ role?: string; company?: string }>;
+    adaptationMeta?: {
+      keywords?: string[];
+      mode?: string;
+      pendingReview?: boolean;
+      guardrail?: string;
+    };
+  };
+};
 
 export const mediaClient = {
   list() {
