@@ -142,6 +142,9 @@ export const adminClient = {
   publicationProjectReview(id: string) {
     return apiFetch<PublicationProjectReview>(`/admin/publication/projects/${id}/review`);
   },
+  publicationSkillReview(id: string) {
+    return apiFetch<PublicationSkillReview>(`/admin/publication/skills/${id}/review`);
+  },
   publishThemeDraft() {
     return apiFetch<{ changedFields: string[] }>("/admin/publication/theme/publish", { method: "POST" });
   },
@@ -153,6 +156,9 @@ export const adminClient = {
   },
   publishProjectDraft(id: string) {
     return apiFetch<{ changedFields: string[] }>(`/admin/publication/projects/${id}/publish`, { method: "POST" });
+  },
+  publishSkillDraft(id: string) {
+    return apiFetch<{ changedFields: string[] }>(`/admin/publication/skills/${id}/publish`, { method: "POST" });
   },
   restorePublicationChange(id: string) {
     return apiFetch<{ changedFields: string[] }>(`/admin/publication/changelog/${id}/restore`, { method: "POST" });
@@ -422,6 +428,10 @@ export type PublicationProjectReview = Omit<PublicationThemeReview, "entityType"
   entityType: "project";
 };
 
+export type PublicationSkillReview = Omit<PublicationThemeReview, "entityType"> & {
+  entityType: "skill";
+};
+
 export type ChangeLogItem = {
   id: string;
   entityType: string;
@@ -614,6 +624,8 @@ export type SkillItem = {
   level?: string | null;
   order: number;
   visible: boolean;
+  draftJson?: Partial<SkillMutation> | null;
+  publishedAt?: string | null;
 };
 
 export type SkillMutation = Omit<SkillItem, "id">;

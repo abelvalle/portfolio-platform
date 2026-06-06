@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 17:10 CEST.
+Estado actualizado: 2026-06-06 17:31 CEST.
 
 ## Hitos completados
 
@@ -2662,6 +2662,23 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run test`
 - `npm.cmd --prefix apps/api run test:e2e`
 
+### UI draft/publish para skills
+
+- `/admin/portfolio/skills` permite guardar borradores de skills desde el dialogo de edicion.
+- La UI llama a `PATCH /api/v1/skills/:id` con `draftJson` sin publicar cambios directamente.
+- La UI consume `GET /api/v1/admin/publication/skills/:id/review` para mostrar diffs del borrador.
+- El dialogo muestra una revision resumida con campos modificados, valor publicado y valor propuesto.
+- La accion `Publicar borrador` llama a `POST /api/v1/admin/publication/skills/:id/publish`.
+- El modal de skills usa ancho responsive, scroll y footer con wrap para evitar recortes.
+- Anadida cobertura e2e desktop/mobile del flujo guardar borrador -> revisar -> publicar.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- QA visual Playwright fallback en `/admin/portfolio/skills` con dialogo de borrador visible y sin errores de consola; Browser integrado no expuso herramienta navegable en esta sesion.
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -2681,7 +2698,7 @@ Verificacion realizada en este hito:
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa y cohorts mensuales; faltan cohorts avanzados por fuente/canal.
 - Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, reordenado por botones y draft/publish desde UI; faltan drag/drop y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media, reordenado por botones y draft/publish desde UI; falta drag/drop.
-- Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles y reordenado por botones; faltan drag/drop y draft/publish desde UI.
+- Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; falta drag/drop.
 - Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; falta drag/drop.
 - Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples y bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones; faltan formularios avanzados por bloque.
@@ -2697,6 +2714,6 @@ Verificacion realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. UI draft/publish para skills.
-2. Extender draft/publish API a educacion y certificaciones.
+1. Extender draft/publish API a educacion y certificaciones.
+2. UI draft/publish para estudios.
 3. Renderer HTML/CSS server-side fiel al preview A4 público.

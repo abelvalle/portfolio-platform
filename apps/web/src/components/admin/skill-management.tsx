@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Save, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Rocket, Save, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { adminClient, type SkillCategoryItem, type SkillItem, type SkillMutation } from "@/lib/api";
+import { adminClient, type PublicationSkillReview, type SkillCategoryItem, type SkillItem, type SkillMutation } from "@/lib/api";
 
 const emptyDraft = {
   name: "",
@@ -17,6 +17,29 @@ const emptyDraft = {
   visible: true
 };
 const skillLevelOptions = ["", "Basico", "Intermedio", "Avanzado", "Experto"];
+
+function buildSkillMutation(source: typeof emptyDraft, order: number): SkillMutation {
+  return {
+    name: source.name.trim(),
+    categoryName: source.categoryName.trim() || null,
+    level: source.level.trim() || null,
+    order,
+    visible: source.visible
+  };
+}
+
+function formatPublicationValue(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.join(", ") || "-";
+  }
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+  if (typeof value === "boolean") {
+    return value ? "si" : "no";
+  }
+  return String(value);
+}
 
 export function SkillManagement() {
   const [items, setItems] = useState<SkillItem[]>([]);
@@ -30,6 +53,9 @@ export function SkillManagement() {
   const [pendingDeleteSkill, setPendingDeleteSkill] = useState<SkillItem | null>(null);
   const [editingSkill, setEditingSkill] = useState<SkillItem | null>(null);
   const [editDraft, setEditDraft] = useState(emptyDraft);
+  const [skillReview, setSkillReview] = useState<PublicationSkillReview | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isPublishingDraft, setIsPublishingDraft] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -93,13 +119,7 @@ export function SkillManagement() {
   }
 
   function buildMutation(order = items.length): SkillMutation {
-    return {
-      name: draft.name.trim(),
-      categoryName: draft.categoryName.trim() || null,
-      level: draft.level.trim() || null,
-      order,
-      visible: draft.visible
-    };
+    return buildSkillMutation(draft, order);
   }
 
   async function createSkill() {
@@ -158,19 +178,19 @@ export function SkillManagement() {
       order: skill.order,
       visible: skill.visible
     });
+    setSkillReview(null);
+  }
+
+  function closeEditSkill() {
+    setEditingSkill(null);
+    setSkillReview(null);
   }
 
   async function updateEditingSkill() {
     if (!editingSkill) {
       return;
     }
-    const payload = {
-      name: editDraft.name.trim(),
-      categoryName: editDraft.categoryName.trim() || null,
-      level: editDraft.level.trim() || null,
-      order: editDraft.order,
-      visible: editDraft.visible
-    };
+    const payload = buildSkillMutation(editDraft, editDraft.order);
     if (!payload.name || !payload.categoryName) {
       setMessage("Nombre y categoria son obligatorios.");
       return;
@@ -179,13 +199,71 @@ export function SkillManagement() {
     setBusyId(editingSkill.id);
     try {
       await adminClient.updateSkill(editingSkill.id, payload);
-      setEditingSkill(null);
+      closeEditSkill();
       await loadSkills();
       setMessage(`Skill actualizada: ${payload.name}.`);
     } catch {
       setMessage("No se pudo actualizar la skill.");
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function saveEditingDraft() {
+    if (!editingSkill) {
+      return;
+    }
+    const payload = buildSkillMutation(editDraft, editDraft.order);
+    if (!payload.name || !payload.categoryName) {
+      setMessage("Nombre y categoria son obligatorios.");
+      return;
+    }
+
+    setIsSavingDraft(true);
+    try {
+      await adminClient.updateSkill(editingSkill.id, { draftJson: payload });
+      const review = await adminClient.publicationSkillReview(editingSkill.id);
+      setSkillReview(review);
+      setMessage(`Borrador de skill guardado: ${payload.name}.`);
+    } catch {
+      setMessage("No se pudo guardar el borrador de skill.");
+    } finally {
+      setIsSavingDraft(false);
+    }
+  }
+
+  async function reviewEditingDraft() {
+    if (!editingSkill) {
+      return;
+    }
+
+    setBusyId(editingSkill.id);
+    try {
+      const review = await adminClient.publicationSkillReview(editingSkill.id);
+      setSkillReview(review);
+      setMessage(review.hasDraft ? "Borrador de skill pendiente de publicacion." : "No hay borrador de skill pendiente.");
+    } catch {
+      setMessage("No se pudo revisar el borrador de skill.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function publishEditingDraft() {
+    if (!editingSkill) {
+      return;
+    }
+
+    setIsPublishingDraft(true);
+    try {
+      const result = await adminClient.publishSkillDraft(editingSkill.id);
+      closeEditSkill();
+      await loadSkills();
+      setMessage(`Borrador de skill publicado. Campos modificados: ${result.changedFields.join(", ")}.`);
+    } catch {
+      setMessage("No se pudo publicar el borrador de skill.");
+    } finally {
+      setIsPublishingDraft(false);
     }
   }
 
@@ -318,8 +396,8 @@ export function SkillManagement() {
         </div>
       </section>
 
-      <Dialog open={Boolean(editingSkill)} onOpenChange={(open) => !open && setEditingSkill(null)}>
-        <DialogContent>
+      <Dialog open={Boolean(editingSkill)} onOpenChange={(open) => !open && closeEditSkill()}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:!max-w-3xl">
           <DialogHeader>
             <DialogTitle>Editar skill</DialogTitle>
             <DialogDescription>
@@ -356,9 +434,44 @@ export function SkillManagement() {
               {editDraft.visible ? "Visible" : "Oculta"}
             </Button>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setEditingSkill(null)}>
+          {skillReview ? (
+            <section className="grid gap-3 rounded-lg border border-border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="font-semibold">Revision borrador skill</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {skillReview.hasDraft ? "Cambios pendientes antes de publicar." : "Sin cambios pendientes."}
+                  </p>
+                </div>
+                <Badge variant={skillReview.hasDraft ? "default" : "outline"}>
+                  {skillReview.fields.filter((field) => field.changed).length} cambios
+                </Badge>
+              </div>
+              <div className="grid gap-2">
+                {skillReview.fields.filter((field) => field.changed).slice(0, 6).map((field) => (
+                  <div key={field.field} className="grid gap-1 rounded-md bg-muted/40 p-2 text-sm md:grid-cols-[120px_1fr_1fr]">
+                    <span className="font-medium">{field.field}</span>
+                    <span className="truncate text-muted-foreground">{formatPublicationValue(field.before)}</span>
+                    <span className="truncate">{formatPublicationValue(field.after)}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+          <DialogFooter className="flex-wrap">
+            <Button type="button" variant="outline" onClick={closeEditSkill}>
               Cancelar
+            </Button>
+            <Button type="button" variant="outline" onClick={saveEditingDraft} disabled={isSavingDraft}>
+              <Save data-icon="inline-start" />
+              {isSavingDraft ? "Guardando borrador..." : "Guardar borrador"}
+            </Button>
+            <Button type="button" variant="outline" onClick={reviewEditingDraft} disabled={Boolean(editingSkill && busyId === editingSkill.id)}>
+              Revisar borrador
+            </Button>
+            <Button type="button" onClick={publishEditingDraft} disabled={!skillReview?.hasDraft || isPublishingDraft}>
+              <Rocket data-icon="inline-start" />
+              {isPublishingDraft ? "Publicando..." : "Publicar borrador"}
             </Button>
             <Button type="button" onClick={updateEditingSkill} disabled={Boolean(editingSkill && busyId === editingSkill.id)}>
               Guardar skill

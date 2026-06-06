@@ -769,7 +769,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           categoryName: "Agile",
           level: "Avanzado",
           order: 0,
-          visible: true
+          visible: true,
+          draftJson: null,
+          publishedAt: null
         }
       ])
     });
@@ -822,8 +824,32 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         categoryName: data.categoryName || "Agile",
         level: data.level || "Avanzado",
         order: data.order ?? 0,
-        visible: data.visible ?? true
+        visible: data.visible ?? true,
+        draftJson: data.draftJson ?? null,
+        publishedAt: null
       })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/skills/skill-1/review", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        entityType: "skill",
+        entityId: "skill-1",
+        hasDraft: true,
+        publishedAt: null,
+        fields: [
+          { field: "name", before: "Scrum", after: "Scrum avanzado", changed: true },
+          { field: "level", before: "Avanzado", after: "Experto", changed: true }
+        ],
+        latestChanges: []
+      })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/skills/skill-1/publish", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ changedFields: ["name", "level"] })
     });
   });
   await page.route(/\/api\/v1\/education(\?.*)?$/, async (route) => {
@@ -1112,8 +1138,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Nombre skill").fill("Scrum avanzado");
   await page.getByLabel("Categoria skill").fill("Agile");
   await page.getByLabel("Nivel skill").selectOption("Experto");
-  await page.getByRole("button", { name: "Guardar skill" }).click();
-  await expect(page.getByText("Skill actualizada: Scrum avanzado.")).toBeVisible();
+  await page.getByRole("button", { name: "Guardar borrador" }).click();
+  await expect(page.getByText("Borrador de skill guardado: Scrum avanzado.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Revision borrador skill" })).toBeVisible();
+  await page.getByRole("button", { name: "Publicar borrador" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Borrador de skill publicado. Campos modificados: name, level.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Scrum" })).toBeVisible();
   await page.getByRole("button", { name: "Subir Scrum" }).click();
   await expect(page.getByText("Skill reordenada: Scrum.")).toBeVisible();
