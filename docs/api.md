@@ -50,6 +50,8 @@ Endpoints protegidos para preparar MFA:
 - `POST /auth/mfa/disable`
 - `POST /auth/mfa/recovery-codes/regenerate`
 
+`POST /auth/mfa/setup` devuelve `secret` y `otpauthUrl`; el panel admin genera el QR localmente desde `otpauthUrl` sin enviar el secreto a servicios externos.
+
 Los cambios de estado MFA se registran en `AuditLog` con acciones `auth.mfa.setup_started`, `auth.mfa.confirmed`, `auth.mfa.disabled`, `auth.mfa.recovery_codes_regenerated` y `auth.mfa.login_verified`. El log no almacena secretos TOTP, códigos ni recovery codes.
 
 MFA no está activado por defecto en seed para evitar bloquear el primer acceso admin.

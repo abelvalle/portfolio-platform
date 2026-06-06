@@ -50,6 +50,22 @@ test("public CV template detail previews are shareable", async ({ page }) => {
 
 test("admin publication page is reachable behind the session proxy", async ({ context, page }) => {
   await context.addCookies([{ name: "accessToken", value: "test-token", url: "http://localhost:3000" }]);
+  await page.route("**/api/v1/auth/mfa/status", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ enabled: false, recoveryCodesRemaining: 0 })
+    });
+  });
+  await page.route("**/api/v1/auth/mfa/setup", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        secret: "JBSWY3DPEHPK3PXP",
+        otpauthUrl: "otpauth://totp/Portfolio:abel@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Portfolio"
+      })
+    });
+  });
+
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
   await expect(page.getByText("Visitas landing")).toBeVisible();
@@ -105,6 +121,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/settings");
   await expect(page.getByText("Seguridad admin")).toBeVisible();
   await expect(page.getByText("Webhooks contacto")).toBeVisible();
+  await page.getByRole("button", { name: "Iniciar setup" }).click();
+  await expect(page.getByText("QR local")).toBeVisible();
+  await expect(page.getByAltText("QR local para configurar MFA")).toBeVisible();
 
   await page.goto("/admin/settings/modules");
   await expect(page.getByRole("heading", { name: "Modulos de la plataforma" })).toBeVisible();

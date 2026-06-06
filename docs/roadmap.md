@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:32 CEST.
+Estado actualizado: 2026-06-06 04:37 CEST.
 
 ## Hitos completados
 
@@ -810,6 +810,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### QR visual local para MFA
+
+- Añadida dependencia `qrcode` en el workspace web para generar QR en cliente.
+- `/admin/settings` renderiza un QR local desde `otpauthUrl` durante el setup TOTP.
+- Secret y `otpauthUrl` siguen visibles como fallback manual.
+- Añadida cobertura e2e con endpoints MFA mockeados para validar que el QR se muestra al iniciar setup.
+- `docs/api.md` aclara que el QR se genera localmente sin enviar el secreto a servicios externos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -817,7 +832,6 @@ Verificacion realizada en este hito:
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
 - Renderer fiel al preview: PDF/DOCX aplican tokens de plantilla, pero todavía no generan desde el mismo HTML/CSS A4 del preview público.
 - Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
-- MFA QR visual: existe UI funcional con secret, otpauth URL y regeneración controlada de recovery codes; falta QR visual local.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
@@ -849,6 +863,7 @@ Verificacion realizada en este hito:
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: falta borrado físico diferido, cuotas, antivirus y auditoría granular de subidas.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
+- NPM audit: quedan 2 vulnerabilidades moderadas reportadas por `npm install`; no se aplica `audit fix --force` para evitar cambios de versiones fuera de hito.
 
 ## Próximos hitos priorizados
 

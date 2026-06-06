@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { authClient, type MfaSetup, type MfaStatus } from "@/lib/api";
+import { MfaQrCode } from "./mfa-qr-code";
 
 export function MfaSettings() {
   const [status, setStatus] = useState<MfaStatus | null>(null);
@@ -107,6 +108,7 @@ export function MfaSettings() {
         {setup ? (
           <section className="grid gap-3 rounded-lg border border-border p-4">
             <h2 className="font-semibold">Setup TOTP</h2>
+            <MfaQrCode otpauthUrl={setup.otpauthUrl} />
             <div className="grid gap-2 text-sm">
               <span className="text-muted-foreground">Secret</span>
               <code className="break-all rounded bg-muted p-2 text-xs">{setup.secret}</code>
