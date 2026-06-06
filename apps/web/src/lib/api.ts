@@ -310,6 +310,15 @@ export const cvClient = {
   update(id: string, data: Partial<CvMutation>) {
     return apiFetch<CvItem>(`/cv/${id}`, { method: "PATCH", body: JSON.stringify(data) });
   },
+  atsReport(id: string) {
+    return apiFetch<CvAtsReport>(`/cv/${id}/ats-report`);
+  },
+  generateAtsPdf(id: string) {
+    return apiFetch<CvGeneratedFileResult>(`/cv/${id}/generate-ats-pdf`, { method: "POST" });
+  },
+  generateAtsDocx(id: string) {
+    return apiFetch<CvGeneratedFileResult>(`/cv/${id}/generate-ats-docx`, { method: "POST" });
+  },
   versions() {
     return apiFetch<CvVersionItem[]>("/cv-versions");
   },
@@ -756,6 +765,20 @@ export type CvGeneratedFileResult = {
     url: string;
     createdAt: string;
   };
+};
+
+export type CvAtsReport = {
+  score: number;
+  status: "strong" | "review" | "needs_work" | string;
+  checks: Array<{
+    key: string;
+    label: string;
+    passed: boolean;
+    weight: number;
+    detail: string;
+  }>;
+  keywords: string[];
+  recommendations: string[];
 };
 
 export type CvItem = {

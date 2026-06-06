@@ -188,6 +188,8 @@ Las sugerencias IA quedan pendientes de revisión y solo pueden reordenar skills
 
 Las exportaciones ATS generan PDF/DOCX con layout textual, nombres de archivo `-ats` y metadata de score ATS.
 
+En admin, `/admin/cv/editor` consume estos endpoints para mostrar el reporte ATS del CV principal y generar archivos ATS descargables desde `GET /media/:id/download`.
+
 `POST /cv/:id/ats-role-report` compara la versión primaria contra una descripción de oferta concreta:
 
 ```json

@@ -249,6 +249,86 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route(/\/api\/v1\/cv$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "cv-1",
+        slug: "abel-valle-rosa",
+        name: "Abel Valle Rosa",
+        headline: "IT Project Manager | Delivery Manager",
+        summary: "Gestion IT, delivery, KPIs, UAT y cliente.",
+        status: "published",
+        isPrimary: true,
+        updatedAt: "2026-06-06T08:00:00.000Z"
+      })
+    });
+  });
+  await page.route("**/api/v1/cv/cv-1/ats-report", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        score: 88,
+        status: "strong",
+        checks: [
+          { key: "contact", label: "Contacto legible", passed: true, weight: 15, detail: "Contacto en texto plano." },
+          { key: "skills", label: "Skills detectables", passed: true, weight: 15, detail: "Skills presentes." }
+        ],
+        keywords: ["KPIs", "UAT", "Cloud"],
+        recommendations: []
+      })
+    });
+  });
+  await page.route("**/api/v1/cv/cv-1/generate-ats-pdf", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        media: {
+          id: "media-ats-pdf",
+          filename: "cv-ats.pdf",
+          originalName: "CV ATS.pdf",
+          mimeType: "application/pdf",
+          size: 4096,
+          url: "/media/generated/cv-ats.pdf",
+          type: "cv-generated",
+          updatedAt: "2026-06-06T08:40:00.000Z"
+        },
+        generated: {
+          id: "generated-ats-pdf",
+          cvVersionId: "cv-base",
+          mediaAssetId: "media-ats-pdf",
+          type: "pdf",
+          url: "/media/generated/cv-ats.pdf",
+          createdAt: "2026-06-06T08:40:00.000Z"
+        }
+      })
+    });
+  });
+  await page.route("**/api/v1/cv/cv-1/generate-ats-docx", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        media: {
+          id: "media-ats-docx",
+          filename: "cv-ats.docx",
+          originalName: "CV ATS.docx",
+          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          size: 4096,
+          url: "/media/generated/cv-ats.docx",
+          type: "cv-generated",
+          updatedAt: "2026-06-06T08:45:00.000Z"
+        },
+        generated: {
+          id: "generated-ats-docx",
+          cvVersionId: "cv-base",
+          mediaAssetId: "media-ats-docx",
+          type: "docx",
+          url: "/media/generated/cv-ats.docx",
+          createdAt: "2026-06-06T08:45:00.000Z"
+        }
+      })
+    });
+  });
   await page.route(/\/api\/v1\/cv-versions\/audit-log(\?.*)?$/, async (route) => {
     const url = new URL(route.request().url());
     const action = url.searchParams.get("action") || "generate_pdf";
@@ -1178,6 +1258,13 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/cv/editor");
   await expect(page.getByRole("heading", { name: "Editor de CV" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Validacion ATS" })).toBeVisible();
+  await page.getByRole("button", { name: "Generar reporte ATS" }).click();
+  await expect(page.getByText("Score 88 - strong")).toBeVisible();
+  await expect(page.getByText("KPIs", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Generar PDF ATS" }).click();
+  await expect(page.getByText("PDF ATS generado.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Descargar ultimo ATS" })).toHaveAttribute("href", /\/api\/v1\/media\/media-ats-pdf\/download/);
 
   await page.goto("/admin/settings/users");
   await expect(page.getByRole("heading", { name: "Usuarios y permisos" })).toBeVisible();

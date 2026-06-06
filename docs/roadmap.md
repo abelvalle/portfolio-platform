@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 14:20 CEST.
+Estado actualizado: 2026-06-06 14:29 CEST.
 
 ## Hitos completados
 
@@ -2364,13 +2364,32 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Acciones ATS desde Editor de CV
+
+- `/admin/cv/editor` expone un panel `Validacion ATS` para el CV principal.
+- La UI consume `GET /api/v1/cv/:id/ats-report` y muestra score, estado, checks, keywords y recomendaciones.
+- La UI permite generar `PDF ATS` y `DOCX ATS` usando los endpoints protegidos ya existentes.
+- El ultimo archivo ATS generado queda disponible mediante enlace de descarga a `GET /api/v1/media/:id/download`.
+- Añadida cobertura e2e para reporte ATS, keywords y descarga del PDF ATS generado.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- QA visual Playwright fallback en `/admin/cv/editor` desktop con mocks de CV/ATS; Browser integrado no expuso herramienta navegable en esta sesion.
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
 - Renderer fiel al preview: el HTML server-side ya renderiza secciones estructuradas y aplica tokens de plantilla; PDF/DOCX todavía no generan desde ese mismo HTML/CSS A4 del preview público.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
-- ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
+- ATS end to end con DB real: el editor ya permite reporte ATS y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; falta prueba con DB real que genere archivos desde una version persistida y valide descarga.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: el wizard ya permite aceptar/rechazar bloques principales, skills individuales y experiencias individuales con trazabilidad; falta revision granular de campos internos de cada experiencia.
 - Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; falta vista historica dedicada de todas las publicaciones CV.
