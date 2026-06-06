@@ -273,6 +273,85 @@ describe('AnalyticsService filters', () => {
       ],
     });
   });
+
+  it('builds a source and channel conversion funnel', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsEvent.findMany.mockResolvedValue([
+      {
+        type: 'landing_visit',
+        metadata: { source: 'linkedin', channel: 'social' },
+        path: '/',
+      },
+      {
+        type: 'landing_visit',
+        metadata: { source: 'linkedin', channel: 'social' },
+        path: '/',
+      },
+      {
+        type: 'cv_download',
+        metadata: { source: 'linkedin', channel: 'social' },
+        path: '/cv',
+      },
+      {
+        type: 'contact_submit',
+        metadata: null,
+        path: '/contact?utm_source=email&utm_medium=newsletter',
+      },
+      {
+        type: 'landing_visit',
+        metadata: null,
+        path: '/',
+      },
+    ]);
+    const service = createService(prisma);
+
+    const result = await service.channelFunnel({
+      from: '2026-06-01',
+      to: '2026-06-02',
+    });
+
+    expect(prisma.analyticsEvent.findMany).toHaveBeenCalledWith({
+      where: {
+        createdAt: {
+          gte: new Date('2026-06-01T00:00:00.000Z'),
+          lte: new Date('2026-06-02T23:59:59.999Z'),
+        },
+        type: { in: ['landing_visit', 'cv_download', 'contact_submit'] },
+      },
+      select: { type: true, metadata: true, path: true },
+    });
+    expect(result).toEqual({
+      segments: [
+        {
+          source: 'linkedin',
+          channel: 'social',
+          landingVisits: 2,
+          cvDownloads: 1,
+          contactSubmits: 0,
+          cvDownloadRate: 50,
+          contactRate: 0,
+        },
+        {
+          source: 'direct',
+          channel: 'direct',
+          landingVisits: 1,
+          cvDownloads: 0,
+          contactSubmits: 0,
+          cvDownloadRate: 0,
+          contactRate: 0,
+        },
+        {
+          source: 'email',
+          channel: 'newsletter',
+          landingVisits: 0,
+          cvDownloads: 0,
+          contactSubmits: 1,
+          cvDownloadRate: 0,
+          contactRate: 0,
+        },
+      ],
+    });
+  });
 });
 
 function createService(

@@ -112,6 +112,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /analytics/channels?from=YYYY-MM-DD&to=YYYY-MM-DD&type=landing_visit` (`read_analytics`)
 - `GET /analytics/labels?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_adaptation` (`read_analytics`)
 - `GET /analytics/funnel?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_analytics`)
+- `GET /analytics/funnel/channels?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_analytics`)
 - `POST /analytics/retention/prune` (`manage_analytics`)
 - `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
 
@@ -135,6 +136,8 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 ```
 
 `GET /analytics/funnel` devuelve un embudo fijo de conversion landing -> descarga CV -> formulario contacto, con ratio desde landing y desde el paso anterior.
+
+`GET /analytics/funnel/channels` devuelve el mismo embudo agrupado por fuente/canal. Cada segmento incluye visitas landing, descargas CV, formularios y tasas de conversion sobre visitas landing.
 
 Variables de privacidad:
 

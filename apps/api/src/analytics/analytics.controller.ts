@@ -76,6 +76,14 @@ export class AnalyticsController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('read_analytics')
+  @Get('funnel/channels')
+  channelFunnel(@Query() query: AnalyticsDateRangeQueryDto) {
+    return this.analyticsService.channelFunnel(query);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_analytics')
   @Get('funnel')
   funnel(@Query() query: AnalyticsDateRangeQueryDto) {
     return this.analyticsService.funnel(query);

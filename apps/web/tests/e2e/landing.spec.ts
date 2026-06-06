@@ -715,6 +715,33 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route(/\/api\/v1\/analytics\/funnel\/channels(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        segments: [
+          {
+            source: "linkedin",
+            channel: "social",
+            landingVisits: 10,
+            cvDownloads: 4,
+            contactSubmits: 2,
+            cvDownloadRate: 40,
+            contactRate: 20
+          },
+          {
+            source: "direct",
+            channel: "direct",
+            landingVisits: 5,
+            cvDownloads: 1,
+            contactSubmits: 0,
+            cvDownloadRate: 20,
+            contactRate: 0
+          }
+        ]
+      })
+    });
+  });
   await page.route("**/api/v1/analytics/privacy", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -1986,6 +2013,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Embudo conversion")).toBeVisible();
   await expect(page.getByText("Landing a CV y contacto")).toBeVisible();
   await expect(page.getByText("25% desde landing")).toBeVisible();
+  await expect(page.getByText("Embudo por canal")).toBeVisible();
+  await expect(page.getByText("linkedin / social")).toBeVisible();
+  await expect(page.getByText("4 - 40%")).toBeVisible();
   await expect(page.getByText("Tendencias", { exact: true })).toBeVisible();
   await expect(page.getByText("Privacidad analytics")).toBeVisible();
   await expect(page.getByText("retencion 30 dias")).toBeVisible();
@@ -1993,8 +2023,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Retencion aplicada: 2 eventos purgados.")).toBeVisible();
   await expect(page.getByText("Serie diaria")).toBeVisible();
   await expect(page.getByText("Fuentes y canales")).toBeVisible();
-  await expect(page.getByText("linkedin")).toBeVisible();
-  await expect(page.getByText("social")).toBeVisible();
+  await expect(page.getByText("linkedin", { exact: true })).toBeVisible();
+  await expect(page.getByText("social", { exact: true })).toBeVisible();
   await expect(page.getByText("Roles objetivo CV")).toBeVisible();
   await expect(page.getByText("Delivery Manager").first()).toBeVisible();
   await expect(page.getByText("Contextos")).toBeVisible();

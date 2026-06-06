@@ -313,6 +313,9 @@ export const adminClient = {
   analyticsFunnel(filters?: DateRangeFilters) {
     return apiFetch<AnalyticsFunnel>(withQuery("/analytics/funnel", filters));
   },
+  analyticsChannelFunnel(filters?: DateRangeFilters) {
+    return apiFetch<AnalyticsChannelFunnel>(withQuery("/analytics/funnel/channels", filters));
+  },
   analyticsPrivacy() {
     return apiFetch<AnalyticsPrivacyStatus>("/analytics/privacy");
   },
@@ -753,6 +756,18 @@ export type AnalyticsFunnel = {
     count: number;
     rateFromStart: number;
     rateFromPrevious: number;
+  }>;
+};
+
+export type AnalyticsChannelFunnel = {
+  segments: Array<{
+    source: string;
+    channel: string;
+    landingVisits: number;
+    cvDownloads: number;
+    contactSubmits: number;
+    cvDownloadRate: number;
+    contactRate: number;
   }>;
 };
 

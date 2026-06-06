@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   adminClient,
+  type AnalyticsChannelFunnel,
   type AnalyticsChannels,
   type AnalyticsEvent,
   type AnalyticsFunnel,
@@ -40,6 +41,7 @@ export function AnalyticsDashboard() {
   const [channels, setChannels] = useState<AnalyticsChannels | null>(null);
   const [labels, setLabels] = useState<AnalyticsLabels | null>(null);
   const [funnel, setFunnel] = useState<AnalyticsFunnel | null>(null);
+  const [channelFunnel, setChannelFunnel] = useState<AnalyticsChannelFunnel | null>(null);
   const [privacy, setPrivacy] = useState<AnalyticsPrivacyStatus | null>(null);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -52,13 +54,14 @@ export function AnalyticsDashboard() {
     setIsLoading(true);
     try {
       const filters = { from: fromDate || undefined, to: toDate || undefined };
-      const [nextSummary, nextEvents, nextTimeSeries, nextChannels, nextLabels, nextFunnel, nextPrivacy] = await Promise.all([
+      const [nextSummary, nextEvents, nextTimeSeries, nextChannels, nextLabels, nextFunnel, nextChannelFunnel, nextPrivacy] = await Promise.all([
         adminClient.analyticsSummary(filters),
         adminClient.analyticsEvents({ ...filters, type: eventType || undefined }),
         adminClient.analyticsTimeSeries({ ...filters, type: eventType || undefined }),
         adminClient.analyticsChannels({ ...filters, type: eventType || undefined }),
         adminClient.analyticsLabels({ ...filters, type: "cv_adaptation" }),
         adminClient.analyticsFunnel(filters),
+        adminClient.analyticsChannelFunnel(filters),
         adminClient.analyticsPrivacy()
       ]);
       setSummary(nextSummary);
@@ -67,6 +70,7 @@ export function AnalyticsDashboard() {
       setChannels(nextChannels);
       setLabels(nextLabels);
       setFunnel(nextFunnel);
+      setChannelFunnel(nextChannelFunnel);
       setPrivacy(nextPrivacy);
       setMessage("Analitica sincronizada con filtros de API.");
     } catch {
@@ -166,6 +170,37 @@ export function AnalyticsDashboard() {
             <p className="mt-2 text-3xl font-semibold">{summary?.[key] ?? 0}</p>
           </div>
         ))}
+      </section>
+
+      <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-mono text-sm text-primary">Embudo por canal</p>
+            <h2 className="mt-1 text-xl font-semibold">Conversion multicanal</h2>
+          </div>
+          <Badge variant="outline">top 8</Badge>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {(channelFunnel?.segments || []).map((segment) => (
+            <div key={`${segment.source}-${segment.channel}`} className="rounded-lg border border-border p-4">
+              <p className="break-all text-sm font-medium">{segment.source} / {segment.channel}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{segment.landingVisits} visitas landing</p>
+              <div className="mt-3 grid gap-2 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span>CV</span>
+                  <span className="text-muted-foreground">{segment.cvDownloads} - {formatPercent(segment.cvDownloadRate)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>Contacto</span>
+                  <span className="text-muted-foreground">{segment.contactSubmits} - {formatPercent(segment.contactRate)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+          {channelFunnel?.segments.length ? null : (
+            <p className="text-sm text-muted-foreground">Sin datos multicanal para los filtros actuales.</p>
+          )}
+        </div>
       </section>
 
       <section className="grid gap-4 rounded-lg border border-border bg-card p-5">

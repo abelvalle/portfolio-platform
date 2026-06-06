@@ -188,6 +188,70 @@ export class AnalyticsService {
     };
   }
 
+  async channelFunnel(filters: AnalyticsDateRangeQueryDto = {}) {
+    const events = await this.prisma.analyticsEvent.findMany({
+      where: {
+        ...this.dateRangeWhere(filters),
+        type: { in: ['landing_visit', 'cv_download', 'contact_submit'] },
+      },
+      select: { type: true, metadata: true, path: true },
+    });
+    const segments = new Map<
+      string,
+      {
+        source: string;
+        channel: string;
+        landingVisits: number;
+        cvDownloads: number;
+        contactSubmits: number;
+      }
+    >();
+
+    for (const event of events) {
+      const attribution = this.resolveAttribution(event.metadata, event.path);
+      const key = `${attribution.source}|${attribution.channel}`;
+      const segment = segments.get(key) || {
+        source: attribution.source,
+        channel: attribution.channel,
+        landingVisits: 0,
+        cvDownloads: 0,
+        contactSubmits: 0,
+      };
+      if (event.type === 'landing_visit') {
+        segment.landingVisits += 1;
+      }
+      if (event.type === 'cv_download') {
+        segment.cvDownloads += 1;
+      }
+      if (event.type === 'contact_submit') {
+        segment.contactSubmits += 1;
+      }
+      segments.set(key, segment);
+    }
+
+    return {
+      segments: [...segments.values()]
+        .map((segment) => ({
+          ...segment,
+          cvDownloadRate: this.percent(
+            segment.cvDownloads,
+            segment.landingVisits,
+          ),
+          contactRate: this.percent(
+            segment.contactSubmits,
+            segment.landingVisits,
+          ),
+        }))
+        .sort(
+          (left, right) =>
+            right.landingVisits - left.landingVisits ||
+            right.cvDownloads - left.cvDownloads ||
+            left.source.localeCompare(right.source),
+        )
+        .slice(0, 8),
+    };
+  }
+
   private eventWhere(filters: AnalyticsEventsQueryDto) {
     return {
       ...this.dateRangeWhere(filters),
