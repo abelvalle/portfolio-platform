@@ -171,6 +171,35 @@ export class AuthService {
     return { enabled: false };
   }
 
+  async regenerateMfaRecoveryCodes(userId: string, code: string) {
+    const user = await this.findUserOrThrow(userId);
+    if (!user.mfaEnabled) {
+      throw new BadRequestException('MFA is not enabled');
+    }
+
+    if (!(await this.verifyMfaCode(user, code))) {
+      throw new UnauthorizedException('Invalid MFA code');
+    }
+
+    const recoveryCodes = this.mfaService.generateRecoveryCodes();
+    const recoveryCodeHashes = await Promise.all(
+      recoveryCodes.map((recoveryCode) => bcrypt.hash(recoveryCode, 12)),
+    );
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { mfaRecoveryCodeHashes: recoveryCodeHashes },
+    });
+    await this.auditMfa(user.id, 'auth.mfa.recovery_codes_regenerated', {
+      recoveryCodesIssued: recoveryCodes.length,
+    });
+
+    return {
+      enabled: true,
+      recoveryCodes,
+    };
+  }
+
   async verifyMfaLogin(mfaToken: string, code: string) {
     const payload = await this.jwtService
       .verifyAsync<{ sub: string; purpose: string }>(mfaToken, {

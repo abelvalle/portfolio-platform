@@ -109,6 +109,16 @@ export class AuthController {
     return this.authService.disableMfa(user.id, body.code);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('mfa/recovery-codes/regenerate')
+  regenerateMfaRecoveryCodes(
+    @CurrentUser() user: { id: string },
+    @Body() body: MfaCodeDto,
+  ) {
+    return this.authService.regenerateMfaRecoveryCodes(user.id, body.code);
+  }
+
   private writeAuthCookies(
     response: Response,
     accessToken: string,

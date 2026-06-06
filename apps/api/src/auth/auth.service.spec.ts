@@ -47,6 +47,29 @@ describe('AuthService MFA audit', () => {
       }),
     });
   });
+
+  it('regenerates MFA recovery codes and audits only the issued count', async () => {
+    const prisma = mockPrisma(
+      userFixture({ mfaEnabled: true, mfaSecret: 'SECRET' }),
+    );
+    const service = createService(prisma);
+
+    const result = await service.regenerateMfaRecoveryCodes('user-1', '123456');
+
+    expect(result.recoveryCodes).toEqual(['CODE-ONE', 'CODE-TWO']);
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'user-1' },
+      data: expect.objectContaining({
+        mfaRecoveryCodeHashes: expect.any(Array),
+      }),
+    });
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'auth.mfa.recovery_codes_regenerated',
+        metadata: { recoveryCodesIssued: 2 },
+      }),
+    });
+  });
 });
 
 function createService(prisma: ReturnType<typeof mockPrisma>) {

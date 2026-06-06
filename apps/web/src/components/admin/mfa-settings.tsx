@@ -71,6 +71,18 @@ export function MfaSettings() {
     }
   }
 
+  async function regenerateRecoveryCodes() {
+    try {
+      const result = await authClient.regenerateMfaRecoveryCodes(disableCode);
+      setRecoveryCodes(result.recoveryCodes);
+      setDisableCode("");
+      setMessage("Recovery codes regenerados. Guardalos ahora; solo se muestran una vez.");
+      await loadStatus();
+    } catch {
+      setMessage("No se pudieron regenerar recovery codes. Codigo/recovery code no valido.");
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -121,9 +133,13 @@ export function MfaSettings() {
 
         {status?.enabled ? (
           <section className="grid gap-3 rounded-lg border border-border p-4">
-            <h2 className="font-semibold">Desactivar MFA</h2>
+            <h2 className="font-semibold">MFA activo</h2>
             <div className="flex flex-wrap gap-2">
               <Input value={disableCode} onChange={(event) => setDisableCode(event.target.value)} placeholder="Codigo TOTP o recovery code" />
+              <Button type="button" variant="outline" onClick={regenerateRecoveryCodes}>
+                <RefreshCw data-icon="inline-start" />
+                Regenerar recovery codes
+              </Button>
               <Button type="button" variant="destructive" onClick={disableMfa}>
                 <ShieldOff data-icon="inline-start" />
                 Desactivar

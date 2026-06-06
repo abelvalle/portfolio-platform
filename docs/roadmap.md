@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:17 CEST.
+Estado actualizado: 2026-06-06 04:20 CEST.
 
 ## Hitos completados
 
@@ -766,6 +766,21 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Regeneración de recovery codes MFA
+
+- Añadido endpoint protegido `POST /api/v1/auth/mfa/recovery-codes/regenerate`.
+- La regeneración exige código TOTP o recovery code válido antes de sustituir hashes.
+- Los nuevos recovery codes se devuelven solo en la respuesta y se muestran una vez en la UI.
+- La acción se audita como `auth.mfa.recovery_codes_regenerated` sin almacenar códigos.
+- `/admin/settings` permite regenerar recovery codes desde la sección MFA activa.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -773,7 +788,7 @@ Verificación realizada en este hito:
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
 - Renderer fiel al preview: PDF/DOCX aplican tokens de plantilla, pero todavía no generan desde el mismo HTML/CSS A4 del preview público.
 - Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
-- MFA QR/regeneración: existe UI funcional con secret, otpauth URL y recovery codes; falta QR visual local y regeneración controlada de recovery codes.
+- MFA QR visual: existe UI funcional con secret, otpauth URL y regeneración controlada de recovery codes; falta QR visual local.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
 - Tema global desde API: rutas públicas y shell admin aplican tokens publicados; falta validación visual avanzada de contraste.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.

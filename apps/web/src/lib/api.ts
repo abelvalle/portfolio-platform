@@ -105,6 +105,9 @@ export const authClient = {
   },
   disableMfa(code: string) {
     return apiFetch<MfaStatus>("/auth/mfa/disable", { method: "POST", body: JSON.stringify({ code }) });
+  },
+  regenerateMfaRecoveryCodes(code: string) {
+    return apiFetch<MfaConfirm>("/auth/mfa/recovery-codes/regenerate", { method: "POST", body: JSON.stringify({ code }) });
   }
 };
 
