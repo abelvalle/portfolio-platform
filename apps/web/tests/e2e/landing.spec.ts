@@ -47,3 +47,10 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await expect(page.getByText("/en/cv/templates/ats-friendly")).toBeVisible();
   await expect(page.getByRole("link", { name: "All templates" })).toHaveAttribute("href", "/en/cv/templates");
 });
+
+test("admin publication page is reachable behind the session proxy", async ({ context, page }) => {
+  await context.addCookies([{ name: "accessToken", value: "test-token", url: "http://localhost:3000" }]);
+  await page.goto("/admin/settings/publication");
+  await expect(page.getByRole("heading", { name: "Revision de publicacion" })).toBeVisible();
+  await expect(page.getByText("Draft / Publish")).toBeVisible();
+});

@@ -100,6 +100,15 @@ export const adminClient = {
   dashboard() {
     return apiFetch("/admin/dashboard");
   },
+  publicationThemeReview() {
+    return apiFetch<PublicationThemeReview>("/admin/publication/theme/review");
+  },
+  publishThemeDraft() {
+    return apiFetch<{ changedFields: string[] }>("/admin/publication/theme/publish", { method: "POST" });
+  },
+  changeLog() {
+    return apiFetch<ChangeLogItem[]>("/admin/publication/changelog");
+  },
   updateTheme(data: unknown) {
     return apiFetch("/theme", { method: "PATCH", body: JSON.stringify(data) });
   },
@@ -127,6 +136,29 @@ export const cvClient = {
       body: JSON.stringify({ baseCvVersionId, adaptedCvVersionId })
     });
   }
+};
+
+export type PublicationThemeReview = {
+  entityType: "theme";
+  entityId: string | null;
+  hasDraft: boolean;
+  publishedAt: string | null;
+  fields: Array<{
+    field: string;
+    before: string;
+    after: string;
+    changed: boolean;
+  }>;
+  latestChanges: ChangeLogItem[];
+};
+
+export type ChangeLogItem = {
+  id: string;
+  entityType: string;
+  entityId?: string | null;
+  action: string;
+  summary: string;
+  createdAt: string;
 };
 
 export type MediaAsset = {

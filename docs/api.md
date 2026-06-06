@@ -62,6 +62,9 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `GET|POST|PATCH|DELETE /projects`
 - `POST /contact-messages`
 - `GET /admin/dashboard`
+- `GET /admin/publication/theme/review`
+- `POST /admin/publication/theme/publish`
+- `GET /admin/publication/changelog`
 - `GET|POST /users`
 - `PATCH|DELETE /users/:id`
 - `GET /users/permissions`
@@ -168,4 +171,30 @@ Ejemplo `multipart/form-data`:
 file=<PDF/DOCX/imagen>
 altText=CV principal Abel Valle Rosa
 type=cv-manual
+```
+
+## Publicación Admin
+
+El primer workflow draft/publish real está conectado a `ThemeSettings`, que ya guarda `draftJson` y `publishedAt`.
+
+- `GET /admin/publication/theme/review`: protegido para `admin`, `editor` y `viewer`; devuelve comparación campo a campo entre tema publicado y borrador.
+- `POST /admin/publication/theme/publish`: protegido para `admin` y `editor`; publica el borrador, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
+- `GET /admin/publication/changelog`: protegido para `admin`, `editor` y `viewer`; lista cambios recientes.
+
+Ejemplo de respuesta de revisión:
+
+```json
+{
+  "entityType": "theme",
+  "entityId": "theme-id",
+  "hasDraft": true,
+  "fields": [
+    {
+      "field": "primaryColor",
+      "before": "#5eead4",
+      "after": "#14b8a6",
+      "changed": true
+    }
+  ]
+}
 ```

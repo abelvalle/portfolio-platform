@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 02:04 CEST.
+Estado actualizado: 2026-06-06 02:12 CEST.
 
 ## Hitos completados
 
@@ -234,6 +234,27 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Workflow draft/publish con revisión de cambios
+
+- Añadido `AdminPublicationController` bajo `/api/v1/admin/publication`.
+- Añadido `AdminPublicationService` para comparar borrador y tema publicado campo a campo.
+- `GET /api/v1/admin/publication/theme/review` devuelve diff granular de `ThemeSettings`.
+- `POST /api/v1/admin/publication/theme/publish` publica el borrador, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
+- `GET /api/v1/admin/publication/changelog` lista cambios recientes.
+- Añadida pantalla `/admin/settings/publication` con revisión de campos, estado de borrador, publicación y últimos cambios.
+- Añadida entrada "Publicacion" en el sidebar admin.
+- Añadidos tests unitarios del diff de tema y rechazo de publicación sin cambios.
+- Añadida cobertura e2e desktop/mobile de acceso a la pantalla protegida por proxy de sesión.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build:api`
+- `npm.cmd run build:web`
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -255,12 +276,13 @@ Verificación realizada en este hito:
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
-- Publicación draft/publish: existe estructura inicial, pero falta workflow granular con revisión de cambios por entidad.
+- Publicación por entidad CMS: existe workflow granular real para tema visual, pero falta extenderlo a profile, experiencias, proyectos, skills y CV.
+- Restauración de versiones: `ChangeLog` guarda antes/después, pero falta endpoint/UI para restaurar una versión anterior.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: falta borrado físico diferido, cuotas, antivirus y auditoría granular de subidas.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 
 ## Próximos hitos priorizados
 
-1. Workflow granular draft/publish con revisión de cambios por entidad.
-2. Exportación PDF/DOCX aplicando plantilla seleccionada.
+1. Exportación PDF/DOCX aplicando plantilla seleccionada.
+2. Extender draft/publish a entidades CMS principales.

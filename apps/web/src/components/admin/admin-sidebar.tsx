@@ -8,6 +8,7 @@ import {
   Image,
   Inbox,
   Layers,
+  Rocket,
   Settings,
   ShieldCheck,
   UserRound
@@ -21,6 +22,7 @@ const items = [
   { href: "/admin/messages", label: "Mensajes", icon: Inbox },
   { href: "/admin/analytics", label: "Analítica", icon: BarChart3 },
   { href: "/admin/media", label: "Media", icon: Image },
+  { href: "/admin/settings/publication", label: "Publicacion", icon: Rocket },
   { href: "/admin/settings/users", label: "Usuarios", icon: ShieldCheck },
   { href: "/admin/settings", label: "Configuración", icon: Settings },
   { href: "/admin/settings#modules", label: "Módulos futuros", icon: Layers }
