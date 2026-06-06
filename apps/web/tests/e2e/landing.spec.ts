@@ -63,7 +63,7 @@ test("public CV template detail previews are shareable", async ({ page }) => {
 });
 
 test("admin publication page is reachable behind the session proxy", async ({ context, page }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(90_000);
   let cvBaseDraftJson: Record<string, unknown> | null = null;
 
   function cvBaseChangedFields() {
@@ -1442,6 +1442,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Aplicar skill granular" }).click();
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"category\": \"Reporting\"/);
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"level\": \"Avanzado\"/);
+  await page.getByRole("button", { name: "Duplicar skill granular" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/KPIs copia/);
+  await page.getByRole("button", { name: "Eliminar skill granular" }).click();
+  await expect(page.getByLabel("JSON estructurado")).not.toHaveValue(/KPIs copia/);
   await page.locator("#skillFormIndex").selectOption("2");
   await page.getByLabel("Nombre skill CV").fill("Cloud");
   await page.getByLabel("Categoria skill CV").fill("Cloud");

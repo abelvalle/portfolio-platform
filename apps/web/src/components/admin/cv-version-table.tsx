@@ -1692,6 +1692,89 @@ export function CvVersionTable() {
     setJsonMessage(`${label} eliminado del JSON. Guarda JSON para persistir el cambio.`);
   }
 
+  function duplicateStructuredListItem(
+    field: "skills" | "experiences" | "projects" | "education" | "certifications",
+    index: number,
+    primaryField: "name" | "role" | "title",
+    syncDrafts: (nextStructuredJson: Record<string, unknown>, nextIndex: number) => void,
+    label: string
+  ) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de duplicar.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const currentItems = listField(nextStructuredJson, field);
+    if (!currentItems.length || index < 0 || index >= currentItems.length) {
+      setJsonMessage(`No hay ${label.toLowerCase()} seleccionado para duplicar.`);
+      return;
+    }
+
+    const source = currentItems[index];
+    const sourceRecord = source && typeof source === "object" && !Array.isArray(source)
+      ? { ...(source as Record<string, unknown>) }
+      : { [primaryField]: String(source || label) };
+    const baseLabel = textField(sourceRecord, primaryField) || label;
+    const duplicate = {
+      ...sourceRecord,
+      [primaryField]: `${baseLabel} copia`
+    };
+    const nextItems = [...currentItems.slice(0, index + 1), duplicate, ...currentItems.slice(index + 1)];
+    nextStructuredJson[field] = nextItems;
+    if (field === "experiences") {
+      delete nextStructuredJson.experience;
+    }
+
+    const nextIndex = index + 1;
+    setJsonDraft(formatJson(nextStructuredJson));
+    syncDrafts(nextStructuredJson, nextIndex);
+    setJsonMessage(`${label} duplicado en el JSON. Guarda JSON para persistir el cambio.`);
+  }
+
+  function duplicateSkillFormItem() {
+    duplicateStructuredListItem("skills", skillFormDraft.index, "name", (nextStructuredJson, nextIndex) => {
+      setSkillsDraft(skillsFromStructuredJson(nextStructuredJson));
+      setSkillFormDraft(skillFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Skill");
+  }
+
+  function duplicateExperienceFormItem() {
+    duplicateStructuredListItem("experiences", experienceFormDraft.index, "role", (nextStructuredJson, nextIndex) => {
+      setExperiencesDraft(experiencesFromStructuredJson(nextStructuredJson));
+      setExperienceFormDraft(experienceFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Experiencia");
+  }
+
+  function duplicateProjectFormItem() {
+    duplicateStructuredListItem("projects", projectFormDraft.index, "name", (nextStructuredJson, nextIndex) => {
+      setProjectsDraft(projectsFromStructuredJson(nextStructuredJson));
+      setProjectFormDraft(projectFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Proyecto");
+  }
+
+  function duplicateEducationFormItem() {
+    duplicateStructuredListItem("education", educationFormDraft.index, "title", (nextStructuredJson, nextIndex) => {
+      setEducationDraft(educationFromStructuredJson(nextStructuredJson));
+      setEducationFormDraft(educationFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Educacion");
+  }
+
+  function duplicateCertificationFormItem() {
+    duplicateStructuredListItem("certifications", certificationFormDraft.index, "title", (nextStructuredJson, nextIndex) => {
+      setCertificationsDraft(certificationsFromStructuredJson(nextStructuredJson));
+      setCertificationFormDraft(certificationFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Certificacion");
+  }
+
   function deleteSkillFormItem() {
     deleteStructuredListItem("skills", skillFormDraft.index, (nextStructuredJson, nextIndex) => {
       setSkillsDraft(skillsFromStructuredJson(nextStructuredJson));
@@ -2286,6 +2369,9 @@ export function CvVersionTable() {
                 <Button type="button" variant="outline" onClick={applySkillFormBlock} disabled={!jsonVersionId}>
                   Aplicar skill granular
                 </Button>
+                <Button type="button" variant="outline" onClick={duplicateSkillFormItem} disabled={!jsonVersionId || !skillOptions.length || skillFormDraft.index >= skillOptions.length}>
+                  Duplicar skill granular
+                </Button>
                 <Button type="button" variant="outline" onClick={deleteSkillFormItem} disabled={!jsonVersionId || !skillOptions.length || skillFormDraft.index >= skillOptions.length}>
                   Eliminar skill granular
                 </Button>
@@ -2356,6 +2442,9 @@ export function CvVersionTable() {
               <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="outline" onClick={applyExperienceFormBlock} disabled={!jsonVersionId}>
                   Aplicar experiencia granular
+                </Button>
+                <Button type="button" variant="outline" onClick={duplicateExperienceFormItem} disabled={!jsonVersionId || !experienceOptions.length || experienceFormDraft.index >= experienceOptions.length}>
+                  Duplicar experiencia granular
                 </Button>
                 <Button type="button" variant="outline" onClick={deleteExperienceFormItem} disabled={!jsonVersionId || !experienceOptions.length || experienceFormDraft.index >= experienceOptions.length}>
                   Eliminar experiencia granular
@@ -2469,6 +2558,9 @@ export function CvVersionTable() {
                 <Button type="button" variant="outline" onClick={applyProjectFormBlock} disabled={!jsonVersionId}>
                   Aplicar proyecto granular
                 </Button>
+                <Button type="button" variant="outline" onClick={duplicateProjectFormItem} disabled={!jsonVersionId || !projectOptions.length || projectFormDraft.index >= projectOptions.length}>
+                  Duplicar proyecto granular
+                </Button>
                 <Button type="button" variant="outline" onClick={deleteProjectFormItem} disabled={!jsonVersionId || !projectOptions.length || projectFormDraft.index >= projectOptions.length}>
                   Eliminar proyecto granular
                 </Button>
@@ -2548,6 +2640,9 @@ export function CvVersionTable() {
               <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="outline" onClick={applyEducationFormBlock} disabled={!jsonVersionId}>
                   Aplicar educacion granular
+                </Button>
+                <Button type="button" variant="outline" onClick={duplicateEducationFormItem} disabled={!jsonVersionId || !educationOptions.length || educationFormDraft.index >= educationOptions.length}>
+                  Duplicar educacion granular
                 </Button>
                 <Button type="button" variant="outline" onClick={deleteEducationFormItem} disabled={!jsonVersionId || !educationOptions.length || educationFormDraft.index >= educationOptions.length}>
                   Eliminar educacion granular
@@ -2636,6 +2731,9 @@ export function CvVersionTable() {
               <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="outline" onClick={applyCertificationFormBlock} disabled={!jsonVersionId}>
                   Aplicar certificacion granular
+                </Button>
+                <Button type="button" variant="outline" onClick={duplicateCertificationFormItem} disabled={!jsonVersionId || !certificationOptions.length || certificationFormDraft.index >= certificationOptions.length}>
+                  Duplicar certificacion granular
                 </Button>
                 <Button type="button" variant="outline" onClick={deleteCertificationFormItem} disabled={!jsonVersionId || !certificationOptions.length || certificationFormDraft.index >= certificationOptions.length}>
                   Eliminar certificacion granular
