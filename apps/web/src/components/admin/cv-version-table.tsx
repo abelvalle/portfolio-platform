@@ -54,6 +54,15 @@ type EducationFormDraft = {
   description: string;
 };
 
+type CertificationFormDraft = {
+  index: number;
+  title: string;
+  institution: string;
+  date: string;
+  certificateUrl: string;
+  description: string;
+};
+
 const emptyDraft: CvVersionDraft = {
   name: "",
   description: "",
@@ -95,6 +104,15 @@ const emptyEducationFormDraft: EducationFormDraft = {
   institution: "",
   date: "",
   type: "",
+  description: ""
+};
+
+const emptyCertificationFormDraft: CertificationFormDraft = {
+  index: 0,
+  title: "",
+  institution: "",
+  date: "",
+  certificateUrl: "",
   description: ""
 };
 
@@ -283,6 +301,14 @@ function certificationsFromStructuredJson(value: unknown) {
     .join("\n");
 }
 
+function certificationListFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return [];
+  }
+  const certifications = (value as Record<string, unknown>).certifications;
+  return Array.isArray(certifications) ? certifications : [];
+}
+
 function experiencesFromStructuredJson(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return "";
@@ -412,6 +438,22 @@ function educationFormFromStructuredJson(value: unknown, index = 0): EducationFo
     institution: textField(data, "institution"),
     date: textField(data, "date"),
     type: textField(data, "type"),
+    description: textField(data, "description")
+  };
+}
+
+function certificationFormFromStructuredJson(value: unknown, index = 0): CertificationFormDraft {
+  const selected = certificationListFromStructuredJson(value)[index];
+  if (!selected || typeof selected !== "object" || Array.isArray(selected)) {
+    return { ...emptyCertificationFormDraft, index };
+  }
+  const data = selected as Record<string, unknown>;
+  return {
+    index,
+    title: textField(data, "title"),
+    institution: textField(data, "institution"),
+    date: textField(data, "date"),
+    certificateUrl: textField(data, "certificateUrl"),
     description: textField(data, "description")
   };
 }
@@ -559,6 +601,7 @@ export function CvVersionTable() {
   const [educationDraft, setEducationDraft] = useState("");
   const [educationFormDraft, setEducationFormDraft] = useState(emptyEducationFormDraft);
   const [certificationsDraft, setCertificationsDraft] = useState("");
+  const [certificationFormDraft, setCertificationFormDraft] = useState(emptyCertificationFormDraft);
   const [experiencesDraft, setExperiencesDraft] = useState("");
   const [experienceFormDraft, setExperienceFormDraft] = useState(emptyExperienceFormDraft);
   const [sectionsDraft, setSectionsDraft] = useState("");
@@ -591,6 +634,7 @@ export function CvVersionTable() {
       setEducationDraft("");
       setEducationFormDraft(emptyEducationFormDraft);
       setCertificationsDraft("");
+      setCertificationFormDraft(emptyCertificationFormDraft);
       setExperiencesDraft("");
       setExperienceFormDraft(emptyExperienceFormDraft);
       setSectionsDraft("");
@@ -610,6 +654,7 @@ export function CvVersionTable() {
       setEducationDraft(educationFromStructuredJson(selectedVersion.structuredJson));
       setEducationFormDraft(educationFormFromStructuredJson(selectedVersion.structuredJson));
       setCertificationsDraft(certificationsFromStructuredJson(selectedVersion.structuredJson));
+      setCertificationFormDraft(certificationFormFromStructuredJson(selectedVersion.structuredJson));
       setExperiencesDraft(experiencesFromStructuredJson(selectedVersion.structuredJson));
       setExperienceFormDraft(experienceFormFromStructuredJson(selectedVersion.structuredJson));
       setSectionsDraft(sectionsFromStructuredJson(selectedVersion.structuredJson));
@@ -827,6 +872,7 @@ export function CvVersionTable() {
     setEducationDraft(educationFromStructuredJson(selectedVersion?.structuredJson));
     setEducationFormDraft(educationFormFromStructuredJson(selectedVersion?.structuredJson));
     setCertificationsDraft(certificationsFromStructuredJson(selectedVersion?.structuredJson));
+    setCertificationFormDraft(certificationFormFromStructuredJson(selectedVersion?.structuredJson));
     setExperiencesDraft(experiencesFromStructuredJson(selectedVersion?.structuredJson));
     setExperienceFormDraft(experienceFormFromStructuredJson(selectedVersion?.structuredJson));
     setSectionsDraft(sectionsFromStructuredJson(selectedVersion?.structuredJson));
@@ -1221,7 +1267,80 @@ export function CvVersionTable() {
       delete nextStructuredJson.certifications;
     }
     setJsonDraft(formatJson(nextStructuredJson));
+    setCertificationFormDraft(certificationFormFromStructuredJson(nextStructuredJson, Math.min(certificationFormDraft.index, Math.max(nextCertifications.length - 1, 0))));
     setJsonMessage("Bloque certificaciones aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function selectCertificationFormIndex(index: number) {
+    try {
+      setCertificationFormDraft(certificationFormFromStructuredJson(JSON.parse(jsonDraft), index));
+    } catch {
+      setCertificationFormDraft((current) => ({ ...current, index }));
+    }
+  }
+
+  function applyCertificationFormBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el bloque.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const title = certificationFormDraft.title.trim();
+    if (!title) {
+      setJsonMessage("El titulo de certificacion es obligatorio para aplicar el formulario granular.");
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const existingCertifications = listField(nextStructuredJson, "certifications");
+    const nextCertifications = existingCertifications.map((item) =>
+      item && typeof item === "object" && !Array.isArray(item) ? { ...(item as Record<string, unknown>) } : { title: String(item || "") }
+    );
+    const index = Math.min(Math.max(certificationFormDraft.index, 0), nextCertifications.length);
+    const nextCertification: Record<string, unknown> = {
+      ...(nextCertifications[index] || {}),
+      title
+    };
+    const institution = certificationFormDraft.institution.trim();
+    const date = certificationFormDraft.date.trim();
+    const certificateUrl = certificationFormDraft.certificateUrl.trim();
+    const description = certificationFormDraft.description.trim();
+
+    if (institution) {
+      nextCertification.institution = institution;
+    } else {
+      delete nextCertification.institution;
+    }
+    if (date) {
+      nextCertification.date = date;
+    } else {
+      delete nextCertification.date;
+    }
+    if (certificateUrl) {
+      nextCertification.certificateUrl = certificateUrl;
+    } else {
+      delete nextCertification.certificateUrl;
+    }
+    if (description) {
+      nextCertification.description = description;
+    } else {
+      delete nextCertification.description;
+    }
+
+    nextCertifications[index] = nextCertification;
+    nextStructuredJson.certifications = nextCertifications.filter((item) => textField(item, "title"));
+    setJsonDraft(formatJson(nextStructuredJson));
+    setCertificationsDraft(certificationsFromStructuredJson(nextStructuredJson));
+    setCertificationFormDraft(certificationFormFromStructuredJson(nextStructuredJson, index));
+    setJsonMessage("Formulario granular de certificacion aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
   function applyExperiencesBlock() {
@@ -1543,6 +1662,7 @@ export function CvVersionTable() {
   const experienceOptions = splitBlockLines(experiencesDraft);
   const projectOptions = splitBlockLines(projectsDraft);
   const educationOptions = splitBlockLines(educationDraft);
+  const certificationOptions = splitBlockLines(certificationsDraft);
 
   return (
     <div className="grid gap-6">
@@ -2221,6 +2341,74 @@ export function CvVersionTable() {
           <Button type="button" variant="outline" className="w-fit" onClick={applyCertificationsBlock} disabled={!jsonVersionId}>
             Aplicar certificaciones
           </Button>
+          <div className="grid gap-3 border-t border-border pt-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="grid min-w-[220px] gap-2">
+                <Label htmlFor="certificationFormIndex">Certificacion granular</Label>
+                <select
+                  id="certificationFormIndex"
+                  className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                  value={String(certificationFormDraft.index)}
+                  onChange={(event) => selectCertificationFormIndex(Number(event.target.value))}
+                  disabled={!jsonVersionId}
+                >
+                  {certificationOptions.length ? certificationOptions.map((item, index) => (
+                    <option key={`${item}-${index}`} value={index}>{item}</option>
+                  )) : (
+                    <option value="0">Nueva certificacion</option>
+                  )}
+                </select>
+              </div>
+              <Button type="button" variant="outline" onClick={applyCertificationFormBlock} disabled={!jsonVersionId}>
+                Aplicar certificacion granular
+              </Button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-2">
+                <Label htmlFor="certificationFormTitle">Titulo certificacion CV</Label>
+                <Input
+                  id="certificationFormTitle"
+                  value={certificationFormDraft.title}
+                  onChange={(event) => setCertificationFormDraft((current) => ({ ...current, title: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="certificationFormInstitution">Institucion certificacion CV</Label>
+                <Input
+                  id="certificationFormInstitution"
+                  value={certificationFormDraft.institution}
+                  onChange={(event) => setCertificationFormDraft((current) => ({ ...current, institution: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="certificationFormDate">Fecha certificacion CV</Label>
+                <Input
+                  id="certificationFormDate"
+                  value={certificationFormDraft.date}
+                  onChange={(event) => setCertificationFormDraft((current) => ({ ...current, date: event.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-[1fr_2fr]">
+              <div className="grid gap-2">
+                <Label htmlFor="certificationFormUrl">URL certificado CV</Label>
+                <Input
+                  id="certificationFormUrl"
+                  value={certificationFormDraft.certificateUrl}
+                  onChange={(event) => setCertificationFormDraft((current) => ({ ...current, certificateUrl: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="certificationFormDescription">Descripcion certificacion CV</Label>
+                <Textarea
+                  id="certificationFormDescription"
+                  rows={3}
+                  value={certificationFormDraft.description}
+                  onChange={(event) => setCertificationFormDraft((current) => ({ ...current, description: event.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="sectionsBlock">Secciones personalizadas CV</Label>

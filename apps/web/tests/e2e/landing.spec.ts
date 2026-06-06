@@ -1474,10 +1474,16 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
   await confirmJsonSaveIfNeeded();
-  await page.getByLabel("Certificaciones CV").fill("Scrum Master - Demo Academy - 2026");
-  await page.getByRole("button", { name: "Aplicar certificaciones" }).focus();
+  await page.getByLabel("Certificaciones CV", { exact: true }).fill("Scrum Master - Demo Academy - 2026");
+  await page.getByRole("button", { name: "Aplicar certificaciones", exact: true }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Scrum Master\"/);
+  await expect(page.getByLabel("Titulo certificacion CV")).toHaveValue("Scrum Master");
+  await page.getByLabel("URL certificado CV").fill("https://example.com/certificado");
+  await page.getByLabel("Descripcion certificacion CV").fill("Certificacion demo pendiente de validacion.");
+  await page.getByRole("button", { name: "Aplicar certificacion granular" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"certificateUrl\": \"https:\/\/example.com\/certificado\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Certificacion demo pendiente de validacion/);
   await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
   await confirmJsonSaveIfNeeded();
