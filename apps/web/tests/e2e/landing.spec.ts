@@ -224,6 +224,47 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route(/\/api\/v1\/projects(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "project-1",
+          name: "Portfolio Platform",
+          slug: "portfolio-platform",
+          description: "Proyecto demo",
+          status: "published",
+          categoryName: "Portfolio",
+          technologies: ["Next.js", "NestJS"],
+          imageUrl: null,
+          publicUrl: null,
+          repositoryUrl: null,
+          featured: true,
+          visible: true,
+          sample: false,
+          order: 0
+        }
+      ])
+    });
+  });
+  await page.route("**/api/v1/projects/project-1", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "project-1",
+        name: "Portfolio Platform",
+        slug: "portfolio-platform",
+        description: "Proyecto demo",
+        status: "archived",
+        categoryName: "Portfolio",
+        technologies: ["Next.js", "NestJS"],
+        featured: true,
+        visible: false,
+        sample: false,
+        order: 0
+      })
+    });
+  });
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
@@ -249,6 +290,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/portfolio/projects");
   await expect(page.getByRole("heading", { name: "Proyectos" })).toBeVisible();
+  await expect(page.getByRole("main").getByText("Portfolio Platform")).toBeVisible();
+  await page.getByRole("button", { name: "Eliminar Portfolio Platform" }).click();
+  await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancelar" }).click();
 
   await page.goto("/admin/portfolio/skills");
   await expect(page.getByRole("heading", { name: "Skills" })).toBeVisible();

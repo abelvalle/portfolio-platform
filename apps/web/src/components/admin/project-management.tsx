@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Archive, Eye, EyeOff, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -75,6 +76,7 @@ export function ProjectManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDeleteProject, setPendingDeleteProject] = useState<ProjectItem | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -129,11 +131,12 @@ export function ProjectManagement() {
     }
   }
 
-  async function deleteProject(id: string) {
-    setBusyId(id);
+  async function deleteProject(project: ProjectItem) {
+    setBusyId(project.id);
     try {
-      await adminClient.deleteProject(id);
-      setMessage("Proyecto eliminado.");
+      await adminClient.deleteProject(project.id);
+      setPendingDeleteProject(null);
+      setMessage(`Proyecto eliminado: ${project.name}.`);
       await loadProjects();
     } catch {
       setMessage("No se pudo eliminar el proyecto.");
@@ -244,7 +247,7 @@ export function ProjectManagement() {
                 <Button type="button" variant="outline" size="icon" onClick={() => patchProject(item.id, { status: item.status === "published" ? "archived" : "published" })} disabled={busyId === item.id}>
                   <Archive />
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => deleteProject(item.id)} disabled={busyId === item.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Eliminar ${item.name}`} onClick={() => setPendingDeleteProject(item)} disabled={busyId === item.id}>
                   <Trash2 />
                 </Button>
               </span>
@@ -254,6 +257,25 @@ export function ProjectManagement() {
           )}
         </div>
       </section>
+
+      <Dialog open={Boolean(pendingDeleteProject)} onOpenChange={(open) => !open && setPendingDeleteProject(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar borrado</DialogTitle>
+            <DialogDescription>
+              Esta accion eliminara el proyecto {pendingDeleteProject?.name}. Puedes ocultarlo o archivarlo si solo quieres retirarlo de la landing.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingDeleteProject(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => pendingDeleteProject && deleteProject(pendingDeleteProject)}>
+              Eliminar proyecto
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
