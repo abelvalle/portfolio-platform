@@ -265,6 +265,9 @@ export const cvClient = {
   generateVersionDocx(id: string) {
     return apiFetch<CvGeneratedFileResult>(`/cv-versions/${id}/generate-docx`, { method: "POST" });
   },
+  setPrimaryVersion(id: string) {
+    return apiFetch<CvVersionItem>(`/cv-versions/${id}/set-primary`, { method: "POST" });
+  },
   deleteVersion(id: string) {
     return apiFetch<CvVersionItem>(`/cv-versions/${id}`, { method: "DELETE" });
   },

@@ -100,6 +100,7 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `GET|POST|PATCH|DELETE /cv-versions`
 - `POST /cv-versions/:id/generate-pdf`
 - `POST /cv-versions/:id/generate-docx`
+- `POST /cv-versions/:id/set-primary`
 - `GET|POST|PATCH|DELETE /cv-templates`
 - `GET|POST|PATCH|DELETE /cv-target-roles`
 - `POST /cv/adapt-to-role`
@@ -134,6 +135,8 @@ Las exportaciones ATS generan PDF/DOCX con layout textual, nombres de archivo `-
 `POST /cv/:id/generate-pdf` y `POST /cv/:id/generate-docx` usan la plantilla asociada a la versión primaria/publicada (`CvVersion.template`).
 
 `POST /cv-versions/:id/generate-pdf` y `POST /cv-versions/:id/generate-docx` generan archivos para una versión concreta, actualizan `generatedPdfId` o `generatedDocxId` en esa fila y registran el resultado como `MediaAsset` descargable.
+
+`POST /cv-versions/:id/set-primary` marca una versión como principal dentro de su CV, limpia `isPrimary` del resto de versiones del mismo `cvId` y publica la versión seleccionada.
 
 La exportación aplica:
 

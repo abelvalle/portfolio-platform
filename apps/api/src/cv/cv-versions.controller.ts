@@ -58,6 +58,12 @@ export class CvVersionsController {
   }
 
   @Roles(UserRole.admin, UserRole.editor)
+  @Post(':id/set-primary')
+  setPrimary(@Param('id') id: string) {
+    return this.cvVersionService.setPrimary(id);
+  }
+
+  @Roles(UserRole.admin, UserRole.editor)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.cvVersionService.remove(id);

@@ -49,6 +49,21 @@ export class CvVersionService {
     });
   }
 
+  async setPrimary(id: string) {
+    const version = await this.findOne(id);
+    const [, selected] = await this.prisma.$transaction([
+      this.prisma.cvVersion.updateMany({
+        where: { cvId: version.cvId, deletedAt: null },
+        data: { isPrimary: false },
+      }),
+      this.prisma.cvVersion.update({
+        where: { id: version.id },
+        data: { isPrimary: true, status: PublishStatus.published },
+      }),
+    ]);
+    return selected;
+  }
+
   async generatePdf(id: string) {
     const version = await this.findOneWithTemplate(id);
     const file = await this.exporter.generatePdf(

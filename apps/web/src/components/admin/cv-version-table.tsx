@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Archive, FileText, RefreshCw, Save, Trash2 } from "lucide-react";
+import { Archive, FileText, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -148,6 +148,20 @@ export function CvVersionTable() {
     }
   }
 
+  async function setPrimaryVersion(id: string) {
+    setBusyId(id);
+    setMessage("Marcando version principal.");
+    try {
+      await cvClient.setPrimaryVersion(id);
+      setMessage("Version principal actualizada.");
+      await loadVersions();
+    } catch {
+      setMessage("No se pudo marcar esta version como principal.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <div className="grid gap-6">
       <section className="rounded-lg border border-border bg-card p-6">
@@ -238,6 +252,12 @@ export function CvVersionTable() {
                   <FileText data-icon="inline-start" />
                   DOCX
                 </Button>
+                {!version.isPrimary ? (
+                  <Button type="button" variant="outline" size="sm" onClick={() => setPrimaryVersion(version.id)} disabled={busyId === version.id}>
+                    <Star data-icon="inline-start" />
+                    Principal
+                  </Button>
+                ) : null}
                 <Button type="button" variant="outline" size="icon" aria-label="Cambiar estado" onClick={() => patchVersion(version.id, { status: version.status === "published" ? "archived" : "published" })} disabled={busyId === version.id}>
                   <Archive />
                 </Button>

@@ -32,6 +32,24 @@ describe('CvVersionService', () => {
     });
     expect(result.media.id).toBe('media-1');
   });
+
+  it('marks only the selected version as primary within its CV', async () => {
+    const prisma = mockPrisma();
+    const service = new CvVersionService(prisma as never, {} as never);
+
+    const result = await service.setPrimary('version-1');
+
+    expect(prisma.cvVersion.updateMany).toHaveBeenCalledWith({
+      where: { cvId: 'cv-1', deletedAt: null },
+      data: { isPrimary: false },
+    });
+    expect(prisma.cvVersion.update).toHaveBeenCalledWith({
+      where: { id: 'version-1' },
+      data: { isPrimary: true, status: 'published' },
+    });
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ id: 'version-1', isPrimary: true });
+  });
 });
 
 function mockPrisma() {
@@ -39,6 +57,7 @@ function mockPrisma() {
     cvVersion: {
       findUnique: jest.fn().mockResolvedValue({
         id: 'version-1',
+        cvId: 'cv-1',
         deletedAt: null,
         structuredJson: { profile: { fullName: 'Abel Valle Rosa' } },
         template: {
@@ -47,7 +66,8 @@ function mockPrisma() {
           config: { primaryColor: '#0f766e' },
         },
       }),
-      update: jest.fn().mockResolvedValue({ id: 'version-1' }),
+      updateMany: jest.fn().mockResolvedValue({ count: 2 }),
+      update: jest.fn().mockResolvedValue({ id: 'version-1', isPrimary: true }),
     },
     mediaAsset: {
       create: jest.fn().mockResolvedValue({ id: 'media-1' }),
@@ -59,5 +79,10 @@ function mockPrisma() {
         type: 'pdf',
       }),
     },
+    $transaction: jest
+      .fn()
+      .mockImplementation(async (operations: Array<Promise<unknown>>) =>
+        Promise.all(operations),
+      ),
   };
 }
