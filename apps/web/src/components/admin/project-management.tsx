@@ -1,0 +1,259 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Archive, Eye, EyeOff, RefreshCw, Save, Star, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { adminClient, type ProjectItem, type ProjectMutation } from "@/lib/api";
+
+type ProjectDraft = {
+  name: string;
+  description: string;
+  status: "draft" | "published" | "archived";
+  categoryName: string;
+  technologies: string;
+  imageUrl: string;
+  publicUrl: string;
+  repositoryUrl: string;
+  visible: boolean;
+  featured: boolean;
+  sample: boolean;
+};
+
+const emptyDraft: ProjectDraft = {
+  name: "",
+  description: "",
+  status: "draft",
+  categoryName: "",
+  technologies: "",
+  imageUrl: "",
+  publicUrl: "",
+  repositoryUrl: "",
+  visible: true,
+  featured: false,
+  sample: false
+};
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function splitList(value: string) {
+  return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
+}
+
+function buildMutation(draft: ProjectDraft, order: number): ProjectMutation {
+  return {
+    name: draft.name.trim(),
+    slug: slugify(draft.name.trim()),
+    description: draft.description.trim(),
+    status: draft.status,
+    categoryName: draft.categoryName.trim() || null,
+    technologies: splitList(draft.technologies),
+    imageUrl: draft.imageUrl.trim() || null,
+    publicUrl: draft.publicUrl.trim() || null,
+    repositoryUrl: draft.repositoryUrl.trim() || null,
+    featured: draft.featured,
+    visible: draft.visible,
+    sample: draft.sample,
+    order
+  };
+}
+
+export function ProjectManagement() {
+  const [items, setItems] = useState<ProjectItem[]>([]);
+  const [draft, setDraft] = useState<ProjectDraft>(emptyDraft);
+  const [message, setMessage] = useState("Cargando proyectos.");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadProjects();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  async function loadProjects() {
+    setIsLoading(true);
+    try {
+      const nextItems = await adminClient.projects();
+      setItems(nextItems);
+      setMessage(nextItems.length ? "Proyectos sincronizados con la API." : "Sin proyectos registrados.");
+    } catch {
+      setMessage("No se pudieron cargar proyectos. Comprueba la sesion admin.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function createProject() {
+    const payload = buildMutation(draft, items.length);
+    if (!payload.name || !payload.slug || !payload.description) {
+      setMessage("Nombre y descripcion son obligatorios.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await adminClient.createProject(payload);
+      setDraft(emptyDraft);
+      setMessage("Proyecto creado.");
+      await loadProjects();
+    } catch {
+      setMessage("No se pudo crear el proyecto.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function patchProject(id: string, data: Partial<ProjectMutation>) {
+    setBusyId(id);
+    try {
+      await adminClient.updateProject(id, data);
+      setMessage("Proyecto actualizado.");
+      await loadProjects();
+    } catch {
+      setMessage("No se pudo actualizar el proyecto.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function deleteProject(id: string) {
+    setBusyId(id);
+    try {
+      await adminClient.deleteProject(id);
+      setMessage("Proyecto eliminado.");
+      await loadProjects();
+    } catch {
+      setMessage("No se pudo eliminar el proyecto.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <div className="grid gap-6">
+      <section className="rounded-lg border border-border bg-card p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="font-mono text-sm text-primary">Portfolio CMS</p>
+            <h1 className="mt-2 text-3xl font-semibold">Proyectos</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              CRUD basico conectado a la API para proyectos publicados, destacados y demo.
+            </p>
+          </div>
+          <Button type="button" variant="outline" onClick={loadProjects} disabled={isLoading}>
+            <RefreshCw className={isLoading ? "animate-spin" : ""} data-icon="inline-start" />
+            Actualizar
+          </Button>
+        </div>
+        <p className="mt-4 text-sm text-muted-foreground" aria-live="polite">{message}</p>
+      </section>
+
+      <section className="grid gap-5 rounded-lg border border-border bg-card p-5 lg:grid-cols-2">
+        <div className="grid gap-2">
+          <Label htmlFor="projectName">Nombre</Label>
+          <Input id="projectName" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="categoryName">Categoria</Label>
+          <Input id="categoryName" value={draft.categoryName} onChange={(event) => setDraft((current) => ({ ...current, categoryName: event.target.value }))} />
+        </div>
+        <div className="grid gap-2 lg:col-span-2">
+          <Label htmlFor="projectDescription">Descripcion</Label>
+          <Textarea id="projectDescription" rows={4} value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="technologies">Tecnologias</Label>
+          <Textarea id="technologies" rows={3} value={draft.technologies} onChange={(event) => setDraft((current) => ({ ...current, technologies: event.target.value }))} />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="imageUrl">Imagen</Label>
+          <Input id="imageUrl" value={draft.imageUrl} onChange={(event) => setDraft((current) => ({ ...current, imageUrl: event.target.value }))} />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="publicUrl">URL publica</Label>
+          <Input id="publicUrl" value={draft.publicUrl} onChange={(event) => setDraft((current) => ({ ...current, publicUrl: event.target.value }))} />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="repositoryUrl">Repositorio</Label>
+          <Input id="repositoryUrl" value={draft.repositoryUrl} onChange={(event) => setDraft((current) => ({ ...current, repositoryUrl: event.target.value }))} />
+        </div>
+        <div className="flex flex-wrap gap-2 lg:col-span-2">
+          {(["draft", "published", "archived"] as const).map((status) => (
+            <Button key={status} type="button" variant={draft.status === status ? "default" : "outline"} onClick={() => setDraft((current) => ({ ...current, status }))}>
+              {status}
+            </Button>
+          ))}
+          <Button type="button" variant={draft.visible ? "default" : "outline"} onClick={() => setDraft((current) => ({ ...current, visible: !current.visible }))}>
+            Visible
+          </Button>
+          <Button type="button" variant={draft.featured ? "default" : "outline"} onClick={() => setDraft((current) => ({ ...current, featured: !current.featured }))}>
+            Destacado
+          </Button>
+          <Button type="button" variant={draft.sample ? "default" : "outline"} onClick={() => setDraft((current) => ({ ...current, sample: !current.sample }))}>
+            Demo
+          </Button>
+          <Button type="button" onClick={createProject} disabled={isSaving}>
+            <Save data-icon="inline-start" />
+            {isSaving ? "Guardando..." : "Crear proyecto"}
+          </Button>
+        </div>
+      </section>
+
+      <section className="overflow-x-auto rounded-lg border border-border">
+        <div className="min-w-[920px]">
+          <div className="grid grid-cols-[1.2fr_1fr_130px_140px_180px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+            <span>Proyecto</span>
+            <span>Categoria</span>
+            <span>Estado</span>
+            <span>Flags</span>
+            <span>Acciones</span>
+          </div>
+          {items.length ? items.map((item) => (
+            <div key={item.id} className="grid grid-cols-[1.2fr_1fr_130px_140px_180px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+              <span>
+                <span className="block font-medium">{item.name}</span>
+                <span className="block text-muted-foreground">{item.slug}</span>
+              </span>
+              <span className="text-muted-foreground">{item.categoryName || "-"}</span>
+              <span><Badge variant={item.status === "published" ? "default" : "secondary"}>{item.status}</Badge></span>
+              <span className="flex flex-wrap gap-1">
+                <Badge variant={item.visible ? "default" : "secondary"}>{item.visible ? "visible" : "oculto"}</Badge>
+                {item.featured ? <Badge variant="outline">destacado</Badge> : null}
+                {item.sample ? <Badge variant="outline">demo</Badge> : null}
+              </span>
+              <span className="flex gap-1">
+                <Button type="button" variant="outline" size="icon" onClick={() => patchProject(item.id, { visible: !item.visible })} disabled={busyId === item.id}>
+                  {item.visible ? <EyeOff /> : <Eye />}
+                </Button>
+                <Button type="button" variant="outline" size="icon" onClick={() => patchProject(item.id, { featured: !item.featured })} disabled={busyId === item.id}>
+                  <Star />
+                </Button>
+                <Button type="button" variant="outline" size="icon" onClick={() => patchProject(item.id, { status: item.status === "published" ? "archived" : "published" })} disabled={busyId === item.id}>
+                  <Archive />
+                </Button>
+                <Button type="button" variant="outline" size="icon" onClick={() => deleteProject(item.id)} disabled={busyId === item.id}>
+                  <Trash2 />
+                </Button>
+              </span>
+            </div>
+          )) : (
+            <div className="p-8 text-center text-sm text-muted-foreground">Sin proyectos registrados.</div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}

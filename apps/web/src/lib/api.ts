@@ -172,6 +172,18 @@ export const adminClient = {
   deleteExperience(id: string) {
     return apiFetch<ExperienceItem>(`/experiences/${id}`, { method: "DELETE" });
   },
+  projects() {
+    return apiFetch<ProjectItem[]>("/projects?includeHidden=true");
+  },
+  createProject(data: ProjectMutation) {
+    return apiFetch<ProjectItem>("/projects", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateProject(id: string, data: Partial<ProjectMutation>) {
+    return apiFetch<ProjectItem>(`/projects/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteProject(id: string) {
+    return apiFetch<ProjectItem>(`/projects/${id}`, { method: "DELETE" });
+  },
   analyticsSummary() {
     return apiFetch<AnalyticsSummary>("/analytics/summary");
   },
@@ -333,6 +345,25 @@ export type ExperienceItem = {
 };
 
 export type ExperienceMutation = Omit<ExperienceItem, "id">;
+
+export type ProjectItem = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  status: "draft" | "published" | "archived";
+  categoryName?: string | null;
+  technologies: string[];
+  imageUrl?: string | null;
+  publicUrl?: string | null;
+  repositoryUrl?: string | null;
+  featured: boolean;
+  visible: boolean;
+  sample: boolean;
+  order: number;
+};
+
+export type ProjectMutation = Omit<ProjectItem, "id">;
 
 export type AnalyticsSummary = {
   totalVisits: number;
