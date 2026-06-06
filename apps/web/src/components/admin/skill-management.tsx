@@ -122,12 +122,12 @@ export function SkillManagement() {
     }
   }
 
-  async function patchSkill(id: string, data: Partial<SkillMutation>) {
+  async function patchSkill(id: string, data: Partial<SkillMutation>, successMessage = "Skill actualizada.") {
     setBusyId(id);
     try {
       await adminClient.updateSkill(id, data);
-      setMessage("Skill actualizada.");
       await loadSkills();
+      setMessage(successMessage);
     } catch {
       setMessage("No se pudo actualizar la skill.");
     } finally {
@@ -301,10 +301,10 @@ export function SkillManagement() {
                 <Button type="button" variant="outline" size="icon" onClick={() => patchSkill(item.id, { visible: !item.visible })} disabled={busyId === item.id}>
                   {item.visible ? <EyeOff /> : <Eye />}
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => patchSkill(item.id, { order: item.order - 1 })} disabled={busyId === item.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Subir ${item.name}`} onClick={() => patchSkill(item.id, { order: item.order - 1 }, `Skill reordenada: ${item.name}.`)} disabled={busyId === item.id}>
                   <ArrowUp />
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => patchSkill(item.id, { order: item.order + 1 })} disabled={busyId === item.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Bajar ${item.name}`} onClick={() => patchSkill(item.id, { order: item.order + 1 }, `Skill reordenada: ${item.name}.`)} disabled={busyId === item.id}>
                   <ArrowDown />
                 </Button>
                 <Button type="button" variant="outline" size="icon" aria-label={`Eliminar ${item.name}`} onClick={() => setPendingDeleteSkill(item)} disabled={busyId === item.id}>
