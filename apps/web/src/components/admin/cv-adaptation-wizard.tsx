@@ -33,6 +33,7 @@ export function CvAdaptationWizard() {
   const [result, setResult] = useState<CvAdaptationResult | null>(null);
   const [acceptedBlocks, setAcceptedBlocks] = useState(defaultAcceptedBlocks);
   const [acceptedSkillNames, setAcceptedSkillNames] = useState<Record<string, boolean>>({});
+  const [acceptedExperienceKeys, setAcceptedExperienceKeys] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState("Cargando versiones base.");
   const [isLoading, setIsLoading] = useState(true);
   const [isAdapting, setIsAdapting] = useState(false);
@@ -76,6 +77,7 @@ export function CvAdaptationWizard() {
       setResult(nextResult);
       setAcceptedBlocks(defaultAcceptedBlocks);
       setAcceptedSkillNames(skillReviewState(nextResult.proposed.skills || []));
+      setAcceptedExperienceKeys(experienceReviewState(nextResult.proposed.experiences || []));
       setMessage("Propuesta generada. Revisa antes de aprobar o convertirla en version.");
     } catch {
       setMessage("No se pudo generar la adaptacion.");
@@ -92,6 +94,10 @@ export function CvAdaptationWizard() {
 
   function setSkillAccepted(name: string, checked: boolean) {
     setAcceptedSkillNames((current) => ({ ...current, [name]: checked }));
+  }
+
+  function setExperienceAccepted(key: string, checked: boolean) {
+    setAcceptedExperienceKeys((current) => ({ ...current, [key]: checked }));
   }
 
   function buildReviewedProposal(nextResult: CvAdaptationResult) {
@@ -131,6 +137,26 @@ export function CvAdaptationWizard() {
       }
       nextMeta.acceptedSkills = acceptedSkills;
       nextMeta.rejectedSkills = rejectedSkills;
+    }
+
+    if (acceptedBlocks.experiences && Array.isArray(nextResult.proposed.experiences)) {
+      const acceptedExperiences = nextResult.proposed.experiences
+        .map((experience) => experienceKey(experience))
+        .filter((key) => key && acceptedExperienceKeys[key] !== false);
+      const rejectedExperiences = nextResult.proposed.experiences
+        .map((experience) => experienceKey(experience))
+        .filter((key) => key && acceptedExperienceKeys[key] === false);
+      const filteredExperiences = nextResult.proposed.experiences.filter((experience) => {
+        const key = experienceKey(experience);
+        return !key || acceptedExperienceKeys[key] !== false;
+      });
+      if (filteredExperiences.length) {
+        nextProposal.experiences = filteredExperiences;
+      } else {
+        delete nextProposal.experiences;
+      }
+      nextMeta.acceptedExperiences = acceptedExperiences;
+      nextMeta.rejectedExperiences = rejectedExperiences;
     }
 
     nextProposal.adaptationMeta = nextMeta;
@@ -294,7 +320,27 @@ export function CvAdaptationWizard() {
             </div>
             <div>
               <p className="font-medium text-foreground">Experiencias priorizadas</p>
-              <p className="mt-1">{result.proposed.experiences?.slice(0, 5).map((experience) => `${experience.role} - ${experience.company}`).join(", ") || "Sin experiencias."}</p>
+              {result.proposed.experiences?.length ? (
+                <div className="mt-2 grid gap-2">
+                  {result.proposed.experiences.slice(0, 5).map((experience, index) => {
+                    const key = experienceKey(experience) || `Experiencia ${index + 1}`;
+                    const id = `accept-experience-${buildVersionSlug(key) || index}`;
+                    return (
+                      <div key={`${key}-${index}`} className="flex items-center gap-2">
+                        <Checkbox
+                          id={id}
+                          checked={acceptedExperienceKeys[key] !== false}
+                          disabled={!acceptedBlocks.experiences}
+                          onCheckedChange={(checked) => setExperienceAccepted(key, Boolean(checked))}
+                        />
+                        <Label htmlFor={id}>Aceptar experiencia {key}</Label>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="mt-1">Sin experiencias.</p>
+              )}
             </div>
             <p>{result.proposed.adaptationMeta?.guardrail}</p>
             <Button type="button" onClick={createAdaptedVersion} disabled={isCreatingVersion}>
@@ -325,5 +371,18 @@ function skillReviewState(skills: Array<{ name?: string }>) {
       .map((skill) => skill.name || "")
       .filter(Boolean)
       .map((name) => [name, true])
+  );
+}
+
+function experienceKey(experience: { role?: string; company?: string }) {
+  return [experience.role, experience.company].filter(Boolean).join(" - ");
+}
+
+function experienceReviewState(experiences: Array<{ role?: string; company?: string }>) {
+  return Object.fromEntries(
+    experiences
+      .map((experience) => experienceKey(experience))
+      .filter(Boolean)
+      .map((key) => [key, true])
   );
 }

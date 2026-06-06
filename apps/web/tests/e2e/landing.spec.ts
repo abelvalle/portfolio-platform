@@ -1107,9 +1107,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   const acceptKpis = page.getByRole("checkbox", { name: "Aceptar skill KPIs" });
   await acceptKpis.click();
   await expect(acceptKpis).not.toBeChecked();
-  const acceptExperiences = page.getByRole("checkbox", { name: "Aceptar experiencias" });
-  await acceptExperiences.click();
-  await expect(acceptExperiences).not.toBeChecked();
+  const acceptSummary = page.getByRole("checkbox", { name: "Aceptar resumen" });
+  await acceptSummary.click();
+  await expect(acceptSummary).not.toBeChecked();
+  const acceptDemoExperience = page.getByRole("checkbox", { name: "Aceptar experiencia IT Project Manager - Demo Company" });
+  await acceptDemoExperience.click();
+  await expect(acceptDemoExperience).not.toBeChecked();
   const createAdaptedVersionRequestPromise = page.waitForRequest((request) => {
     if (!request.url().endsWith("/api/v1/cv-versions") || request.method() !== "POST") {
       return false;
@@ -1117,11 +1120,13 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     const data = JSON.parse(request.postData() || "{}");
     const structuredJson = data.structuredJson || {};
     const skillNames = structuredJson.skills?.map((skill: { name?: string }) => skill.name) || [];
-    return !("experiences" in structuredJson)
+    return !("summary" in structuredJson)
+      && !("experiences" in structuredJson)
       && skillNames.includes("UAT")
       && !skillNames.includes("KPIs")
-      && structuredJson.adaptationMeta?.rejectedBlocks?.includes("experiences")
+      && structuredJson.adaptationMeta?.rejectedBlocks?.includes("summary")
       && structuredJson.adaptationMeta?.rejectedSkills?.includes("KPIs")
+      && structuredJson.adaptationMeta?.rejectedExperiences?.includes("IT Project Manager - Demo Company")
       && structuredJson.adaptationMeta?.acceptedSkills?.includes("UAT");
   });
   await page.getByRole("button", { name: "Crear version borrador" }).click();
