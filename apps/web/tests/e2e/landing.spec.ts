@@ -1791,6 +1791,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Plantilla preview admin").selectOption("");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "default");
   await expect(page.locator("[data-cv-section='experiences']")).toBeVisible();
+  await expect(page.locator("[data-cv-section='formation']")).toContainText("Formación superior en desarrollo de aplicaciones.");
+  await expect(page.locator("[data-cv-section='formation']")).toContainText("Certificación incluida en el CV actual.");
   await expect(page.getByRole("heading", { name: "Validacion ATS" })).toBeVisible();
   await page.getByRole("button", { name: "Generar reporte ATS" }).click();
   await expect(page.getByText("Score 88 - strong")).toBeVisible();

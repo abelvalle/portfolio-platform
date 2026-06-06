@@ -5,6 +5,12 @@ import type { CvTemplateItem } from "@/lib/cv-templates";
 import type { Locale } from "@/lib/i18n";
 import type { PortfolioSnapshot } from "@/lib/portfolio-data";
 
+type PreviewFormationItem = PortfolioSnapshot["education"][number] & {
+  url?: string | null;
+  certificateUrl?: string | null;
+  credentialId?: string | null;
+};
+
 const previewCopy = {
   es: {
     summary: "Resumen",
@@ -121,14 +127,37 @@ export function CvA4Preview({
         <PreviewSection title={copy.education} color={color} section="formation">
           <div className="grid gap-2">
             {visibleEducation.map((item) => (
-              <p key={`${item.title}-${item.institution}`}>
-                <span className="font-semibold">{item.title}</span> - {item.institution} - {item.date}
-              </p>
+              <div key={`${item.title}-${item.institution}`}>
+                <p>
+                  <span className="font-semibold">{item.title}</span> - {item.institution} - {item.date}
+                </p>
+                <FormationMetadata item={item as PreviewFormationItem} />
+              </div>
             ))}
           </div>
         </PreviewSection>
       </div>
     </article>
+  );
+}
+
+function FormationMetadata({ item }: { item: PreviewFormationItem }) {
+  const rows = [
+    item.description,
+    item.url || item.certificateUrl,
+    item.credentialId ? `ID: ${item.credentialId}` : ""
+  ].filter((value): value is string => Boolean(value));
+
+  if (!rows.length) {
+    return null;
+  }
+
+  return (
+    <div className="mt-1 grid gap-0.5 text-[10px] leading-4 text-slate-500">
+      {rows.map((row) => (
+        <p key={row}>{row}</p>
+      ))}
+    </div>
   );
 }
 
