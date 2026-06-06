@@ -3548,6 +3548,15 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run lint`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "public CV template detail|admin publication"`
 
+### Build web tras idiomas/contacto A4
+
+- Ejecutado build de produccion del frontend despues de separar idiomas y filtrar contacto en el preview A4.
+- Next compila rutas publicas y privadas sin errores de TypeScript ni build.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
