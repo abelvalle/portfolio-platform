@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, Send } from "lucide-react";
+import { RefreshCw, RotateCcw, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ export function WebhookSettings() {
   const [message, setMessage] = useState("Cargando estado de webhook.");
   const [isLoading, setIsLoading] = useState(true);
   const [isTesting, setIsTesting] = useState(false);
+  const [retryingMessageId, setRetryingMessageId] = useState<string | null>(null);
 
   useEffect(() => {
     void loadSettings();
@@ -45,6 +46,19 @@ export function WebhookSettings() {
       setMessage("No se pudo ejecutar la prueba de webhook.");
     } finally {
       setIsTesting(false);
+    }
+  }
+
+  async function retryWebhook(messageId: string) {
+    setRetryingMessageId(messageId);
+    try {
+      const result = await adminClient.retryContactWebhook(messageId);
+      await loadSettings();
+      setMessage(result.dispatched ? `Reintento enviado para ${messageId}.` : `Reintento no enviado para ${messageId}.`);
+    } catch {
+      setMessage(`No se pudo reintentar el webhook para ${messageId}.`);
+    } finally {
+      setRetryingMessageId(null);
     }
   }
 
@@ -86,7 +100,7 @@ export function WebhookSettings() {
                     <p className="truncate font-medium">{delivery.event}</p>
                     <p className="text-muted-foreground">
                       {formatDeliveryDate(delivery.createdAt)}
-                      {delivery.messageId ? ` · mensaje ${delivery.messageId}` : ""}
+                      {delivery.messageId ? ` - mensaje ${delivery.messageId}` : ""}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -94,6 +108,18 @@ export function WebhookSettings() {
                       {delivery.dispatched ? "enviado" : "fallido"}
                     </Badge>
                     <span className="text-muted-foreground">{delivery.status ? `HTTP ${delivery.status}` : delivery.error || "sin HTTP"}</span>
+                    {!delivery.dispatched && delivery.messageId ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => retryWebhook(delivery.messageId as string)}
+                        disabled={!status?.configured || retryingMessageId === delivery.messageId}
+                      >
+                        <RotateCcw data-icon="inline-start" />
+                        {retryingMessageId === delivery.messageId ? "Reintentando..." : "Reintentar"}
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               ))}

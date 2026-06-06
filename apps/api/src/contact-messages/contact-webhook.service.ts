@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ContactMessage } from '@prisma/client';
 import { createHmac } from 'node:crypto';
@@ -89,6 +89,18 @@ export class ContactWebhookService {
 
     const result = await this.postWebhook(url, body, 'contact.webhook.test');
     return { configured: true, ...result };
+  }
+
+  async retryMessage(messageId: string) {
+    const message = await this.prisma.contactMessage.findUnique({
+      where: { id: messageId },
+    });
+    if (!message || message.deletedAt) {
+      throw new NotFoundException('Contact message not found');
+    }
+
+    const result = await this.dispatch(message);
+    return { messageId, ...result };
   }
 
   private async postWebhook(

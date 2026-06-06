@@ -6,6 +6,9 @@ const createPrisma = () => ({
     create: jest.fn(),
     findMany: jest.fn(),
   },
+  contactMessage: {
+    findUnique: jest.fn(),
+  },
 });
 
 const createService = (
@@ -185,5 +188,49 @@ describe('ContactWebhookService', () => {
       },
     ]);
     expect(JSON.stringify(result)).not.toContain('not-returned');
+  });
+
+  it('retries a failed message delivery from the stored contact message', async () => {
+    const prisma = createPrisma();
+    prisma.contactMessage.findUnique.mockResolvedValue(message);
+    const service = createService(
+      {
+        CONTACT_WEBHOOK_URL: 'https://example.com/webhook',
+        CONTACT_WEBHOOK_SECRET: 'secret-value',
+      },
+      prisma,
+    );
+    Object.defineProperty(global, 'fetch', {
+      configurable: true,
+      value: jest.fn().mockResolvedValue({ ok: true, status: 200 }),
+    });
+
+    const result = await service.retryMessage('message-1');
+
+    expect(prisma.contactMessage.findUnique).toHaveBeenCalledWith({
+      where: { id: 'message-1' },
+    });
+    expect(result).toEqual({
+      messageId: 'message-1',
+      dispatched: true,
+      status: 200,
+    });
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: {
+        action: 'contact.webhook.delivery',
+        resource: 'contact-webhook',
+        resourceId: 'contact.message.created',
+        metadata: {
+          event: 'contact.message.created',
+          configured: true,
+          dispatched: true,
+          messageId: 'message-1',
+          status: 200,
+        },
+      },
+    });
+    expect(JSON.stringify(prisma.auditLog.create.mock.calls)).not.toContain(
+      'Mensaje de prueba',
+    );
   });
 });

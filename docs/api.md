@@ -77,6 +77,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /contact-messages?status=unread&from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_messages`)
 - `GET /contact-messages/webhook/status` (`read_messages`)
 - `GET /contact-messages/webhook/deliveries` (`read_messages`)
+- `POST /contact-messages/webhook/messages/:id/retry` (`manage_messages`)
 - `POST /contact-messages/webhook/test` (`manage_messages`)
 - `GET /admin/dashboard` (`read_dashboard`)
 - `GET /admin/publication/theme/review` (`read_publication`)
@@ -299,6 +300,7 @@ Endpoints admin de webhook:
 
 - `GET /contact-messages/webhook/status`: protegido para `admin`, `editor` y `viewer`; indica si URL/secret están configurados sin exponer valores.
 - `GET /contact-messages/webhook/deliveries`: protegido para `admin`, `editor` y `viewer`; devuelve los 10 últimos intentos auditados sin URL, secreto ni payload.
+- `POST /contact-messages/webhook/messages/:id/retry`: protegido para `admin` y `editor`; reconstruye el payload desde el mensaje guardado y crea una nueva auditoria de entrega.
 - `POST /contact-messages/webhook/test`: protegido para `admin` y `editor`; envía un evento `contact.webhook.test` sin datos personales.
 
 ## Integraciones

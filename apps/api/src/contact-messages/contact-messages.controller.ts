@@ -60,6 +60,14 @@ export class ContactMessagesController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('manage_messages')
+  @Post('webhook/messages/:id/retry')
+  retryWebhook(@Param('id') id: string) {
+    return this.contactWebhookService.retryMessage(id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_messages')
   @Post('webhook/test')
   testWebhook() {
     return this.contactWebhookService.testDispatch();

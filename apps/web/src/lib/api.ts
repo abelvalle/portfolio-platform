@@ -208,6 +208,9 @@ export const adminClient = {
   testContactWebhook() {
     return apiFetch<ContactWebhookTestResult>("/contact-messages/webhook/test", { method: "POST" });
   },
+  retryContactWebhook(messageId: string) {
+    return apiFetch<ContactWebhookRetryResult>(`/contact-messages/webhook/messages/${encodeURIComponent(messageId)}/retry`, { method: "POST" });
+  },
   contactMessages(filters?: ContactMessageFilters) {
     return apiFetch<ContactMessage[]>(withQuery("/contact-messages", filters));
   },
@@ -573,6 +576,12 @@ export type ContactWebhookStatus = {
 export type ContactWebhookTestResult = {
   configured: boolean;
   dispatched: boolean;
+};
+
+export type ContactWebhookRetryResult = {
+  messageId: string;
+  dispatched: boolean;
+  status?: number | null;
 };
 
 export type ContactWebhookDelivery = {

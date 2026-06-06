@@ -195,8 +195,27 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           status: 202,
           messageId: "message-1",
           createdAt: "2026-06-06T08:30:00.000Z"
+        },
+        {
+          id: "webhook-delivery-2",
+          event: "contact.message.created",
+          configured: true,
+          dispatched: false,
+          error: "fetch failed",
+          messageId: "message-2",
+          createdAt: "2026-06-06T08:35:00.000Z"
         }
       ])
+    });
+  });
+  await page.route("**/api/v1/contact-messages/webhook/messages/message-2/retry", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        messageId: "message-2",
+        dispatched: true,
+        status: 200
+      })
     });
   });
   await page.route("**/api/v1/users", async (route) => {
@@ -1976,8 +1995,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Seguridad admin")).toBeVisible();
   await expect(page.getByText("Webhooks contacto")).toBeVisible();
   await expect(page.getByText("Ultimas entregas webhook")).toBeVisible();
-  await expect(page.getByText("contact.message.created", { exact: true })).toBeVisible();
+  await expect(page.getByText("contact.message.created", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("HTTP 202")).toBeVisible();
+  await page.getByRole("button", { name: "Reintentar" }).click();
+  await expect(page.getByText("Reintento enviado para message-2.")).toBeVisible();
   await expect(page.getByText("GET /api/v1/integrations/linkedin/callback")).toBeVisible();
   await page.getByRole("button", { name: "Iniciar setup" }).click();
   await expect(page.getByText("QR local")).toBeVisible();
