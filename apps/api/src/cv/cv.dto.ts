@@ -24,6 +24,12 @@ export class AdaptCvDto {
   @IsString()
   baseCvVersionId!: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  targetRoleId?: string;
+
   @ApiProperty()
   @IsString()
   @MaxLength(160)

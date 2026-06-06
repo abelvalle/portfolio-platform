@@ -79,6 +79,7 @@ export function CvAdaptationWizard() {
       const nextResult = await cvClient.adapt({
         baseCvVersionId,
         targetRole: targetRole.trim(),
+        targetRoleId: selectedTargetRoleId || undefined,
         targetCompany: targetCompany.trim() || undefined,
         jobDescription: jobDescription.trim()
       });

@@ -196,6 +196,8 @@ En admin, `/admin/cv/target-roles` consume `GET|POST|PATCH|DELETE /cv-target-rol
 
 En admin, `/admin/cv/adapt` lee esos roles objetivo para precargar puesto y keywords antes de llamar a `POST /cv/adapt-to-role`.
 
+`POST /cv/adapt-to-role` acepta opcionalmente `targetRoleId`. Si se envia, la API valida que el rol objetivo exista y no este archivado, persiste ese id en `CvAdaptationRequest` y lo replica en `adaptationMeta.targetRolePreset` para trazabilidad.
+
 `POST /cv/:id/ats-role-report` compara la versión primaria contra una descripción de oferta concreta:
 
 ```json

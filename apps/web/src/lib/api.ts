@@ -373,7 +373,7 @@ export const cvClient = {
   deleteTargetRole(id: string) {
     return apiFetch<CvTargetRoleItem>(`/cv-target-roles/${id}`, { method: "DELETE" });
   },
-  adapt(data: { baseCvVersionId: string; targetRole: string; targetCompany?: string; jobDescription: string }) {
+  adapt(data: { baseCvVersionId: string; targetRole: string; targetRoleId?: string; targetCompany?: string; jobDescription: string }) {
     return apiFetch<CvAdaptationResult>("/cv/adapt-to-role", { method: "POST", body: JSON.stringify(data) });
   },
   compare(baseCvVersionId: string, adaptedCvVersionId: string) {

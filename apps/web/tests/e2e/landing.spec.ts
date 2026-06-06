@@ -1269,7 +1269,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByText("JSON estructurado debe ser un objeto raiz.")).toBeVisible();
   await page.getByLabel("JSON estructurado").fill(JSON.stringify({ summary: "x".repeat(300), skills: [] }, null, 2));
-  await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/"summary"/);
+  await page.getByRole("button", { name: "Guardar JSON" }).first().focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
@@ -1320,7 +1322,15 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("Descripcion de oferta")).toHaveValue(/Keywords objetivo: delivery, uat, kpi\./);
   await page.getByLabel("Puesto objetivo").fill("Delivery Manager");
   await page.getByLabel("Descripcion de oferta").fill("Buscamos Delivery Manager con KPIs, UAT, stakeholders, reporting y gestion de cliente en entornos cloud.");
+  const adaptRequestPromise = page.waitForRequest((request) => {
+    if (!request.url().endsWith("/api/v1/cv/adapt-to-role") || request.method() !== "POST") {
+      return false;
+    }
+    const data = JSON.parse(request.postData() || "{}");
+    return data.targetRoleId === "target-role-1";
+  });
   await page.getByRole("button", { name: "Proponer adaptacion" }).click();
+  await adaptRequestPromise;
   await expect(page.getByText("Resumen orientado a Delivery Manager.")).toBeVisible();
   const acceptKpis = page.getByRole("checkbox", { name: "Aceptar skill KPIs" });
   await acceptKpis.click();

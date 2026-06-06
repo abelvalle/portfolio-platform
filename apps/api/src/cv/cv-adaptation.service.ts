@@ -18,6 +18,15 @@ export class CvAdaptationService {
       throw new NotFoundException('Base CV version not found');
     }
 
+    const targetRolePreset = dto.targetRoleId
+      ? await this.prisma.cvTargetRole.findFirst({
+          where: { id: dto.targetRoleId, deletedAt: null },
+        })
+      : null;
+    if (dto.targetRoleId && !targetRolePreset) {
+      throw new NotFoundException('CV target role not found');
+    }
+
     const source = base.structuredJson as Record<string, any>;
     const keywords = this.extractKeywords(
       `${dto.targetRole} ${dto.jobDescription}`,
@@ -46,6 +55,14 @@ export class CvAdaptationService {
       ),
       adaptationMeta: {
         targetRole: dto.targetRole,
+        targetRoleId: targetRolePreset?.id,
+        targetRolePreset: targetRolePreset
+          ? {
+              id: targetRolePreset.id,
+              name: targetRolePreset.name,
+              keywords: targetRolePreset.keywords,
+            }
+          : undefined,
         targetCompany: dto.targetCompany,
         keywords,
         mode: aiSuggestion ? 'ai_assisted_with_rule_guardrails' : 'rules',
@@ -59,6 +76,7 @@ export class CvAdaptationService {
     const request = await this.prisma.cvAdaptationRequest.create({
       data: {
         baseCvVersionId: base.id,
+        targetRoleId: targetRolePreset?.id,
         targetRole: dto.targetRole,
         targetCompany: dto.targetCompany,
         jobDescription: dto.jobDescription,
