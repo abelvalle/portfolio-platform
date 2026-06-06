@@ -64,6 +64,7 @@ type CertificationFormDraft = {
   institution: string;
   date: string;
   certificateUrl: string;
+  credentialId: string;
   description: string;
 };
 
@@ -119,6 +120,7 @@ const emptyCertificationFormDraft: CertificationFormDraft = {
   institution: "",
   date: "",
   certificateUrl: "",
+  credentialId: "",
   description: ""
 };
 
@@ -525,6 +527,7 @@ function certificationFormFromStructuredJson(value: unknown, index = 0): Certifi
     institution: textField(data, "institution"),
     date: textField(data, "date"),
     certificateUrl: textField(data, "certificateUrl"),
+    credentialId: textField(data, "credentialId"),
     description: textField(data, "description")
   };
 }
@@ -1405,6 +1408,7 @@ export function CvVersionTable() {
     const institution = certificationFormDraft.institution.trim();
     const date = certificationFormDraft.date.trim();
     const certificateUrl = certificationFormDraft.certificateUrl.trim();
+    const credentialId = certificationFormDraft.credentialId.trim();
     const description = certificationFormDraft.description.trim();
 
     if (institution) {
@@ -1421,6 +1425,11 @@ export function CvVersionTable() {
       nextCertification.certificateUrl = certificateUrl;
     } else {
       delete nextCertification.certificateUrl;
+    }
+    if (credentialId) {
+      nextCertification.credentialId = credentialId;
+    } else {
+      delete nextCertification.credentialId;
     }
     if (description) {
       nextCertification.description = description;
@@ -2971,13 +2980,21 @@ export function CvVersionTable() {
                 />
               </div>
             </div>
-            <div className="grid gap-3 md:grid-cols-[1fr_2fr]">
+            <div className="grid gap-3 md:grid-cols-[1fr_1fr_2fr]">
               <div className="grid gap-2">
                 <Label htmlFor="certificationFormUrl">URL certificado CV</Label>
                 <Input
                   id="certificationFormUrl"
                   value={certificationFormDraft.certificateUrl}
                   onChange={(event) => setCertificationFormDraft((current) => ({ ...current, certificateUrl: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="certificationFormCredentialId">ID credencial certificacion CV</Label>
+                <Input
+                  id="certificationFormCredentialId"
+                  value={certificationFormDraft.credentialId}
+                  onChange={(event) => setCertificationFormDraft((current) => ({ ...current, credentialId: event.target.value }))}
                 />
               </div>
               <div className="grid gap-2">

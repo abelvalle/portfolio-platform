@@ -1590,9 +1590,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Scrum Master\"/);
   await expect(page.getByLabel("Titulo certificacion CV")).toHaveValue("Scrum Master");
   await page.getByLabel("URL certificado CV").fill("https://example.com/certificado");
+  await page.getByLabel("ID credencial certificacion CV").fill("SCRUM-DEMO-2026");
   await page.getByLabel("Descripcion certificacion CV").fill("Certificacion demo pendiente de validacion.");
   await page.getByRole("button", { name: "Aplicar certificacion granular" }).click();
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"certificateUrl\": \"https:\/\/example.com\/certificado\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"credentialId\": \"SCRUM-DEMO-2026\"/);
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Certificacion demo pendiente de validacion/);
   await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
