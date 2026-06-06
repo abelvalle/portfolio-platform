@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 11:56 CEST.
+Estado actualizado: 2026-06-06 12:00 CEST.
 
 ## Hitos completados
 
@@ -1960,6 +1960,21 @@ Verificacion realizada en este hito:
 - Los formularios de crear y editar certificacion mantienen el campo manual `attachmentId` y añaden selector de assets media.
 - Al elegir un asset, la UI copia su `id` al campo enviado como `attachmentId`.
 - Añadida cobertura e2e del flujo editar certificacion -> seleccionar adjunto media -> guardar.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
+### Selector de media para avatar y Open Graph
+
+- `/admin/portfolio` carga la biblioteca media desde `GET /api/v1/media` junto con perfil y revision de publicacion.
+- El editor mantiene los campos manuales `avatarUrl` y `ogImageUrl`.
+- Los nuevos selectores muestran solo assets `image/*` y copian su URL al borrador del perfil.
+- El flujo respeta draft/publish: seleccionar media no publica automaticamente el perfil.
+- Añadida cobertura e2e del flujo seleccionar avatar/OG desde media -> guardar borrador.
 
 Verificacion realizada en este hito:
 

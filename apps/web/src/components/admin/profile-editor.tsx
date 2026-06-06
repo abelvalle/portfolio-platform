@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { adminClient, type ProfileSettings, type PublicationProfileReview } from "@/lib/api";
+import { adminClient, mediaClient, type MediaAsset, type ProfileSettings, type PublicationProfileReview } from "@/lib/api";
 
 const profileFields = [
   { key: "fullName", label: "Nombre completo" },
@@ -72,9 +72,14 @@ function draftFromForm(form: ProfileForm) {
   }, {});
 }
 
+function mediaAssetLabel(asset: MediaAsset) {
+  return asset.originalName || asset.filename;
+}
+
 export function ProfileEditor() {
   const [profile, setProfile] = useState<ProfileSettings | null>(null);
   const [review, setReview] = useState<PublicationProfileReview | null>(null);
+  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
   const [form, setForm] = useState<ProfileForm>(() => emptyForm());
   const [message, setMessage] = useState("Cargando perfil.");
   const [isLoading, setIsLoading] = useState(true);
@@ -93,12 +98,14 @@ export function ProfileEditor() {
   async function loadProfile() {
     setIsLoading(true);
     try {
-      const [nextProfile, nextReview] = await Promise.all([
+      const [nextProfile, nextReview, nextMediaAssets] = await Promise.all([
         adminClient.profile(),
-        adminClient.publicationProfileReview()
+        adminClient.publicationProfileReview(),
+        mediaClient.list()
       ]);
       setProfile(nextProfile);
       setReview(nextReview);
+      setMediaAssets(nextMediaAssets);
       setForm(formFromProfile(nextProfile, nextReview));
       setMessage(nextReview.hasDraft ? "Borrador de perfil pendiente de revision." : "Perfil sincronizado.");
     } catch {
@@ -134,6 +141,8 @@ export function ProfileEditor() {
       setIsPublishing(false);
     }
   }
+
+  const imageAssets = mediaAssets.filter((asset) => asset.mimeType.startsWith("image/"));
 
   return (
     <div className="grid gap-6">
@@ -172,6 +181,8 @@ export function ProfileEditor() {
       <section className="grid gap-5 rounded-lg border border-border bg-card p-5 lg:grid-cols-2">
         {profileFields.map((field) => {
           const isTextarea = "textarea" in field && field.textarea;
+          const mediaLabel = field.key === "avatarUrl" ? "Avatar media" : field.key === "ogImageUrl" ? "Open Graph media" : null;
+          const mediaValue = imageAssets.some((asset) => asset.url === form[field.key]) ? form[field.key] : "";
           return (
             <div className={isTextarea ? "grid gap-2 lg:col-span-2" : "grid gap-2"} key={field.key}>
               <Label htmlFor={field.key}>{field.label}</Label>
@@ -189,6 +200,22 @@ export function ProfileEditor() {
                   onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
                 />
               )}
+              {mediaLabel ? (
+                <>
+                  <Label htmlFor={`${field.key}Media`}>{mediaLabel}</Label>
+                  <select
+                    id={`${field.key}Media`}
+                    className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                    value={mediaValue}
+                    onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
+                  >
+                    <option value="">{imageAssets.length ? "Seleccionar imagen" : "Sin imagenes en media"}</option>
+                    {imageAssets.map((asset) => (
+                      <option key={asset.id} value={asset.url}>{mediaAssetLabel(asset)}</option>
+                    ))}
+                  </select>
+                </>
+              ) : null}
             </div>
           );
         })}

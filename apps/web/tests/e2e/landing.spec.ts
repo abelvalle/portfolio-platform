@@ -188,6 +188,52 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/profile", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "profile-1",
+        fullName: "Abel Valle Rosa",
+        headline: "IT Project Manager | Delivery Manager",
+        subtitle: "Gestion agil de proyectos IT",
+        shortBio: "Perfil demo",
+        longBio: "Perfil publico demo",
+        location: "Zaragoza",
+        availability: "Disponible",
+        email: "abel@example.com",
+        phone: null,
+        linkedin: "https://www.linkedin.com/in/abelvalle",
+        github: null,
+        website: null,
+        avatarUrl: null,
+        cvUrl: "/api/v1/cv/download",
+        seoTitle: "Abel Valle Rosa",
+        seoDescription: "Portfolio profesional",
+        ogImageUrl: null,
+        primaryLanguage: "es",
+        ctaPrimary: "Descargar CV",
+        ctaSecondary: "Contactar",
+        publishedAt: "2026-06-06T08:00:00.000Z",
+        draftJson: null
+      })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/profile/review", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        entityType: "profile",
+        entityId: "profile-1",
+        hasDraft: true,
+        publishedAt: "2026-06-06T08:00:00.000Z",
+        fields: [
+          { field: "avatarUrl", before: null, after: "/media/uploads/portfolio-cover.jpg", changed: true },
+          { field: "ogImageUrl", before: null, after: null, changed: false }
+        ],
+        latestChanges: []
+      })
+    });
+  });
   await page.route("**/api/v1/users/user-1", async (route) => {
     const data = JSON.parse(route.request().postData() || "{}");
     await route.fulfill({
@@ -738,6 +784,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/portfolio");
   await expect(page.getByRole("heading", { name: "Perfil publico" })).toBeVisible();
+  await page.getByLabel("Avatar media").selectOption("/media/uploads/portfolio-cover.jpg");
+  await expect(page.getByLabel("Avatar URL")).toHaveValue("/media/uploads/portfolio-cover.jpg");
+  await page.getByLabel("Open Graph media").selectOption("/media/uploads/portfolio-cover.jpg");
+  await expect(page.getByLabel("Open Graph image")).toHaveValue("/media/uploads/portfolio-cover.jpg");
+  await page.getByRole("button", { name: "Guardar borrador" }).click();
+  await expect(page.getByText("Borrador de perfil guardado.")).toBeVisible();
 
   await page.goto("/admin/portfolio/theme");
   await expect(page.getByText("Editor visual de estilos")).toBeVisible();
