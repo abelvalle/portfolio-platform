@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { adminClient, type EducationItem, type EducationMutation } from "@/lib/api";
+import { adminClient, mediaClient, type EducationItem, type EducationMutation, type MediaAsset } from "@/lib/api";
 
 const emptyDraft = {
   title: "",
@@ -36,8 +36,13 @@ function educationToDraft(item: EducationItem): EducationDraft {
   };
 }
 
+function mediaAssetLabel(asset: MediaAsset) {
+  return asset.originalName || asset.filename;
+}
+
 export function EducationManagement() {
   const [items, setItems] = useState<EducationItem[]>([]);
+  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
   const [draft, setDraft] = useState(emptyDraft);
   const [message, setMessage] = useState("Cargando estudios.");
   const [isLoading, setIsLoading] = useState(true);
@@ -57,8 +62,12 @@ export function EducationManagement() {
   async function loadEducation() {
     setIsLoading(true);
     try {
-      const nextItems = await adminClient.education();
+      const [nextItems, nextMediaAssets] = await Promise.all([
+        adminClient.education(),
+        mediaClient.list()
+      ]);
       setItems(nextItems);
+      setMediaAssets(nextMediaAssets);
       setMessage(nextItems.length ? "Estudios sincronizados con la API." : "Sin estudios registrados.");
     } catch {
       setMessage("No se pudieron cargar estudios. Comprueba la sesion admin.");
@@ -156,6 +165,9 @@ export function EducationManagement() {
     }
   }
 
+  const selectedDraftAttachment = mediaAssets.some((asset) => asset.id === draft.attachmentId) ? draft.attachmentId : "";
+  const selectedEditAttachment = mediaAssets.some((asset) => asset.id === editDraft.attachmentId) ? editDraft.attachmentId : "";
+
   return (
     <div className="grid gap-6">
       <section className="rounded-lg border border-border bg-card p-6">
@@ -195,6 +207,24 @@ export function EducationManagement() {
         <div className="grid gap-2 md:col-span-2">
           <Label htmlFor="educationCertificateUrl">URL certificado</Label>
           <Input id="educationCertificateUrl" value={draft.certificateUrl} onChange={(event) => setDraft((current) => ({ ...current, certificateUrl: event.target.value }))} />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="educationAttachment">Adjunto ID</Label>
+          <Input id="educationAttachment" value={draft.attachmentId} onChange={(event) => setDraft((current) => ({ ...current, attachmentId: event.target.value }))} />
+        </div>
+        <div className="grid gap-2 md:col-span-2">
+          <Label htmlFor="educationAttachmentMedia">Adjunto media</Label>
+          <select
+            id="educationAttachmentMedia"
+            className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+            value={selectedDraftAttachment}
+            onChange={(event) => setDraft((current) => ({ ...current, attachmentId: event.target.value }))}
+          >
+            <option value="">{mediaAssets.length ? "Seleccionar asset" : "Sin assets en media"}</option>
+            {mediaAssets.map((asset) => (
+              <option key={asset.id} value={asset.id}>{mediaAssetLabel(asset)}</option>
+            ))}
+          </select>
         </div>
         <div className="grid gap-2 md:col-span-3">
           <Label htmlFor="educationDescription">Descripcion</Label>
@@ -282,6 +312,20 @@ export function EducationManagement() {
             <div className="grid gap-2">
               <Label htmlFor="editEducationAttachment">Adjunto ID estudio</Label>
               <Input id="editEducationAttachment" value={editDraft.attachmentId} onChange={(event) => setEditDraft((current) => ({ ...current, attachmentId: event.target.value }))} />
+            </div>
+            <div className="grid gap-2 md:col-span-2">
+              <Label htmlFor="editEducationAttachmentMedia">Adjunto media estudio</Label>
+              <select
+                id="editEducationAttachmentMedia"
+                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                value={selectedEditAttachment}
+                onChange={(event) => setEditDraft((current) => ({ ...current, attachmentId: event.target.value }))}
+              >
+                <option value="">{mediaAssets.length ? "Seleccionar asset" : "Sin assets en media"}</option>
+                {mediaAssets.map((asset) => (
+                  <option key={asset.id} value={asset.id}>{mediaAssetLabel(asset)}</option>
+                ))}
+              </select>
             </div>
             <div className="grid gap-2 md:col-span-2">
               <Label htmlFor="editEducationDescription">Descripcion estudio</Label>

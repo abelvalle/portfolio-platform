@@ -816,6 +816,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Institucion estudio").fill("Demo Institute");
   await page.getByLabel("Fecha estudio").fill("2026");
   await page.getByLabel("Descripcion estudio").fill("Programa ampliado de gestion.");
+  await page.getByLabel("Adjunto media estudio").selectOption("media-1");
+  await expect(page.getByLabel("Adjunto ID estudio")).toHaveValue("media-1");
   await page.getByRole("button", { name: "Guardar estudio" }).click();
   await expect(page.getByText("Estudio actualizado: Project Management avanzado.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Project Management" })).toBeVisible();
