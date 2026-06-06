@@ -42,6 +42,13 @@ function formatJson(value: unknown) {
   return JSON.stringify(value || {}, null, 2);
 }
 
+function getInitialVersionId() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+  return new URLSearchParams(window.location.search).get("versionId") || "";
+}
+
 export function CvVersionTable() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
   const [templates, setTemplates] = useState<CvTemplateItem[]>([]);
@@ -56,7 +63,9 @@ export function CvVersionTable() {
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const syncJsonEditor = useCallback((nextVersions: CvVersionItem[]) => {
-    const selectedVersion = nextVersions.find((version) => version.id === jsonVersionId) || nextVersions[0];
+    const requestedVersionId = getInitialVersionId();
+    const preferredId = jsonVersionId || requestedVersionId;
+    const selectedVersion = nextVersions.find((version) => version.id === preferredId) || nextVersions[0];
     if (!selectedVersion) {
       setJsonVersionId("");
       setJsonDraft("{}");
@@ -66,7 +75,11 @@ export function CvVersionTable() {
     if (!jsonVersionId || selectedVersion.id !== jsonVersionId) {
       setJsonVersionId(selectedVersion.id);
       setJsonDraft(formatJson(selectedVersion.structuredJson));
-      setJsonMessage("JSON estructurado cargado desde la API.");
+      setJsonMessage(
+        requestedVersionId === selectedVersion.id
+          ? "Version enlazada desde el comparador cargada para edicion."
+          : "JSON estructurado cargado desde la API."
+      );
     }
   }, [jsonVersionId]);
 

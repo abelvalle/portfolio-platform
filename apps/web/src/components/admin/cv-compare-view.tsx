@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GitCompare, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { Edit3, FileText, GitCompare, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cvClient, type CvCompareResult, type CvVersionItem } from "@/lib/api";
 
@@ -29,6 +30,7 @@ export function CvCompareView() {
   const [message, setMessage] = useState("Cargando versiones.");
   const [isLoading, setIsLoading] = useState(true);
   const [isComparing, setIsComparing] = useState(false);
+  const adaptedVersion = versions.find((version) => version.id === adaptedId);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -120,6 +122,28 @@ export function CvCompareView() {
         <GitCompare data-icon="inline-start" />
         {isComparing ? "Comparando..." : "Comparar versiones"}
       </Button>
+
+      {adaptedId ? (
+        <section className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-card p-5">
+          <div>
+            <p className="font-mono text-xs text-primary">Revision</p>
+            <h2 className="mt-1 text-lg font-semibold">Acciones sobre la version adaptada</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {adaptedVersion ? `Seleccionada: ${adaptedVersion.name}.` : "Selecciona una version adaptada para revisar sus datos estructurados."}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link className={buttonVariants()} href={`/admin/cv/versions?versionId=${encodeURIComponent(adaptedId)}`}>
+              <Edit3 data-icon="inline-start" />
+              Editar JSON adaptado
+            </Link>
+            <Link className={buttonVariants({ variant: "outline" })} href="/admin/cv/editor">
+              <FileText data-icon="inline-start" />
+              Editar CV principal
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       <section className="grid gap-4 lg:grid-cols-2">
         {[

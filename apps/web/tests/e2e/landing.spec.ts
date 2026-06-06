@@ -176,6 +176,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Comparar versiones" }).click();
   await expect(page.getByText("Solo en adaptado").first()).toBeVisible();
   await expect(page.getByText("KPIs", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Editar JSON adaptado" }).click();
+  await expect(page).toHaveURL(/\/admin\/cv\/versions\?versionId=cv-adapted/);
+  await expect(page.locator("#structuredJsonVersion")).toHaveValue("cv-adapted");
 
   await page.goto("/admin/cv/editor");
   await expect(page.getByRole("heading", { name: "Editor de CV" })).toBeVisible();
