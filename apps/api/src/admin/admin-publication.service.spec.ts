@@ -185,6 +185,72 @@ describe('AdminPublicationService', () => {
     );
   });
 
+  it('builds a field-level project draft review', async () => {
+    const service = new AdminPublicationService(
+      mockPrisma({
+        project: projectFixture({
+          description: 'Portfolio publico.',
+          draftJson: {
+            description: 'Portfolio publico con CV Manager.',
+            technologies: ['Next.js', 'NestJS'],
+          },
+        }),
+      }),
+    );
+
+    const review = await service.projectReview('project-1');
+
+    expect(review.hasDraft).toBe(true);
+    expect(review.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: 'description',
+          before: 'Portfolio publico.',
+          after: 'Portfolio publico con CV Manager.',
+          changed: true,
+        }),
+      ]),
+    );
+  });
+
+  it('publishes project drafts and logs changed fields', async () => {
+    const prisma = mockPrisma({
+      project: projectFixture({
+        description: 'Portfolio publico.',
+        draftJson: {
+          description: 'Portfolio publico con CV Manager.',
+          technologies: ['Next.js', 'NestJS'],
+          featured: true,
+        },
+      }),
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.publishProjectDraft('project-1', 'user-1');
+
+    expect(result.changedFields).toEqual([
+      'description',
+      'technologies',
+      'featured',
+    ]);
+    expect(prisma.project.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          description: 'Portfolio publico con CV Manager.',
+          draftJson: expect.anything(),
+        }),
+      }),
+    );
+    expect(prisma.changeLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          entityType: 'project',
+          action: 'publish',
+        }),
+      }),
+    );
+  });
+
   it('restores theme values from a changelog entry', async () => {
     const prisma = mockPrisma({
       theme: {
@@ -252,17 +318,44 @@ describe('AdminPublicationService', () => {
       }),
     );
   });
+
+  it('restores project values from a changelog entry', async () => {
+    const prisma = mockPrisma({
+      project: projectFixture({ description: 'Version nueva.' }),
+      change: {
+        id: 'change-project-1',
+        entityType: 'project',
+        entityId: 'project-1',
+        beforeJson: projectSnapshot({ description: 'Version anterior.' }),
+      },
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.restorePublicationChange(
+      'change-project-1',
+      'user-1',
+    );
+
+    expect(result.changedFields).toEqual(['description']);
+    expect(prisma.project.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ description: 'Version anterior.' }),
+      }),
+    );
+  });
 });
 
 function mockPrisma({
   theme,
   profile,
   experience,
+  project,
   change,
 }: {
   theme?: Record<string, unknown>;
   profile?: Record<string, unknown>;
   experience?: Record<string, unknown>;
+  project?: Record<string, unknown>;
   change?: Record<string, unknown>;
 }) {
   return {
@@ -279,6 +372,10 @@ function mockPrisma({
     experience: {
       findUnique: jest.fn().mockResolvedValue(experience),
       update: jest.fn().mockResolvedValue(experience),
+    },
+    project: {
+      findUnique: jest.fn().mockResolvedValue(project),
+      update: jest.fn().mockResolvedValue(project),
     },
     changeLog: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -349,6 +446,37 @@ function experienceSnapshot(overrides: Record<string, unknown> = {}) {
     technologies: ['Cloud'],
     methodologies: ['Agile'],
     skills: ['Stakeholders'],
+    ...overrides,
+  };
+}
+
+function projectFixture(overrides: Record<string, unknown> = {}) {
+  return {
+    ...projectSnapshot(),
+    id: 'project-1',
+    featured: false,
+    visible: true,
+    sample: false,
+    order: 0,
+    draftJson: null,
+    publishedAt: null,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+function projectSnapshot(overrides: Record<string, unknown> = {}) {
+  return {
+    name: 'Portfolio Platform',
+    slug: 'portfolio-platform',
+    description: 'Portfolio publico.',
+    status: 'published',
+    categoryId: null,
+    categoryName: 'Portfolio',
+    technologies: ['Next.js'],
+    imageUrl: null,
+    publicUrl: null,
+    repositoryUrl: null,
     ...overrides,
   };
 }

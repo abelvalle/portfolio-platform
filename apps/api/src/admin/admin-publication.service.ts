@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ChangeLog, Prisma } from '@prisma/client';
+import { ChangeLog, Prisma, PublishStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 const THEME_FIELDS = [
@@ -90,6 +90,35 @@ const REQUIRED_EXPERIENCE_FIELDS = new Set<ExperienceField>([
   'startDate',
   'description',
 ]);
+
+const PROJECT_FIELDS = [
+  'name',
+  'slug',
+  'description',
+  'status',
+  'categoryId',
+  'categoryName',
+  'technologies',
+  'imageUrl',
+  'publicUrl',
+  'repositoryUrl',
+  'featured',
+  'visible',
+  'sample',
+  'order',
+] as const;
+
+type ProjectField = (typeof PROJECT_FIELDS)[number];
+type ProjectValue = string | number | boolean | string[] | null;
+type ProjectValues = Record<ProjectField, ProjectValue>;
+
+const REQUIRED_PROJECT_FIELDS = new Set<ProjectField>([
+  'name',
+  'slug',
+  'description',
+]);
+
+const PROJECT_STATUSES = new Set<string>(Object.values(PublishStatus));
 
 @Injectable()
 export class AdminPublicationService {
@@ -207,6 +236,41 @@ export class AdminPublicationService {
       entityId: experience.id,
       hasDraft: fields.some((field) => field.changed),
       publishedAt: experience.publishedAt,
+      fields,
+      latestChanges,
+    };
+  }
+
+  async projectReview(id: string) {
+    const [project, latestChanges] = await Promise.all([
+      this.prisma.project.findUnique({ where: { id } }),
+      this.latestChanges('project'),
+    ]);
+
+    if (!project || project.deletedAt) {
+      throw new NotFoundException('Project not found');
+    }
+
+    const published = this.pickProjectValues(project);
+    const draft = this.readProjectDraft(project.draftJson);
+    const fields = PROJECT_FIELDS.map((field) => {
+      const before = published[field];
+      const hasDraftValue =
+        draft && Object.prototype.hasOwnProperty.call(draft, field);
+      const after = hasDraftValue ? (draft[field] ?? null) : before;
+      return {
+        field,
+        before,
+        after,
+        changed: !this.samePublicationValue(before, after),
+      };
+    });
+
+    return {
+      entityType: 'project',
+      entityId: project.id,
+      hasDraft: fields.some((field) => field.changed),
+      publishedAt: project.publishedAt,
       fields,
       latestChanges,
     };
@@ -401,6 +465,73 @@ export class AdminPublicationService {
     };
   }
 
+  async publishProjectDraft(id: string, actorUserId?: string) {
+    const project = await this.prisma.project.findUnique({
+      where: { id },
+    });
+    if (!project || project.deletedAt) {
+      throw new NotFoundException('Project not found');
+    }
+
+    const draft = this.readProjectDraft(project.draftJson);
+    if (!draft) {
+      throw new BadRequestException('Project draft not found');
+    }
+
+    const before = this.pickProjectValues(project);
+    const after: ProjectValues = { ...before, ...draft };
+    const changedFields = PROJECT_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    const missingRequiredFields = [...REQUIRED_PROJECT_FIELDS].filter(
+      (field) => !String(after[field] ?? '').trim(),
+    );
+    if (missingRequiredFields.length) {
+      throw new BadRequestException(
+        `Project draft is missing required fields: ${missingRequiredFields.join(', ')}`,
+      );
+    }
+    if (!changedFields.length) {
+      throw new BadRequestException('Project draft has no changes');
+    }
+
+    const published = await this.prisma.project.update({
+      where: { id: project.id },
+      data: {
+        ...this.buildProjectUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'project',
+        entityId: project.id,
+        action: 'publish',
+        summary: `Published project draft (${changedFields.join(', ')})`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'publish',
+        resource: 'project',
+        resourceId: project.id,
+        metadata: { changedFields } as never,
+      },
+    });
+
+    return {
+      published,
+      changedFields,
+    };
+  }
+
   async restoreThemeChange(changeLogId: string, actorUserId?: string) {
     const change = await this.prisma.changeLog.findUnique({
       where: { id: changeLogId },
@@ -430,6 +561,10 @@ export class AdminPublicationService {
 
     if (change.entityType === 'experience') {
       return this.restoreExperienceSnapshot(change, actorUserId);
+    }
+
+    if (change.entityType === 'project') {
+      return this.restoreProjectSnapshot(change, actorUserId);
     }
 
     throw new NotFoundException('Publication change not found');
@@ -630,6 +765,72 @@ export class AdminPublicationService {
     };
   }
 
+  private async restoreProjectSnapshot(
+    change: ChangeLog,
+    actorUserId?: string,
+  ) {
+    if (!change.entityId) {
+      throw new NotFoundException('Project change not found');
+    }
+
+    const restoreValues = this.readProjectDraft(change.beforeJson);
+    if (!restoreValues) {
+      throw new BadRequestException('Project change cannot be restored');
+    }
+
+    const project = await this.prisma.project.findUnique({
+      where: { id: change.entityId },
+    });
+    if (!project || project.deletedAt) {
+      throw new NotFoundException('Project not found');
+    }
+
+    const before = this.pickProjectValues(project);
+    const after: ProjectValues = { ...before, ...restoreValues };
+    const changedFields = PROJECT_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    if (!changedFields.length) {
+      throw new BadRequestException('Project is already at this version');
+    }
+
+    const restored = await this.prisma.project.update({
+      where: { id: project.id },
+      data: {
+        ...this.buildProjectUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'project',
+        entityId: project.id,
+        action: 'restore',
+        summary: `Restored project change ${change.id}`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'restore',
+        resource: 'project',
+        resourceId: project.id,
+        metadata: { changeLogId: change.id, changedFields } as never,
+      },
+    });
+
+    return {
+      restored,
+      changedFields,
+    };
+  }
+
   latestChanges(entityType?: string) {
     return this.prisma.changeLog.findMany({
       where: entityType ? { entityType } : undefined,
@@ -808,6 +1009,105 @@ export class AdminPublicationService {
     return Object.keys(values).length ? values : null;
   }
 
+  private pickProjectValues(project: Record<string, unknown>): ProjectValues {
+    return {
+      name: this.stringValue(project.name),
+      slug: this.stringValue(project.slug),
+      description: this.stringValue(project.description),
+      status: this.publishStatusValue(project.status),
+      categoryId:
+        typeof project.categoryId === 'string' ? project.categoryId : null,
+      categoryName:
+        typeof project.categoryName === 'string' ? project.categoryName : null,
+      technologies: this.stringArrayValue(project.technologies),
+      imageUrl: typeof project.imageUrl === 'string' ? project.imageUrl : null,
+      publicUrl:
+        typeof project.publicUrl === 'string' ? project.publicUrl : null,
+      repositoryUrl:
+        typeof project.repositoryUrl === 'string'
+          ? project.repositoryUrl
+          : null,
+      featured: Boolean(project.featured),
+      visible: project.visible !== false,
+      sample: Boolean(project.sample),
+      order: typeof project.order === 'number' ? project.order : 0,
+    };
+  }
+
+  private buildProjectUpdateData(
+    values: ProjectValues,
+  ): Prisma.ProjectUpdateInput {
+    const data: Prisma.ProjectUpdateInput = {
+      name: String(values.name ?? ''),
+      slug: String(values.slug ?? ''),
+      description: String(values.description ?? ''),
+      status: this.publishStatusValue(values.status),
+      categoryName: values.categoryName ? String(values.categoryName) : null,
+      technologies: this.stringArrayValue(values.technologies),
+      imageUrl: values.imageUrl ? String(values.imageUrl) : null,
+      publicUrl: values.publicUrl ? String(values.publicUrl) : null,
+      repositoryUrl: values.repositoryUrl ? String(values.repositoryUrl) : null,
+      featured: Boolean(values.featured),
+      visible: Boolean(values.visible),
+      sample: Boolean(values.sample),
+      order: typeof values.order === 'number' ? values.order : 0,
+    };
+
+    data.category = values.categoryId
+      ? { connect: { id: String(values.categoryId) } }
+      : { disconnect: true };
+
+    return data;
+  }
+
+  private readProjectDraft(draftJson: unknown): Partial<ProjectValues> | null {
+    if (
+      !draftJson ||
+      typeof draftJson !== 'object' ||
+      Array.isArray(draftJson)
+    ) {
+      return null;
+    }
+
+    const draft = draftJson as Record<string, unknown>;
+    const values = PROJECT_FIELDS.reduce((current, field) => {
+      const value = draft[field];
+      if (value === undefined) {
+        return current;
+      }
+      if (field === 'technologies') {
+        if (Array.isArray(value)) {
+          current[field] = this.stringArrayValue(value);
+        }
+        return current;
+      }
+      if (['featured', 'visible', 'sample'].includes(field)) {
+        if (typeof value === 'boolean') {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (field === 'order') {
+        if (typeof value === 'number') {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (field === 'status') {
+        if (typeof value === 'string' && PROJECT_STATUSES.has(value)) {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (typeof value === 'string' || value === null) {
+        current[field] = value;
+      }
+      return current;
+    }, {} as Partial<ProjectValues>);
+
+    return Object.keys(values).length ? values : null;
+  }
+
   private samePublicationValue(left: unknown, right: unknown) {
     return JSON.stringify(left) === JSON.stringify(right);
   }
@@ -835,5 +1135,11 @@ export class AdminPublicationService {
     }
     const date = value instanceof Date ? value : new Date(value);
     return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  }
+
+  private publishStatusValue(value: unknown): PublishStatus {
+    return typeof value === 'string' && PROJECT_STATUSES.has(value)
+      ? (value as PublishStatus)
+      : PublishStatus.draft;
   }
 }
