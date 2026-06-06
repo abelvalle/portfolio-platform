@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 08:34 CEST.
+Estado actualizado: 2026-06-06 08:38 CEST.
 
 ## Hitos completados
 
@@ -1653,6 +1653,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Panel de privacidad y retención Analytics
+
+- `/admin/analytics` muestra `retentionDays`, persistencia de user-agent y estado de sal IP desde `GET /api/v1/analytics/privacy`.
+- El panel permite ejecutar `POST /api/v1/analytics/retention/prune` cuando hay retención configurada.
+- La acción recarga los datos y muestra cuántos eventos fueron purgados.
+- Añadidos tipos y cliente API frontend para privacidad y purga de retención.
+- Añadida cobertura e2e del estado y acción de purga en el panel.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1666,7 +1681,7 @@ Verificacion realizada en este hito:
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto` y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
-- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, privacidad configurable y purga por retención; faltan embudos y segmentación avanzada.
+- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad y purga de retención desde UI; faltan embudos y segmentación avanzada.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo y segmentación operativa; falta segmentación por fuente/canal y cohorts.
 - Experiencias UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, reordenado drag/drop y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, selector de media, categorías gestionadas visualmente y orden drag/drop.

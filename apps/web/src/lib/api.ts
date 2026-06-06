@@ -247,6 +247,12 @@ export const adminClient = {
   analyticsTimeSeries(filters?: AnalyticsEventFilters) {
     return apiFetch<AnalyticsTimeSeriesPoint[]>(withQuery("/analytics/timeseries", filters));
   },
+  analyticsPrivacy() {
+    return apiFetch<AnalyticsPrivacyStatus>("/analytics/privacy");
+  },
+  pruneAnalyticsRetention() {
+    return apiFetch<AnalyticsRetentionPruneResult>("/analytics/retention/prune", { method: "POST" });
+  },
   appModules() {
     return apiFetch<AppModuleItem[]>("/app-modules?includeHidden=true");
   },
@@ -547,6 +553,18 @@ export type AnalyticsTimeSeriesPoint = {
   date: string;
   total: number;
   types: Record<string, number>;
+};
+
+export type AnalyticsPrivacyStatus = {
+  retentionDays: number | null;
+  storeUserAgent: boolean;
+  ipHashSaltConfigured: boolean;
+};
+
+export type AnalyticsRetentionPruneResult = {
+  retentionDays: number | null;
+  cutoff?: string;
+  deleted: number;
 };
 
 export type AppModuleItem = {

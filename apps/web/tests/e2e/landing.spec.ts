@@ -275,6 +275,26 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       )
     });
   });
+  await page.route("**/api/v1/analytics/privacy", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        retentionDays: 30,
+        storeUserAgent: false,
+        ipHashSaltConfigured: true
+      })
+    });
+  });
+  await page.route("**/api/v1/analytics/retention/prune", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        retentionDays: 30,
+        cutoff: "2026-05-07T08:00:00.000Z",
+        deleted: 2
+      })
+    });
+  });
   await page.route(/\/api\/v1\/analytics(\?.*)?$/, async (route) => {
     const url = new URL(route.request().url());
     const eventType = url.searchParams.get("type");
@@ -652,6 +672,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("Hasta")).toBeVisible();
   await expect(page.getByLabel("Tipo de evento")).toBeVisible();
   await expect(page.getByText("Tendencias", { exact: true })).toBeVisible();
+  await expect(page.getByText("Privacidad analytics")).toBeVisible();
+  await expect(page.getByText("retencion 30 dias")).toBeVisible();
+  await page.getByRole("button", { name: "Purgar retencion" }).click();
+  await expect(page.getByText("Retencion aplicada: 2 eventos purgados.")).toBeVisible();
   await expect(page.getByText("Serie diaria")).toBeVisible();
   await expect(page.getByText("2026-06-06").first()).toBeVisible();
   await expect(page.getByText("landing_visit").first()).toBeVisible();

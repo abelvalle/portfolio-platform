@@ -6,7 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { adminClient, type AnalyticsEvent, type AnalyticsSummary, type AnalyticsTimeSeriesPoint } from "@/lib/api";
+import {
+  adminClient,
+  type AnalyticsEvent,
+  type AnalyticsPrivacyStatus,
+  type AnalyticsSummary,
+  type AnalyticsTimeSeriesPoint
+} from "@/lib/api";
 
 const summaryLabels: Array<[keyof AnalyticsSummary, string]> = [
   ["totalVisits", "Visitas landing"],
@@ -27,24 +33,28 @@ export function AnalyticsDashboard() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [timeSeries, setTimeSeries] = useState<AnalyticsTimeSeriesPoint[]>([]);
+  const [privacy, setPrivacy] = useState<AnalyticsPrivacyStatus | null>(null);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [eventType, setEventType] = useState("");
   const [message, setMessage] = useState("Cargando analitica.");
   const [isLoading, setIsLoading] = useState(true);
+  const [isPruning, setIsPruning] = useState(false);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
       const filters = { from: fromDate || undefined, to: toDate || undefined };
-      const [nextSummary, nextEvents, nextTimeSeries] = await Promise.all([
+      const [nextSummary, nextEvents, nextTimeSeries, nextPrivacy] = await Promise.all([
         adminClient.analyticsSummary(filters),
         adminClient.analyticsEvents({ ...filters, type: eventType || undefined }),
-        adminClient.analyticsTimeSeries({ ...filters, type: eventType || undefined })
+        adminClient.analyticsTimeSeries({ ...filters, type: eventType || undefined }),
+        adminClient.analyticsPrivacy()
       ]);
       setSummary(nextSummary);
       setEvents(nextEvents);
       setTimeSeries(nextTimeSeries);
+      setPrivacy(nextPrivacy);
       setMessage("Analitica sincronizada con filtros de API.");
     } catch {
       setMessage("No se pudo cargar analitica. Comprueba sesion admin.");
@@ -76,6 +86,19 @@ export function AnalyticsDashboard() {
     link.click();
     URL.revokeObjectURL(url);
     setMessage("CSV de eventos filtrados generado.");
+  }
+
+  async function pruneRetention() {
+    setIsPruning(true);
+    try {
+      const result = await adminClient.pruneAnalyticsRetention();
+      await loadAnalytics();
+      setMessage(`Retencion aplicada: ${result.deleted} eventos purgados.`);
+    } catch {
+      setMessage("No se pudo ejecutar la purga de retencion.");
+    } finally {
+      setIsPruning(false);
+    }
   }
 
   return (
@@ -130,6 +153,23 @@ export function AnalyticsDashboard() {
             <p className="mt-2 text-3xl font-semibold">{summary?.[key] ?? 0}</p>
           </div>
         ))}
+      </section>
+
+      <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-mono text-sm text-primary">Privacidad analytics</p>
+            <h2 className="mt-1 text-xl font-semibold">Retencion y metadata</h2>
+          </div>
+          <Button type="button" variant="outline" onClick={pruneRetention} disabled={isPruning || !privacy?.retentionDays}>
+            {isPruning ? "Purgando..." : "Purgar retencion"}
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline">retencion {privacy?.retentionDays ? `${privacy.retentionDays} dias` : "off"}</Badge>
+          <Badge variant="outline">user-agent {privacy?.storeUserAgent === false ? "off" : "on"}</Badge>
+          <Badge variant="outline">salt IP {privacy?.ipHashSaltConfigured ? "on" : "off"}</Badge>
+        </div>
       </section>
 
       <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
