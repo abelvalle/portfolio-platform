@@ -939,6 +939,13 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("heading", { name: "Versiones de CV" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Auditoria reciente CV" })).toBeVisible();
   await expect(page.getByLabel("Evento generate_pdf")).toBeVisible();
+  await page.getByRole("button", { name: "Ver auditoria generate_pdf" }).click();
+  const auditDialog = page.getByRole("dialog", { name: "Detalle auditoria CV" });
+  await expect(auditDialog).toBeVisible();
+  await expect(auditDialog.getByText("mediaAssetId", { exact: true })).toBeVisible();
+  await expect(auditDialog.getByText("media-1", { exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("heading", { name: "Detalle auditoria CV" })).toBeHidden();
   await page.getByLabel("Accion").selectOption("update");
   await expect(page.getByLabel("Evento update")).toBeVisible();
   await expect(page.getByLabel("Plantilla", { exact: true })).toBeVisible();

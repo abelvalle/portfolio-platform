@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Archive, Copy, FileText, RefreshCw, Save, Star, Trash2 } from "lucide-react";
+import { Archive, Copy, Eye, FileText, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -263,6 +263,19 @@ function auditValue(value: unknown) {
   return "";
 }
 
+function auditDetailValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map((item) => auditDetailValue(item)).filter(Boolean).join(", ");
+  }
+  if (value && typeof value === "object") {
+    return JSON.stringify(value, null, 2);
+  }
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return "";
+}
+
 function auditMetadata(metadata?: Record<string, unknown> | null) {
   if (!metadata) {
     return "";
@@ -333,6 +346,7 @@ export function CvVersionTable() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingArchiveVersion, setPendingArchiveVersion] = useState<CvVersionItem | null>(null);
   const [pendingJsonSave, setPendingJsonSave] = useState<{ version: CvVersionItem; structuredJson: unknown } | null>(null);
+  const [selectedAuditLog, setSelectedAuditLog] = useState<AuditLogItem | null>(null);
 
   const syncJsonEditor = useCallback((nextVersions: CvVersionItem[]) => {
     const requestedVersionId = getInitialVersionId();
@@ -900,10 +914,14 @@ export function CvVersionTable() {
         {auditLogs.length ? (
           <div className="grid gap-2">
             {auditLogs.slice(0, 6).map((log) => (
-              <div key={log.id} className="grid gap-1 rounded-lg border border-border p-3 text-sm md:grid-cols-[160px_1fr_160px]">
+              <div key={log.id} className="grid gap-2 rounded-lg border border-border p-3 text-sm md:grid-cols-[160px_1fr_160px_110px]">
                 <span className="font-medium" aria-label={`Evento ${log.action}`}>{log.action}</span>
                 <span className="text-muted-foreground">{auditMetadata(log.metadata) || log.resourceId || "Sin metadata."}</span>
                 <span className="text-xs text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</span>
+                <Button type="button" variant="outline" size="sm" aria-label={`Ver auditoria ${log.action}`} onClick={() => setSelectedAuditLog(log)}>
+                  <Eye data-icon="inline-start" />
+                  Detalle
+                </Button>
               </div>
             ))}
           </div>
@@ -1178,6 +1196,53 @@ export function CvVersionTable() {
             </Button>
             <Button type="button" variant="destructive" onClick={() => pendingArchiveVersion && deleteVersion(pendingArchiveVersion)}>
               Archivar version
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(selectedAuditLog)} onOpenChange={(open) => !open && setSelectedAuditLog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalle auditoria CV</DialogTitle>
+            <DialogDescription>
+              Evento {selectedAuditLog?.action} sobre {selectedAuditLog?.resourceId || selectedAuditLog?.resource}.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedAuditLog ? (
+            <div className="grid gap-4 text-sm">
+              <div className="grid gap-2 rounded-lg border border-border p-3">
+                <div className="flex flex-wrap justify-between gap-2">
+                  <span className="text-muted-foreground">Recurso</span>
+                  <span>{selectedAuditLog.resource}</span>
+                </div>
+                <div className="flex flex-wrap justify-between gap-2">
+                  <span className="text-muted-foreground">ID recurso</span>
+                  <span>{selectedAuditLog.resourceId || "Sin ID"}</span>
+                </div>
+                <div className="flex flex-wrap justify-between gap-2">
+                  <span className="text-muted-foreground">Fecha</span>
+                  <span>{new Date(selectedAuditLog.createdAt).toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <p className="font-medium">Metadata</p>
+                {Object.entries(selectedAuditLog.metadata || {}).length ? (
+                  Object.entries(selectedAuditLog.metadata || {}).map(([key, value]) => (
+                    <div key={key} className="grid gap-1 rounded-lg border border-border p-3">
+                      <span className="font-mono text-xs text-muted-foreground">{key}</span>
+                      <pre className="whitespace-pre-wrap break-words font-sans text-sm">{auditDetailValue(value) || "Sin valor"}</pre>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">Sin metadata registrada.</p>
+                )}
+              </div>
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setSelectedAuditLog(null)}>
+              Cerrar
             </Button>
           </DialogFooter>
         </DialogContent>
