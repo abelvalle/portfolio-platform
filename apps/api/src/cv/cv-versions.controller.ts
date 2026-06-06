@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from '../common/guards/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermissions } from '../common/guards/permissions.decorator';
@@ -34,37 +35,44 @@ export class CvVersionsController {
 
   @RequirePermissions('manage_cv')
   @Post()
-  create(@Body() body: Record<string, any>) {
-    return this.cvVersionService.create(body);
+  create(
+    @Body() body: Record<string, any>,
+    @CurrentUser() user: { id?: string },
+  ) {
+    return this.cvVersionService.create(body, user?.id);
   }
 
   @RequirePermissions('manage_cv')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: Record<string, any>) {
-    return this.cvVersionService.update(id, body);
+  update(
+    @Param('id') id: string,
+    @Body() body: Record<string, any>,
+    @CurrentUser() user: { id?: string },
+  ) {
+    return this.cvVersionService.update(id, body, user?.id);
   }
 
   @RequirePermissions('manage_cv')
   @Post(':id/generate-pdf')
-  generatePdf(@Param('id') id: string) {
-    return this.cvVersionService.generatePdf(id);
+  generatePdf(@Param('id') id: string, @CurrentUser() user: { id?: string }) {
+    return this.cvVersionService.generatePdf(id, user?.id);
   }
 
   @RequirePermissions('manage_cv')
   @Post(':id/generate-docx')
-  generateDocx(@Param('id') id: string) {
-    return this.cvVersionService.generateDocx(id);
+  generateDocx(@Param('id') id: string, @CurrentUser() user: { id?: string }) {
+    return this.cvVersionService.generateDocx(id, user?.id);
   }
 
   @RequirePermissions('manage_cv')
   @Post(':id/set-primary')
-  setPrimary(@Param('id') id: string) {
-    return this.cvVersionService.setPrimary(id);
+  setPrimary(@Param('id') id: string, @CurrentUser() user: { id?: string }) {
+    return this.cvVersionService.setPrimary(id, user?.id);
   }
 
   @RequirePermissions('manage_cv')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cvVersionService.remove(id);
+  remove(@Param('id') id: string, @CurrentUser() user: { id?: string }) {
+    return this.cvVersionService.remove(id, user?.id);
   }
 }

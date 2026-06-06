@@ -25,8 +25,8 @@ export class CvVersionService {
     return version;
   }
 
-  create(data: Record<string, any>) {
-    return this.prisma.cvVersion.create({
+  async create(data: Record<string, any>, actorUserId?: string) {
+    const created = await this.prisma.cvVersion.create({
       data: {
         ...data,
         slug: data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
@@ -34,22 +34,35 @@ export class CvVersionService {
         structuredJson: data.structuredJson || {},
       } as any,
     });
+    await this.audit('create', created.id, actorUserId, {
+      cvId: created.cvId,
+      status: created.status,
+    });
+    return created;
   }
 
-  async update(id: string, data: Record<string, any>) {
-    await this.findOne(id);
-    return this.prisma.cvVersion.update({ where: { id }, data });
+  async update(id: string, data: Record<string, any>, actorUserId?: string) {
+    const before = await this.findOne(id);
+    const updated = await this.prisma.cvVersion.update({ where: { id }, data });
+    await this.audit('update', id, actorUserId, {
+      changedFields: this.changedFields(before, data),
+    });
+    return updated;
   }
 
-  async remove(id: string) {
+  async remove(id: string, actorUserId?: string) {
     await this.findOne(id);
-    return this.prisma.cvVersion.update({
+    const archived = await this.prisma.cvVersion.update({
       where: { id },
       data: { deletedAt: new Date(), status: PublishStatus.archived },
     });
+    await this.audit('archive', id, actorUserId, {
+      status: PublishStatus.archived,
+    });
+    return archived;
   }
 
-  async setPrimary(id: string) {
+  async setPrimary(id: string, actorUserId?: string) {
     const version = await this.findOne(id);
     const [, selected] = await this.prisma.$transaction([
       this.prisma.cvVersion.updateMany({
@@ -61,39 +74,53 @@ export class CvVersionService {
         data: { isPrimary: true, status: PublishStatus.published },
       }),
     ]);
+    await this.audit('set_primary', id, actorUserId, {
+      cvId: version.cvId,
+      status: PublishStatus.published,
+    });
     return selected;
   }
 
-  async generatePdf(id: string) {
+  async generatePdf(id: string, actorUserId?: string) {
     const version = await this.findOneWithTemplate(id);
     const file = await this.exporter.generatePdf(
       version.id,
       version.structuredJson as never,
       { template: this.exportTemplate(version) },
     );
-    return this.persistGeneratedFile(
+    const result = await this.persistGeneratedFile(
       version.id,
       file,
       'pdf',
       'application/pdf',
       this.generationMetadata(version),
     );
+    await this.audit('generate_pdf', id, actorUserId, {
+      mediaAssetId: result.media.id,
+      template: this.exportTemplate(version),
+    });
+    return result;
   }
 
-  async generateDocx(id: string) {
+  async generateDocx(id: string, actorUserId?: string) {
     const version = await this.findOneWithTemplate(id);
     const file = await this.exporter.generateDocx(
       version.id,
       version.structuredJson as never,
       { template: this.exportTemplate(version) },
     );
-    return this.persistGeneratedFile(
+    const result = await this.persistGeneratedFile(
       version.id,
       file,
       'docx',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       this.generationMetadata(version),
     );
+    await this.audit('generate_docx', id, actorUserId, {
+      mediaAssetId: result.media.id,
+      template: this.exportTemplate(version),
+    });
+    return result;
   }
 
   private async findOneWithTemplate(id: string) {
@@ -163,5 +190,31 @@ export class CvVersionService {
           : { generatedDocxId: media.id },
     });
     return { media, generated };
+  }
+
+  private changedFields(
+    before: Record<string, unknown>,
+    data: Record<string, unknown>,
+  ) {
+    return Object.keys(data).filter(
+      (field) => JSON.stringify(before[field]) !== JSON.stringify(data[field]),
+    );
+  }
+
+  private audit(
+    action: string,
+    resourceId: string,
+    actorUserId?: string,
+    metadata?: Record<string, unknown>,
+  ) {
+    return this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action,
+        resource: 'cv-version',
+        resourceId,
+        metadata: (metadata || {}) as never,
+      },
+    });
   }
 }

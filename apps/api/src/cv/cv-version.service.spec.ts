@@ -13,7 +13,7 @@ describe('CvVersionService', () => {
     };
     const service = new CvVersionService(prisma as never, exporter as never);
 
-    const result = await service.generatePdf('version-1');
+    const result = await service.generatePdf('version-1', 'user-1');
 
     expect(exporter.generatePdf).toHaveBeenCalledWith(
       'version-1',
@@ -31,13 +31,21 @@ describe('CvVersionService', () => {
       data: { generatedPdfId: 'media-1' },
     });
     expect(result.media.id).toBe('media-1');
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'generate_pdf',
+        resource: 'cv-version',
+        resourceId: 'version-1',
+      }),
+    });
   });
 
   it('marks only the selected version as primary within its CV', async () => {
     const prisma = mockPrisma();
     const service = new CvVersionService(prisma as never, {} as never);
 
-    const result = await service.setPrimary('version-1');
+    const result = await service.setPrimary('version-1', 'user-1');
 
     expect(prisma.cvVersion.updateMany).toHaveBeenCalledWith({
       where: { cvId: 'cv-1', deletedAt: null },
@@ -49,15 +57,55 @@ describe('CvVersionService', () => {
     });
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ id: 'version-1', isPrimary: true });
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'set_primary',
+        resource: 'cv-version',
+        resourceId: 'version-1',
+      }),
+    });
+  });
+
+  it('audits version creation and updates', async () => {
+    const prisma = mockPrisma();
+    const service = new CvVersionService(prisma as never, {} as never);
+
+    await service.create({ cvId: 'cv-1', name: 'CV copia' }, 'user-1');
+    await service.update('version-1', { status: 'published' }, 'user-1');
+
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'create',
+        resource: 'cv-version',
+        resourceId: 'version-new',
+      }),
+    });
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'update',
+        resource: 'cv-version',
+        resourceId: 'version-1',
+        metadata: { changedFields: ['status'] },
+      }),
+    });
   });
 });
 
 function mockPrisma() {
   return {
     cvVersion: {
+      create: jest.fn().mockResolvedValue({
+        id: 'version-new',
+        cvId: 'cv-1',
+        status: 'draft',
+      }),
       findUnique: jest.fn().mockResolvedValue({
         id: 'version-1',
         cvId: 'cv-1',
+        status: 'draft',
         deletedAt: null,
         structuredJson: { profile: { fullName: 'Abel Valle Rosa' } },
         template: {
@@ -78,6 +126,9 @@ function mockPrisma() {
         mediaAssetId: 'media-1',
         type: 'pdf',
       }),
+    },
+    auditLog: {
+      create: jest.fn().mockResolvedValue({ id: 'audit-1' }),
     },
     $transaction: jest
       .fn()

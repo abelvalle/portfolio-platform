@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 12:58 CEST.
+Estado actualizado: 2026-06-06 13:05 CEST.
 
 ## Hitos completados
 
@@ -2159,6 +2159,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Auditoria de acciones en Versiones CV
+
+- `CvVersionService` registra `AuditLog` al crear, actualizar, archivar, marcar principal y generar PDF/DOCX de versiones CV.
+- `CvVersionsController` pasa el usuario autenticado al servicio para asociar las acciones admin.
+- La auditoria usa `resource: cv-version`, `resourceId` y metadata con campos cambiados, estado, plantilla o media generada segun accion.
+- Añadida cobertura unitaria para creacion, actualizacion, marcar principal y generacion PDF.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -2169,6 +2183,7 @@ Verificacion realizada en este hito:
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
 - Adaptación CV a versión final: el wizard ya propone datos desde API y crea una `CvVersion` draft desde la propuesta; falta aceptar/rechazar cambios por bloque y publicar tras revisión.
+- Auditoria CV avanzada: Versiones CV ya audita acciones clave; falta exponer esas trazas filtradas desde UI del CV Manager.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: hay trazabilidad persistente y vista admin de entregas/test; falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto` y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
