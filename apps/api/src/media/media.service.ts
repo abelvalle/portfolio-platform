@@ -60,10 +60,14 @@ export class MediaService {
     });
   }
 
-  async upload(file: UploadedMediaFile, data: UploadMediaDto) {
+  async upload(
+    file: UploadedMediaFile,
+    data: UploadMediaDto,
+    actorUserId?: string,
+  ) {
     await this.assertWithinQuota(file.size);
     const stored = await this.storage.save(file);
-    return this.prisma.mediaAsset.create({
+    const asset = await this.prisma.mediaAsset.create({
       data: {
         filename: stored.filename,
         originalName: file.originalname,
@@ -78,6 +82,14 @@ export class MediaService {
         } as never,
       },
     });
+    await this.audit('upload', asset.id, actorUserId, {
+      filename: asset.filename,
+      originalName: asset.originalName,
+      mimeType: asset.mimeType,
+      size: asset.size,
+      type: asset.type,
+    });
+    return asset;
   }
 
   async update(id: string, data: UpdateMediaAssetDto) {
@@ -88,12 +100,20 @@ export class MediaService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, actorUserId?: string) {
     await this.findOne(id);
-    return this.prisma.mediaAsset.update({
+    const asset = await this.prisma.mediaAsset.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
+    await this.audit('delete', asset.id, actorUserId, {
+      filename: asset.filename,
+      originalName: asset.originalName,
+      mimeType: asset.mimeType,
+      size: asset.size,
+      type: asset.type,
+    });
+    return asset;
   }
 
   async download(id: string) {
@@ -118,5 +138,22 @@ export class MediaService {
     if (usedBytes + incomingBytes > quotaBytes) {
       throw new BadRequestException('Media storage quota exceeded');
     }
+  }
+
+  private audit(
+    action: string,
+    resourceId: string,
+    userId?: string,
+    metadata: Record<string, unknown> = {},
+  ) {
+    return this.prisma.auditLog.create({
+      data: {
+        userId,
+        action,
+        resource: 'media',
+        resourceId,
+        metadata: metadata as never,
+      },
+    });
   }
 }

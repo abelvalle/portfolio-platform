@@ -16,6 +16,7 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserRole } from '@prisma/client';
 import type { Response } from 'express';
+import { CurrentUser } from '../common/guards/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { Roles } from '../common/guards/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -85,8 +86,9 @@ export class MediaController {
   upload(
     @UploadedFile() file: UploadedMediaFile,
     @Body() body: UploadMediaDto,
+    @CurrentUser() user: { id?: string },
   ) {
-    return this.mediaService.upload(file, body);
+    return this.mediaService.upload(file, body, user?.id);
   }
 
   @ApiBearerAuth()
@@ -109,7 +111,7 @@ export class MediaController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin, UserRole.editor)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.mediaService.remove(id);
+  remove(@Param('id') id: string, @CurrentUser() user: { id?: string }) {
+    return this.mediaService.remove(id, user?.id);
   }
 }

@@ -61,4 +61,88 @@ describe('MediaService', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(storage.save).not.toHaveBeenCalled();
   });
+
+  it('audits successful uploads', async () => {
+    const prisma = {
+      mediaAsset: {
+        create: jest.fn().mockResolvedValue({
+          id: 'media-1',
+          filename: 'cv-demo.pdf',
+          originalName: 'CV Demo.pdf',
+          mimeType: 'application/pdf',
+          size: 2000,
+          type: 'cv-manual',
+        }),
+      },
+      auditLog: {
+        create: jest.fn(),
+      },
+    };
+    const storage = {
+      getStatus: jest
+        .fn()
+        .mockReturnValue({ provider: 'local', quotaMb: null }),
+      save: jest.fn().mockResolvedValue({
+        filename: 'cv-demo.pdf',
+        storageKey: 'storage/uploads/cv-demo.pdf',
+        url: '/media/uploads/cv-demo.pdf',
+      }),
+    };
+    const service = new MediaService(prisma as never, storage as never);
+
+    await service.upload(
+      {
+        originalname: 'CV Demo.pdf',
+        mimetype: 'application/pdf',
+        size: 2000,
+        buffer: Buffer.from('pdf'),
+      },
+      { type: 'cv-manual' },
+      'user-1',
+    );
+
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'upload',
+        resource: 'media',
+        resourceId: 'media-1',
+      }),
+    });
+  });
+
+  it('audits soft deletes', async () => {
+    const prisma = {
+      mediaAsset: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'media-1',
+          filename: 'cv-demo.pdf',
+          deletedAt: null,
+        }),
+        update: jest.fn().mockResolvedValue({
+          id: 'media-1',
+          filename: 'cv-demo.pdf',
+          originalName: 'CV Demo.pdf',
+          mimeType: 'application/pdf',
+          size: 2000,
+          type: 'cv-manual',
+        }),
+      },
+      auditLog: {
+        create: jest.fn(),
+      },
+    };
+    const service = new MediaService(prisma as never, {} as never);
+
+    await service.remove('media-1', 'user-1');
+
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'delete',
+        resource: 'media',
+        resourceId: 'media-1',
+      }),
+    });
+  });
 });
