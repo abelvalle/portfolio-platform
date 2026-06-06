@@ -1,4 +1,8 @@
 import { CvVersionService } from './cv-version.service';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { MediaService } from '../media/media.service';
+import { MediaStorageService } from '../media/media-storage.service';
 
 describe('CvVersionService', () => {
   it('generates PDF for the selected version and stores media references', async () => {
@@ -158,7 +162,85 @@ describe('CvVersionService', () => {
     expect(csv).toContain('"set_primary","cv-version","version-1","user-1"');
     expect(csv).toContain('"{""status"":""published""}"');
   });
+
+  it('generates a persisted PDF media asset that can be downloaded from local storage', async () => {
+    const storageDir = join(
+      'storage-test',
+      `cv-generated-download-${Date.now()}`,
+    );
+    const storageRoot = join(process.cwd(), storageDir);
+    const cvDir = join(storageRoot, 'cv');
+    const pdfPath = join(cvDir, 'version-1.pdf');
+    mkdirSync(cvDir, { recursive: true });
+    writeFileSync(pdfPath, Buffer.from('%PDF-1.4 generated cv'));
+
+    const prisma = mockPrisma();
+    let persistedMedia: Record<string, unknown> | null = null;
+    prisma.mediaAsset.create.mockImplementationOnce(({ data }) => {
+      persistedMedia = {
+        id: 'media-generated-pdf',
+        deletedAt: null,
+        ...data,
+      };
+      return Promise.resolve(persistedMedia);
+    });
+    prisma.mediaAsset.findUnique.mockImplementation(({ where }) =>
+      Promise.resolve(
+        where.id === 'media-generated-pdf' ? persistedMedia : null,
+      ),
+    );
+    const exporter = {
+      generatePdf: jest.fn().mockResolvedValue({
+        filename: 'version-1.pdf',
+        path: pdfPath,
+        url: '/media/generated/version-1.pdf',
+      }),
+      generateDocx: jest.fn(),
+    };
+    const versionService = new CvVersionService(
+      prisma as never,
+      exporter as never,
+    );
+    const mediaService = new MediaService(
+      prisma as never,
+      new MediaStorageService({
+        get: jest.fn((key: string) =>
+          key === 'STORAGE_DIR' ? storageDir : undefined,
+        ),
+      } as never),
+    );
+
+    try {
+      const generated = await versionService.generatePdf('version-1', 'user-1');
+      const download = await mediaService.download(generated.media.id);
+      const buffer = await streamToBuffer(download.stream);
+
+      expect(generated.media).toEqual(
+        expect.objectContaining({
+          id: 'media-generated-pdf',
+          filename: 'version-1.pdf',
+          mimeType: 'application/pdf',
+          storageKey: pdfPath,
+        }),
+      );
+      expect(download.asset.id).toBe('media-generated-pdf');
+      expect(buffer.toString()).toBe('%PDF-1.4 generated cv');
+    } finally {
+      rmSync(storageRoot, { recursive: true, force: true });
+    }
+  });
 });
+
+function streamToBuffer(stream: NodeJS.ReadableStream) {
+  return new Promise<Buffer>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    stream.on('data', (chunk) =>
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)),
+    );
+    stream.on('error', reject);
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+  });
+}
 
 function mockPrisma() {
   return {
@@ -185,6 +267,7 @@ function mockPrisma() {
     },
     mediaAsset: {
       create: jest.fn().mockResolvedValue({ id: 'media-1' }),
+      findUnique: jest.fn().mockResolvedValue(null),
     },
     cvGeneratedFile: {
       create: jest.fn().mockResolvedValue({

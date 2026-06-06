@@ -2996,13 +2996,30 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Descarga fisica de CV generado persistido
+
+- `CvVersionService.generatePdf` queda cubierto con una prueba que persiste un `MediaAsset` generado.
+- La prueba crea un archivo PDF temporal dentro de storage local relativo y lo descarga mediante `MediaService.download`.
+- Se verifica que el asset generado conserva filename, MIME type y `storageKey` descargable.
+- Este hito cubre el ciclo servicio -> media persistida -> stream local; sigue pendiente el e2e con Postgres real.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- cv-version.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/api run build`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
 - Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder` y existe contrato `data-*` compartido con preview web; DOCX sigue usando renderer propio aunque comparte orden de bloques, y falta diff visual automatizado contra PDF generado.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
-- ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; falta prueba con DB real que genere archivos desde una version persistida y valide descarga.
+- ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado, y servicios cubren MediaAsset generado descargable desde storage local; falta prueba con DB real que genere archivos desde una version persistida y valide descarga HTTP.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: el wizard ya permite aceptar/rechazar bloques principales, skills individuales y experiencias individuales con trazabilidad; falta revision granular de campos internos de cada experiencia.
 - Roles objetivo CV: la pantalla admin permite CRUD, el wizard los usa como precarga y el backend persiste el rol elegido; falta analytics agregada de uso por rol objetivo.
@@ -3032,5 +3049,5 @@ Verificacion realizada en este hito:
 ## Próximos hitos priorizados
 
 1. Diff visual automatizado entre preview A4 y PDF generado.
-2. Prueba e2e con DB real para generar y descargar archivos CV persistidos.
+2. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
 3. Granularidad multi-item en Versiones CV para experiencias, skills, proyectos, educacion y certificaciones.
