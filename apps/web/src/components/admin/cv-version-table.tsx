@@ -1650,6 +1650,83 @@ export function CvVersionTable() {
     }, "Seccion personalizada reordenada en el JSON. Guarda JSON para persistirla.");
   }
 
+  function deleteStructuredListItem(
+    field: "skills" | "experiences" | "projects" | "education" | "certifications",
+    index: number,
+    syncDrafts: (nextStructuredJson: Record<string, unknown>, nextIndex: number) => void,
+    label: string
+  ) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de eliminar.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const currentItems = listField(nextStructuredJson, field);
+    if (!currentItems.length || index < 0 || index >= currentItems.length) {
+      setJsonMessage(`No hay ${label.toLowerCase()} seleccionado para eliminar.`);
+      return;
+    }
+
+    const nextItems = currentItems.filter((_, itemIndex) => itemIndex !== index);
+    if (nextItems.length) {
+      nextStructuredJson[field] = nextItems;
+    } else {
+      delete nextStructuredJson[field];
+    }
+    if (field === "experiences") {
+      delete nextStructuredJson.experience;
+    }
+
+    const nextIndex = Math.min(index, Math.max(nextItems.length - 1, 0));
+    setJsonDraft(formatJson(nextStructuredJson));
+    syncDrafts(nextStructuredJson, nextIndex);
+    setJsonMessage(`${label} eliminado del JSON. Guarda JSON para persistir el cambio.`);
+  }
+
+  function deleteSkillFormItem() {
+    deleteStructuredListItem("skills", skillFormDraft.index, (nextStructuredJson, nextIndex) => {
+      setSkillsDraft(skillsFromStructuredJson(nextStructuredJson));
+      setSkillFormDraft(skillFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Skill");
+  }
+
+  function deleteExperienceFormItem() {
+    deleteStructuredListItem("experiences", experienceFormDraft.index, (nextStructuredJson, nextIndex) => {
+      setExperiencesDraft(experiencesFromStructuredJson(nextStructuredJson));
+      setExperienceFormDraft(experienceFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Experiencia");
+  }
+
+  function deleteProjectFormItem() {
+    deleteStructuredListItem("projects", projectFormDraft.index, (nextStructuredJson, nextIndex) => {
+      setProjectsDraft(projectsFromStructuredJson(nextStructuredJson));
+      setProjectFormDraft(projectFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Proyecto");
+  }
+
+  function deleteEducationFormItem() {
+    deleteStructuredListItem("education", educationFormDraft.index, (nextStructuredJson, nextIndex) => {
+      setEducationDraft(educationFromStructuredJson(nextStructuredJson));
+      setEducationFormDraft(educationFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Educacion");
+  }
+
+  function deleteCertificationFormItem() {
+    deleteStructuredListItem("certifications", certificationFormDraft.index, (nextStructuredJson, nextIndex) => {
+      setCertificationsDraft(certificationsFromStructuredJson(nextStructuredJson));
+      setCertificationFormDraft(certificationFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Certificacion");
+  }
+
   async function saveStructuredJson() {
     const selectedVersion = versions.find((version) => version.id === jsonVersionId);
     if (!selectedVersion) {
@@ -2205,9 +2282,14 @@ export function CvVersionTable() {
                   )}
                 </select>
               </div>
-              <Button type="button" variant="outline" onClick={applySkillFormBlock} disabled={!jsonVersionId}>
-                Aplicar skill granular
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" onClick={applySkillFormBlock} disabled={!jsonVersionId}>
+                  Aplicar skill granular
+                </Button>
+                <Button type="button" variant="outline" onClick={deleteSkillFormItem} disabled={!jsonVersionId || !skillOptions.length || skillFormDraft.index >= skillOptions.length}>
+                  Eliminar skill granular
+                </Button>
+              </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="grid gap-2">
@@ -2271,9 +2353,14 @@ export function CvVersionTable() {
                   )}
                 </select>
               </div>
-              <Button type="button" variant="outline" onClick={applyExperienceFormBlock} disabled={!jsonVersionId}>
-                Aplicar experiencia granular
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" onClick={applyExperienceFormBlock} disabled={!jsonVersionId}>
+                  Aplicar experiencia granular
+                </Button>
+                <Button type="button" variant="outline" onClick={deleteExperienceFormItem} disabled={!jsonVersionId || !experienceOptions.length || experienceFormDraft.index >= experienceOptions.length}>
+                  Eliminar experiencia granular
+                </Button>
+              </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="grid gap-2">
@@ -2378,9 +2465,14 @@ export function CvVersionTable() {
                   )}
                 </select>
               </div>
-              <Button type="button" variant="outline" onClick={applyProjectFormBlock} disabled={!jsonVersionId}>
-                Aplicar proyecto granular
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" onClick={applyProjectFormBlock} disabled={!jsonVersionId}>
+                  Aplicar proyecto granular
+                </Button>
+                <Button type="button" variant="outline" onClick={deleteProjectFormItem} disabled={!jsonVersionId || !projectOptions.length || projectFormDraft.index >= projectOptions.length}>
+                  Eliminar proyecto granular
+                </Button>
+              </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="grid gap-2">
@@ -2453,9 +2545,14 @@ export function CvVersionTable() {
                   )}
                 </select>
               </div>
-              <Button type="button" variant="outline" onClick={applyEducationFormBlock} disabled={!jsonVersionId}>
-                Aplicar educacion granular
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" onClick={applyEducationFormBlock} disabled={!jsonVersionId}>
+                  Aplicar educacion granular
+                </Button>
+                <Button type="button" variant="outline" onClick={deleteEducationFormItem} disabled={!jsonVersionId || !educationOptions.length || educationFormDraft.index >= educationOptions.length}>
+                  Eliminar educacion granular
+                </Button>
+              </div>
             </div>
             <div className="grid gap-3 md:grid-cols-4">
               <div className="grid gap-2">
@@ -2536,9 +2633,14 @@ export function CvVersionTable() {
                   )}
                 </select>
               </div>
-              <Button type="button" variant="outline" onClick={applyCertificationFormBlock} disabled={!jsonVersionId}>
-                Aplicar certificacion granular
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" onClick={applyCertificationFormBlock} disabled={!jsonVersionId}>
+                  Aplicar certificacion granular
+                </Button>
+                <Button type="button" variant="outline" onClick={deleteCertificationFormItem} disabled={!jsonVersionId || !certificationOptions.length || certificationFormDraft.index >= certificationOptions.length}>
+                  Eliminar certificacion granular
+                </Button>
+              </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="grid gap-2">
