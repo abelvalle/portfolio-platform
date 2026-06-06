@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Eye, EyeOff, RefreshCw, Save, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +28,7 @@ export function EducationManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDeleteEducation, setPendingDeleteEducation] = useState<EducationItem | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -95,11 +97,12 @@ export function EducationManagement() {
     }
   }
 
-  async function deleteEducation(id: string) {
-    setBusyId(id);
+  async function deleteEducation(item: EducationItem) {
+    setBusyId(item.id);
     try {
-      await adminClient.deleteEducation(id);
-      setMessage("Estudio eliminado.");
+      await adminClient.deleteEducation(item.id);
+      setPendingDeleteEducation(null);
+      setMessage(`Estudio eliminado: ${item.title}.`);
       await loadEducation();
     } catch {
       setMessage("No se pudo eliminar el estudio.");
@@ -188,7 +191,7 @@ export function EducationManagement() {
                 <Button type="button" variant="outline" size="icon" onClick={() => patchEducation(item.id, { order: item.order + 1 })} disabled={busyId === item.id}>
                   <ArrowDown />
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => deleteEducation(item.id)} disabled={busyId === item.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Eliminar ${item.title}`} onClick={() => setPendingDeleteEducation(item)} disabled={busyId === item.id}>
                   <Trash2 />
                 </Button>
               </span>
@@ -198,6 +201,25 @@ export function EducationManagement() {
           )}
         </div>
       </section>
+
+      <Dialog open={Boolean(pendingDeleteEducation)} onOpenChange={(open) => !open && setPendingDeleteEducation(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar borrado</DialogTitle>
+            <DialogDescription>
+              Esta accion eliminara el estudio {pendingDeleteEducation?.title}. Puedes ocultarlo si solo quieres retirarlo de la landing.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingDeleteEducation(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => pendingDeleteEducation && deleteEducation(pendingDeleteEducation)}>
+              Eliminar estudio
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

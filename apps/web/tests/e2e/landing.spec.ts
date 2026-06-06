@@ -280,6 +280,25 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route(/\/api\/v1\/education(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "education-1",
+          title: "Project Management",
+          institution: "Demo Institute",
+          date: "2025",
+          description: "Formacion demo",
+          type: "course",
+          certificateUrl: null,
+          attachmentId: null,
+          order: 0,
+          visible: true
+        }
+      ])
+    });
+  });
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
@@ -319,6 +338,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/portfolio/education");
   await expect(page.getByRole("heading", { name: "Estudios" })).toBeVisible();
+  await expect(page.getByRole("main").getByText("Project Management")).toBeVisible();
+  await page.getByRole("button", { name: "Eliminar Project Management" }).click();
+  await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancelar" }).click();
 
   await page.goto("/admin/portfolio/certifications");
   await expect(page.getByRole("heading", { name: "Certificaciones" })).toBeVisible();
@@ -389,6 +412,6 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("button", { name: "Exportar CSV" })).toBeVisible();
   await expect(page.getByLabel("Desde")).toBeVisible();
   await expect(page.getByLabel("Hasta")).toBeVisible();
-  await expect(page.getByText("Tendencias")).toBeVisible();
+  await expect(page.getByText("Tendencias", { exact: true })).toBeVisible();
   await expect(page.getByText("landing_visit").first()).toBeVisible();
 });
