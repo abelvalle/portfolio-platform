@@ -1,6 +1,25 @@
 import { CvService } from './cv.service';
 
 describe('CvService public downloads', () => {
+  it('exposes section order from the primary CV version', async () => {
+    const prisma = mockPrisma();
+    const service = new CvService(
+      prisma as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+
+    const result = await service.getPrimary();
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'cv-1',
+        sectionOrder: ['summary', 'page-break', 'skills'],
+      }),
+    );
+  });
+
   it('generates a primary PDF with a public template override', async () => {
     const prisma = mockPrisma();
     const exporter = {
@@ -63,7 +82,16 @@ describe('CvService public downloads', () => {
 function mockPrisma() {
   return {
     cv: {
-      findFirst: jest.fn().mockResolvedValue({ id: 'cv-1' }),
+      findFirst: jest.fn().mockResolvedValue({
+        id: 'cv-1',
+        versions: [
+          {
+            structuredJson: {
+              sectionOrder: ['summary', 'page-break', 'skills'],
+            },
+          },
+        ],
+      }),
     },
     cvVersion: {
       findFirst: jest.fn().mockResolvedValue({

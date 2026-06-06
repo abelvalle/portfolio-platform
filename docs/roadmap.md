@@ -3750,6 +3750,18 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "public CV template detail"`
 - `npm.cmd run build:web`
 
+### SectionOrder primario en GET /cv
+
+- `CvService.getPrimary()` expone `sectionOrder` de la version CV primaria cuando existe en `structuredJson`.
+- El contrato permite que el snapshot publico aplique los saltos manuales reales de la version publicada.
+- Anadida cobertura unitaria para asegurar que `GET /cv` conserva `page-break`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- cv.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3787,4 +3799,4 @@ Verificacion realizada en este hito:
 
 1. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
 2. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.
-3. Conectar `sectionOrder` real de la version CV primaria al endpoint de snapshot publico del backend.
+3. Ejecutar una suite raiz completa tras los hitos A4/page-break recientes.

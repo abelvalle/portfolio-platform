@@ -248,6 +248,8 @@ En exportacion PDF, el HTML A4 usa estilos `@media print` para permitir que cont
 
 `structuredJson.sectionOrder` acepta el item especial `page-break` para forzar un salto manual en el HTML/PDF server-side; el DOCX ignora ese marcador y conserva el orden de secciones.
 
+`GET /cv` expone `sectionOrder` de la versión CV primaria cuando está disponible, de modo que el frontend público puede aplicar los mismos saltos manuales en el preview A4.
+
 Los previews A4 web publico/admin exponen el mismo contrato `data-cv-section` para `header`, `contact`, `summary`, `experiences`, `skills`, `languages`, `formation` y `projects`.
 
 Los items de contacto renderizados por preview web y HTML server-side exponen `data-cv-contact-item="true"` y omiten campos vacios.

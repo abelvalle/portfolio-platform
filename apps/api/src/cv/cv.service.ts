@@ -44,7 +44,7 @@ export class CvService {
     if (!cv) {
       throw new NotFoundException('Primary CV not found');
     }
-    return cv;
+    return this.withPrimaryVersionSectionOrder(cv);
   }
 
   create(dto: CreateCvDto) {
@@ -279,6 +279,25 @@ export class CvService {
       ...metadata,
       template: this.exportTemplate(version),
     };
+  }
+
+  private withPrimaryVersionSectionOrder<
+    T extends { versions?: Array<{ structuredJson?: unknown }> },
+  >(cv: T) {
+    const sectionOrder = this.sectionOrderFromStructuredJson(
+      cv.versions?.[0]?.structuredJson,
+    );
+    return sectionOrder.length ? { ...cv, sectionOrder } : cv;
+  }
+
+  private sectionOrderFromStructuredJson(value: unknown) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return [];
+    }
+    const sectionOrder = (value as Record<string, unknown>).sectionOrder;
+    return Array.isArray(sectionOrder)
+      ? sectionOrder.filter((item): item is string => typeof item === 'string')
+      : [];
   }
 
   private async persistGeneratedFile(
