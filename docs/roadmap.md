@@ -3684,6 +3684,19 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 - `npm.cmd run build:web`
 
+### Investigacion de audit Next/PostCSS
+
+- `next@16.2.7` sigue siendo la ultima version estable publicada y depende internamente de `postcss@8.4.31`.
+- Se probo un override raiz de `next -> postcss@8.5.15`, pero npm no lo aplica al subarbol workspace de Next; se retiro para no dejar configuracion inerte.
+- `npm audit fix --force` sigue proponiendo un downgrade rompedor a `next@9.3.3`, por lo que no se aplica.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web ls next postcss --depth=3`
+- `npm.cmd view next version`
+- `npm.cmd view next@latest dependencies.postcss version`
+- `npm.cmd audit --audit-level=moderate` (falla por deuda conocida `next`/`postcss`)
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3715,10 +3728,10 @@ Verificacion realizada en este hito:
 - Restauración por entidad CMS: existe restore para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; falta exponer affordances especificas por entidad en UI mas alla del changelog general.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete, purga fisica diferida y bloqueo local de firma EICAR; falta integracion antivirus externa real.
-- NPM audit: quedan 2 vulnerabilidades moderadas en la cadena `next`/`postcss` confirmadas con `npm.cmd audit --audit-level=moderate`; no se aplica `audit fix --force` porque propone un cambio de versión no seguro para este hito.
+- NPM audit: quedan 2 vulnerabilidades moderadas en la cadena `next`/`postcss` confirmadas con `npm.cmd audit --audit-level=moderate`; `next@16.2.7` es la ultima version estable y todavia depende de `postcss@8.4.31`, no se aplica `audit fix --force` porque propone un downgrade rompedor a `next@9.3.3`.
 
 ## Próximos hitos priorizados
 
 1. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
-2. Resolver `npm audit` de `next`/`postcss` cuando exista ruta compatible sin downgrade forzado.
-3. Refinar paginacion del PDF server-side para documentos largos de mas de dos paginas.
+2. Refinar paginacion del PDF server-side para documentos largos de mas de dos paginas.
+3. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.
