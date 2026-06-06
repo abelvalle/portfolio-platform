@@ -3557,6 +3557,15 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run build:web`
 
+### Guard A4 en preview publico ingles
+
+- La prueba de detalle de plantillas tambien valida ratio A4 y ausencia de overflow horizontal en `/en/cv/templates/ats-friendly`.
+- El guard queda cubierto en desktop y mobile para previews publicos ES/EN.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "public CV template detail"`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
