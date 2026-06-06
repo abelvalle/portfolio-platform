@@ -2193,9 +2193,14 @@ export function CvVersionTable() {
                   onChange={(event) => selectSkillFormIndex(Number(event.target.value))}
                   disabled={!jsonVersionId}
                 >
-                  {skillOptions.length ? skillOptions.map((skill, index) => (
-                    <option key={`${skill}-${index}`} value={index}>{skill}</option>
-                  )) : (
+                  {skillOptions.length ? (
+                    <>
+                      {skillOptions.map((skill, index) => (
+                        <option key={`${skill}-${index}`} value={index}>{skill}</option>
+                      ))}
+                      <option value={skillOptions.length}>Nueva skill</option>
+                    </>
+                  ) : (
                     <option value="0">Nueva skill</option>
                   )}
                 </select>
@@ -2254,9 +2259,14 @@ export function CvVersionTable() {
                   onChange={(event) => selectExperienceFormIndex(Number(event.target.value))}
                   disabled={!jsonVersionId}
                 >
-                  {experienceOptions.length ? experienceOptions.map((experience, index) => (
-                    <option key={`${experience}-${index}`} value={index}>{experience}</option>
-                  )) : (
+                  {experienceOptions.length ? (
+                    <>
+                      {experienceOptions.map((experience, index) => (
+                        <option key={`${experience}-${index}`} value={index}>{experience}</option>
+                      ))}
+                      <option value={experienceOptions.length}>Nueva experiencia</option>
+                    </>
+                  ) : (
                     <option value="0">Nueva experiencia</option>
                   )}
                 </select>
@@ -2356,9 +2366,14 @@ export function CvVersionTable() {
                   onChange={(event) => selectProjectFormIndex(Number(event.target.value))}
                   disabled={!jsonVersionId}
                 >
-                  {projectOptions.length ? projectOptions.map((project, index) => (
-                    <option key={`${project}-${index}`} value={index}>{project}</option>
-                  )) : (
+                  {projectOptions.length ? (
+                    <>
+                      {projectOptions.map((project, index) => (
+                        <option key={`${project}-${index}`} value={index}>{project}</option>
+                      ))}
+                      <option value={projectOptions.length}>Nuevo proyecto</option>
+                    </>
+                  ) : (
                     <option value="0">Nuevo proyecto</option>
                   )}
                 </select>
@@ -2426,9 +2441,14 @@ export function CvVersionTable() {
                   onChange={(event) => selectEducationFormIndex(Number(event.target.value))}
                   disabled={!jsonVersionId}
                 >
-                  {educationOptions.length ? educationOptions.map((item, index) => (
-                    <option key={`${item}-${index}`} value={index}>{item}</option>
-                  )) : (
+                  {educationOptions.length ? (
+                    <>
+                      {educationOptions.map((item, index) => (
+                        <option key={`${item}-${index}`} value={index}>{item}</option>
+                      ))}
+                      <option value={educationOptions.length}>Nueva educacion</option>
+                    </>
+                  ) : (
                     <option value="0">Nueva educacion</option>
                   )}
                 </select>
@@ -2504,9 +2524,14 @@ export function CvVersionTable() {
                   onChange={(event) => selectCertificationFormIndex(Number(event.target.value))}
                   disabled={!jsonVersionId}
                 >
-                  {certificationOptions.length ? certificationOptions.map((item, index) => (
-                    <option key={`${item}-${index}`} value={index}>{item}</option>
-                  )) : (
+                  {certificationOptions.length ? (
+                    <>
+                      {certificationOptions.map((item, index) => (
+                        <option key={`${item}-${index}`} value={index}>{item}</option>
+                      ))}
+                      <option value={certificationOptions.length}>Nueva certificacion</option>
+                    </>
+                  ) : (
                     <option value="0">Nueva certificacion</option>
                   )}
                 </select>

@@ -1442,6 +1442,13 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Aplicar skill granular" }).click();
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"category\": \"Reporting\"/);
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"level\": \"Avanzado\"/);
+  await page.locator("#skillFormIndex").selectOption("2");
+  await page.getByLabel("Nombre skill CV").fill("Cloud");
+  await page.getByLabel("Categoria skill CV").fill("Cloud");
+  await page.getByLabel("Nivel skill CV").fill("Intermedio");
+  await page.getByRole("button", { name: "Aplicar skill granular" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"name\": \"Cloud\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"level\": \"Intermedio\"/);
   await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
   await confirmJsonSaveIfNeeded();
