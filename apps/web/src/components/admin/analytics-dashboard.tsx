@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +51,8 @@ export function AnalyticsDashboard() {
   const filteredEvents = useMemo(() => {
     return events.filter((event) => isInsideDateRange(event.createdAt, fromDate, toDate));
   }, [events, fromDate, toDate]);
+  const trend = useMemo(() => buildAnalyticsTrend(filteredEvents), [filteredEvents]);
+  const maxTypeCount = Math.max(...trend.topTypes.map((item) => item.count), 1);
 
   function exportCsv() {
     const blob = new Blob([buildCsv(filteredEvents)], { type: "text/csv;charset=utf-8" });
@@ -103,6 +106,47 @@ export function AnalyticsDashboard() {
         ))}
       </section>
 
+      <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-mono text-sm text-primary">Tendencias</p>
+            <h2 className="mt-1 text-xl font-semibold">Actividad filtrada</h2>
+          </div>
+          <Badge variant="outline">{trend.totalEvents} eventos</Badge>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-lg border border-border p-4">
+            <p className="text-sm text-muted-foreground">Dias activos</p>
+            <p className="mt-2 text-2xl font-semibold">{trend.activeDays}</p>
+          </div>
+          <div className="rounded-lg border border-border p-4">
+            <p className="text-sm text-muted-foreground">Dia con mas actividad</p>
+            <p className="mt-2 text-2xl font-semibold">{trend.topDay || "Sin datos"}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{trend.topDayCount} eventos</p>
+          </div>
+          <div className="rounded-lg border border-border p-4">
+            <p className="text-sm text-muted-foreground">Evento dominante</p>
+            <p className="mt-2 text-2xl font-semibold">{trend.topType || "Sin datos"}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{trend.topTypeCount} registros</p>
+          </div>
+        </div>
+        <div className="grid gap-3">
+          {trend.topTypes.length ? trend.topTypes.map((item) => (
+            <div key={item.type} className="grid gap-2">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="font-medium">{item.type}</span>
+                <span className="text-muted-foreground">{item.count}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${(item.count / maxTypeCount) * 100}%` }} />
+              </div>
+            </div>
+          )) : (
+            <p className="text-sm text-muted-foreground">Sin eventos suficientes para calcular tendencias.</p>
+          )}
+        </div>
+      </section>
+
       <section className="overflow-x-auto rounded-lg border border-border">
         <div className="min-w-[720px]">
           <div className="grid grid-cols-[180px_1fr_1fr_180px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
@@ -147,6 +191,41 @@ function formatDate(value: string) {
     return value;
   }
   return new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
+function buildAnalyticsTrend(events: AnalyticsEvent[]) {
+  const byDay = new Map<string, number>();
+  const byType = new Map<string, number>();
+
+  for (const event of events) {
+    const day = toDayKey(event.createdAt);
+    byDay.set(day, (byDay.get(day) || 0) + 1);
+    byType.set(event.type, (byType.get(event.type) || 0) + 1);
+  }
+
+  const topDay = [...byDay.entries()].sort((a, b) => b[1] - a[1])[0];
+  const topTypes = [...byType.entries()]
+    .map(([type, count]) => ({ type, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+
+  return {
+    totalEvents: events.length,
+    activeDays: byDay.size,
+    topDay: topDay?.[0] || "",
+    topDayCount: topDay?.[1] || 0,
+    topType: topTypes[0]?.type || "",
+    topTypeCount: topTypes[0]?.count || 0,
+    topTypes
+  };
+}
+
+function toDayKey(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "sin-fecha";
+  }
+  return date.toISOString().slice(0, 10);
 }
 
 function buildCsv(events: AnalyticsEvent[]) {

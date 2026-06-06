@@ -187,6 +187,22 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route(/\/api\/v1\/analytics\/summary(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ totalVisits: 3, cvDownloads: 1, contactSubmits: 1, projectViews: 1 })
+    });
+  });
+  await page.route(/\/api\/v1\/analytics(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        { id: "event-1", type: "landing_visit", path: "/", label: "Landing", createdAt: "2026-06-06T08:00:00.000Z" },
+        { id: "event-2", type: "landing_visit", path: "/", label: "Landing", createdAt: "2026-06-06T09:00:00.000Z" },
+        { id: "event-3", type: "cv_download", path: "/cv", label: "CV", createdAt: "2026-06-05T09:00:00.000Z" }
+      ])
+    });
+  });
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
@@ -285,4 +301,6 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("button", { name: "Exportar CSV" })).toBeVisible();
   await expect(page.getByLabel("Desde")).toBeVisible();
   await expect(page.getByLabel("Hasta")).toBeVisible();
+  await expect(page.getByText("Tendencias")).toBeVisible();
+  await expect(page.getByText("landing_visit").first()).toBeVisible();
 });
