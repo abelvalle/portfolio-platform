@@ -2,6 +2,7 @@ import { UserRole } from '@prisma/client';
 
 export const permissionMatrix: Record<UserRole, string[]> = {
   admin: [
+    'read_dashboard',
     'manage_users',
     'manage_settings',
     'manage_portfolio',
@@ -9,7 +10,13 @@ export const permissionMatrix: Record<UserRole, string[]> = {
     'read_messages',
     'read_analytics',
   ],
-  editor: ['manage_portfolio', 'manage_cv', 'read_messages', 'read_analytics'],
+  editor: [
+    'read_dashboard',
+    'manage_portfolio',
+    'manage_cv',
+    'read_messages',
+    'read_analytics',
+  ],
   viewer: ['read_dashboard', 'read_portfolio', 'read_cv', 'read_analytics'],
 };
 

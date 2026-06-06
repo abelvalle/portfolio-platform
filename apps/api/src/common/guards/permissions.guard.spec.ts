@@ -16,6 +16,12 @@ describe('PermissionsGuard', () => {
     expect(guard.canActivate(mockContext(UserRole.editor))).toBe(false);
   });
 
+  it('allows editors to read the admin dashboard', () => {
+    const guard = new PermissionsGuard(mockReflector(['read_dashboard']));
+
+    expect(guard.canActivate(mockContext(UserRole.editor))).toBe(true);
+  });
+
   it('allows routes without explicit permissions', () => {
     const guard = new PermissionsGuard(mockReflector(undefined));
 
