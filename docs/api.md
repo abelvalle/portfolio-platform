@@ -100,7 +100,23 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `POST /media/upload` (`manage_media`)
 - `POST /analytics/events`
 - `GET /analytics/summary?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_analytics`)
+- `GET /analytics/privacy` (`read_analytics`)
+- `POST /analytics/retention/prune` (`manage_analytics`)
 - `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
+
+## Analytics
+
+`POST /analytics/events` registra eventos anonimos de landing, descarga de CV, contacto y proyectos. La IP se guarda como hash SHA-256 y puede saltearse con `ANALYTICS_IP_HASH_SALT`.
+
+Variables de privacidad:
+
+- `ANALYTICS_IP_HASH_SALT`: sal opcional para el hash de IP.
+- `ANALYTICS_STORE_USER_AGENT`: usa `false` para no persistir user-agent.
+- `ANALYTICS_RETENTION_DAYS`: si es un numero positivo, habilita purga de eventos anteriores a ese umbral.
+
+`GET /analytics/privacy` devuelve configuracion no sensible: dias de retencion, si se guarda user-agent y si hay sal configurada.
+
+`POST /analytics/retention/prune` borra eventos anteriores a la retencion configurada y requiere `manage_analytics`.
 
 ## CV
 

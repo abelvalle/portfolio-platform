@@ -7,6 +7,7 @@ export const permissionMatrix: Record<UserRole, string[]> = {
     'manage_settings',
     'manage_portfolio',
     'manage_cv',
+    'manage_analytics',
     'manage_messages',
     'manage_media',
     'manage_integrations',

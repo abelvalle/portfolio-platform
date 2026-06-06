@@ -23,6 +23,9 @@ Variables:
 - `ADMIN_EMAIL`
 - `ADMIN_PASSWORD`
 - `STORAGE_DIR`
+- `ANALYTICS_IP_HASH_SALT` opcional para saltear hashes de IP
+- `ANALYTICS_STORE_USER_AGENT=false` opcional para no guardar user-agent
+- `ANALYTICS_RETENTION_DAYS` opcional para purgar eventos antiguos
 
 Comandos:
 

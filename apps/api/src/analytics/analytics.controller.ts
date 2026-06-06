@@ -44,6 +44,22 @@ export class AnalyticsController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('read_analytics')
+  @Get('privacy')
+  privacyStatus() {
+    return this.analyticsService.privacyStatus();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_analytics')
+  @Post('retention/prune')
+  pruneRetention() {
+    return this.analyticsService.pruneRetention();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_analytics')
   @Get()
   list(@Query() query: AnalyticsEventsQueryDto) {
     return this.analyticsService.list(query);

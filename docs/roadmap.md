@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 07:53 CEST.
+Estado actualizado: 2026-06-06 08:00 CEST.
 
 ## Hitos completados
 
@@ -1526,6 +1526,23 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Privacidad y retención configurable en Analytics
+
+- `ANALYTICS_IP_HASH_SALT` permite saltear el hash de IP sin guardar direcciones en claro.
+- `ANALYTICS_STORE_USER_AGENT=false` evita persistir user-agent en nuevos eventos.
+- `ANALYTICS_RETENTION_DAYS` habilita purga de eventos anteriores al umbral configurado.
+- `GET /api/v1/analytics/privacy` expone solo configuración no sensible de privacidad.
+- `POST /api/v1/analytics/retention/prune` ejecuta purga protegida con `manage_analytics`.
+- `.env.example`, `README.md`, `docs/api.md` y `docs/deployment.md` documentan las variables y endpoints.
+- Añadidos tests unitarios para hash con sal, descarte de user-agent y purga por retención.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1540,7 +1557,7 @@ Verificacion realizada en este hito:
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado y respuesta `mailto`; falta integracion real con proveedor email.
-- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV y tendencias básicas; faltan retención/anonimización configurable y series históricas más profundas.
+- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias básicas, privacidad configurable y purga por retención; faltan series históricas más profundas.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API y pulso operativo; falta segmentación avanzada.
 - Experiencias UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, reordenado drag/drop y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, selector de media, categorías gestionadas visualmente y orden drag/drop.

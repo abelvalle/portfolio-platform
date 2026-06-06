@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -10,16 +11,44 @@ import {
 
 @Injectable()
 export class AnalyticsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   record(dto: CreateAnalyticsEventDto, ip?: string, userAgent?: string) {
     return this.prisma.analyticsEvent.create({
       data: {
         ...dto,
-        ipHash: ip ? createHash('sha256').update(ip).digest('hex') : null,
-        userAgent,
+        ipHash: this.hashIp(ip),
+        userAgent: this.storeUserAgent() ? userAgent : null,
       },
     });
+  }
+
+  privacyStatus() {
+    return {
+      retentionDays: this.retentionDays(),
+      storeUserAgent: this.storeUserAgent(),
+      ipHashSaltConfigured: Boolean(
+        this.configService.get<string>('ANALYTICS_IP_HASH_SALT'),
+      ),
+    };
+  }
+
+  async pruneRetention(now = new Date()) {
+    const retentionDays = this.retentionDays();
+    if (!retentionDays) {
+      return { retentionDays: null, deleted: 0 };
+    }
+
+    const cutoff = new Date(
+      now.getTime() - retentionDays * 24 * 60 * 60 * 1000,
+    );
+    const result = await this.prisma.analyticsEvent.deleteMany({
+      where: { createdAt: { lt: cutoff } },
+    });
+    return { retentionDays, cutoff, deleted: result.count };
   }
 
   async summary(filters: AnalyticsDateRangeQueryDto = {}) {
@@ -77,6 +106,30 @@ export class AnalyticsService {
     }
 
     return Object.keys(createdAt).length ? { createdAt } : {};
+  }
+
+  private hashIp(ip?: string) {
+    if (!ip) {
+      return null;
+    }
+
+    const salt = this.configService.get<string>('ANALYTICS_IP_HASH_SALT');
+    return createHash('sha256')
+      .update(salt ? `${salt}:${ip}` : ip)
+      .digest('hex');
+  }
+
+  private storeUserAgent() {
+    return (
+      this.configService.get<string>('ANALYTICS_STORE_USER_AGENT') !== 'false'
+    );
+  }
+
+  private retentionDays() {
+    const configured = Number(
+      this.configService.get<string>('ANALYTICS_RETENTION_DAYS') || 0,
+    );
+    return Number.isFinite(configured) && configured > 0 ? configured : null;
   }
 }
 

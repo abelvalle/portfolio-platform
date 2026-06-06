@@ -1,4 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createHash } from 'node:crypto';
 import { AnalyticsService } from './analytics.service';
 
 describe('AnalyticsService filters', () => {
@@ -9,7 +11,7 @@ describe('AnalyticsService filters', () => {
       .mockResolvedValueOnce(3)
       .mockResolvedValueOnce(2)
       .mockResolvedValueOnce(1);
-    const service = new AnalyticsService(prisma as never);
+    const service = createService(prisma);
 
     const result = await service.summary({
       from: '2026-06-01',
@@ -36,7 +38,7 @@ describe('AnalyticsService filters', () => {
   it('applies date range to event list', async () => {
     const prisma = mockPrisma();
     prisma.analyticsEvent.findMany.mockResolvedValue([]);
-    const service = new AnalyticsService(prisma as never);
+    const service = createService(prisma);
 
     await service.list({ from: '2026-06-01' });
 
@@ -54,7 +56,7 @@ describe('AnalyticsService filters', () => {
   it('applies event type to event list', async () => {
     const prisma = mockPrisma();
     prisma.analyticsEvent.findMany.mockResolvedValue([]);
-    const service = new AnalyticsService(prisma as never);
+    const service = createService(prisma);
 
     await service.list({ from: '2026-06-01', type: 'cv_download' });
 
@@ -71,18 +73,72 @@ describe('AnalyticsService filters', () => {
   });
 
   it('rejects inverted date ranges', async () => {
-    const service = new AnalyticsService(mockPrisma() as never);
+    const service = createService(mockPrisma());
 
     await expect(
       service.summary({ from: '2026-06-05', to: '2026-06-01' }),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
+
+  it('hashes IP with optional salt and can drop user agent storage', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsEvent.create.mockResolvedValue({ id: 'event-1' });
+    const service = createService(prisma, {
+      ANALYTICS_IP_HASH_SALT: 'salt',
+      ANALYTICS_STORE_USER_AGENT: 'false',
+    });
+
+    await service.record(
+      { type: 'landing_visit', path: '/' },
+      '127.0.0.1',
+      'ua',
+    );
+
+    expect(prisma.analyticsEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        ipHash: createHash('sha256').update('salt:127.0.0.1').digest('hex'),
+        userAgent: null,
+      }),
+    });
+  });
+
+  it('prunes analytics events older than configured retention', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsEvent.deleteMany.mockResolvedValue({ count: 3 });
+    const service = createService(prisma, {
+      ANALYTICS_RETENTION_DAYS: '30',
+    });
+
+    const result = await service.pruneRetention(
+      new Date('2026-06-30T00:00:00.000Z'),
+    );
+
+    expect(prisma.analyticsEvent.deleteMany).toHaveBeenCalledWith({
+      where: { createdAt: { lt: new Date('2026-05-31T00:00:00.000Z') } },
+    });
+    expect(result).toMatchObject({ retentionDays: 30, deleted: 3 });
+  });
 });
+
+function createService(
+  prisma: ReturnType<typeof mockPrisma>,
+  config: Record<string, string> = {},
+) {
+  return new AnalyticsService(prisma as never, mockConfig(config));
+}
+
+function mockConfig(values: Record<string, string> = {}) {
+  return {
+    get: jest.fn((key: string) => values[key]),
+  } as unknown as ConfigService;
+}
 
 function mockPrisma() {
   return {
     analyticsEvent: {
       count: jest.fn(),
+      create: jest.fn(),
+      deleteMany: jest.fn(),
       findMany: jest.fn(),
     },
   };

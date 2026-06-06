@@ -53,6 +53,12 @@ npm run docker:up
 
 Copia `.env.example` a `.env` para desarrollo local y ajusta secretos.
 
+Variables opcionales de analitica:
+
+- `ANALYTICS_IP_HASH_SALT`: sal para hashes de IP.
+- `ANALYTICS_STORE_USER_AGENT=false`: evita guardar user-agent.
+- `ANALYTICS_RETENTION_DAYS`: dias de retencion antes de purgar eventos antiguos.
+
 ## Migraciones y seed
 
 ```bash
