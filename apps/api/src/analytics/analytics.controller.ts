@@ -9,10 +9,9 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
-import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Roles } from '../common/guards/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/guards/permissions.decorator';
 import { AnalyticsService } from './analytics.service';
 import {
   AnalyticsDateRangeQueryDto,
@@ -35,16 +34,16 @@ export class AnalyticsController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor, UserRole.viewer)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_analytics')
   @Get('summary')
   summary(@Query() query: AnalyticsDateRangeQueryDto) {
     return this.analyticsService.summary(query);
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor, UserRole.viewer)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_analytics')
   @Get()
   list(@Query() query: AnalyticsEventsQueryDto) {
     return this.analyticsService.list(query);

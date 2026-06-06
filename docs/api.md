@@ -96,8 +96,8 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /media/storage/status`
 - `POST /media/upload`
 - `POST /analytics/events`
-- `GET /analytics/summary?from=YYYY-MM-DD&to=YYYY-MM-DD`
-- `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download`
+- `GET /analytics/summary?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_analytics`)
+- `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
 
 ## CV
 
