@@ -3449,6 +3449,15 @@ Verificacion realizada en este hito:
 
 - `npm.cmd --prefix apps/api run test -- cv-export-pdf.spec.ts`
 
+### Contrato DOCX real de orden de secciones
+
+- `cv-export-docx.spec.ts` valida en `word/document.xml` que el DOCX respeta `sectionOrder`.
+- La prueba comprueba el orden Resumen -> Experiencia -> Formacion -> Skills dentro del documento Word generado.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- cv-export-docx.spec.ts`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.

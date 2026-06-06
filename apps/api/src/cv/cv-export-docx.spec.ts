@@ -82,6 +82,15 @@ describe('CvExportService DOCX generation', () => {
       expect(documentXml).toContain('https://example.com/formacion');
       expect(documentXml).toContain('SCRUM-DEMO-2026');
       expect(documentXml).toContain('https://example.com/certificado');
+      expect(documentXml.indexOf('Resumen profesional')).toBeLessThan(
+        documentXml.indexOf('Experiencia'),
+      );
+      expect(documentXml.indexOf('Experiencia')).toBeLessThan(
+        documentXml.indexOf('Formacion y certificaciones'),
+      );
+      expect(
+        documentXml.indexOf('Formacion y certificaciones'),
+      ).toBeLessThan(documentXml.indexOf('Skills'));
       expect(docx.byteLength).toBeGreaterThan(5_000);
     } finally {
       rmSync(storageRoot, { recursive: true, force: true });
