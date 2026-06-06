@@ -13,10 +13,9 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
-import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Roles } from '../common/guards/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/guards/permissions.decorator';
 import {
   ContactMessageQueryDto,
   CreateContactMessageDto,
@@ -43,48 +42,48 @@ export class ContactMessagesController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor, UserRole.viewer)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_messages')
   @Get('webhook/status')
   webhookStatus() {
     return this.contactWebhookService.status();
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_messages')
   @Post('webhook/test')
   testWebhook() {
     return this.contactWebhookService.testDispatch();
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor, UserRole.viewer)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_messages')
   @Get()
   list(@Query() query: ContactMessageQueryDto) {
     return this.contactMessagesService.list(query);
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor, UserRole.viewer)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_messages')
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.contactMessagesService.findOne(id);
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_messages')
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.contactMessagesService.updateStatus(id, status);
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_messages')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.contactMessagesService.remove(id);

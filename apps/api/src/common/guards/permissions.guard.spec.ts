@@ -22,6 +22,18 @@ describe('PermissionsGuard', () => {
     expect(guard.canActivate(mockContext(UserRole.editor))).toBe(true);
   });
 
+  it('allows viewers to read contact messages', () => {
+    const guard = new PermissionsGuard(mockReflector(['read_messages']));
+
+    expect(guard.canActivate(mockContext(UserRole.viewer))).toBe(true);
+  });
+
+  it('rejects viewers from managing contact messages', () => {
+    const guard = new PermissionsGuard(mockReflector(['manage_messages']));
+
+    expect(guard.canActivate(mockContext(UserRole.viewer))).toBe(false);
+  });
+
   it('allows routes without explicit permissions', () => {
     const guard = new PermissionsGuard(mockReflector(undefined));
 

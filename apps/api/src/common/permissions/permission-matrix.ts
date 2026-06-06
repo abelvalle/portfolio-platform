@@ -7,6 +7,7 @@ export const permissionMatrix: Record<UserRole, string[]> = {
     'manage_settings',
     'manage_portfolio',
     'manage_cv',
+    'manage_messages',
     'read_messages',
     'read_analytics',
   ],
@@ -14,10 +15,17 @@ export const permissionMatrix: Record<UserRole, string[]> = {
     'read_dashboard',
     'manage_portfolio',
     'manage_cv',
+    'manage_messages',
     'read_messages',
     'read_analytics',
   ],
-  viewer: ['read_dashboard', 'read_portfolio', 'read_cv', 'read_analytics'],
+  viewer: [
+    'read_dashboard',
+    'read_portfolio',
+    'read_cv',
+    'read_messages',
+    'read_analytics',
+  ],
 };
 
 export function roleHasPermissions(

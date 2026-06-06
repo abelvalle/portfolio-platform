@@ -70,9 +70,9 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET|POST|PATCH|DELETE /skills`
 - `GET|POST|PATCH|DELETE /projects`
 - `POST /contact-messages`
-- `GET /contact-messages?status=unread&from=YYYY-MM-DD&to=YYYY-MM-DD`
-- `GET /contact-messages/webhook/status`
-- `POST /contact-messages/webhook/test`
+- `GET /contact-messages?status=unread&from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_messages`)
+- `GET /contact-messages/webhook/status` (`read_messages`)
+- `POST /contact-messages/webhook/test` (`manage_messages`)
 - `GET /admin/dashboard` (`read_dashboard`)
 - `GET /admin/publication/theme/review`
 - `POST /admin/publication/theme/publish`

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 07:14 CEST.
+Estado actualizado: 2026-06-06 07:17 CEST.
 
 ## Hitos completados
 
@@ -1344,6 +1344,22 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Permisos granulares en mensajes de contacto
+
+- `GET /api/v1/contact-messages`, `GET /api/v1/contact-messages/:id` y `GET /api/v1/contact-messages/webhook/status` usan `read_messages`.
+- `PATCH /api/v1/contact-messages/:id/status`, `DELETE /api/v1/contact-messages/:id` y `POST /api/v1/contact-messages/webhook/test` usan `manage_messages`.
+- La matriz de permisos conserva lectura de mensajes para `viewer` y añade gestion de mensajes para `admin` y `editor`.
+- `POST /api/v1/contact-messages` se mantiene publico con rate limiting para el formulario.
+- `docs/api.md` documenta permisos de lectura/gestion de mensajes listados.
+- Añadidos tests unitarios para lectura de mensajes por `viewer` y rechazo de gestion por `viewer`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1358,7 +1374,7 @@ Verificacion realizada en este hito:
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
 - Adaptación CV a versión final: el wizard ya propone datos desde API; falta aceptar/rechazar cambios por bloque y crear/publicar una `CvVersion` adaptada desde la propuesta.
-- Permisos por acción: existe matriz de permisos y guard granular aplicado a `/users`, `/analytics` y dashboard admin; falta extenderlo al resto de endpoints admin.
+- Permisos por acción: existe matriz de permisos y guard granular aplicado a `/users`, `/analytics`, dashboard admin y mensajes; falta extenderlo al resto de endpoints admin.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado y respuesta `mailto`; falta integracion real con proveedor email.
