@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("landing intro, hero and command palette work", async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
   await expect(page.getByRole("heading", { name: "Abel Valle Rosa" }).first()).toBeVisible();
   await page.getByRole("button", { name: /Saltar intro|Entrar/ }).first().click();
   await expect(page.getByText("IT Project Manager | Delivery Manager").first()).toBeVisible();
@@ -13,6 +14,7 @@ test("landing intro, hero and command palette work", async ({ page }) => {
 
 test("english landing and online resume route work", async ({ page }) => {
   await page.goto("/en");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await page.getByRole("button", { name: /Skip intro|Enter/ }).first().click();
   await expect(page.getByText("Available for IT Project / Delivery Management opportunities")).toBeVisible();
   await page.keyboard.press("Control+K");
