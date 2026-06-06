@@ -973,6 +973,20 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           visible: true,
           draftJson: null,
           publishedAt: null
+        },
+        {
+          id: "education-2",
+          title: "Sample Training",
+          institution: "Demo Institute",
+          date: "2024",
+          description: "Estudio sample para pruebas de reordenado.",
+          type: "course",
+          certificateUrl: null,
+          attachmentId: null,
+          order: 1,
+          visible: false,
+          draftJson: null,
+          publishedAt: null
         }
       ])
     });
@@ -1035,6 +1049,19 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           attachmentId: null,
           order: 0,
           visible: true,
+          draftJson: null,
+          publishedAt: null
+        },
+        {
+          id: "certification-2",
+          title: "Sample Certification",
+          institution: "Demo Academy",
+          date: "2024",
+          description: "Certificacion sample para pruebas de reordenado.",
+          certificateUrl: null,
+          attachmentId: null,
+          order: 1,
+          visible: false,
           draftJson: null,
           publishedAt: null
         }
@@ -1354,6 +1381,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.keyboard.press("Enter");
   await expect(page.getByText("Borrador de estudio publicado. Campos modificados: title, date, description, attachmentId.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Project Management" })).toBeVisible();
+  await expect(page.locator("[data-cms-education-id='education-1']")).toHaveAttribute("draggable", "true");
+  await expect(page.locator("[data-cms-education-id='education-2']")).toHaveAttribute("draggable", "true");
   await page.getByRole("button", { name: "Subir Project Management" }).click();
   await expect(page.getByText("Estudio reordenado: Project Management.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Project Management" }).click();
@@ -1378,6 +1407,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.keyboard.press("Enter");
   await expect(page.getByText("Borrador de certificacion publicado. Campos modificados: title, date, description, attachmentId.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Scrum Master" })).toBeVisible();
+  await expect(page.locator("[data-cms-certification-id='certification-1']")).toHaveAttribute("draggable", "true");
+  await expect(page.locator("[data-cms-certification-id='certification-2']")).toHaveAttribute("draggable", "true");
   await page.getByRole("button", { name: "Subir Scrum Master" }).click();
   await expect(page.getByText("Certificacion reordenada: Scrum Master.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Scrum Master" }).click();
