@@ -114,6 +114,13 @@ export class CvExportService {
                 .join(' - '),
               template,
             ),
+            this.heading('Proyectos', 18, template),
+            ...this.simpleList(
+              this.projectRows(data),
+              (item) => item,
+              template,
+            ),
+            ...this.customSectionParagraphs(data, template),
           ],
         },
       ],
@@ -204,6 +211,10 @@ export class CvExportService {
         ],
         template,
       );
+      this.pdfSection(doc, 'Proyectos', this.projectRows(data), template);
+      for (const section of this.customSectionRows(data)) {
+        this.pdfSection(doc, section.title, section.rows, template);
+      }
       doc.end();
       stream.on('finish', resolve);
       stream.on('error', reject);
@@ -387,6 +398,37 @@ export class CvExportService {
     return [profile.location, profile.email, profile.phone, profile.linkedin]
       .filter(Boolean)
       .join(' - ');
+  }
+
+  private projectRows(data: CvStructuredData) {
+    return (data.projects || []).map((project) =>
+      [
+        project.name,
+        project.description,
+        (project.technologies || []).join(' - '),
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    );
+  }
+
+  private customSectionRows(data: CvStructuredData) {
+    return (data.sections || [])
+      .filter((section) => section.title)
+      .map((section) => ({
+        title: section.title,
+        rows: [section.content || ''].filter(Boolean),
+      }));
+  }
+
+  private customSectionParagraphs(
+    data: CvStructuredData,
+    template: ResolvedTemplateOptions,
+  ) {
+    return this.customSectionRows(data).flatMap((section) => [
+      this.heading(section.title, 18, template),
+      ...this.simpleList(section.rows, (item) => item, template),
+    ]);
   }
 
   private pdfSection(

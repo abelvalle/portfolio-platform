@@ -225,6 +225,8 @@ La exportación aplica:
 
 El HTML server-side de preview/export incluye `@page A4`, contenedor `main.cv-page` con ancho `210mm` y alto minimo `297mm`, y estilos de pantalla para revisar el documento como hoja A4.
 
+PDF y DOCX incluyen tambien proyectos destacados y secciones personalizadas cuando existen en `structuredJson`.
+
 Las exportaciones ATS siguen priorizando compatibilidad: fuerzan color textual y densidad normal aunque la versión tenga otra plantilla.
 
 ## Ejemplo contacto
