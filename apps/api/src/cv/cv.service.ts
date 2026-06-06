@@ -135,6 +135,19 @@ export class CvService {
     return this.atsService.validate(version.structuredJson as never);
   }
 
+  async getAtsRoleReport(
+    cvId: string,
+    jobDescription: string,
+    targetRole?: string,
+  ) {
+    const version = await this.findPrimaryVersion(cvId);
+    return this.atsService.validateAgainstJobDescription(
+      version.structuredJson as never,
+      jobDescription,
+      targetRole,
+    );
+  }
+
   async generateAtsPdf(cvId: string) {
     const version = await this.findPrimaryVersion(cvId);
     const report = this.atsService.validate(version.structuredJson as never);

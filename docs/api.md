@@ -113,6 +113,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `POST /cv/:id/generate-pdf` (`manage_cv`)
 - `POST /cv/:id/generate-docx` (`manage_cv`)
 - `GET /cv/:id/ats-report` (`manage_cv`)
+- `POST /cv/:id/ats-role-report` (`manage_cv`)
 - `POST /cv/:id/generate-ats-pdf` (`manage_cv`)
 - `POST /cv/:id/generate-ats-docx` (`manage_cv`)
 - `POST /cv/:id/set-primary` (`manage_cv`)
@@ -149,6 +150,17 @@ Las sugerencias IA quedan pendientes de revisión y solo pueden reordenar skills
 ```
 
 Las exportaciones ATS generan PDF/DOCX con layout textual, nombres de archivo `-ats` y metadata de score ATS.
+
+`POST /cv/:id/ats-role-report` compara la versión primaria contra una descripción de oferta concreta:
+
+```json
+{
+  "targetRole": "Delivery Manager",
+  "jobDescription": "Oferta con UAT, Scrum, reporting ejecutivo y Cloud..."
+}
+```
+
+Devuelve `matchScore`, `jobKeywords`, `matchedKeywords`, `missingKeywords` y recomendaciones de revisión. No modifica el CV ni inventa experiencia.
 
 ### Exportación con plantilla
 

@@ -51,4 +51,40 @@ describe('CvAtsService', () => {
     expect(result.status).toBe('needs_work');
     expect(result.recommendations.length).toBeGreaterThan(0);
   });
+
+  it('compares CV keywords against a concrete job description', () => {
+    const result = service.validateAgainstJobDescription(
+      {
+        profile: {
+          headline: 'IT Project Manager | Delivery Manager',
+          email: 'abel@example.com',
+          phone: '+34 600 000 000',
+        },
+        summary:
+          'Delivery Manager con foco en UAT, Scrum, KPIs y stakeholders.',
+        experiences: [
+          {
+            role: 'Project Manager',
+            company: 'Experis',
+            technologies: ['Azure'],
+            methodologies: ['Scrum', 'UAT'],
+            skills: ['Stakeholders', 'KPIs'],
+          },
+        ],
+        education: [{ title: 'CFGS', institution: 'Salesianas' }],
+        skills: ['UAT', 'Scrum', 'KPIs', 'Stakeholders', 'Azure'].map(
+          (name) => ({ name }),
+        ),
+      },
+      'Delivery Manager con UAT, Scrum, AWS, reporting ejecutivo y gobierno Cloud.',
+      'Delivery Manager',
+    );
+
+    expect(result.targetRole).toBe('Delivery Manager');
+    expect(result.matchedKeywords).toEqual(
+      expect.arrayContaining(['uat', 'scrum']),
+    );
+    expect(result.missingKeywords).toContain('aws');
+    expect(result.roleRecommendations[0]).toContain('Revisar');
+  });
 });

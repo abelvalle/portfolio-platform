@@ -50,3 +50,16 @@ export class CompareVersionsDto {
   @IsString()
   adaptedCvVersionId!: string;
 }
+
+export class AtsRoleReportDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  targetRole?: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(40)
+  jobDescription!: string;
+}

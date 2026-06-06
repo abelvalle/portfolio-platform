@@ -40,6 +40,22 @@ type AtsCheck = {
 
 @Injectable()
 export class CvAtsService {
+  private readonly stopWords = new Set([
+    'and',
+    'con',
+    'del',
+    'de',
+    'en',
+    'for',
+    'la',
+    'las',
+    'los',
+    'the',
+    'una',
+    'uno',
+    'y',
+  ]);
+
   validate(data: CvStructuredData) {
     const checks: AtsCheck[] = [
       {
@@ -124,6 +140,40 @@ export class CvAtsService {
     };
   }
 
+  validateAgainstJobDescription(
+    data: CvStructuredData,
+    jobDescription: string,
+    targetRole?: string,
+  ) {
+    const baseReport = this.validate(data);
+    const jobKeywords = this.extractJobKeywords(jobDescription);
+    const cvText = this.normalizeText(JSON.stringify(data));
+    const matchedKeywords = jobKeywords.filter((keyword) =>
+      cvText.includes(keyword),
+    );
+    const missingKeywords = jobKeywords.filter(
+      (keyword) => !matchedKeywords.includes(keyword),
+    );
+    const matchScore = jobKeywords.length
+      ? Math.round((matchedKeywords.length / jobKeywords.length) * 100)
+      : 0;
+
+    return {
+      ...baseReport,
+      targetRole,
+      matchScore,
+      jobKeywords,
+      matchedKeywords,
+      missingKeywords,
+      roleRecommendations: missingKeywords
+        .slice(0, 8)
+        .map(
+          (keyword) =>
+            `Revisar si "${keyword}" existe en la experiencia real antes de incorporarlo.`,
+        ),
+    };
+  }
+
   private extractKeywords(data: CvStructuredData) {
     const keywords = new Set<string>();
     for (const skill of data.skills || []) {
@@ -139,5 +189,28 @@ export class CvAtsService {
       }
     }
     return [...keywords].slice(0, 40);
+  }
+
+  private extractJobKeywords(jobDescription: string) {
+    const counts = new Map<string, number>();
+    const words = this.normalizeText(jobDescription).match(/[a-z0-9+#.]+/g);
+    for (const word of words || []) {
+      if (word.length < 3 || this.stopWords.has(word)) {
+        continue;
+      }
+      counts.set(word, (counts.get(word) || 0) + 1);
+    }
+
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([word]) => word)
+      .slice(0, 30);
+  }
+
+  private normalizeText(value: string) {
+    return value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 }

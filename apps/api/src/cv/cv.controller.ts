@@ -12,7 +12,12 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermissions } from '../common/guards/permissions.decorator';
-import { AdaptCvDto, CompareVersionsDto, CreateCvDto } from './cv.dto';
+import {
+  AdaptCvDto,
+  AtsRoleReportDto,
+  CompareVersionsDto,
+  CreateCvDto,
+} from './cv.dto';
 import { CvAdaptationService } from './cv-adaptation.service';
 import { CvService } from './cv.service';
 
@@ -88,6 +93,18 @@ export class CvController {
   @Get(':id/ats-report')
   getAtsReport(@Param('id') id: string) {
     return this.cvService.getAtsReport(id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_cv')
+  @Post(':id/ats-role-report')
+  getAtsRoleReport(@Param('id') id: string, @Body() body: AtsRoleReportDto) {
+    return this.cvService.getAtsRoleReport(
+      id,
+      body.jobDescription,
+      body.targetRole,
+    );
   }
 
   @ApiBearerAuth()

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 07:40 CEST.
+Estado actualizado: 2026-06-06 07:45 CEST.
 
 ## Hitos completados
 
@@ -1480,6 +1480,22 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### ATS por oferta concreta
+
+- Añadido `POST /api/v1/cv/:id/ats-role-report` protegido con `manage_cv`.
+- El reporte compara la version primaria del CV contra una descripcion de oferta concreta.
+- Devuelve `matchScore`, `jobKeywords`, `matchedKeywords`, `missingKeywords` y recomendaciones de revision.
+- La logica no modifica el CV ni inventa experiencia; marca faltantes como puntos a revisar.
+- `docs/api.md` documenta request/response esperado del endpoint.
+- Añadidos tests unitarios para coincidencias reales y keywords ausentes.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1489,7 +1505,6 @@ Verificacion realizada en este hito:
 - Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
-- ATS por oferta concreta: el score actual valida estructura general; falta comparar contra keywords de una oferta específica.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
 - Adaptación CV a versión final: el wizard ya propone datos desde API; falta aceptar/rechazar cambios por bloque y crear/publicar una `CvVersion` adaptada desde la propuesta.
