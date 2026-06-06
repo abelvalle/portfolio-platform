@@ -28,6 +28,11 @@ export class CvVersionsController {
     return this.cvVersionService.list();
   }
 
+  @Get('audit-log')
+  auditTrail() {
+    return this.cvVersionService.auditTrail();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.cvVersionService.findOne(id);

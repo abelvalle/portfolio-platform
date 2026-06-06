@@ -92,6 +92,20 @@ describe('CvVersionService', () => {
       }),
     });
   });
+
+  it('lists recent audit events for CV versions', async () => {
+    const prisma = mockPrisma();
+    const service = new CvVersionService(prisma as never, {} as never);
+
+    const result = await service.auditTrail();
+
+    expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
+      where: { resource: 'cv-version' },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+    expect(result).toEqual([{ id: 'audit-1', action: 'generate_pdf' }]);
+  });
 });
 
 function mockPrisma() {
@@ -129,6 +143,9 @@ function mockPrisma() {
     },
     auditLog: {
       create: jest.fn().mockResolvedValue({ id: 'audit-1' }),
+      findMany: jest
+        .fn()
+        .mockResolvedValue([{ id: 'audit-1', action: 'generate_pdf' }]),
     },
     $transaction: jest
       .fn()

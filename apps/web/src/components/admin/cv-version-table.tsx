@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cvClient, getApiUrl, type CvTemplateItem, type CvVersionItem, type CvVersionMutation } from "@/lib/api";
+import { cvClient, getApiUrl, type AuditLogItem, type CvTemplateItem, type CvVersionItem, type CvVersionMutation } from "@/lib/api";
 
 type CvVersionDraft = {
   name: string;
@@ -251,6 +251,29 @@ function findRecord(items: unknown[], matches: (item: Record<string, unknown>) =
   });
 }
 
+function auditValue(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.filter((item) => typeof item === "string").join(", ");
+  }
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return "";
+}
+
+function auditMetadata(metadata?: Record<string, unknown> | null) {
+  if (!metadata) {
+    return "";
+  }
+  return Object.entries(metadata)
+    .map(([key, value]) => {
+      const text = auditValue(value);
+      return text ? `${key}: ${text}` : "";
+    })
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function getInitialVersionId() {
   if (typeof window === "undefined") {
     return "";
@@ -287,6 +310,7 @@ function isLargeJsonChange(previousValue: unknown, nextValue: unknown) {
 export function CvVersionTable() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
   const [templates, setTemplates] = useState<CvTemplateItem[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [draft, setDraft] = useState(emptyDraft);
   const [message, setMessage] = useState("Cargando versiones de CV.");
   const [jsonVersionId, setJsonVersionId] = useState("");
@@ -347,15 +371,18 @@ export function CvVersionTable() {
   const loadVersions = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [nextVersions, nextTemplates] = await Promise.all([
+      const [nextVersions, nextTemplates, nextAuditLogs] = await Promise.all([
         cvClient.versions(),
-        cvClient.templates().catch(() => [])
+        cvClient.templates().catch(() => []),
+        cvClient.versionAuditLog().catch(() => [])
       ]);
       setVersions(nextVersions);
       setTemplates(nextTemplates);
+      setAuditLogs(nextAuditLogs);
       syncJsonEditor(nextVersions);
       setMessage(nextVersions.length ? "Versiones y plantillas sincronizadas con la API." : "Sin versiones registradas.");
     } catch {
+      setAuditLogs([]);
       setMessage("No se pudieron cargar versiones. Comprueba la sesion admin.");
     } finally {
       setIsLoading(false);
@@ -842,6 +869,29 @@ export function CvVersionTable() {
           </Button>
         </div>
         <p className="mt-4 text-sm text-muted-foreground" aria-live="polite">{message}</p>
+      </section>
+
+      <section className="grid gap-3 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-mono text-sm text-primary">AuditLog</p>
+            <h2 className="text-xl font-semibold">Auditoria reciente CV</h2>
+          </div>
+          <Badge variant="outline">{auditLogs.length} eventos</Badge>
+        </div>
+        {auditLogs.length ? (
+          <div className="grid gap-2">
+            {auditLogs.slice(0, 6).map((log) => (
+              <div key={log.id} className="grid gap-1 rounded-lg border border-border p-3 text-sm md:grid-cols-[160px_1fr_160px]">
+                <span className="font-medium">{log.action}</span>
+                <span className="text-muted-foreground">{auditMetadata(log.metadata) || log.resourceId || "Sin metadata."}</span>
+                <span className="text-xs text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Sin eventos recientes de versiones CV.</p>
+        )}
       </section>
 
       <section className="grid gap-5 rounded-lg border border-border bg-card p-5 md:grid-cols-4">

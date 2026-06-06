@@ -25,6 +25,14 @@ export class CvVersionService {
     return version;
   }
 
+  auditTrail() {
+    return this.prisma.auditLog.findMany({
+      where: { resource: 'cv-version' },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+  }
+
   async create(data: Record<string, any>, actorUserId?: string) {
     const created = await this.prisma.cvVersion.create({
       data: {
