@@ -208,6 +208,15 @@ export const adminClient = {
   skills() {
     return apiFetch<SkillItem[]>("/skills?includeHidden=true");
   },
+  skillCategories() {
+    return apiFetch<SkillCategoryItem[]>("/skill-categories?includeHidden=true");
+  },
+  createSkillCategory(data: SkillCategoryMutation) {
+    return apiFetch<SkillCategoryItem>("/skill-categories", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateSkillCategory(id: string, data: Partial<SkillCategoryMutation>) {
+    return apiFetch<SkillCategoryItem>(`/skill-categories/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
   createSkill(data: SkillMutation) {
     return apiFetch<SkillItem>("/skills", { method: "POST", body: JSON.stringify(data) });
   },
@@ -516,6 +525,15 @@ export type SkillItem = {
 };
 
 export type SkillMutation = Omit<SkillItem, "id">;
+
+export type SkillCategoryItem = {
+  id: string;
+  name: string;
+  order: number;
+  visible: boolean;
+};
+
+export type SkillCategoryMutation = Omit<SkillCategoryItem, "id">;
 
 export type EducationItem = {
   id: string;

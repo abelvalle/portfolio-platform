@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { adminClient, type SkillItem, type SkillMutation } from "@/lib/api";
+import { adminClient, type SkillCategoryItem, type SkillItem, type SkillMutation } from "@/lib/api";
 
 const emptyDraft = {
   name: "",
@@ -19,7 +19,9 @@ const emptyDraft = {
 
 export function SkillManagement() {
   const [items, setItems] = useState<SkillItem[]>([]);
+  const [categories, setCategories] = useState<SkillCategoryItem[]>([]);
   const [draft, setDraft] = useState(emptyDraft);
+  const [categoryDraft, setCategoryDraft] = useState({ name: "", order: 0, visible: true });
   const [message, setMessage] = useState("Cargando skills.");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -38,13 +40,54 @@ export function SkillManagement() {
   async function loadSkills() {
     setIsLoading(true);
     try {
-      const nextItems = await adminClient.skills();
+      const [nextItems, nextCategories] = await Promise.all([
+        adminClient.skills(),
+        adminClient.skillCategories()
+      ]);
       setItems(nextItems);
+      setCategories(nextCategories);
       setMessage(nextItems.length ? "Skills sincronizadas con la API." : "Sin skills registradas.");
     } catch {
       setMessage("No se pudieron cargar skills. Comprueba la sesion admin.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function createCategory() {
+    const payload = {
+      name: categoryDraft.name.trim(),
+      order: categoryDraft.order,
+      visible: categoryDraft.visible
+    };
+    if (!payload.name) {
+      setMessage("Nombre de categoria obligatorio.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await adminClient.createSkillCategory(payload);
+      setCategoryDraft({ name: "", order: categories.length, visible: true });
+      await loadSkills();
+      setMessage(`Categoria creada: ${payload.name}.`);
+    } catch {
+      setMessage("No se pudo crear la categoria.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function toggleCategory(category: SkillCategoryItem) {
+    setBusyId(`category:${category.id}`);
+    try {
+      await adminClient.updateSkillCategory(category.id, { visible: !category.visible });
+      await loadSkills();
+      setMessage(`Categoria ${category.visible ? "ocultada" : "mostrada"}: ${category.name}.`);
+    } catch {
+      setMessage("No se pudo actualizar la categoria.");
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -164,14 +207,52 @@ export function SkillManagement() {
         <p className="mt-4 text-sm text-muted-foreground" aria-live="polite">{message}</p>
       </section>
 
+      <section className="grid gap-5 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="grid min-w-60 flex-1 gap-2">
+            <Label htmlFor="skillCategoryName">Categoria nueva</Label>
+            <Input id="skillCategoryName" value={categoryDraft.name} onChange={(event) => setCategoryDraft((current) => ({ ...current, name: event.target.value }))} />
+          </div>
+          <div className="grid w-28 gap-2">
+            <Label htmlFor="skillCategoryOrder">Orden</Label>
+            <Input id="skillCategoryOrder" type="number" value={categoryDraft.order} onChange={(event) => setCategoryDraft((current) => ({ ...current, order: Number(event.target.value) }))} />
+          </div>
+          <Button type="button" onClick={createCategory} disabled={isSaving}>
+            <Save data-icon="inline-start" />
+            Crear categoria
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {categories.length ? categories.map((category) => (
+            <Button
+              key={category.id}
+              type="button"
+              variant={category.visible ? "outline" : "secondary"}
+              onClick={() => toggleCategory(category)}
+              disabled={busyId === `category:${category.id}`}
+            >
+              {category.name}
+              <Badge variant={category.visible ? "default" : "secondary"}>{category.visible ? "visible" : "oculta"}</Badge>
+            </Button>
+          )) : (
+            <p className="text-sm text-muted-foreground">Sin categorias registradas.</p>
+          )}
+        </div>
+      </section>
+
       <section className="grid gap-5 rounded-lg border border-border bg-card p-5 md:grid-cols-4">
+        <datalist id="skillCategoryOptions">
+          {categories.map((category) => (
+            <option key={category.id} value={category.name} />
+          ))}
+        </datalist>
         <div className="grid gap-2 md:col-span-2">
           <Label htmlFor="skillName">Nombre</Label>
           <Input id="skillName" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="skillCategory">Categoria</Label>
-          <Input id="skillCategory" value={draft.categoryName} onChange={(event) => setDraft((current) => ({ ...current, categoryName: event.target.value }))} />
+          <Input id="skillCategory" list="skillCategoryOptions" value={draft.categoryName} onChange={(event) => setDraft((current) => ({ ...current, categoryName: event.target.value }))} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="skillLevel">Nivel</Label>
@@ -242,7 +323,7 @@ export function SkillManagement() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="editSkillCategory">Categoria skill</Label>
-              <Input id="editSkillCategory" value={editDraft.categoryName} onChange={(event) => setEditDraft((current) => ({ ...current, categoryName: event.target.value }))} />
+              <Input id="editSkillCategory" list="skillCategoryOptions" value={editDraft.categoryName} onChange={(event) => setEditDraft((current) => ({ ...current, categoryName: event.target.value }))} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="editSkillLevel">Nivel skill</Label>

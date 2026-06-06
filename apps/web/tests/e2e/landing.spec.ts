@@ -458,6 +458,44 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route(/\/api\/v1\/skill-categories(\?.*)?$/, async (route) => {
+    if (route.request().method() === "POST") {
+      const data = JSON.parse(route.request().postData() || "{}");
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "category-new",
+          name: data.name,
+          order: data.order ?? 1,
+          visible: data.visible ?? true
+        })
+      });
+      return;
+    }
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "category-1",
+          name: "Agile",
+          order: 0,
+          visible: true
+        }
+      ])
+    });
+  });
+  await page.route("**/api/v1/skill-categories/category-1", async (route) => {
+    const data = JSON.parse(route.request().postData() || "{}");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "category-1",
+        name: "Agile",
+        order: 0,
+        visible: data.visible ?? false
+      })
+    });
+  });
   await page.route("**/api/v1/skills/skill-1", async (route) => {
     const data = JSON.parse(route.request().postData() || "{}");
     await route.fulfill({
@@ -611,6 +649,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/portfolio/skills");
   await expect(page.getByRole("heading", { name: "Skills" })).toBeVisible();
   await expect(page.getByRole("main").getByText("Scrum")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Agile visible/ })).toBeVisible();
+  await page.getByLabel("Categoria nueva").fill("Cloud");
+  await page.getByRole("button", { name: "Crear categoria" }).click();
+  await expect(page.getByText("Categoria creada: Cloud.")).toBeVisible();
+  await page.getByRole("button", { name: /Agile visible/ }).click();
+  await expect(page.getByText("Categoria ocultada: Agile.")).toBeVisible();
   await page.getByRole("button", { name: "Editar Scrum" }).click();
   await expect(page.getByRole("heading", { name: "Editar skill" })).toBeVisible();
   await page.getByLabel("Nombre skill").fill("Scrum avanzado");
