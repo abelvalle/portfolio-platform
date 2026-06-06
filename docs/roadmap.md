@@ -3222,11 +3222,24 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run test:e2e`
 - `npm.cmd --prefix apps/api run test:e2e:db` sin `RUN_DB_E2E` confirma skip seguro.
 
+### Smoke visual A4 del renderer server-side
+
+- Anadida prueba `cv-export-visual.spec.ts` con Chromium real de Playwright.
+- Renderiza el HTML A4 server-side de `CvExportService.renderHtml` con plantilla compacta.
+- Valida proporciones A4, secciones `data-cv-section`, renderer `server-html` y screenshot no vacio.
+- Este hito cubre regresiones visuales basicas del HTML usado para PDF; el diff pixel-perfect contra PDF rasterizado sigue pendiente.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/api run build`
+- `npm.cmd --prefix apps/api run test -- cv-export-visual.spec.ts`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
-- Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder` y existe contrato `data-*` compartido con preview web; DOCX sigue usando renderer propio aunque comparte orden de bloques, y falta diff visual automatizado contra PDF generado.
+- Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web y hay smoke visual A4 del renderer server-side; DOCX sigue usando renderer propio aunque comparte orden de bloques, y falta diff visual automatizado contra PDF generado/rasterizado.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; servicios y contrato HTTP cubren MediaAsset generado descargable desde storage local con version persistida en memoria; existe harness opcional `RUN_DB_E2E=true`, pero falta validarlo con credenciales Postgres reales porque Docker daemon no estaba disponible y la instancia local no acepto las credenciales de ejemplo.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
