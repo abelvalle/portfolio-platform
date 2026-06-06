@@ -3440,6 +3440,15 @@ Verificacion realizada en este hito:
 
 - `npm.cmd --prefix apps/api run test -- cv-export-docx.spec.ts`
 
+### Smoke PDF real con trailer completo
+
+- `cv-export-pdf.spec.ts` valida que el PDF generado por Playwright contiene cabecera `%PDF-` y trailer `%%EOF`.
+- El smoke binario cubre mejor la integridad minima del archivo generado antes de publicar enlaces de descarga.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- cv-export-pdf.spec.ts`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.

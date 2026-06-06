@@ -42,12 +42,14 @@ describe('CvExportService PDF generation', () => {
         },
       );
       const pdf = readFileSync(result.path);
+      const pdfText = pdf.toString('latin1');
 
       expect(result.filename).toBe('version-real-pdf-ats-friendly.pdf');
       expect(result.url).toBe(
         '/media/generated/version-real-pdf-ats-friendly.pdf',
       );
       expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+      expect(pdfText).toContain('%%EOF');
       expect(pdf.byteLength).toBeGreaterThan(5_000);
     } finally {
       rmSync(storageRoot, { recursive: true, force: true });
