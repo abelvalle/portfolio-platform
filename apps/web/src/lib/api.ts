@@ -208,6 +208,18 @@ export const adminClient = {
   deleteEducation(id: string) {
     return apiFetch<EducationItem>(`/education/${id}`, { method: "DELETE" });
   },
+  certifications() {
+    return apiFetch<CertificationItem[]>("/certifications?includeHidden=true");
+  },
+  createCertification(data: CertificationMutation) {
+    return apiFetch<CertificationItem>("/certifications", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateCertification(id: string, data: Partial<CertificationMutation>) {
+    return apiFetch<CertificationItem>(`/certifications/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteCertification(id: string) {
+    return apiFetch<CertificationItem>(`/certifications/${id}`, { method: "DELETE" });
+  },
   analyticsSummary() {
     return apiFetch<AnalyticsSummary>("/analytics/summary");
   },
@@ -414,6 +426,20 @@ export type EducationItem = {
 };
 
 export type EducationMutation = Omit<EducationItem, "id">;
+
+export type CertificationItem = {
+  id: string;
+  title: string;
+  institution: string;
+  date: string;
+  description?: string | null;
+  certificateUrl?: string | null;
+  attachmentId?: string | null;
+  order: number;
+  visible: boolean;
+};
+
+export type CertificationMutation = Omit<CertificationItem, "id">;
 
 export type AnalyticsSummary = {
   totalVisits: number;

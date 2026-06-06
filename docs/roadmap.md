@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 03:12 CEST.
+Estado actualizado: 2026-06-06 03:15 CEST.
 
 ## Hitos completados
 
@@ -486,6 +486,22 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### CRUD básico de certificaciones conectado
+
+- Reemplazada `/admin/portfolio/certifications` placeholder por `CertificationManagement`.
+- La pantalla lista certificaciones desde `GET /api/v1/certifications?includeHidden=true`.
+- Añadido formulario para crear certificaciones con título, institución, fecha, URL de certificado, adjunto y descripción.
+- Añadidas acciones rápidas para ocultar/mostrar, ajustar orden y borrar con soft delete.
+- Añadidos estados de carga, error, vacío y refresco manual.
+- Añadida cobertura e2e desktop/mobile de la ruta admin de certificaciones.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -513,6 +529,7 @@ Verificación realizada en este hito:
 - Proyectos UI avanzada: el CRUD básico está conectado; faltan edición completa en formulario, selector de media, categorías gestionadas visualmente, orden drag/drop y confirmación modal de borrado.
 - Skills UI avanzada: el CRUD básico está conectado; faltan edición completa inline, categorías gestionadas como entidad, orden drag/drop y niveles con selector consistente.
 - Estudios UI avanzada: el CRUD básico está conectado; faltan edición completa inline, selector de adjuntos/media, orden drag/drop y confirmación modal de borrado.
+- Certificaciones UI avanzada: el CRUD básico está conectado; faltan edición completa inline, selector de adjuntos/media, orden drag/drop y confirmación modal de borrado.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.
