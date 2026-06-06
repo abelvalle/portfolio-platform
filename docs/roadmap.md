@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 03:49 CEST.
+Estado actualizado: 2026-06-06 03:54 CEST.
 
 ## Hitos completados
 
@@ -651,6 +651,21 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Bandeja de mensajes con fecha y detalle
+
+- `/admin/messages` incorpora filtros de fecha `Desde` y `Hasta` sobre los mensajes cargados desde API.
+- Añadida vista de detalle del mensaje seleccionado con asunto, contacto, fecha, estado y cuerpo completo.
+- Las acciones de marcar leído/no leído y borrar se mantienen disponibles en listado y detalle.
+- La lista muestra preview compacto para facilitar escaneo.
+- Añadida cobertura e2e mínima para los filtros de fecha.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -673,7 +688,7 @@ Verificación realizada en este hito:
 - Permisos por acción: existe matriz de permisos, pero los guards todavía se basan en roles por endpoint.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
-- Mensajes UI avanzada: la bandeja está conectada; faltan filtro por fecha, vista detalle/modal y preparación visual de integración email.
+- Mensajes UI avanzada: la bandeja está conectada con filtro por fecha y vista detalle; falta preparación visual de integración email.
 - Analítica avanzada: el panel está conectado a eventos; faltan filtros por fecha, series temporales, exportación y retención/anonimización configurable.
 - Dashboard avanzado: el resumen está conectado; faltan filtros temporales, drill-down desde tarjetas y control real de módulos desde UI.
 - Experiencias UI avanzada: el CRUD básico está conectado; faltan edición completa en formulario, reordenado drag/drop, confirmación modal de borrado y asociación visual con skills/tecnologías.

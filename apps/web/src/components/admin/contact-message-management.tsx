@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { MailOpen, RefreshCw, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Eye, MailOpen, RefreshCw, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { adminClient, type ContactMessage } from "@/lib/api";
 
 const filters = [
@@ -15,6 +17,9 @@ const filters = [
 export function ContactMessageManagement() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [filter, setFilter] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [message, setMessage] = useState("Cargando mensajes.");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -38,6 +43,14 @@ export function ContactMessageManagement() {
     return () => window.clearTimeout(timer);
   }, [filter, loadMessages]);
 
+  const visibleMessages = useMemo(() => {
+    return messages.filter((item) => isInsideDateRange(item.createdAt, fromDate, toDate));
+  }, [fromDate, messages, toDate]);
+
+  const selectedMessage = useMemo(() => {
+    return messages.find((item) => item.id === selectedMessageId) || null;
+  }, [messages, selectedMessageId]);
+
   async function setStatus(item: ContactMessage, status: string) {
     try {
       const updated = await adminClient.updateContactMessageStatus(item.id, status);
@@ -52,6 +65,7 @@ export function ContactMessageManagement() {
     try {
       await adminClient.deleteContactMessage(item.id);
       setMessages((current) => current.filter((messageItem) => messageItem.id !== item.id));
+      setSelectedMessageId((current) => (current === item.id ? null : current));
       setMessage("Mensaje eliminado.");
     } catch {
       setMessage("No se pudo eliminar el mensaje.");
@@ -78,11 +92,47 @@ export function ContactMessageManagement() {
             </Button>
           ))}
         </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:max-w-xl">
+          <div className="grid gap-2">
+            <Label htmlFor="fromDate">Desde</Label>
+            <Input id="fromDate" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="toDate">Hasta</Label>
+            <Input id="toDate" type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} />
+          </div>
+        </div>
         <p className="mt-4 text-sm text-muted-foreground" aria-live="polite">{message}</p>
       </section>
 
+      {selectedMessage ? (
+        <section className="rounded-lg border border-border bg-card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="font-mono text-sm text-primary">Detalle</p>
+              <h2 className="mt-2 text-2xl font-semibold">{selectedMessage.subject || "Sin asunto"}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {selectedMessage.name} - {selectedMessage.email} - {formatDate(selectedMessage.createdAt)}
+              </p>
+            </div>
+            <Badge variant={selectedMessage.status === "unread" ? "default" : "outline"}>{selectedMessage.status}</Badge>
+          </div>
+          <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{selectedMessage.message}</p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setStatus(selectedMessage, selectedMessage.status === "unread" ? "read" : "unread")}>
+              <MailOpen data-icon="inline-start" />
+              {selectedMessage.status === "unread" ? "Marcar leido" : "Marcar no leido"}
+            </Button>
+            <Button type="button" variant="destructive" size="sm" onClick={() => deleteMessage(selectedMessage)}>
+              <Trash2 data-icon="inline-start" />
+              Borrar mensaje
+            </Button>
+          </div>
+        </section>
+      ) : null}
+
       <section className="grid gap-3">
-        {messages.length ? messages.map((item) => (
+        {visibleMessages.length ? visibleMessages.map((item) => (
           <article key={item.id} className="rounded-lg border border-border bg-card p-4">
             <div className="grid gap-3 md:grid-cols-[1fr_auto]">
               <div className="min-w-0">
@@ -91,8 +141,13 @@ export function ContactMessageManagement() {
                   <Badge variant={item.status === "unread" ? "default" : "outline"}>{item.status}</Badge>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{item.name} - {item.email}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{formatDate(item.createdAt)}</p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedMessageId(item.id)}>
+                  <Eye data-icon="inline-start" />
+                  Detalle
+                </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => setStatus(item, item.status === "unread" ? "read" : "unread")}>
                   <MailOpen data-icon="inline-start" />
                   {item.status === "unread" ? "Leido" : "No leido"}
@@ -103,12 +158,34 @@ export function ContactMessageManagement() {
                 </Button>
               </div>
             </div>
-            <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{item.message}</p>
+            <p className="mt-4 line-clamp-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{item.message}</p>
           </article>
         )) : (
-          <div className="rounded-lg border border-border p-8 text-center text-sm text-muted-foreground">Sin mensajes.</div>
+          <div className="rounded-lg border border-border p-8 text-center text-sm text-muted-foreground">Sin mensajes para los filtros actuales.</div>
         )}
       </section>
     </div>
   );
+}
+
+function isInsideDateRange(createdAt: string, fromDate: string, toDate: string) {
+  const createdTime = new Date(createdAt).getTime();
+  if (Number.isNaN(createdTime)) {
+    return true;
+  }
+  if (fromDate && createdTime < new Date(`${fromDate}T00:00:00`).getTime()) {
+    return false;
+  }
+  if (toDate && createdTime > new Date(`${toDate}T23:59:59`).getTime()) {
+    return false;
+  }
+  return true;
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
