@@ -959,6 +959,15 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
   await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
+  await page.getByLabel("Certificaciones CV").fill("Scrum Master - Demo Academy - 2026");
+  await page.getByRole("button", { name: "Aplicar certificaciones" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Scrum Master\"/);
+  await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
+  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
+  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).click({ force: true });
+  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
+  await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
   await page.getByLabel("JSON estructurado").fill("[]");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue("[]");
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
