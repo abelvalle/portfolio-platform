@@ -3723,11 +3723,26 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 - `npm.cmd run build:web`
 
+### Saltos manuales de pagina en CV
+
+- `structuredJson.sectionOrder` acepta `page-break` como marcador manual para HTML/PDF server-side.
+- El editor de Versiones CV permite insertar `page-break`, moverlo en el orden visual y guardarlo en el JSON estructurado.
+- El exportador ignora `page-break` en DOCX para mantener compatibilidad de bloques, y lo respeta en HTML/PDF con `break-before`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- cv-export.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
-- Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side, guard de overflow HTML, smoke de PDF real, diff visual automatizado contra PDF rasterizado y paginacion print para CV largos; DOCX comparte orden de bloques, tiene smoke real de paquete Word y valida metadatos ricos dentro de `word/document.xml`, aunque sigue usando renderer propio.
+- Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side, guard de overflow HTML, smoke de PDF real, diff visual automatizado contra PDF rasterizado, paginacion print para CV largos y saltos manuales `page-break`; DOCX comparte orden de bloques, tiene smoke real de paquete Word y valida metadatos ricos dentro de `word/document.xml`, aunque sigue usando renderer propio.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; servicios y contrato HTTP cubren MediaAsset generado descargable desde storage local con version persistida en memoria; existe harness opcional `RUN_DB_E2E=true`, pero falta validarlo con credenciales Postgres reales porque Docker daemon no esta disponible y la instancia local no acepta las credenciales de ejemplo.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
@@ -3760,4 +3775,4 @@ Verificacion realizada en este hito:
 
 1. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
 2. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.
-3. Afinar saltos manuales por plantilla en previews/exportaciones CV.
+3. Extender saltos manuales al preview A4 web cuando las versiones CV alimenten el snapshot publico.

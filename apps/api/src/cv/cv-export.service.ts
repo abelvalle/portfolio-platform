@@ -72,6 +72,7 @@ type CvExportSectionKey =
   | 'languages'
   | 'projects'
   | 'sections';
+type CvExportOrderItem = CvExportSectionKey | 'page-break';
 
 @Injectable()
 export class CvExportService {
@@ -217,8 +218,10 @@ export class CvExportService {
       projects: this.htmlSection('Proyectos', projectBody, 'projects'),
       sections: customSections,
     };
-    const orderedSections = this.orderedSectionKeys(data)
-      .map((key) => sections[key])
+    const orderedSections = this.orderedHtmlItems(data)
+      .map((key) =>
+        key === 'page-break' ? this.htmlPageBreak() : sections[key],
+      )
       .join('');
 
     return `<!doctype html><html><head><meta charset="utf-8"><style>${this.htmlStyles(template, pagePadding)}</style></head><body><main class="cv-page" data-page-size="A4" data-cv-renderer="server-html" data-cv-density="${template.density}" data-cv-template="${this.html(options.template?.slug || 'default')}"><header class="cv-header" data-cv-section="header"><div><p class="cv-eyebrow">${this.html(data.profile?.headline || '')}</p><h1>${this.html(data.profile?.fullName || 'Abel Valle Rosa')}</h1>${this.htmlParagraph(subtitle, 'cv-subtitle')}</div>${this.htmlPhoto(data, template)}</header><section class="cv-contact" data-cv-section="contact">${this.htmlContactItems(data)}</section>${orderedSections}</main></body></html>`;
@@ -275,6 +278,17 @@ export class CvExportService {
   }
 
   private orderedSectionKeys(data: CvStructuredData): CvExportSectionKey[] {
+    return this.orderedItems(data, false) as CvExportSectionKey[];
+  }
+
+  private orderedHtmlItems(data: CvStructuredData): CvExportOrderItem[] {
+    return this.orderedItems(data, true);
+  }
+
+  private orderedItems(
+    data: CvStructuredData,
+    includePageBreaks: boolean,
+  ): CvExportOrderItem[] {
     const defaultOrder: CvExportSectionKey[] = [
       'summary',
       'experiences',
@@ -284,7 +298,7 @@ export class CvExportService {
       'projects',
       'sections',
     ];
-    const aliases: Record<string, CvExportSectionKey> = {
+    const aliases: Record<string, CvExportOrderItem> = {
       summary: 'summary',
       resumen: 'summary',
       experience: 'experiences',
@@ -306,11 +320,41 @@ export class CvExportService {
       sections: 'sections',
       secciones: 'sections',
       custom: 'sections',
+      'page-break': 'page-break',
+      pagebreak: 'page-break',
+      salto: 'page-break',
+      'salto de pagina': 'page-break',
     };
     const requested = (data.sectionOrder || [])
       .map((item) => aliases[item.trim().toLowerCase()])
-      .filter((item): item is CvExportSectionKey => Boolean(item));
-    return Array.from(new Set([...requested, ...defaultOrder]));
+      .filter((item): item is CvExportOrderItem => Boolean(item));
+    const seen = new Set<CvExportSectionKey>();
+    const ordered: CvExportOrderItem[] = [];
+
+    for (const item of requested) {
+      if (item === 'page-break') {
+        if (includePageBreaks && ordered.length) {
+          ordered.push(item);
+        }
+        continue;
+      }
+      if (!seen.has(item)) {
+        seen.add(item);
+        ordered.push(item);
+      }
+    }
+
+    for (const item of defaultOrder) {
+      if (!seen.has(item)) {
+        ordered.push(item);
+      }
+    }
+
+    return ordered;
+  }
+
+  private htmlPageBreak() {
+    return '<div class="cv-page-break" data-cv-section="page-break" aria-hidden="true"></div>';
   }
 
   private docxSectionBlocks(
@@ -387,6 +431,7 @@ export class CvExportService {
       'li{margin:0 0 4px}',
       '.cv-chips{display:flex;flex-wrap:wrap;gap:6px}',
       '.cv-chip{border:1px solid #e2e8f0;border-radius:4px;padding:3px 8px;font-size:10px}',
+      '.cv-page-break{height:0;break-before:page;page-break-before:always}',
     ].join('');
   }
 

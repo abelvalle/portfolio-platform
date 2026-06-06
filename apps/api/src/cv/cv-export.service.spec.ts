@@ -123,6 +123,7 @@ describe('CvExportService', () => {
           'skills',
           'summary',
           'sections',
+          'page-break',
           'experiences',
           'formation',
           'languages',
@@ -155,6 +156,8 @@ describe('CvExportService', () => {
     expect(html).toContain('data-cv-template="ejecutiva"');
     expect(html).toContain('width:210mm;min-height:297mm');
     expect(html).toContain('@media screen');
+    expect(html).toContain('class="cv-page-break"');
+    expect(html).toContain('data-cv-section="page-break"');
     expect(html).toContain('class="cv-header"');
     expect(html).toContain('data-cv-section="summary"');
     expect(html).toContain('data-cv-section="skills"');
@@ -173,6 +176,9 @@ describe('CvExportService', () => {
       html.indexOf('<h2>Resumen profesional</h2>'),
     );
     expect(html.indexOf('<h2>Publicaciones</h2>')).toBeLessThan(
+      html.indexOf('<h2>Experiencia</h2>'),
+    );
+    expect(html.indexOf('data-cv-section="page-break"')).toBeLessThan(
       html.indexOf('<h2>Experiencia</h2>'),
     );
 

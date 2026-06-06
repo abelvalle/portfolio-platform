@@ -1559,8 +1559,15 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("Orden visual CV").locator("[data-cv-section-order-item='summary']")).toHaveAttribute("draggable", "true");
   await page.getByRole("button", { name: "Bajar bloque summary" }).click();
   await expect(page.getByLabel("Orden de bloques CV")).toHaveValue(/^experiences\nsummary/);
+  await page.getByRole("button", { name: "Insertar salto de pagina" }).click();
+  await expect(page.getByLabel("Orden de bloques CV")).toHaveValue(/sections\npage-break$/);
+  for (let index = 0; index < 5; index += 1) {
+    await page.getByRole("button", { name: "Subir bloque page-break" }).click();
+  }
+  await expect(page.getByLabel("Orden de bloques CV")).toHaveValue(/^experiences\nsummary\npage-break/);
+  await expect(page.getByLabel("Orden visual CV").locator("[data-cv-section-order-item='page-break']")).toContainText("Salto de pagina");
   await page.getByRole("button", { name: "Aplicar orden de bloques" }).click();
-  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"sectionOrder\": \[\s+\"experiences\",\s+\"summary\"/);
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"sectionOrder\": \[\s+\"experiences\",\s+\"summary\",\s+\"page-break\"/);
   await page.getByRole("button", { name: "Duplicar", exact: true }).first().click({ force: true });
   await expect(page.getByText("Version duplicada: CV Base copia.")).toBeVisible();
   await page.getByLabel("Resumen profesional CV").fill("Resumen profesional editado por bloques.");

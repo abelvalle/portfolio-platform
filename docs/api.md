@@ -246,6 +246,8 @@ El HTML server-side de preview/export incluye `@page A4`, contenedor `main.cv-pa
 
 En exportacion PDF, el HTML A4 usa estilos `@media print` para permitir que contenido largo fluya a paginas adicionales sin recortar secciones completas.
 
+`structuredJson.sectionOrder` acepta el item especial `page-break` para forzar un salto manual en el HTML/PDF server-side; el DOCX ignora ese marcador y conserva el orden de secciones.
+
 Los previews A4 web publico/admin exponen el mismo contrato `data-cv-section` para `header`, `contact`, `summary`, `experiences`, `skills`, `languages`, `formation` y `projects`.
 
 Los items de contacto renderizados por preview web y HTML server-side exponen `data-cv-contact-item="true"` y omiten campos vacios.

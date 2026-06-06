@@ -134,7 +134,8 @@ const cvSectionOrderLabels: Record<string, string> = {
   skills: "Skills",
   languages: "Idiomas",
   projects: "Proyectos",
-  sections: "Secciones"
+  sections: "Secciones",
+  "page-break": "Salto de pagina"
 };
 const cvSectionOrderAliases: Record<string, string> = {
   resumen: "summary",
@@ -160,7 +161,11 @@ const cvSectionOrderAliases: Record<string, string> = {
   secciones: "sections",
   "secciones personalizadas": "sections",
   sections: "sections",
-  custom: "sections"
+  custom: "sections",
+  "page-break": "page-break",
+  pagebreak: "page-break",
+  salto: "page-break",
+  "salto de pagina": "page-break"
 };
 
 function slugify(value: string) {
@@ -1624,7 +1629,20 @@ export function CvVersionTable() {
       return;
     }
 
-    const uniqueOrder = Array.from(new Set(requestedOrder.map(normalizeCvSectionOrderItem).filter(Boolean)));
+    const seenSections = new Set<string>();
+    const uniqueOrder = requestedOrder
+      .map(normalizeCvSectionOrderItem)
+      .filter((item): item is string => Boolean(item))
+      .filter((item) => {
+        if (item === "page-break") {
+          return true;
+        }
+        if (seenSections.has(item)) {
+          return false;
+        }
+        seenSections.add(item);
+        return true;
+      });
     const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
     if (uniqueOrder.length) {
       nextStructuredJson.sectionOrder = uniqueOrder;
@@ -3021,6 +3039,9 @@ export function CvVersionTable() {
             <Button type="button" variant="outline" className="w-fit" onClick={() => setSectionOrderDraft(defaultCvSectionOrder.join("\n"))} disabled={!jsonVersionId}>
               Usar orden recomendado
             </Button>
+            <Button type="button" variant="outline" className="w-fit" onClick={() => updateSectionOrderItems([...splitBlockLines(sectionOrderDraft), "page-break"], "Salto de pagina anadido. Aplica el orden de bloques y guarda JSON para persistirlo.")} disabled={!jsonVersionId}>
+              Insertar salto de pagina
+            </Button>
             <Button type="button" variant="outline" className="w-fit" onClick={applySectionOrderBlock} disabled={!jsonVersionId}>
               Aplicar orden de bloques
             </Button>
@@ -3030,6 +3051,7 @@ export function CvVersionTable() {
               const normalizedItem = normalizeCvSectionOrderItem(item);
               const displayLabel = cvSectionOrderLabels[normalizedItem] || item;
               const isInvalid = !normalizedItem;
+              const isPageBreak = normalizedItem === "page-break";
               return (
                 <div
                   key={`${item}-${index}`}
@@ -3050,7 +3072,7 @@ export function CvVersionTable() {
                     <div className="font-medium">{displayLabel}</div>
                     <div className="truncate font-mono text-xs text-muted-foreground">{item}</div>
                   </div>
-                  {isInvalid ? <Badge variant="secondary">invalido</Badge> : <Badge variant="outline">{index + 1}</Badge>}
+                  {isInvalid ? <Badge variant="secondary">invalido</Badge> : <Badge variant={isPageBreak ? "secondary" : "outline"}>{isPageBreak ? "salto" : index + 1}</Badge>}
                   <div className="flex gap-1">
                     <Button
                       type="button"
