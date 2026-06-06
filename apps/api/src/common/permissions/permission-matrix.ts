@@ -9,8 +9,10 @@ export const permissionMatrix: Record<UserRole, string[]> = {
     'manage_cv',
     'manage_messages',
     'manage_media',
+    'manage_publication',
     'purge_media',
     'read_messages',
+    'read_publication',
     'read_analytics',
   ],
   editor: [
@@ -19,7 +21,9 @@ export const permissionMatrix: Record<UserRole, string[]> = {
     'manage_cv',
     'manage_messages',
     'manage_media',
+    'manage_publication',
     'read_messages',
+    'read_publication',
     'read_analytics',
   ],
   viewer: [
@@ -27,6 +31,7 @@ export const permissionMatrix: Record<UserRole, string[]> = {
     'read_portfolio',
     'read_cv',
     'read_messages',
+    'read_publication',
     'read_analytics',
   ],
 };

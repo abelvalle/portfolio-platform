@@ -70,6 +70,18 @@ describe('PermissionsGuard', () => {
     expect(guard.canActivate(mockContext(UserRole.viewer))).toBe(false);
   });
 
+  it('allows viewers to review publication state', () => {
+    const guard = new PermissionsGuard(mockReflector(['read_publication']));
+
+    expect(guard.canActivate(mockContext(UserRole.viewer))).toBe(true);
+  });
+
+  it('rejects viewers from publishing or restoring changes', () => {
+    const guard = new PermissionsGuard(mockReflector(['manage_publication']));
+
+    expect(guard.canActivate(mockContext(UserRole.viewer))).toBe(false);
+  });
+
   it('allows routes without explicit permissions', () => {
     const guard = new PermissionsGuard(mockReflector(undefined));
 

@@ -74,13 +74,13 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /contact-messages/webhook/status` (`read_messages`)
 - `POST /contact-messages/webhook/test` (`manage_messages`)
 - `GET /admin/dashboard` (`read_dashboard`)
-- `GET /admin/publication/theme/review`
-- `POST /admin/publication/theme/publish`
-- `GET /admin/publication/profile/review`
-- `POST /admin/publication/profile/publish`
+- `GET /admin/publication/theme/review` (`read_publication`)
+- `POST /admin/publication/theme/publish` (`manage_publication`)
+- `GET /admin/publication/profile/review` (`read_publication`)
+- `POST /admin/publication/profile/publish` (`manage_publication`)
 - `GET /admin/dashboard?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_dashboard`)
-- `GET /admin/publication/changelog`
-- `POST /admin/publication/changelog/:id/restore`
+- `GET /admin/publication/changelog` (`read_publication`)
+- `POST /admin/publication/changelog/:id/restore` (`manage_publication`)
 - `GET /app-modules`
 - `PATCH /app-modules/:id` (`manage_portfolio`)
 - `GET|POST /users` (`manage_users`)
@@ -234,12 +234,12 @@ El workflow draft/publish real está conectado a `ThemeSettings` y `Profile`, qu
 
 `PATCH /theme` usa DTO validado: solo acepta tokens visuales del tema, `draftJson` y `publishedAt`; los colores deben usar formato hex `#RRGGBB` y `cardStyle`/`colorMode` se limitan a valores conocidos.
 
-- `GET /admin/publication/theme/review`: protegido para `admin`, `editor` y `viewer`; devuelve comparación campo a campo entre tema publicado y borrador.
-- `POST /admin/publication/theme/publish`: protegido para `admin` y `editor`; publica el borrador, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
-- `GET /admin/publication/profile/review`: protegido para `admin`, `editor` y `viewer`; devuelve comparación campo a campo entre perfil publicado y borrador.
-- `POST /admin/publication/profile/publish`: protegido para `admin` y `editor`; publica el borrador del perfil, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
-- `GET /admin/publication/changelog`: protegido para `admin`, `editor` y `viewer`; lista cambios recientes.
-- `POST /admin/publication/changelog/:id/restore`: protegido para `admin` y `editor`; restaura cambios de tema o perfil usando `beforeJson` y registra una nueva entrada `restore`.
+- `GET /admin/publication/theme/review`: protegido con `read_publication`; devuelve comparación campo a campo entre tema publicado y borrador.
+- `POST /admin/publication/theme/publish`: protegido con `manage_publication`; publica el borrador, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
+- `GET /admin/publication/profile/review`: protegido con `read_publication`; devuelve comparación campo a campo entre perfil publicado y borrador.
+- `POST /admin/publication/profile/publish`: protegido con `manage_publication`; publica el borrador del perfil, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
+- `GET /admin/publication/changelog`: protegido con `read_publication`; lista cambios recientes.
+- `POST /admin/publication/changelog/:id/restore`: protegido con `manage_publication`; restaura cambios de tema o perfil usando `beforeJson` y registra una nueva entrada `restore`.
 
 Ejemplo de respuesta de revisión:
 
