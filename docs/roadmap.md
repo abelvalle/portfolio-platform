@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:07 CEST.
+Estado actualizado: 2026-06-06 04:10 CEST.
 
 ## Hitos completados
 
@@ -725,6 +725,20 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Tema publicado aplicado a landing
+
+- `PublicLanding` aplica tokens de `snapshot.theme` a variables CSS en runtime.
+- Los tokens cubren color principal, fondo, texto, bordes, muted/accent, radio y tipografía.
+- Añadido saneado básico de colores, longitudes y fuente para evitar valores CSS inesperados.
+- La landing conserva fallback visual si la API no entrega un tema válido.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -734,7 +748,7 @@ Verificación realizada en este hito:
 - Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
 - MFA QR/regeneración: existe UI funcional con secret, otpauth URL y recovery codes; falta QR visual local y regeneración controlada de recovery codes.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
-- Tema global desde API: el editor persiste tokens, pero falta aplicar automáticamente esos tokens a las variables CSS de la landing/admin en runtime.
+- Tema global desde API: la landing pública aplica tokens publicados; falta extender la aplicación automática al admin completo y a otras rutas públicas.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
 - ATS por oferta concreta: el score actual valida estructura general; falta comparar contra keywords de una oferta específica.
