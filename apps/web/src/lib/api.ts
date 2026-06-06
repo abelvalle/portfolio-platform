@@ -40,6 +40,17 @@ async function apiUpload<T>(path: string, body: FormData): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+function withQuery(path: string, params?: Record<string, string | undefined>) {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params || {})) {
+    if (value) {
+      searchParams.set(key, value);
+    }
+  }
+  const query = searchParams.toString();
+  return query ? `${path}?${query}` : path;
+}
+
 export const portfolioClient = {
   async snapshot(locale: Locale = "es"): Promise<PortfolioSnapshot> {
     try {
@@ -223,11 +234,11 @@ export const adminClient = {
   deleteCertification(id: string) {
     return apiFetch<CertificationItem>(`/certifications/${id}`, { method: "DELETE" });
   },
-  analyticsSummary() {
-    return apiFetch<AnalyticsSummary>("/analytics/summary");
+  analyticsSummary(filters?: DateRangeFilters) {
+    return apiFetch<AnalyticsSummary>(withQuery("/analytics/summary", filters));
   },
-  analyticsEvents() {
-    return apiFetch<AnalyticsEvent[]>("/analytics");
+  analyticsEvents(filters?: DateRangeFilters) {
+    return apiFetch<AnalyticsEvent[]>(withQuery("/analytics", filters));
   },
   appModules() {
     return apiFetch<AppModuleItem[]>("/app-modules?includeHidden=true");
@@ -488,6 +499,11 @@ export type AnalyticsSummary = {
   cvDownloads: number;
   contactSubmits: number;
   projectViews: number;
+};
+
+export type DateRangeFilters = {
+  from?: string;
+  to?: string;
 };
 
 export type AnalyticsEvent = {

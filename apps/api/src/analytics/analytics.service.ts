@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateAnalyticsEventDto } from './analytics.dto';
+import {
+  AnalyticsDateRangeQueryDto,
+  CreateAnalyticsEventDto,
+} from './analytics.dto';
 
 @Injectable()
 export class AnalyticsService {
@@ -17,22 +21,61 @@ export class AnalyticsService {
     });
   }
 
-  async summary() {
+  async summary(filters: AnalyticsDateRangeQueryDto = {}) {
+    const dateWhere = this.dateRangeWhere(filters);
     const [totalVisits, cvDownloads, contactSubmits, projectViews] =
       await Promise.all([
-        this.prisma.analyticsEvent.count({ where: { type: 'landing_visit' } }),
-        this.prisma.analyticsEvent.count({ where: { type: 'cv_download' } }),
-        this.prisma.analyticsEvent.count({ where: { type: 'contact_submit' } }),
-        this.prisma.analyticsEvent.count({ where: { type: 'project_view' } }),
+        this.prisma.analyticsEvent.count({
+          where: { ...dateWhere, type: 'landing_visit' },
+        }),
+        this.prisma.analyticsEvent.count({
+          where: { ...dateWhere, type: 'cv_download' },
+        }),
+        this.prisma.analyticsEvent.count({
+          where: { ...dateWhere, type: 'contact_submit' },
+        }),
+        this.prisma.analyticsEvent.count({
+          where: { ...dateWhere, type: 'project_view' },
+        }),
       ]);
 
     return { totalVisits, cvDownloads, contactSubmits, projectViews };
   }
 
-  list() {
+  list(filters: AnalyticsDateRangeQueryDto = {}) {
     return this.prisma.analyticsEvent.findMany({
+      where: this.dateRangeWhere(filters),
       orderBy: { createdAt: 'desc' },
       take: 200,
     });
   }
+
+  private dateRangeWhere(
+    filters: AnalyticsDateRangeQueryDto,
+  ): Prisma.AnalyticsEventWhereInput {
+    const from = filters.from ? startOfDayUtc(filters.from) : null;
+    const to = filters.to ? endOfDayUtc(filters.to) : null;
+
+    if (from && to && from.getTime() > to.getTime()) {
+      throw new BadRequestException('Invalid analytics date range');
+    }
+
+    const createdAt: Prisma.DateTimeFilter = {};
+    if (from) {
+      createdAt.gte = from;
+    }
+    if (to) {
+      createdAt.lte = to;
+    }
+
+    return Object.keys(createdAt).length ? { createdAt } : {};
+  }
+}
+
+function startOfDayUtc(value: string) {
+  return new Date(`${value}T00:00:00.000Z`);
+}
+
+function endOfDayUtc(value: string) {
+  return new Date(`${value}T23:59:59.999Z`);
 }

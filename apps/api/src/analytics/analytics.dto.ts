@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 
 export class CreateAnalyticsEventDto {
   @ApiProperty({ example: 'landing_visit' })
@@ -18,4 +18,16 @@ export class CreateAnalyticsEventDto {
   @IsString()
   @MaxLength(160)
   label?: string;
+}
+
+export class AnalyticsDateRangeQueryDto {
+  @ApiProperty({ required: false, example: '2026-06-01' })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  from?: string;
+
+  @ApiProperty({ required: false, example: '2026-06-30' })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  to?: string;
 }

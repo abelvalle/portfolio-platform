@@ -25,16 +25,20 @@ export function AnalyticsDashboard() {
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [nextSummary, nextEvents] = await Promise.all([adminClient.analyticsSummary(), adminClient.analyticsEvents()]);
+      const filters = { from: fromDate || undefined, to: toDate || undefined };
+      const [nextSummary, nextEvents] = await Promise.all([
+        adminClient.analyticsSummary(filters),
+        adminClient.analyticsEvents(filters)
+      ]);
       setSummary(nextSummary);
       setEvents(nextEvents);
-      setMessage("Analitica sincronizada con la API.");
+      setMessage("Analitica sincronizada con filtros de API.");
     } catch {
       setMessage("No se pudo cargar analitica. Comprueba sesion admin.");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [fromDate, toDate]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

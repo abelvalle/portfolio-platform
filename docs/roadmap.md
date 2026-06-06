@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:37 CEST.
+Estado actualizado: 2026-06-06 04:42 CEST.
 
 ## Hitos completados
 
@@ -825,6 +825,22 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Filtros temporales API para analitica
+
+- Añadido `AnalyticsDateRangeQueryDto` para `from/to` en formato `YYYY-MM-DD`.
+- `GET /api/v1/analytics/summary` y `GET /api/v1/analytics` aplican filtro real por `createdAt`.
+- El backend rechaza rangos invertidos.
+- El panel `/admin/analytics` envia los filtros al backend y mantiene filtro local para CSV.
+- Añadidos tests unitarios del servicio para summary, listado y rango invalido.
+- `docs/api.md` documenta los query params de analitica.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -845,7 +861,7 @@ Verificacion realizada en este hito:
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtro por fecha y vista detalle; falta preparación visual de integración email.
-- Analítica avanzada: el panel está conectado a eventos con filtros por fecha y exportación CSV; faltan series temporales, segmentación por evento y retención/anonimización configurable.
+- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha y exportación CSV; faltan series temporales, segmentación por evento y retención/anonimización configurable.
 - Dashboard avanzado: el resumen está conectado con drill-downs; faltan filtros temporales reales por endpoint.
 - Experiencias UI avanzada: el CRUD básico está conectado; faltan edición completa en formulario, reordenado drag/drop, confirmación modal de borrado y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD básico está conectado; faltan edición completa en formulario, selector de media, categorías gestionadas visualmente, orden drag/drop y confirmación modal de borrado.
