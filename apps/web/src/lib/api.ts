@@ -3,8 +3,12 @@ import { getLocalizedFallback, localizeSnapshot, type Locale } from "./i18n";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
+export function getApiUrl(path: string) {
+  return `${API_URL}${path}`;
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(getApiUrl(path), {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -12,6 +16,21 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     },
     credentials: "include",
     cache: init?.method && init.method !== "GET" ? "no-store" : "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`API ${path} failed with ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+
+async function apiUpload<T>(path: string, body: FormData): Promise<T> {
+  const response = await fetch(getApiUrl(path), {
+    method: "POST",
+    body,
+    credentials: "include",
+    cache: "no-store"
   });
 
   if (!response.ok) {
@@ -107,5 +126,37 @@ export const cvClient = {
       method: "POST",
       body: JSON.stringify({ baseCvVersionId, adaptedCvVersionId })
     });
+  }
+};
+
+export type MediaAsset = {
+  id: string;
+  filename: string;
+  originalName?: string | null;
+  mimeType: string;
+  size?: number | null;
+  url: string;
+  type?: string | null;
+  updatedAt?: string;
+};
+
+export type MediaStorageStatus = {
+  provider: string;
+  storageDir: string;
+  maxFileSizeMb: number;
+  allowedMimeTypes: string[];
+  uploadEndpoint: string;
+  downloadPattern: string;
+};
+
+export const mediaClient = {
+  list() {
+    return apiFetch<MediaAsset[]>("/media");
+  },
+  storageStatus() {
+    return apiFetch<MediaStorageStatus>("/media/storage/status");
+  },
+  upload(data: FormData) {
+    return apiUpload<MediaAsset>("/media/upload", data);
   }
 };

@@ -68,6 +68,11 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `GET /integrations/linkedin/status`
 - `GET /integrations/linkedin/share-url`
 - `GET /integrations/linkedin/auth-url`
+- `GET /media`
+- `GET /media/:id`
+- `GET /media/:id/download`
+- `GET /media/storage/status`
+- `POST /media/upload`
 - `POST /analytics/events`
 
 ## CV
@@ -136,3 +141,31 @@ Si `CONTACT_WEBHOOK_URL` está configurado, cada mensaje guardado dispara un `PO
 - `GET /integrations/linkedin/auth-url`: protegido para admin; construye URL OAuth si `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` y `LINKEDIN_REDIRECT_URI` están configurados.
 
 Sin credenciales LinkedIn, el sistema mantiene integración pública mediante enlace de perfil y share URL.
+
+## Media
+
+El módulo de media usa `MediaStorageService` para aislar almacenamiento. La implementación activa es local (`MEDIA_STORAGE_PROVIDER=local`) y queda preparada para sustituirse por S3/R2/Supabase Storage sin cambiar el frontend.
+
+Variables principales:
+
+- `STORAGE_DIR`: directorio base local.
+- `MEDIA_STORAGE_PROVIDER`: proveedor activo. Actualmente soportado: `local`.
+- `MEDIA_MAX_FILE_SIZE_MB`: tamaño máximo por archivo.
+- `MEDIA_ALLOWED_MIME_TYPES`: lista separada por comas.
+
+Endpoints:
+
+- `GET /media`: lista assets no eliminados.
+- `GET /media/:id`: obtiene metadata de un asset.
+- `GET /media/:id/download`: descarga el binario asociado a `storageKey`.
+- `GET /media/storage/status`: protegido para `admin` y `editor`; devuelve proveedor, límites y MIME types.
+- `POST /media/upload`: protegido para `admin` y `editor`; acepta `multipart/form-data` con `file`, `altText` opcional y `type` opcional.
+- `POST|PATCH|DELETE /media`: protegido para `admin` y `editor`; mantiene registro manual/edición/soft delete de metadata.
+
+Ejemplo `multipart/form-data`:
+
+```text
+file=<PDF/DOCX/imagen>
+altText=CV principal Abel Valle Rosa
+type=cv-manual
+```

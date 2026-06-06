@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { createResourceController } from '../resources/resource-controller.factory';
-import { ResourcesService } from '../resources/resources.service';
-
-const MediaController = createResourceController('media', 'mediaAsset');
+import { MediaController } from './media.controller';
+import { MediaService } from './media.service';
+import { MediaStorageService } from './media-storage.service';
 
 @Module({
   controllers: [MediaController],
-  providers: [ResourcesService],
+  providers: [MediaService, MediaStorageService],
+  exports: [MediaService, MediaStorageService],
 })
 export class MediaModule {}
