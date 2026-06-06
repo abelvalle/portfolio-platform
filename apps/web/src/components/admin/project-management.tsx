@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Archive, Eye, EyeOff, RefreshCw, Save, Star, Trash2 } from "lucide-react";
+import { Archive, Eye, EyeOff, Pencil, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -69,6 +69,22 @@ function buildMutation(draft: ProjectDraft, order: number): ProjectMutation {
   };
 }
 
+function projectToDraft(project: ProjectItem): ProjectDraft {
+  return {
+    name: project.name,
+    description: project.description,
+    status: project.status,
+    categoryName: project.categoryName || "",
+    technologies: project.technologies.join("\n"),
+    imageUrl: project.imageUrl || "",
+    publicUrl: project.publicUrl || "",
+    repositoryUrl: project.repositoryUrl || "",
+    visible: project.visible,
+    featured: project.featured,
+    sample: project.sample
+  };
+}
+
 export function ProjectManagement() {
   const [items, setItems] = useState<ProjectItem[]>([]);
   const [categories, setCategories] = useState<ProjectCategoryItem[]>([]);
@@ -79,6 +95,8 @@ export function ProjectManagement() {
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingDeleteProject, setPendingDeleteProject] = useState<ProjectItem | null>(null);
+  const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
+  const [editDraft, setEditDraft] = useState<ProjectDraft>(emptyDraft);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -183,6 +201,34 @@ export function ProjectManagement() {
       await loadProjects();
     } catch {
       setMessage("No se pudo eliminar el proyecto.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  function openEditProject(project: ProjectItem) {
+    setEditingProject(project);
+    setEditDraft(projectToDraft(project));
+  }
+
+  async function updateEditingProject() {
+    if (!editingProject) {
+      return;
+    }
+    const payload = buildMutation(editDraft, editingProject.order);
+    if (!payload.name || !payload.slug || !payload.description) {
+      setMessage("Nombre y descripcion son obligatorios.");
+      return;
+    }
+
+    setBusyId(editingProject.id);
+    try {
+      await adminClient.updateProject(editingProject.id, payload);
+      setEditingProject(null);
+      await loadProjects();
+      setMessage(`Proyecto actualizado: ${payload.name}.`);
+    } catch {
+      setMessage("No se pudo actualizar el proyecto.");
     } finally {
       setBusyId(null);
     }
@@ -297,8 +343,8 @@ export function ProjectManagement() {
       </section>
 
       <section className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-[920px]">
-          <div className="grid grid-cols-[1.2fr_1fr_130px_140px_180px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+        <div className="min-w-[980px]">
+          <div className="grid grid-cols-[1.2fr_1fr_130px_140px_220px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
             <span>Proyecto</span>
             <span>Categoria</span>
             <span>Estado</span>
@@ -306,7 +352,7 @@ export function ProjectManagement() {
             <span>Acciones</span>
           </div>
           {items.length ? items.map((item) => (
-            <div key={item.id} className="grid grid-cols-[1.2fr_1fr_130px_140px_180px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+            <div key={item.id} className="grid grid-cols-[1.2fr_1fr_130px_140px_220px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <span>
                 <span className="block font-medium">{item.name}</span>
                 <span className="block text-muted-foreground">{item.slug}</span>
@@ -319,6 +365,9 @@ export function ProjectManagement() {
                 {item.sample ? <Badge variant="outline">demo</Badge> : null}
               </span>
               <span className="flex gap-1">
+                <Button type="button" variant="outline" size="icon" aria-label={`Editar ${item.name}`} onClick={() => openEditProject(item)} disabled={busyId === item.id}>
+                  <Pencil />
+                </Button>
                 <Button type="button" variant="outline" size="icon" onClick={() => patchProject(item.id, { visible: !item.visible })} disabled={busyId === item.id}>
                   {item.visible ? <EyeOff /> : <Eye />}
                 </Button>
@@ -338,6 +387,71 @@ export function ProjectManagement() {
           )}
         </div>
       </section>
+
+      <Dialog open={Boolean(editingProject)} onOpenChange={(open) => !open && setEditingProject(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Editar proyecto</DialogTitle>
+            <DialogDescription>
+              Actualiza contenido, enlaces, categoria, estado y visibilidad del proyecto.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid max-h-[70vh] gap-4 overflow-y-auto pr-1 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="editProjectName">Nombre proyecto</Label>
+              <Input id="editProjectName" value={editDraft.name} onChange={(event) => setEditDraft((current) => ({ ...current, name: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editProjectCategory">Categoria proyecto</Label>
+              <Input id="editProjectCategory" list="projectCategoryOptions" value={editDraft.categoryName} onChange={(event) => setEditDraft((current) => ({ ...current, categoryName: event.target.value }))} />
+            </div>
+            <div className="grid gap-2 md:col-span-2">
+              <Label htmlFor="editProjectDescription">Descripcion proyecto</Label>
+              <Textarea id="editProjectDescription" rows={4} value={editDraft.description} onChange={(event) => setEditDraft((current) => ({ ...current, description: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editProjectTechnologies">Tecnologias proyecto</Label>
+              <Textarea id="editProjectTechnologies" rows={3} value={editDraft.technologies} onChange={(event) => setEditDraft((current) => ({ ...current, technologies: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editProjectImage">Imagen proyecto</Label>
+              <Input id="editProjectImage" value={editDraft.imageUrl} onChange={(event) => setEditDraft((current) => ({ ...current, imageUrl: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editProjectPublicUrl">URL publica proyecto</Label>
+              <Input id="editProjectPublicUrl" value={editDraft.publicUrl} onChange={(event) => setEditDraft((current) => ({ ...current, publicUrl: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editProjectRepositoryUrl">Repositorio proyecto</Label>
+              <Input id="editProjectRepositoryUrl" value={editDraft.repositoryUrl} onChange={(event) => setEditDraft((current) => ({ ...current, repositoryUrl: event.target.value }))} />
+            </div>
+            <div className="flex flex-wrap gap-2 md:col-span-2">
+              {(["draft", "published", "archived"] as const).map((status) => (
+                <Button key={status} type="button" variant={editDraft.status === status ? "default" : "outline"} onClick={() => setEditDraft((current) => ({ ...current, status }))}>
+                  {status}
+                </Button>
+              ))}
+              <Button type="button" variant={editDraft.visible ? "default" : "outline"} onClick={() => setEditDraft((current) => ({ ...current, visible: !current.visible }))}>
+                Visible
+              </Button>
+              <Button type="button" variant={editDraft.featured ? "default" : "outline"} onClick={() => setEditDraft((current) => ({ ...current, featured: !current.featured }))}>
+                Destacado
+              </Button>
+              <Button type="button" variant={editDraft.sample ? "default" : "outline"} onClick={() => setEditDraft((current) => ({ ...current, sample: !current.sample }))}>
+                Demo
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditingProject(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={updateEditingProject} disabled={Boolean(editingProject && busyId === editingProject.id)}>
+              Guardar proyecto
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(pendingDeleteProject)} onOpenChange={(open) => !open && setPendingDeleteProject(null)}>
         <DialogContent>

@@ -464,20 +464,24 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     });
   });
   await page.route("**/api/v1/projects/project-1", async (route) => {
+    const data = JSON.parse(route.request().postData() || "{}");
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
         id: "project-1",
-        name: "Portfolio Platform",
-        slug: "portfolio-platform",
-        description: "Proyecto demo",
-        status: "archived",
-        categoryName: "Portfolio",
-        technologies: ["Next.js", "NestJS"],
-        featured: true,
-        visible: false,
-        sample: false,
-        order: 0
+        name: data.name || "Portfolio Platform",
+        slug: data.slug || "portfolio-platform",
+        description: data.description || "Proyecto demo",
+        status: data.status || "archived",
+        categoryName: data.categoryName || "Portfolio",
+        technologies: data.technologies || ["Next.js", "NestJS"],
+        imageUrl: data.imageUrl ?? null,
+        publicUrl: data.publicUrl ?? null,
+        repositoryUrl: data.repositoryUrl ?? null,
+        featured: data.featured ?? true,
+        visible: data.visible ?? false,
+        sample: data.sample ?? false,
+        order: data.order ?? 0
       })
     });
   });
@@ -686,6 +690,13 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Categoria creada: Producto.")).toBeVisible();
   await page.getByRole("button", { name: /Portfolio visible/ }).click();
   await expect(page.getByText("Categoria ocultada: Portfolio.")).toBeVisible();
+  await page.getByRole("button", { name: "Editar Portfolio Platform" }).click();
+  await expect(page.getByRole("heading", { name: "Editar proyecto" })).toBeVisible();
+  await page.getByLabel("Nombre proyecto").fill("Portfolio Platform Pro");
+  await page.getByLabel("Descripcion proyecto").fill("Proyecto portfolio ampliado.");
+  await page.getByLabel("Tecnologias proyecto").fill("Next.js\nNestJS\nPrisma");
+  await page.getByRole("button", { name: "Guardar proyecto" }).click();
+  await expect(page.getByText("Proyecto actualizado: Portfolio Platform Pro.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Portfolio Platform" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();

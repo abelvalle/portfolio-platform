@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 09:20 CEST.
+Estado actualizado: 2026-06-06 09:24 CEST.
 
 ## Hitos completados
 
@@ -1807,6 +1807,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Edicion completa de Proyectos desde UI
+
+- `/admin/portfolio/projects` añade accion `Editar` por fila.
+- El dialogo permite modificar nombre, descripcion, categoria, tecnologias, imagen, URLs, estado y flags.
+- El guardado usa `PATCH /api/v1/projects/:id`, conserva el orden y recalcula slug desde el nombre.
+- La tabla amplía el area de acciones para editar, ocultar, destacar, archivar y borrar sin solapamientos.
+- Añadida cobertura e2e del flujo editar proyecto -> guardar -> mensaje de exito.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1823,7 +1838,7 @@ Verificacion realizada en este hito:
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal y embudo básico desde UI; faltan embudos configurables/multicanal.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa y cohorts mensuales; faltan cohorts avanzados por fuente/canal.
 - Experiencias UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, reordenado drag/drop y asociación visual con skills/tecnologías.
-- Proyectos UI avanzada: el CRUD básico está conectado con confirmación modal de borrado y gestion de categorias; faltan edición completa en formulario, selector de media y orden drag/drop.
+- Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias y edición completa por dialogo; faltan selector de media y orden drag/drop.
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias y selector de niveles; falta orden drag/drop.
 - Estudios UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa inline, selector de adjuntos/media y orden drag/drop.
 - Certificaciones UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa inline, selector de adjuntos/media y orden drag/drop.
