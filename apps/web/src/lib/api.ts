@@ -316,6 +316,9 @@ export const cvClient = {
   versionAuditLog(filters?: CvVersionAuditFilters) {
     return apiFetch<AuditLogItem[]>(withQuery("/cv-versions/audit-log", filters));
   },
+  versionAuditExportUrl(filters?: CvVersionAuditFilters) {
+    return getApiUrl(withQuery("/cv-versions/audit-log/export", filters));
+  },
   createVersion(data: CvVersionMutation) {
     return apiFetch<CvVersionItem>("/cv-versions", { method: "POST", body: JSON.stringify(data) });
   },

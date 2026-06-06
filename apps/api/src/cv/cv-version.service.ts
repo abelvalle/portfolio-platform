@@ -13,6 +13,15 @@ type CvVersionAuditTrailFilters = {
   limit?: string;
 };
 
+type AuditLogCsvItem = {
+  action: string;
+  resource: string;
+  resourceId?: string | null;
+  userId?: string | null;
+  metadata?: unknown;
+  createdAt: Date | string;
+};
+
 @Injectable()
 export class CvVersionService {
   constructor(
@@ -36,29 +45,22 @@ export class CvVersionService {
   }
 
   auditTrail(filters: CvVersionAuditTrailFilters = {}) {
-    const createdAt: { gte?: Date; lte?: Date } = {};
-    const from = this.auditDate(filters.from);
-    const to = this.auditDate(filters.to, true);
     const page = this.auditPage(filters.page);
     const take = this.auditLimit(filters.limit);
-    if (from) {
-      createdAt.gte = from;
-    }
-    if (to) {
-      createdAt.lte = to;
-    }
     return this.prisma.auditLog.findMany({
-      where: {
-        resource: 'cv-version',
-        ...(filters.action ? { action: filters.action } : {}),
-        ...(filters.resourceId ? { resourceId: filters.resourceId } : {}),
-        ...(filters.userId ? { userId: filters.userId } : {}),
-        ...(Object.keys(createdAt).length ? { createdAt } : {}),
-      },
+      where: this.auditWhere(filters),
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * take,
       take,
     });
+  }
+
+  async exportAuditTrailCsv(filters: CvVersionAuditTrailFilters = {}) {
+    const logs = await this.prisma.auditLog.findMany({
+      where: this.auditWhere(filters),
+      orderBy: { createdAt: 'desc' },
+    });
+    return this.auditCsv(logs);
   }
 
   async create(data: Record<string, any>, actorUserId?: string) {
@@ -249,6 +251,46 @@ export class CvVersionService {
       date.setUTCHours(23, 59, 59, 999);
     }
     return date;
+  }
+
+  private auditWhere(filters: CvVersionAuditTrailFilters) {
+    const createdAt: { gte?: Date; lte?: Date } = {};
+    const from = this.auditDate(filters.from);
+    const to = this.auditDate(filters.to, true);
+    if (from) {
+      createdAt.gte = from;
+    }
+    if (to) {
+      createdAt.lte = to;
+    }
+    return {
+      resource: 'cv-version',
+      ...(filters.action ? { action: filters.action } : {}),
+      ...(filters.resourceId ? { resourceId: filters.resourceId } : {}),
+      ...(filters.userId ? { userId: filters.userId } : {}),
+      ...(Object.keys(createdAt).length ? { createdAt } : {}),
+    };
+  }
+
+  private auditCsv(logs: AuditLogCsvItem[]) {
+    const rows = [
+      ['action', 'resource', 'resourceId', 'userId', 'createdAt', 'metadata'],
+      ...logs.map((log) => [
+        log.action,
+        log.resource,
+        log.resourceId || '',
+        log.userId || '',
+        String(log.createdAt),
+        JSON.stringify(log.metadata || {}),
+      ]),
+    ];
+    return rows
+      .map((row) => row.map((cell) => this.csvCell(cell)).join(','))
+      .join('\n');
+  }
+
+  private csvCell(value: string) {
+    return `"${value.replace(/"/g, '""')}"`;
   }
 
   private auditPage(value?: string) {

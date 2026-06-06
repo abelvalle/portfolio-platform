@@ -995,6 +995,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   const auditDownload = await auditDownloadPromise;
   expect(auditDownload.suggestedFilename()).toBe("cv-version-audit-update.csv");
   await expect(page.getByText("CSV de auditoria CV generado.")).toBeVisible();
+  const auditHistoryHref = await page.getByRole("link", { name: "Exportar historico CSV" }).getAttribute("href");
+  expect(auditHistoryHref).toContain("/api/v1/cv-versions/audit-log/export");
+  expect(auditHistoryHref).toContain("action=update");
+  expect(auditHistoryHref).toContain("from=2026-06-01");
+  expect(auditHistoryHref).toContain("to=2026-06-06");
+  expect(auditHistoryHref).toContain("userId=user-1");
   await expect(page.getByLabel("Plantilla", { exact: true })).toBeVisible();
   await expect(page.getByLabel("JSON estructurado")).toBeVisible();
   await expect(page.locator("#structuredJsonVersion")).toHaveValue("cv-base");

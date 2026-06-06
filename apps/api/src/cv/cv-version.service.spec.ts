@@ -124,6 +124,40 @@ describe('CvVersionService', () => {
     });
     expect(result).toEqual([{ id: 'audit-1', action: 'generate_pdf' }]);
   });
+
+  it('exports filtered audit events as CSV without pagination', async () => {
+    const prisma = mockPrisma();
+    prisma.auditLog.findMany.mockResolvedValueOnce([
+      {
+        action: 'set_primary',
+        resource: 'cv-version',
+        resourceId: 'version-1',
+        userId: 'user-1',
+        createdAt: new Date('2026-06-06T08:00:00.000Z'),
+        metadata: { status: 'published' },
+      },
+    ]);
+    const service = new CvVersionService(prisma as never, {} as never);
+
+    const csv = await service.exportAuditTrailCsv({
+      action: 'set_primary',
+      resourceId: 'version-1',
+    });
+
+    expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
+      where: {
+        resource: 'cv-version',
+        action: 'set_primary',
+        resourceId: 'version-1',
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    expect(csv).toContain(
+      '"action","resource","resourceId","userId","createdAt","metadata"',
+    );
+    expect(csv).toContain('"set_primary","cv-version","version-1","user-1"');
+    expect(csv).toContain('"{""status"":""published""}"');
+  });
 });
 
 function mockPrisma() {

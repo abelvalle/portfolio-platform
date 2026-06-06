@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   Param,
   Patch,
   Post,
@@ -54,6 +55,30 @@ export class CvVersionsController {
       to,
       page,
       limit,
+    });
+  }
+
+  @Get('audit-log/export')
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  @Header('Content-Disposition', 'attachment; filename="cv-version-audit.csv"')
+  @ApiQuery({ name: 'action', required: false })
+  @ApiQuery({ name: 'resourceId', required: false })
+  @ApiQuery({ name: 'userId', required: false })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to', required: false })
+  exportAuditTrail(
+    @Query('action') action?: string,
+    @Query('resourceId') resourceId?: string,
+    @Query('userId') userId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.cvVersionService.exportAuditTrailCsv({
+      action,
+      resourceId,
+      userId,
+      from,
+      to,
     });
   }
 

@@ -152,6 +152,7 @@ Variables de privacidad:
 - `POST /cv/:id/set-primary` (`manage_cv`)
 - `GET /cv-versions` y `GET /cv-versions/:id` (`read_cv`)
 - `GET /cv-versions/audit-log?action=&resourceId=&from=&to=&userId=&page=&limit=` (`read_cv`)
+- `GET /cv-versions/audit-log/export?action=&resourceId=&from=&to=&userId=` (`read_cv`)
 - `POST|PATCH|DELETE /cv-versions` (`manage_cv`)
 - `POST /cv-versions/:id/generate-pdf` (`manage_cv`)
 - `POST /cv-versions/:id/generate-docx` (`manage_cv`)
@@ -207,6 +208,8 @@ Devuelve `matchScore`, `jobKeywords`, `matchedKeywords`, `missingKeywords` y rec
 `POST /cv-versions/:id/set-primary` marca una versión como principal dentro de su CV, limpia `isPrimary` del resto de versiones del mismo `cvId` y publica la versión seleccionada.
 
 `GET /cv-versions/audit-log` devuelve trazas `AuditLog` de versiones CV ordenadas por fecha descendente. Los filtros opcionales `action`, `resourceId`, `from`, `to`, `userId`, `page` y `limit` permiten revisar acciones concretas, recursos concretos, rangos de fecha y actividad de un usuario admin sin exponer secretos. `limit` se limita a 100 eventos por pagina.
+
+`GET /cv-versions/audit-log/export` devuelve CSV server-side con el historico filtrado por `action`, `resourceId`, `from`, `to` y `userId`, sin paginar la respuesta.
 
 La exportación aplica:
 

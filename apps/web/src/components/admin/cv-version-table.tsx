@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Archive, Copy, Download, Eye, FileText, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -997,6 +997,19 @@ export function CvVersionTable() {
               <Download data-icon="inline-start" />
               Exportar auditoria CSV
             </Button>
+            <a
+              className={buttonVariants({ variant: "outline" })}
+              href={cvClient.versionAuditExportUrl({
+                action: auditActionFilter || undefined,
+                from: auditFromDate || undefined,
+                to: auditToDate || undefined,
+                userId: auditUserId.trim() || undefined
+              })}
+              download
+            >
+              <Download data-icon="inline-start" />
+              Exportar historico CSV
+            </a>
             <Badge variant="outline">{auditLogs.length} eventos</Badge>
           </div>
         </div>
