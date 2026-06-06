@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 02:59 CEST.
+Estado actualizado: 2026-06-06 03:02 CEST.
 
 ## Hitos completados
 
@@ -422,6 +422,22 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### CRUD básico de experiencia conectado
+
+- Reemplazada `/admin/portfolio/experience` placeholder por `ExperienceManagement`.
+- La pantalla lista experiencias desde `GET /api/v1/experiences?includeHidden=true`.
+- Añadido formulario para crear experiencias con empresa, cargo, fechas, modalidad, descripción y listas de logros/responsabilidades/tecnologías/metodologías/skills.
+- Añadidas acciones rápidas para ocultar/mostrar, marcar destacada/no destacada y borrar con soft delete.
+- Añadidos estados de carga, error, vacío y refresco manual.
+- Añadida cobertura e2e desktop/mobile de la ruta admin de experiencia.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -445,6 +461,7 @@ Verificación realizada en este hito:
 - Mensajes UI avanzada: la bandeja está conectada; faltan filtro por fecha, vista detalle/modal y preparación visual de integración email.
 - Analítica avanzada: el panel está conectado a eventos; faltan filtros por fecha, series temporales, exportación y retención/anonimización configurable.
 - Dashboard avanzado: el resumen está conectado; faltan filtros temporales, drill-down desde tarjetas y control real de módulos desde UI.
+- Experiencias UI avanzada: el CRUD básico está conectado; faltan edición completa en formulario, reordenado drag/drop, confirmación modal de borrado y asociación visual con skills/tecnologías.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.

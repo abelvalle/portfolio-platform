@@ -160,6 +160,18 @@ export const adminClient = {
   deleteContactMessage(id: string) {
     return apiFetch<ContactMessage>(`/contact-messages/${id}`, { method: "DELETE" });
   },
+  experiences() {
+    return apiFetch<ExperienceItem[]>("/experiences?includeHidden=true");
+  },
+  createExperience(data: ExperienceMutation) {
+    return apiFetch<ExperienceItem>("/experiences", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateExperience(id: string, data: Partial<ExperienceMutation>) {
+    return apiFetch<ExperienceItem>(`/experiences/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteExperience(id: string) {
+    return apiFetch<ExperienceItem>(`/experiences/${id}`, { method: "DELETE" });
+  },
   analyticsSummary() {
     return apiFetch<AnalyticsSummary>("/analytics/summary");
   },
@@ -299,6 +311,28 @@ export type ContactMessage = {
   status: string;
   createdAt: string;
 };
+
+export type ExperienceItem = {
+  id: string;
+  company: string;
+  role: string;
+  startDate: string;
+  endDate?: string | null;
+  current: boolean;
+  location?: string | null;
+  modality?: string | null;
+  description: string;
+  achievements: string[];
+  responsibilities: string[];
+  technologies: string[];
+  methodologies: string[];
+  skills: string[];
+  order: number;
+  visible: boolean;
+  featured: boolean;
+};
+
+export type ExperienceMutation = Omit<ExperienceItem, "id">;
 
 export type AnalyticsSummary = {
   totalVisits: number;
