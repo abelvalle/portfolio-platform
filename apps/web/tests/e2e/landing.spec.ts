@@ -1,4 +1,16 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function expectA4PreviewLayout(page: Page) {
+  const metrics = await page.locator("[data-cv-preview='a4']").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      aspectDelta: Math.abs(rect.width / rect.height - 210 / 297),
+      horizontalOverflow: element.scrollWidth - element.clientWidth
+    };
+  });
+  expect(metrics.aspectDelta).toBeLessThan(0.02);
+  expect(metrics.horizontalOverflow).toBeLessThanOrEqual(2);
+}
 
 test("landing intro, hero and command palette work", async ({ page }) => {
   await page.goto("/");
@@ -44,6 +56,7 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await page.goto("/cv/templates/minimalista");
   await expect(page.getByRole("heading", { name: "Minimalista" })).toBeVisible();
   await expect(page.getByText("Preview A4")).toBeVisible();
+  await expectA4PreviewLayout(page);
   await expect(page.getByText("/cv/templates/minimalista")).toBeVisible();
   await expect(page.getByRole("link", { name: "Todas las plantillas" })).toHaveAttribute("href", "/cv/templates");
   await expect(page.getByRole("link", { name: "Descargar CV" })).toHaveAttribute("href", /\/api\/v1\/cv\/download\?template=minimalista$/);
@@ -1785,15 +1798,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("heading", { name: "Editor de CV" })).toBeVisible();
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-page-size", "A4");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-renderer", "web-preview");
-  const a4PreviewMetrics = await page.locator("[data-cv-preview='a4']").evaluate((element) => {
-    const rect = element.getBoundingClientRect();
-    return {
-      aspectDelta: Math.abs(rect.width / rect.height - 210 / 297),
-      horizontalOverflow: element.scrollWidth - element.clientWidth
-    };
-  });
-  expect(a4PreviewMetrics.aspectDelta).toBeLessThan(0.02);
-  expect(a4PreviewMetrics.horizontalOverflow).toBeLessThanOrEqual(2);
+  await expectA4PreviewLayout(page);
   await expect(page.getByLabel("Plantilla preview admin")).toHaveValue("ats-friendly");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "ats-friendly");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-density", "compact");

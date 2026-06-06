@@ -3350,6 +3350,17 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run lint`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 
+### Guard A4 compartido en previews publico y admin
+
+- El smoke de ratio A4 se factoriza en un helper e2e reutilizable.
+- La cobertura ahora valida el preview publico `/cv/templates/minimalista` y el preview admin `/admin/cv/editor`.
+- Ambos checks se ejecutan en desktop y mobile dentro de la suite Playwright web.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd --prefix apps/web run test:e2e`
+
 ### Documentacion API de metadatos CV exportados
 
 - `docs/api.md` documenta que PDF/DOCX renderizan metadatos avanzados de formacion cuando existen en `structuredJson`.
