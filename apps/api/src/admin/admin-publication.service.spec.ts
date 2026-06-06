@@ -428,6 +428,85 @@ describe('AdminPublicationService', () => {
     );
   });
 
+  it('builds a field-level CV version draft review', async () => {
+    const service = new AdminPublicationService(
+      mockPrisma({
+        cvVersion: cvVersionFixture({
+          name: 'CV general',
+          draftJson: {
+            name: 'CV Delivery Manager',
+            structuredJson: { summary: 'Delivery, UAT y KPIs.' },
+          },
+        }),
+      }),
+    );
+
+    const review = await service.cvVersionReview('cv-version-1');
+
+    expect(review.hasDraft).toBe(true);
+    expect(review.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: 'name',
+          before: 'CV general',
+          after: 'CV Delivery Manager',
+          changed: true,
+        }),
+        expect.objectContaining({
+          field: 'structuredJson',
+          before: { summary: 'IT Project Manager' },
+          after: { summary: 'Delivery, UAT y KPIs.' },
+          changed: true,
+        }),
+      ]),
+    );
+  });
+
+  it('publishes CV version drafts and logs changed fields', async () => {
+    const prisma = mockPrisma({
+      cvVersion: cvVersionFixture({
+        name: 'CV general',
+        status: 'draft',
+        draftJson: {
+          name: 'CV Delivery Manager',
+          targetRole: 'Delivery Manager',
+          structuredJson: { summary: 'Delivery, UAT y KPIs.' },
+        },
+      }),
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.publishCvVersionDraft(
+      'cv-version-1',
+      'user-1',
+    );
+
+    expect(result.changedFields).toEqual([
+      'name',
+      'targetRole',
+      'status',
+      'structuredJson',
+    ]);
+    expect(prisma.cvVersion.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          name: 'CV Delivery Manager',
+          targetRole: 'Delivery Manager',
+          status: 'published',
+          draftJson: expect.anything(),
+        }),
+      }),
+    );
+    expect(prisma.changeLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          entityType: 'cv-version',
+          action: 'publish',
+        }),
+      }),
+    );
+  });
+
   it('restores theme values from a changelog entry', async () => {
     const prisma = mockPrisma({
       theme: {
@@ -595,6 +674,40 @@ describe('AdminPublicationService', () => {
       }),
     );
   });
+
+  it('restores CV version values from a changelog entry', async () => {
+    const prisma = mockPrisma({
+      cvVersion: cvVersionFixture({
+        name: 'CV Delivery Manager',
+        structuredJson: { summary: 'Delivery.' },
+      }),
+      change: {
+        id: 'change-cv-version-1',
+        entityType: 'cv-version',
+        entityId: 'cv-version-1',
+        beforeJson: cvVersionSnapshot({
+          name: 'CV general',
+          structuredJson: { summary: 'IT Project Manager' },
+        }),
+      },
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.restorePublicationChange(
+      'change-cv-version-1',
+      'user-1',
+    );
+
+    expect(result.changedFields).toEqual(['name', 'structuredJson']);
+    expect(prisma.cvVersion.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          name: 'CV general',
+          structuredJson: { summary: 'IT Project Manager' },
+        }),
+      }),
+    );
+  });
 });
 
 function mockPrisma({
@@ -605,6 +718,7 @@ function mockPrisma({
   skill,
   education,
   certification,
+  cvVersion,
   change,
 }: {
   theme?: Record<string, unknown>;
@@ -614,6 +728,7 @@ function mockPrisma({
   skill?: Record<string, unknown>;
   education?: Record<string, unknown>;
   certification?: Record<string, unknown>;
+  cvVersion?: Record<string, unknown>;
   change?: Record<string, unknown>;
 }) {
   return {
@@ -646,6 +761,10 @@ function mockPrisma({
     certification: {
       findUnique: jest.fn().mockResolvedValue(certification),
       update: jest.fn().mockResolvedValue(certification),
+    },
+    cvVersion: {
+      findUnique: jest.fn().mockResolvedValue(cvVersion),
+      update: jest.fn().mockResolvedValue(cvVersion),
     },
     changeLog: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -821,6 +940,36 @@ function certificationSnapshot(overrides: Record<string, unknown> = {}) {
     description: 'Certificacion demo.',
     certificateUrl: null,
     attachmentId: null,
+    ...overrides,
+  };
+}
+
+function cvVersionFixture(overrides: Record<string, unknown> = {}) {
+  return {
+    ...cvVersionSnapshot(),
+    id: 'cv-version-1',
+    cvId: 'cv-1',
+    generatedPdfId: null,
+    generatedDocxId: null,
+    isPrimary: false,
+    draftJson: null,
+    publishedAt: null,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+function cvVersionSnapshot(overrides: Record<string, unknown> = {}) {
+  return {
+    name: 'CV general',
+    slug: 'cv-general',
+    description: 'Version general.',
+    targetRole: 'IT Project Manager',
+    targetCompany: null,
+    language: 'es',
+    status: 'draft',
+    templateId: null,
+    structuredJson: { summary: 'IT Project Manager' },
     ...overrides,
   };
 }

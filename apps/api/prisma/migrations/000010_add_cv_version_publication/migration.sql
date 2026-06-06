@@ -1,0 +1,2 @@
+ALTER TABLE "CvVersion" ADD COLUMN "draftJson" JSONB;
+ALTER TABLE "CvVersion" ADD COLUMN "publishedAt" TIMESTAMP(3);

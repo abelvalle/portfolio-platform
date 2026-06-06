@@ -179,6 +179,30 @@ const REQUIRED_CERTIFICATION_FIELDS = new Set<CertificationField>([
   'date',
 ]);
 
+const CV_VERSION_FIELDS = [
+  'name',
+  'slug',
+  'description',
+  'targetRole',
+  'targetCompany',
+  'language',
+  'status',
+  'templateId',
+  'structuredJson',
+] as const;
+
+type CvVersionField = (typeof CV_VERSION_FIELDS)[number];
+type CvVersionValue = string | Record<string, unknown> | null;
+type CvVersionValues = Record<CvVersionField, CvVersionValue>;
+
+const REQUIRED_CV_VERSION_FIELDS = new Set<CvVersionField>([
+  'name',
+  'slug',
+  'targetRole',
+  'language',
+  'structuredJson',
+]);
+
 @Injectable()
 export class AdminPublicationService {
   constructor(private readonly prisma: PrismaService) {}
@@ -435,6 +459,41 @@ export class AdminPublicationService {
       entityId: certification.id,
       hasDraft: fields.some((field) => field.changed),
       publishedAt: certification.publishedAt,
+      fields,
+      latestChanges,
+    };
+  }
+
+  async cvVersionReview(id: string) {
+    const [version, latestChanges] = await Promise.all([
+      this.prisma.cvVersion.findUnique({ where: { id } }),
+      this.latestChanges('cv-version'),
+    ]);
+
+    if (!version || version.deletedAt) {
+      throw new NotFoundException('CV version not found');
+    }
+
+    const published = this.pickCvVersionValues(version);
+    const draft = this.readCvVersionDraft(version.draftJson);
+    const fields = CV_VERSION_FIELDS.map((field) => {
+      const before = published[field];
+      const hasDraftValue =
+        draft && Object.prototype.hasOwnProperty.call(draft, field);
+      const after = hasDraftValue ? (draft[field] ?? null) : before;
+      return {
+        field,
+        before,
+        after,
+        changed: !this.samePublicationValue(before, after),
+      };
+    });
+
+    return {
+      entityType: 'cv-version',
+      entityId: version.id,
+      hasDraft: fields.some((field) => field.changed),
+      publishedAt: version.publishedAt,
       fields,
       latestChanges,
     };
@@ -897,6 +956,83 @@ export class AdminPublicationService {
     };
   }
 
+  async publishCvVersionDraft(id: string, actorUserId?: string) {
+    const version = await this.prisma.cvVersion.findUnique({
+      where: { id },
+    });
+    if (!version || version.deletedAt) {
+      throw new NotFoundException('CV version not found');
+    }
+
+    const draft = this.readCvVersionDraft(version.draftJson);
+    if (!draft) {
+      throw new BadRequestException('CV version draft not found');
+    }
+
+    const before = this.pickCvVersionValues(version);
+    const after: CvVersionValues = {
+      ...before,
+      ...draft,
+      status: PublishStatus.published,
+    };
+    const changedFields = CV_VERSION_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    const missingRequiredFields = [...REQUIRED_CV_VERSION_FIELDS].filter(
+      (field) => {
+        const value = after[field];
+        if (field === 'structuredJson') {
+          return !this.isPlainRecord(value);
+        }
+        return !this.cvStringValue(value).trim();
+      },
+    );
+    if (missingRequiredFields.length) {
+      throw new BadRequestException(
+        `CV version draft is missing required fields: ${missingRequiredFields.join(', ')}`,
+      );
+    }
+    if (!changedFields.length) {
+      throw new BadRequestException('CV version draft has no changes');
+    }
+
+    const published = await this.prisma.cvVersion.update({
+      where: { id: version.id },
+      data: {
+        ...this.buildCvVersionUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'cv-version',
+        entityId: version.id,
+        action: 'publish',
+        summary: `Published CV version draft (${changedFields.join(', ')})`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'publish',
+        resource: 'cv-version',
+        resourceId: version.id,
+        metadata: { changedFields } as never,
+      },
+    });
+
+    return {
+      published,
+      changedFields,
+    };
+  }
+
   async restoreThemeChange(changeLogId: string, actorUserId?: string) {
     const change = await this.prisma.changeLog.findUnique({
       where: { id: changeLogId },
@@ -942,6 +1078,10 @@ export class AdminPublicationService {
 
     if (change.entityType === 'certification') {
       return this.restoreCertificationSnapshot(change, actorUserId);
+    }
+
+    if (change.entityType === 'cv-version') {
+      return this.restoreCvVersionSnapshot(change, actorUserId);
     }
 
     throw new NotFoundException('Publication change not found');
@@ -1393,6 +1533,72 @@ export class AdminPublicationService {
         action: 'restore',
         resource: 'certification',
         resourceId: certification.id,
+        metadata: { changeLogId: change.id, changedFields } as never,
+      },
+    });
+
+    return {
+      restored,
+      changedFields,
+    };
+  }
+
+  private async restoreCvVersionSnapshot(
+    change: ChangeLog,
+    actorUserId?: string,
+  ) {
+    if (!change.entityId) {
+      throw new NotFoundException('CV version change not found');
+    }
+
+    const restoreValues = this.readCvVersionDraft(change.beforeJson);
+    if (!restoreValues) {
+      throw new BadRequestException('CV version change cannot be restored');
+    }
+
+    const version = await this.prisma.cvVersion.findUnique({
+      where: { id: change.entityId },
+    });
+    if (!version || version.deletedAt) {
+      throw new NotFoundException('CV version not found');
+    }
+
+    const before = this.pickCvVersionValues(version);
+    const after: CvVersionValues = { ...before, ...restoreValues };
+    const changedFields = CV_VERSION_FIELDS.filter(
+      (field) => !this.samePublicationValue(before[field], after[field]),
+    );
+    if (!changedFields.length) {
+      throw new BadRequestException('CV version is already at this version');
+    }
+
+    const restored = await this.prisma.cvVersion.update({
+      where: { id: version.id },
+      data: {
+        ...this.buildCvVersionUpdateData(after),
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'cv-version',
+        entityId: version.id,
+        action: 'restore',
+        summary: `Restored CV version change ${change.id}`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'restore',
+        resource: 'cv-version',
+        resourceId: version.id,
         metadata: { changeLogId: change.id, changedFields } as never,
       },
     });
@@ -1905,6 +2111,87 @@ export class AdminPublicationService {
     return Object.keys(values).length ? values : null;
   }
 
+  private pickCvVersionValues(
+    version: Record<string, unknown>,
+  ): CvVersionValues {
+    return {
+      name: this.stringValue(version.name),
+      slug: this.stringValue(version.slug),
+      description:
+        typeof version.description === 'string' ? version.description : null,
+      targetRole: this.stringValue(version.targetRole),
+      targetCompany:
+        typeof version.targetCompany === 'string'
+          ? version.targetCompany
+          : null,
+      language: this.stringValue(version.language) || 'es',
+      status: this.publishStatusValue(version.status),
+      templateId:
+        typeof version.templateId === 'string' ? version.templateId : null,
+      structuredJson: this.plainRecordValue(version.structuredJson),
+    };
+  }
+
+  private buildCvVersionUpdateData(
+    values: CvVersionValues,
+  ): Prisma.CvVersionUpdateInput {
+    const data: Prisma.CvVersionUpdateInput = {
+      name: this.cvStringValue(values.name),
+      slug: this.cvStringValue(values.slug),
+      description: this.cvNullableStringValue(values.description),
+      targetRole: this.cvStringValue(values.targetRole),
+      targetCompany: this.cvNullableStringValue(values.targetCompany),
+      language: this.cvStringValue(values.language) || 'es',
+      status: this.publishStatusValue(values.status),
+      structuredJson: this.plainRecordValue(values.structuredJson) as never,
+    };
+
+    const templateId = this.cvStringValue(values.templateId);
+    data.template = templateId
+      ? { connect: { id: templateId } }
+      : { disconnect: true };
+
+    return data;
+  }
+
+  private readCvVersionDraft(
+    draftJson: unknown,
+  ): Partial<CvVersionValues> | null {
+    if (
+      !draftJson ||
+      typeof draftJson !== 'object' ||
+      Array.isArray(draftJson)
+    ) {
+      return null;
+    }
+
+    const draft = draftJson as Record<string, unknown>;
+    const values = CV_VERSION_FIELDS.reduce((current, field) => {
+      const value = draft[field];
+      if (value === undefined) {
+        return current;
+      }
+      if (field === 'structuredJson') {
+        if (this.isPlainRecord(value)) {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (field === 'status') {
+        if (typeof value === 'string' && PROJECT_STATUSES.has(value)) {
+          current[field] = value;
+        }
+        return current;
+      }
+      if (typeof value === 'string' || value === null) {
+        current[field] = value;
+      }
+      return current;
+    }, {} as Partial<CvVersionValues>);
+
+    return Object.keys(values).length ? values : null;
+  }
+
   private samePublicationValue(left: unknown, right: unknown) {
     return JSON.stringify(left) === JSON.stringify(right);
   }
@@ -1913,10 +2200,26 @@ export class AdminPublicationService {
     return typeof value === 'string' ? value : '';
   }
 
+  private cvStringValue(value: CvVersionValue | undefined) {
+    return typeof value === 'string' ? value : '';
+  }
+
+  private cvNullableStringValue(value: CvVersionValue | undefined) {
+    return typeof value === 'string' ? value : null;
+  }
+
   private stringArrayValue(value: unknown) {
     return Array.isArray(value)
       ? value.filter((item): item is string => typeof item === 'string')
       : [];
+  }
+
+  private plainRecordValue(value: unknown) {
+    return this.isPlainRecord(value) ? value : {};
+  }
+
+  private isPlainRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
   }
 
   private dateValue(value: unknown) {

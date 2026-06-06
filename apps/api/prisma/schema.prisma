@@ -354,6 +354,8 @@ model CvVersion {
   generatedPdfId  String?
   generatedDocxId String?
   isPrimary       Boolean   @default(false)
+  draftJson       Json?
+  publishedAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?

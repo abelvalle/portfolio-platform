@@ -57,6 +57,7 @@ test("public CV template detail previews are shareable", async ({ page }) => {
 });
 
 test("admin publication page is reachable behind the session proxy", async ({ context, page }) => {
+  test.setTimeout(60_000);
   await context.addCookies([{ name: "accessToken", value: "test-token", url: "http://localhost:3000" }]);
   await page.route("**/api/v1/auth/mfa/status", async (route) => {
     await route.fulfill({

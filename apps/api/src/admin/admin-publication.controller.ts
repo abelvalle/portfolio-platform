@@ -49,6 +49,11 @@ export class AdminPublicationController {
     return this.publicationService.certificationReview(id);
   }
 
+  @Get('cv-versions/:id/review')
+  cvVersionReview(@Param('id') id: string) {
+    return this.publicationService.cvVersionReview(id);
+  }
+
   @Get('changelog')
   changeLog() {
     return this.publicationService.latestChanges();
@@ -106,6 +111,15 @@ export class AdminPublicationController {
     @CurrentUser() user: { id?: string },
   ) {
     return this.publicationService.publishCertificationDraft(id, user?.id);
+  }
+
+  @RequirePermissions('manage_publication')
+  @Post('cv-versions/:id/publish')
+  publishCvVersion(
+    @Param('id') id: string,
+    @CurrentUser() user: { id?: string },
+  ) {
+    return this.publicationService.publishCvVersionDraft(id, user?.id);
   }
 
   @RequirePermissions('manage_publication')

@@ -151,6 +151,9 @@ export const adminClient = {
   publicationCertificationReview(id: string) {
     return apiFetch<PublicationCertificationReview>(`/admin/publication/certifications/${id}/review`);
   },
+  publicationCvVersionReview(id: string) {
+    return apiFetch<PublicationCvVersionReview>(`/admin/publication/cv-versions/${id}/review`);
+  },
   publishThemeDraft() {
     return apiFetch<{ changedFields: string[] }>("/admin/publication/theme/publish", { method: "POST" });
   },
@@ -171,6 +174,9 @@ export const adminClient = {
   },
   publishCertificationDraft(id: string) {
     return apiFetch<{ changedFields: string[] }>(`/admin/publication/certifications/${id}/publish`, { method: "POST" });
+  },
+  publishCvVersionDraft(id: string) {
+    return apiFetch<{ changedFields: string[] }>(`/admin/publication/cv-versions/${id}/publish`, { method: "POST" });
   },
   restorePublicationChange(id: string) {
     return apiFetch<{ changedFields: string[] }>(`/admin/publication/changelog/${id}/restore`, { method: "POST" });
@@ -450,6 +456,10 @@ export type PublicationEducationReview = Omit<PublicationThemeReview, "entityTyp
 
 export type PublicationCertificationReview = Omit<PublicationThemeReview, "entityType"> & {
   entityType: "certification";
+};
+
+export type PublicationCvVersionReview = Omit<PublicationThemeReview, "entityType"> & {
+  entityType: "cv-version";
 };
 
 export type ChangeLogItem = {
@@ -826,6 +836,8 @@ export type CvVersionItem = {
   generatedPdfId?: string | null;
   generatedDocxId?: string | null;
   isPrimary: boolean;
+  draftJson?: Partial<CvVersionMutation> | null;
+  publishedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };
