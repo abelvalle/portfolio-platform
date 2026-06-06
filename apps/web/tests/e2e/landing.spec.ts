@@ -1315,6 +1315,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/cv/adapt");
   await expect(page.getByRole("heading", { name: "Adaptar CV" })).toBeVisible();
+  await page.getByLabel("Rol objetivo guardado").selectOption("target-role-1");
+  await expect(page.getByLabel("Puesto objetivo")).toHaveValue("Delivery Manager");
+  await expect(page.getByLabel("Descripcion de oferta")).toHaveValue(/Keywords objetivo: delivery, uat, kpi\./);
   await page.getByLabel("Puesto objetivo").fill("Delivery Manager");
   await page.getByLabel("Descripcion de oferta").fill("Buscamos Delivery Manager con KPIs, UAT, stakeholders, reporting y gestion de cliente en entornos cloud.");
   await page.getByRole("button", { name: "Proponer adaptacion" }).click();

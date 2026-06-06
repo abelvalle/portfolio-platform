@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cvClient, type CvAdaptationResult, type CvVersionItem } from "@/lib/api";
+import { cvClient, type CvAdaptationResult, type CvTargetRoleItem, type CvVersionItem } from "@/lib/api";
 
 type AdaptationBlockKey = "summary" | "skills" | "experiences";
 
@@ -27,7 +27,9 @@ const defaultAcceptedBlocks: Record<AdaptationBlockKey, boolean> = {
 
 export function CvAdaptationWizard() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
+  const [targetRoles, setTargetRoles] = useState<CvTargetRoleItem[]>([]);
   const [baseCvVersionId, setBaseCvVersionId] = useState("");
+  const [selectedTargetRoleId, setSelectedTargetRoleId] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [targetCompany, setTargetCompany] = useState("");
   const [jobDescription, setJobDescription] = useState("");
@@ -51,8 +53,12 @@ export function CvAdaptationWizard() {
   async function loadVersions() {
     setIsLoading(true);
     try {
-      const nextVersions = await cvClient.versions();
+      const [nextVersions, nextTargetRoles] = await Promise.all([
+        cvClient.versions(),
+        cvClient.targetRoles().catch(() => [])
+      ]);
       setVersions(nextVersions);
+      setTargetRoles(nextTargetRoles);
       setBaseCvVersionId((current) => current || nextVersions[0]?.id || "");
       setMessage(nextVersions.length ? "Selecciona una version base." : "No hay versiones base disponibles.");
     } catch {
@@ -90,6 +96,18 @@ export function CvAdaptationWizard() {
   }
 
   const selectedVersion = versions.find((version) => version.id === baseCvVersionId);
+
+  function applyTargetRole(roleId: string) {
+    setSelectedTargetRoleId(roleId);
+    const role = targetRoles.find((item) => item.id === roleId);
+    if (!role) {
+      return;
+    }
+
+    setTargetRole(role.name);
+    setJobDescription(targetRolePrompt(role));
+    setMessage(`Rol objetivo aplicado: ${role.name}. Revisa la descripcion antes de proponer.`);
+  }
 
   function setBlockAccepted(key: AdaptationBlockKey, checked: boolean) {
     setAcceptedBlocks((current) => ({ ...current, [key]: checked }));
@@ -244,6 +262,24 @@ export function CvAdaptationWizard() {
             )}
           </div>
           {selectedVersion ? <p className="text-sm text-muted-foreground">Base seleccionada: {selectedVersion.targetRole}</p> : null}
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="targetRolePreset">Rol objetivo guardado</Label>
+          <select
+            id="targetRolePreset"
+            className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+            value={selectedTargetRoleId}
+            onChange={(event) => applyTargetRole(event.target.value)}
+          >
+            <option value="">Seleccionar rol objetivo</option>
+            {targetRoles.map((role) => (
+              <option key={role.id} value={role.id}>{role.name}</option>
+            ))}
+          </select>
+          <p className="text-sm text-muted-foreground">
+            {targetRoles.length ? "Aplica puesto y keywords guardadas; completa la oferta real antes de generar." : "Sin roles objetivo guardados."}
+          </p>
         </div>
 
         <div className="grid gap-2">
@@ -404,4 +440,11 @@ function experienceReviewState(experiences: Array<{ role?: string; company?: str
       .filter(Boolean)
       .map((key) => [key, true])
   );
+}
+
+function targetRolePrompt(role: CvTargetRoleItem) {
+  return [
+    role.description?.trim(),
+    role.keywords.length ? `Keywords objetivo: ${role.keywords.join(", ")}.` : ""
+  ].filter(Boolean).join("\n\n");
 }

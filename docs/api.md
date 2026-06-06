@@ -194,6 +194,8 @@ En admin, `/admin/cv/versions` permite filtrar la auditoria por version concreta
 
 En admin, `/admin/cv/target-roles` consume `GET|POST|PATCH|DELETE /cv-target-roles` para gestionar perfiles objetivo y keywords reutilizables en futuras adaptaciones de CV.
 
+En admin, `/admin/cv/adapt` lee esos roles objetivo para precargar puesto y keywords antes de llamar a `POST /cv/adapt-to-role`.
+
 `POST /cv/:id/ats-role-report` compara la versión primaria contra una descripción de oferta concreta:
 
 ```json
