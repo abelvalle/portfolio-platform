@@ -49,6 +49,25 @@ function getInitialVersionId() {
   return new URLSearchParams(window.location.search).get("versionId") || "";
 }
 
+function validateStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return "JSON estructurado debe ser un objeto raiz.";
+  }
+
+  const data = value as Record<string, unknown>;
+  const arrayFields = ["experience", "education", "certifications", "skills", "projects", "languages", "sections"];
+  for (const field of arrayFields) {
+    if (field in data && !Array.isArray(data[field])) {
+      return `El campo ${field} debe ser una lista.`;
+    }
+  }
+  if ("personal" in data && (typeof data.personal !== "object" || Array.isArray(data.personal))) {
+    return "El campo personal debe ser un objeto.";
+  }
+
+  return "";
+}
+
 export function CvVersionTable() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
   const [templates, setTemplates] = useState<CvTemplateItem[]>([]);
@@ -226,6 +245,11 @@ export function CvVersionTable() {
       parsed = JSON.parse(jsonDraft);
     } catch {
       setJsonMessage("JSON invalido. Revisa comas, llaves y comillas.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
       return;
     }
 
