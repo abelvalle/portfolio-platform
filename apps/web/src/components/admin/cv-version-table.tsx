@@ -43,6 +43,14 @@ function formatJson(value: unknown) {
   return JSON.stringify(value || {}, null, 2);
 }
 
+function summaryFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return "";
+  }
+  const summary = (value as Record<string, unknown>).summary;
+  return typeof summary === "string" ? summary : "";
+}
+
 function getInitialVersionId() {
   if (typeof window === "undefined") {
     return "";
@@ -83,6 +91,7 @@ export function CvVersionTable() {
   const [message, setMessage] = useState("Cargando versiones de CV.");
   const [jsonVersionId, setJsonVersionId] = useState("");
   const [jsonDraft, setJsonDraft] = useState("{}");
+  const [summaryDraft, setSummaryDraft] = useState("");
   const [jsonMessage, setJsonMessage] = useState("Selecciona una version para editar su JSON estructurado.");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -98,12 +107,14 @@ export function CvVersionTable() {
     if (!selectedVersion) {
       setJsonVersionId("");
       setJsonDraft("{}");
+      setSummaryDraft("");
       setJsonMessage("Sin versiones disponibles para editar.");
       return;
     }
     if (!jsonVersionId || selectedVersion.id !== jsonVersionId) {
       setJsonVersionId(selectedVersion.id);
       setJsonDraft(formatJson(selectedVersion.structuredJson));
+      setSummaryDraft(summaryFromStructuredJson(selectedVersion.structuredJson));
       setJsonMessage(
         requestedVersionId === selectedVersion.id
           ? "Version enlazada desde el comparador cargada para edicion."
@@ -241,7 +252,33 @@ export function CvVersionTable() {
     const selectedVersion = versions.find((version) => version.id === id);
     setJsonVersionId(id);
     setJsonDraft(formatJson(selectedVersion?.structuredJson));
+    setSummaryDraft(summaryFromStructuredJson(selectedVersion?.structuredJson));
     setJsonMessage(selectedVersion ? "JSON estructurado cargado desde la version seleccionada." : "Version no encontrada.");
+  }
+
+  function applySummaryBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el bloque.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const nextSummary = summaryDraft.trim();
+    if (nextSummary) {
+      nextStructuredJson.summary = nextSummary;
+    } else {
+      delete nextStructuredJson.summary;
+    }
+    setJsonDraft(formatJson(nextStructuredJson));
+    setJsonMessage("Bloque resumen aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
   async function saveStructuredJson() {
@@ -379,6 +416,18 @@ export function CvVersionTable() {
           <Button type="button" onClick={saveStructuredJson} disabled={isJsonSaving || !jsonVersionId}>
             <Save data-icon="inline-start" />
             {isJsonSaving ? "Guardando JSON..." : "Guardar JSON"}
+          </Button>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="summaryBlock">Resumen profesional CV</Label>
+          <Textarea
+            id="summaryBlock"
+            rows={4}
+            value={summaryDraft}
+            onChange={(event) => setSummaryDraft(event.target.value)}
+          />
+          <Button type="button" variant="outline" className="w-fit" onClick={applySummaryBlock} disabled={!jsonVersionId}>
+            Aplicar resumen
           </Button>
         </div>
         <div className="grid gap-2">
