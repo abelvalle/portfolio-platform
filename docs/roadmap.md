@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 16:18 CEST.
+Estado actualizado: 2026-06-06 16:44 CEST.
 
 ## Hitos completados
 
@@ -2624,6 +2624,24 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run test`
 - `npm.cmd --prefix apps/api run test:e2e`
 
+### UI draft/publish para proyectos
+
+- `/admin/portfolio/projects` permite guardar borradores de proyectos desde el dialogo de edicion.
+- La UI llama a `PATCH /api/v1/projects/:id` con `draftJson` sin publicar cambios directamente.
+- La UI consume `GET /api/v1/admin/publication/projects/:id/review` para mostrar diffs del borrador.
+- El dialogo muestra una revision resumida con campos modificados, valor publicado y valor propuesto.
+- La accion `Publicar borrador` llama a `POST /api/v1/admin/publication/projects/:id/publish`.
+- El modal de proyectos usa ancho responsive real (`sm:!max-w-4xl`), scroll y footer con wrap para evitar recortes en desktop/mobile.
+- Se aplico el mismo ajuste responsive al dialogo largo de experiencias para mantener consistencia visual.
+- Anadida cobertura e2e desktop/mobile del flujo guardar borrador -> revisar -> publicar.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- QA visual Playwright fallback en `/admin/portfolio/projects` con dialogo de borrador visible y sin errores de consola; Browser integrado no expuso herramienta navegable en esta sesion.
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -2642,7 +2660,7 @@ Verificacion realizada en este hito:
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal y embudo básico desde UI; faltan embudos configurables/multicanal.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa y cohorts mensuales; faltan cohorts avanzados por fuente/canal.
 - Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, reordenado por botones y draft/publish desde UI; faltan drag/drop y asociación visual con skills/tecnologías.
-- Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media y reordenado por botones; faltan drag/drop y draft/publish desde UI.
+- Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles y reordenado por botones; falta drag/drop.
 - Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; falta drag/drop.
 - Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; falta drag/drop.
@@ -2659,6 +2677,6 @@ Verificacion realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. UI draft/publish para proyectos.
-2. Extender draft/publish API a skills, educacion y certificaciones.
+1. Extender draft/publish API a skills, educacion y certificaciones.
+2. UI draft/publish para skills.
 3. Renderer HTML/CSS server-side fiel al preview A4 público.

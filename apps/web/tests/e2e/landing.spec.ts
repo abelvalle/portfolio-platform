@@ -663,7 +663,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           featured: true,
           visible: true,
           sample: false,
-          order: 0
+          order: 0,
+          draftJson: null,
+          publishedAt: null
         }
       ])
     });
@@ -724,7 +726,36 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         featured: data.featured ?? true,
         visible: data.visible ?? false,
         sample: data.sample ?? false,
-        order: data.order ?? 0
+        order: data.order ?? 0,
+        draftJson: data.draftJson ?? null,
+        publishedAt: null
+      })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/projects/project-1/review", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        entityType: "project",
+        entityId: "project-1",
+        hasDraft: true,
+        publishedAt: null,
+        fields: [
+          { field: "name", before: "Portfolio Platform", after: "Portfolio Platform Pro", changed: true },
+          { field: "slug", before: "portfolio-platform", after: "portfolio-platform-pro", changed: true },
+          { field: "description", before: "Proyecto demo", after: "Proyecto portfolio ampliado.", changed: true },
+          { field: "technologies", before: ["Next.js", "NestJS"], after: ["Next.js", "NestJS", "Prisma"], changed: true },
+          { field: "imageUrl", before: null, after: "/media/uploads/portfolio-cover.jpg", changed: true }
+        ],
+        latestChanges: []
+      })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/projects/project-1/publish", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        changedFields: ["name", "slug", "description", "technologies", "imageUrl"]
       })
     });
   });
@@ -1054,8 +1085,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Tecnologias proyecto").fill("Next.js\nNestJS\nPrisma");
   await page.getByLabel("Imagen media proyecto").selectOption("/media/uploads/portfolio-cover.jpg");
   await expect(page.getByLabel("Imagen proyecto")).toHaveValue("/media/uploads/portfolio-cover.jpg");
-  await page.getByRole("button", { name: "Guardar proyecto" }).click();
-  await expect(page.getByText("Proyecto actualizado: Portfolio Platform Pro.")).toBeVisible();
+  await page.getByRole("button", { name: "Guardar borrador" }).click();
+  await expect(page.getByText("Borrador de proyecto guardado: Portfolio Platform Pro.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Revision borrador proyecto" })).toBeVisible();
+  await page.getByRole("button", { name: "Publicar borrador" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Borrador de proyecto publicado. Campos modificados: name, slug, description, technologies, imageUrl.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Portfolio Platform" })).toBeVisible();
   await page.getByRole("button", { name: "Subir Portfolio Platform" }).click();
   await expect(page.getByText("Proyecto reordenado: Portfolio Platform.")).toBeVisible();

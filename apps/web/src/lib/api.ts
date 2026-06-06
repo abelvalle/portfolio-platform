@@ -139,6 +139,9 @@ export const adminClient = {
   publicationExperienceReview(id: string) {
     return apiFetch<PublicationExperienceReview>(`/admin/publication/experiences/${id}/review`);
   },
+  publicationProjectReview(id: string) {
+    return apiFetch<PublicationProjectReview>(`/admin/publication/projects/${id}/review`);
+  },
   publishThemeDraft() {
     return apiFetch<{ changedFields: string[] }>("/admin/publication/theme/publish", { method: "POST" });
   },
@@ -147,6 +150,9 @@ export const adminClient = {
   },
   publishExperienceDraft(id: string) {
     return apiFetch<{ changedFields: string[] }>(`/admin/publication/experiences/${id}/publish`, { method: "POST" });
+  },
+  publishProjectDraft(id: string) {
+    return apiFetch<{ changedFields: string[] }>(`/admin/publication/projects/${id}/publish`, { method: "POST" });
   },
   restorePublicationChange(id: string) {
     return apiFetch<{ changedFields: string[] }>(`/admin/publication/changelog/${id}/restore`, { method: "POST" });
@@ -412,6 +418,10 @@ export type PublicationExperienceReview = Omit<PublicationThemeReview, "entityTy
   entityType: "experience";
 };
 
+export type PublicationProjectReview = Omit<PublicationThemeReview, "entityType"> & {
+  entityType: "project";
+};
+
 export type ChangeLogItem = {
   id: string;
   entityType: string;
@@ -582,6 +592,8 @@ export type ProjectItem = {
   visible: boolean;
   sample: boolean;
   order: number;
+  draftJson?: Partial<ProjectMutation> | null;
+  publishedAt?: string | null;
 };
 
 export type ProjectMutation = Omit<ProjectItem, "id">;

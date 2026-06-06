@@ -385,7 +385,7 @@ export function ExperienceManagement() {
       </section>
 
       <Dialog open={Boolean(editingExperience)} onOpenChange={(open) => !open && setEditingExperience(null)}>
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:!max-w-4xl">
           <DialogHeader>
             <DialogTitle>Editar experiencia</DialogTitle>
             <DialogDescription>
@@ -463,7 +463,7 @@ export function ExperienceManagement() {
               </div>
             </section>
           ) : null}
-          <DialogFooter>
+          <DialogFooter className="flex-wrap">
             <Button type="button" variant="outline" onClick={() => setEditingExperience(null)}>
               Cancelar
             </Button>

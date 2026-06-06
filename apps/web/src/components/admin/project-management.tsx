@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Archive, ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Save, Star, Trash2 } from "lucide-react";
+import { Archive, ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Rocket, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { adminClient, mediaClient, type MediaAsset, type ProjectCategoryItem, type ProjectItem, type ProjectMutation } from "@/lib/api";
+import { adminClient, mediaClient, type MediaAsset, type ProjectCategoryItem, type ProjectItem, type ProjectMutation, type PublicationProjectReview } from "@/lib/api";
 
 type ProjectDraft = {
   name: string;
@@ -89,6 +89,19 @@ function mediaAssetLabel(asset: MediaAsset) {
   return asset.originalName || asset.filename;
 }
 
+function formatPublicationValue(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.join(", ") || "-";
+  }
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+  if (typeof value === "boolean") {
+    return value ? "si" : "no";
+  }
+  return String(value);
+}
+
 export function ProjectManagement() {
   const [items, setItems] = useState<ProjectItem[]>([]);
   const [categories, setCategories] = useState<ProjectCategoryItem[]>([]);
@@ -102,6 +115,9 @@ export function ProjectManagement() {
   const [pendingDeleteProject, setPendingDeleteProject] = useState<ProjectItem | null>(null);
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [editDraft, setEditDraft] = useState<ProjectDraft>(emptyDraft);
+  const [projectReview, setProjectReview] = useState<PublicationProjectReview | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isPublishingDraft, setIsPublishingDraft] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -216,6 +232,12 @@ export function ProjectManagement() {
   function openEditProject(project: ProjectItem) {
     setEditingProject(project);
     setEditDraft(projectToDraft(project));
+    setProjectReview(null);
+  }
+
+  function closeEditProject() {
+    setEditingProject(null);
+    setProjectReview(null);
   }
 
   async function updateEditingProject() {
@@ -231,13 +253,71 @@ export function ProjectManagement() {
     setBusyId(editingProject.id);
     try {
       await adminClient.updateProject(editingProject.id, payload);
-      setEditingProject(null);
+      closeEditProject();
       await loadProjects();
       setMessage(`Proyecto actualizado: ${payload.name}.`);
     } catch {
       setMessage("No se pudo actualizar el proyecto.");
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function saveEditingDraft() {
+    if (!editingProject) {
+      return;
+    }
+    const payload = buildMutation(editDraft, editingProject.order);
+    if (!payload.name || !payload.slug || !payload.description) {
+      setMessage("Nombre y descripcion son obligatorios.");
+      return;
+    }
+
+    setIsSavingDraft(true);
+    try {
+      await adminClient.updateProject(editingProject.id, { draftJson: payload });
+      const review = await adminClient.publicationProjectReview(editingProject.id);
+      setProjectReview(review);
+      setMessage(`Borrador de proyecto guardado: ${payload.name}.`);
+    } catch {
+      setMessage("No se pudo guardar el borrador de proyecto.");
+    } finally {
+      setIsSavingDraft(false);
+    }
+  }
+
+  async function reviewEditingDraft() {
+    if (!editingProject) {
+      return;
+    }
+
+    setBusyId(editingProject.id);
+    try {
+      const review = await adminClient.publicationProjectReview(editingProject.id);
+      setProjectReview(review);
+      setMessage(review.hasDraft ? "Borrador de proyecto pendiente de publicacion." : "No hay borrador de proyecto pendiente.");
+    } catch {
+      setMessage("No se pudo revisar el borrador de proyecto.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function publishEditingDraft() {
+    if (!editingProject) {
+      return;
+    }
+
+    setIsPublishingDraft(true);
+    try {
+      const result = await adminClient.publishProjectDraft(editingProject.id);
+      closeEditProject();
+      await loadProjects();
+      setMessage(`Borrador de proyecto publicado. Campos modificados: ${result.changedFields.join(", ")}.`);
+    } catch {
+      setMessage("No se pudo publicar el borrador de proyecto.");
+    } finally {
+      setIsPublishingDraft(false);
     }
   }
 
@@ -417,8 +497,8 @@ export function ProjectManagement() {
         </div>
       </section>
 
-      <Dialog open={Boolean(editingProject)} onOpenChange={(open) => !open && setEditingProject(null)}>
-        <DialogContent className="max-w-3xl">
+      <Dialog open={Boolean(editingProject)} onOpenChange={(open) => !open && closeEditProject()}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:!max-w-4xl">
           <DialogHeader>
             <DialogTitle>Editar proyecto</DialogTitle>
             <DialogDescription>
@@ -485,9 +565,44 @@ export function ProjectManagement() {
               </Button>
             </div>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setEditingProject(null)}>
+          {projectReview ? (
+            <section className="grid gap-3 rounded-lg border border-border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="font-semibold">Revision borrador proyecto</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {projectReview.hasDraft ? "Cambios pendientes antes de publicar." : "Sin cambios pendientes."}
+                  </p>
+                </div>
+                <Badge variant={projectReview.hasDraft ? "default" : "outline"}>
+                  {projectReview.fields.filter((field) => field.changed).length} cambios
+                </Badge>
+              </div>
+              <div className="grid gap-2">
+                {projectReview.fields.filter((field) => field.changed).slice(0, 6).map((field) => (
+                  <div key={field.field} className="grid gap-1 rounded-md bg-muted/40 p-2 text-sm md:grid-cols-[140px_1fr_1fr]">
+                    <span className="font-medium">{field.field}</span>
+                    <span className="truncate text-muted-foreground">{formatPublicationValue(field.before)}</span>
+                    <span className="truncate">{formatPublicationValue(field.after)}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+          <DialogFooter className="flex-wrap">
+            <Button type="button" variant="outline" onClick={closeEditProject}>
               Cancelar
+            </Button>
+            <Button type="button" variant="outline" onClick={saveEditingDraft} disabled={isSavingDraft}>
+              <Save data-icon="inline-start" />
+              {isSavingDraft ? "Guardando borrador..." : "Guardar borrador"}
+            </Button>
+            <Button type="button" variant="outline" onClick={reviewEditingDraft} disabled={Boolean(editingProject && busyId === editingProject.id)}>
+              Revisar borrador
+            </Button>
+            <Button type="button" onClick={publishEditingDraft} disabled={!projectReview?.hasDraft || isPublishingDraft}>
+              <Rocket data-icon="inline-start" />
+              {isPublishingDraft ? "Publicando..." : "Publicar borrador"}
             </Button>
             <Button type="button" onClick={updateEditingProject} disabled={Boolean(editingProject && busyId === editingProject.id)}>
               Guardar proyecto
