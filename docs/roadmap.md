@@ -3585,6 +3585,17 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run build:api`
 
+### Revision granular de campos de experiencia en adaptacion CV
+
+- `CvAdaptationWizard` permite aceptar/rechazar campos internos de cada experiencia propuesta: descripcion, responsabilidades y logros.
+- La version draft conserva experiencias aceptadas, elimina campos rechazados y registra `acceptedExperienceFields`/`rejectedExperienceFields` en `adaptationMeta`.
+- El flujo mantiene rechazo de experiencias completas y rechazo granular de skills/bloques.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3593,7 +3604,7 @@ Verificacion realizada en este hito:
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; servicios y contrato HTTP cubren MediaAsset generado descargable desde storage local con version persistida en memoria; existe harness opcional `RUN_DB_E2E=true`, pero falta validarlo con credenciales Postgres reales porque Docker daemon no esta disponible y la instancia local no acepta las credenciales de ejemplo.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
-- Aceptar/rechazar sugerencias IA desde UI: el wizard ya permite aceptar/rechazar bloques principales, skills individuales y experiencias individuales con trazabilidad; falta revision granular de campos internos de cada experiencia.
+- Aceptar/rechazar sugerencias IA desde UI: el wizard ya permite aceptar/rechazar bloques principales, skills individuales, experiencias individuales y campos internos de experiencia con trazabilidad en `adaptationMeta`; falta extender la misma granularidad a otros bloques complejos si se incorporan propuestas mas ricas.
 - Roles objetivo CV: la pantalla admin permite CRUD, el wizard los usa como precarga y el backend persiste el rol elegido; falta analytics agregada de uso por rol objetivo.
 - Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; el historial agregado de publicaciones CV queda visible desde Versiones CV.
 - Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, version/recurso, fecha y usuario, con timeline visual por version, historial agregado de publicaciones CV, detalle por evento, exportacion CSV visible y exportacion server-side del historico filtrado; falta analitica comparativa avanzada de cambios entre publicaciones.

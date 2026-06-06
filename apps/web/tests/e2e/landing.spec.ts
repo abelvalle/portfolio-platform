@@ -535,7 +535,20 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         proposed: {
           summary: "Resumen orientado a Delivery Manager.",
           skills: [{ name: "KPIs", category: "Reporting" }, { name: "UAT", category: "Delivery" }],
-          experiences: [{ role: "IT Project Manager", company: "Demo Company" }],
+          experiences: [
+            {
+              role: "IT Project Manager",
+              company: "Demo Company",
+              description: "Delivery cloud priorizado.",
+              responsibilities: ["Coordinar UAT"],
+              achievements: ["Mejorar KPIs"]
+            },
+            {
+              role: "Team Leader",
+              company: "Demo Company",
+              description: "Gestion tecnica priorizada."
+            }
+          ],
           adaptationMeta: {
             mode: "rules",
             pendingReview: true,
@@ -1766,9 +1779,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   const acceptSummary = page.getByRole("checkbox", { name: "Aceptar resumen" });
   await acceptSummary.click();
   await expect(acceptSummary).not.toBeChecked();
-  const acceptDemoExperience = page.getByRole("checkbox", { name: "Aceptar experiencia IT Project Manager - Demo Company" });
-  await acceptDemoExperience.click();
-  await expect(acceptDemoExperience).not.toBeChecked();
+  const acceptDescriptionField = page.getByRole("checkbox", { name: "Aceptar campo descripcion de IT Project Manager - Demo Company" });
+  await acceptDescriptionField.click();
+  await expect(acceptDescriptionField).not.toBeChecked();
+  const acceptTeamLeaderExperience = page.getByRole("checkbox", { name: "Aceptar experiencia Team Leader - Demo Company" });
+  await acceptTeamLeaderExperience.click();
+  await expect(acceptTeamLeaderExperience).not.toBeChecked();
   const createAdaptedVersionRequestPromise = page.waitForRequest((request) => {
     if (!request.url().endsWith("/api/v1/cv-versions") || request.method() !== "POST") {
       return false;
@@ -1776,13 +1792,19 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     const data = JSON.parse(request.postData() || "{}");
     const structuredJson = data.structuredJson || {};
     const skillNames = structuredJson.skills?.map((skill: { name?: string }) => skill.name) || [];
+    const experiences = structuredJson.experiences || [];
+    const projectManagerExperience = experiences.find((experience: { role?: string }) => experience.role === "IT Project Manager");
     return !("summary" in structuredJson)
-      && !("experiences" in structuredJson)
       && skillNames.includes("UAT")
       && !skillNames.includes("KPIs")
+      && Boolean(projectManagerExperience)
+      && !("description" in projectManagerExperience)
+      && projectManagerExperience.responsibilities?.includes("Coordinar UAT")
+      && !experiences.some((experience: { role?: string }) => experience.role === "Team Leader")
       && structuredJson.adaptationMeta?.rejectedBlocks?.includes("summary")
       && structuredJson.adaptationMeta?.rejectedSkills?.includes("KPIs")
-      && structuredJson.adaptationMeta?.rejectedExperiences?.includes("IT Project Manager - Demo Company")
+      && structuredJson.adaptationMeta?.rejectedExperiences?.includes("Team Leader - Demo Company")
+      && structuredJson.adaptationMeta?.rejectedExperienceFields?.includes("IT Project Manager - Demo Company.description")
       && structuredJson.adaptationMeta?.acceptedSkills?.includes("UAT");
   });
   await page.getByRole("button", { name: "Crear version borrador" }).click();

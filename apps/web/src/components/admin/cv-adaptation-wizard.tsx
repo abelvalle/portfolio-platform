@@ -12,11 +12,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { cvClient, type CvAdaptationResult, type CvTargetRoleItem, type CvVersionItem } from "@/lib/api";
 
 type AdaptationBlockKey = "summary" | "skills" | "experiences";
+type ExperienceFieldKey = "description" | "responsibilities" | "achievements";
 
 const adaptationBlocks: Array<{ key: AdaptationBlockKey; label: string }> = [
   { key: "summary", label: "resumen" },
   { key: "skills", label: "skills" },
   { key: "experiences", label: "experiencias" }
+];
+
+const experienceFields: Array<{ key: ExperienceFieldKey; label: string }> = [
+  { key: "description", label: "descripcion" },
+  { key: "responsibilities", label: "responsabilidades" },
+  { key: "achievements", label: "logros" }
 ];
 
 const defaultAcceptedBlocks: Record<AdaptationBlockKey, boolean> = {
@@ -37,6 +44,7 @@ export function CvAdaptationWizard() {
   const [acceptedBlocks, setAcceptedBlocks] = useState(defaultAcceptedBlocks);
   const [acceptedSkillNames, setAcceptedSkillNames] = useState<Record<string, boolean>>({});
   const [acceptedExperienceKeys, setAcceptedExperienceKeys] = useState<Record<string, boolean>>({});
+  const [acceptedExperienceFields, setAcceptedExperienceFields] = useState<Record<string, boolean>>({});
   const [createdReview, setCreatedReview] = useState<{ baseId: string; adaptedId: string; name: string } | null>(null);
   const [message, setMessage] = useState("Cargando versiones base.");
   const [isLoading, setIsLoading] = useState(true);
@@ -87,6 +95,7 @@ export function CvAdaptationWizard() {
       setAcceptedBlocks(defaultAcceptedBlocks);
       setAcceptedSkillNames(skillReviewState(nextResult.proposed.skills || []));
       setAcceptedExperienceKeys(experienceReviewState(nextResult.proposed.experiences || []));
+      setAcceptedExperienceFields(experienceFieldReviewState(nextResult.proposed.experiences || []));
       setCreatedReview(null);
       setMessage("Propuesta generada. Revisa antes de aprobar o convertirla en version.");
     } catch {
@@ -120,6 +129,10 @@ export function CvAdaptationWizard() {
 
   function setExperienceAccepted(key: string, checked: boolean) {
     setAcceptedExperienceKeys((current) => ({ ...current, [key]: checked }));
+  }
+
+  function setExperienceFieldAccepted(key: string, checked: boolean) {
+    setAcceptedExperienceFields((current) => ({ ...current, [key]: checked }));
   }
 
   function buildReviewedProposal(nextResult: CvAdaptationResult) {
@@ -168,9 +181,27 @@ export function CvAdaptationWizard() {
       const rejectedExperiences = nextResult.proposed.experiences
         .map((experience) => experienceKey(experience))
         .filter((key) => key && acceptedExperienceKeys[key] === false);
-      const filteredExperiences = nextResult.proposed.experiences.filter((experience) => {
+      const acceptedExperienceFieldsList: string[] = [];
+      const rejectedExperienceFieldsList: string[] = [];
+      const filteredExperiences = nextResult.proposed.experiences.flatMap((experience) => {
         const key = experienceKey(experience);
-        return !key || acceptedExperienceKeys[key] !== false;
+        if (key && acceptedExperienceKeys[key] === false) {
+          return [];
+        }
+        const nextExperience = { ...experience };
+        for (const field of experienceFields) {
+          if (!hasExperienceField(experience, field.key) || !key) {
+            continue;
+          }
+          const reviewKey = experienceFieldKey(key, field.key);
+          if (acceptedExperienceFields[reviewKey] === false) {
+            delete nextExperience[field.key];
+            rejectedExperienceFieldsList.push(reviewKey);
+          } else {
+            acceptedExperienceFieldsList.push(reviewKey);
+          }
+        }
+        return [nextExperience];
       });
       if (filteredExperiences.length) {
         nextProposal.experiences = filteredExperiences;
@@ -179,6 +210,8 @@ export function CvAdaptationWizard() {
       }
       nextMeta.acceptedExperiences = acceptedExperiences;
       nextMeta.rejectedExperiences = rejectedExperiences;
+      nextMeta.acceptedExperienceFields = acceptedExperienceFieldsList;
+      nextMeta.rejectedExperienceFields = rejectedExperienceFieldsList;
     }
 
     nextProposal.adaptationMeta = nextMeta;
@@ -366,15 +399,36 @@ export function CvAdaptationWizard() {
                   {result.proposed.experiences.slice(0, 5).map((experience, index) => {
                     const key = experienceKey(experience) || `Experiencia ${index + 1}`;
                     const id = `accept-experience-${buildVersionSlug(key) || index}`;
+                    const experienceAccepted = acceptedExperienceKeys[key] !== false;
                     return (
-                      <div key={`${key}-${index}`} className="flex items-center gap-2">
-                        <Checkbox
-                          id={id}
-                          checked={acceptedExperienceKeys[key] !== false}
-                          disabled={!acceptedBlocks.experiences}
-                          onCheckedChange={(checked) => setExperienceAccepted(key, Boolean(checked))}
-                        />
-                        <Label htmlFor={id}>Aceptar experiencia {key}</Label>
+                      <div key={`${key}-${index}`} className="grid gap-2 rounded-md border border-border p-3">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id={id}
+                            checked={experienceAccepted}
+                            disabled={!acceptedBlocks.experiences}
+                            onCheckedChange={(checked) => setExperienceAccepted(key, Boolean(checked))}
+                          />
+                          <Label htmlFor={id}>Aceptar experiencia {key}</Label>
+                        </div>
+                        {acceptedBlocks.experiences && experienceAccepted ? (
+                          <div className="grid gap-2 pl-6">
+                            {experienceFields.filter((field) => hasExperienceField(experience, field.key)).map((field) => {
+                              const fieldKey = experienceFieldKey(key, field.key);
+                              const fieldId = `accept-experience-field-${buildVersionSlug(fieldKey) || index}`;
+                              return (
+                                <div key={fieldKey} className="flex items-center gap-2">
+                                  <Checkbox
+                                    id={fieldId}
+                                    checked={acceptedExperienceFields[fieldKey] !== false}
+                                    onCheckedChange={(checked) => setExperienceFieldAccepted(fieldKey, Boolean(checked))}
+                                  />
+                                  <Label htmlFor={fieldId}>Aceptar campo {field.label} de {key}</Label>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : null}
                       </div>
                     );
                   })}
@@ -434,12 +488,35 @@ function experienceKey(experience: { role?: string; company?: string }) {
   return [experience.role, experience.company].filter(Boolean).join(" - ");
 }
 
+function experienceFieldKey(experienceKeyValue: string, field: ExperienceFieldKey) {
+  return `${experienceKeyValue}.${field}`;
+}
+
+function hasExperienceField(experience: Record<string, unknown>, field: ExperienceFieldKey) {
+  const value = experience[field];
+  return Array.isArray(value) ? value.length > 0 : typeof value === "string" && value.trim().length > 0;
+}
+
 function experienceReviewState(experiences: Array<{ role?: string; company?: string }>) {
   return Object.fromEntries(
     experiences
       .map((experience) => experienceKey(experience))
       .filter(Boolean)
       .map((key) => [key, true])
+  );
+}
+
+function experienceFieldReviewState(experiences: Array<Record<string, unknown> & { role?: string; company?: string }>) {
+  return Object.fromEntries(
+    experiences.flatMap((experience) => {
+      const key = experienceKey(experience);
+      if (!key) {
+        return [];
+      }
+      return experienceFields
+        .filter((field) => hasExperienceField(experience, field.key))
+        .map((field) => [experienceFieldKey(key, field.key), true]);
+    })
   );
 }
 

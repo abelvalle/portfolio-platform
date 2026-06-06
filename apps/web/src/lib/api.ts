@@ -946,7 +946,14 @@ export type CvAdaptationResult = {
   proposed: {
     summary?: string;
     skills?: Array<{ name?: string; category?: string }>;
-    experiences?: Array<{ role?: string; company?: string }>;
+    experiences?: Array<{
+      role?: string;
+      company?: string;
+      description?: string;
+      responsibilities?: string[];
+      achievements?: string[];
+      [key: string]: unknown;
+    }>;
     adaptationMeta?: {
       keywords?: string[];
       mode?: string;
