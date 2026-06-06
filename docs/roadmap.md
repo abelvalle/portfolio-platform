@@ -3411,6 +3411,15 @@ Verificacion realizada en este hito:
 
 - `git diff --check`
 
+### Deployment docs de prerequisitos e2e DB
+
+- `docs/deployment.md` replica el prerequisito operativo para ejecutar la prueba e2e DB opcional con Docker Compose.
+- La documentacion distingue entre PostgreSQL levantado por `npm run docker:up` y una instancia local externa con credenciales propias.
+
+Verificacion realizada en este hito:
+
+- `git diff --check`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
