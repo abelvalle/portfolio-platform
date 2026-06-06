@@ -3516,6 +3516,16 @@ Verificacion realizada en este hito:
 
 - `git diff --check`
 
+### Corte operativo 2026-06-06 antes de las 22:00
+
+- Tanda cerrada y subida a `develop` con commits separados para documentacion DB e2e, guards A4/PDF/DOCX, preview A4 con proyectos, revalidacion de deuda audit y QA de build/test.
+- Verificacion consolidada: `npm.cmd --prefix apps/web run lint`, e2e web focalizado desktop/mobile, `npm.cmd run build:web`, `npm.cmd run build:api` y `npm.cmd run test`.
+- Deuda confirmada: e2e DB real bloqueado por Docker/credenciales Postgres, `npm audit` sigue pendiente por `next/postcss`, diff visual PDF rasterizado y paginacion A4 real siguen como siguientes hitos.
+
+Verificacion realizada en este hito:
+
+- `git diff --check`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
