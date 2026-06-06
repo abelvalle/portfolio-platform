@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 02:27 CEST.
+Estado actualizado: 2026-06-06 02:32 CEST.
 
 ## Hitos completados
 
@@ -311,6 +311,26 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### UI de configuración MFA admin
+
+- Añadido componente `MfaSettings` en `/admin/settings`.
+- La UI carga estado MFA desde `GET /api/v1/auth/mfa/status`.
+- Permite iniciar setup TOTP con `POST /api/v1/auth/mfa/setup`.
+- Muestra `secret` y `otpauthUrl` sin depender de proveedores externos de QR.
+- Permite confirmar MFA con código TOTP y muestra recovery codes una sola vez.
+- Permite desactivar MFA con código TOTP o recovery code.
+- Añadidos métodos MFA en `authClient`.
+- Añadida cobertura e2e desktop/mobile de la card de seguridad admin.
+
+Verificación realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -318,7 +338,7 @@ Verificación realizada en este hito:
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
 - Renderer fiel al preview: PDF/DOCX aplican tokens de plantilla, pero todavía no generan desde el mismo HTML/CSS A4 del preview público.
 - Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
-- MFA UI avanzada: falta pantalla de configuración con QR visual, copia de recovery codes y regeneración controlada desde admin.
+- MFA QR/regeneración: existe UI funcional con secret, otpauth URL y recovery codes; falta QR visual local y regeneración controlada de recovery codes.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
 - Auditoría MFA granular: conviene registrar setup/confirm/disable en `AuditLog`.
 - Tema global desde API: el editor persiste tokens, pero falta aplicar automáticamente esos tokens a las variables CSS de la landing/admin en runtime.

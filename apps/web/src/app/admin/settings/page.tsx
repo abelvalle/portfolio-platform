@@ -1,48 +1,30 @@
-import { EntityForm } from "@/components/admin/entity-form";
 import { DataTable } from "@/components/admin/data-table";
+import { EntityForm } from "@/components/admin/entity-form";
+import { MfaSettings } from "@/components/admin/mfa-settings";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function SettingsPage() {
   return (
     <div className="grid gap-6">
-      <EntityForm title="Configuración" fields={["Idioma principal", "CORS frontend", "Email de contacto", "CTA principal"]} />
+      <EntityForm title="Configuracion" fields={["Idioma principal", "CORS frontend", "Email de contacto", "CTA principal"]} />
+      <MfaSettings />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
-            <CardTitle>Seguridad admin</CardTitle>
-            <Badge variant="secondary">MFA preparado</Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="grid gap-3 text-sm text-muted-foreground">
-          <p>
-            La API soporta configuración TOTP, confirmación, reto MFA en login y desactivación protegida. MFA no está
-            activado por defecto para evitar bloquear el acceso inicial.
-          </p>
-          <DataTable rows={[
-            { flujo: "Estado MFA", endpoint: "GET /api/v1/auth/mfa/status", estado: "protegido" },
-            { flujo: "Setup TOTP", endpoint: "POST /api/v1/auth/mfa/setup", estado: "protegido" },
-            { flujo: "Confirmar TOTP", endpoint: "POST /api/v1/auth/mfa/confirm", estado: "protegido" },
-            { flujo: "Verificar login", endpoint: "POST /api/v1/auth/mfa/verify-login", estado: "rate limited" }
-          ]} />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-4">
-            <CardTitle>Integración LinkedIn</CardTitle>
+            <CardTitle>Integracion LinkedIn</CardTitle>
             <Badge variant="secondary">Opcional</Badge>
           </div>
         </CardHeader>
         <CardContent className="grid gap-3 text-sm text-muted-foreground">
           <p>
-            La API expone estado, URL de autorización OAuth opcional y URL de compartir portfolio. Si no hay credenciales
-            LinkedIn, la landing conserva el enlace público del perfil.
+            La API expone estado, URL de autorizacion OAuth opcional y URL de compartir portfolio. Si no hay credenciales
+            LinkedIn, la landing conserva el enlace publico del perfil.
           </p>
           <DataTable rows={[
-            { flujo: "Estado", endpoint: "GET /api/v1/integrations/linkedin/status", acceso: "público" },
+            { flujo: "Estado", endpoint: "GET /api/v1/integrations/linkedin/status", acceso: "publico" },
             { flujo: "Auth URL", endpoint: "GET /api/v1/integrations/linkedin/auth-url", acceso: "admin" },
-            { flujo: "Share URL", endpoint: "GET /api/v1/integrations/linkedin/share-url", acceso: "público" }
+            { flujo: "Share URL", endpoint: "GET /api/v1/integrations/linkedin/share-url", acceso: "publico" }
           ]} />
         </CardContent>
       </Card>
@@ -51,7 +33,7 @@ export default function SettingsPage() {
           { modulo: "Dashboard", activo: true },
           { modulo: "Portfolio", activo: true },
           { modulo: "CV Manager", activo: true },
-          { modulo: "Módulos futuros", activo: true }
+          { modulo: "Modulos futuros", activo: true }
         ]} />
       </section>
     </div>

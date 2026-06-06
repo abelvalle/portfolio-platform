@@ -93,6 +93,18 @@ export const authClient = {
   },
   logout() {
     return apiFetch("/auth/logout", { method: "POST" });
+  },
+  mfaStatus() {
+    return apiFetch<MfaStatus>("/auth/mfa/status");
+  },
+  setupMfa() {
+    return apiFetch<MfaSetup>("/auth/mfa/setup", { method: "POST" });
+  },
+  confirmMfa(code: string) {
+    return apiFetch<MfaConfirm>("/auth/mfa/confirm", { method: "POST", body: JSON.stringify({ code }) });
+  },
+  disableMfa(code: string) {
+    return apiFetch<MfaStatus>("/auth/mfa/disable", { method: "POST", body: JSON.stringify({ code }) });
   }
 };
 
@@ -189,6 +201,23 @@ export type AdminUser = {
   mfaEnabled: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type MfaStatus = {
+  enabled: boolean;
+  confirmedAt?: string | null;
+  lastUsedAt?: string | null;
+  recoveryCodesRemaining?: number;
+};
+
+export type MfaSetup = {
+  secret: string;
+  otpauthUrl: string;
+};
+
+export type MfaConfirm = {
+  enabled: boolean;
+  recoveryCodes: string[];
 };
 
 export type MediaAsset = {
