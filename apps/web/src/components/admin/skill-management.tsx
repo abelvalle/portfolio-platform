@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Eye, EyeOff, RefreshCw, Save, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { adminClient, type SkillItem, type SkillMutation } from "@/lib/api";
@@ -23,6 +24,7 @@ export function SkillManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDeleteSkill, setPendingDeleteSkill] = useState<SkillItem | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -87,11 +89,12 @@ export function SkillManagement() {
     }
   }
 
-  async function deleteSkill(id: string) {
-    setBusyId(id);
+  async function deleteSkill(skill: SkillItem) {
+    setBusyId(skill.id);
     try {
-      await adminClient.deleteSkill(id);
-      setMessage("Skill eliminada.");
+      await adminClient.deleteSkill(skill.id);
+      setPendingDeleteSkill(null);
+      setMessage(`Skill eliminada: ${skill.name}.`);
       await loadSkills();
     } catch {
       setMessage("No se pudo eliminar la skill.");
@@ -168,7 +171,7 @@ export function SkillManagement() {
                 <Button type="button" variant="outline" size="icon" onClick={() => patchSkill(item.id, { order: item.order + 1 })} disabled={busyId === item.id}>
                   <ArrowDown />
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => deleteSkill(item.id)} disabled={busyId === item.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Eliminar ${item.name}`} onClick={() => setPendingDeleteSkill(item)} disabled={busyId === item.id}>
                   <Trash2 />
                 </Button>
               </span>
@@ -178,6 +181,25 @@ export function SkillManagement() {
           )}
         </div>
       </section>
+
+      <Dialog open={Boolean(pendingDeleteSkill)} onOpenChange={(open) => !open && setPendingDeleteSkill(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar borrado</DialogTitle>
+            <DialogDescription>
+              Esta accion eliminara la skill {pendingDeleteSkill?.name}. Puedes ocultarla si solo quieres retirarla de la landing.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingDeleteSkill(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => pendingDeleteSkill && deleteSkill(pendingDeleteSkill)}>
+              Eliminar skill
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
