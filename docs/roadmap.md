@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 09:47 CEST.
+Estado actualizado: 2026-06-06 09:50 CEST.
 
 ## Hitos completados
 
@@ -1897,6 +1897,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Reordenado rapido de Estudios
+
+- `/admin/portfolio/education` consolida las acciones `Subir` y `Bajar` por fila con labels accesibles.
+- Los botones actualizan `order` mediante `PATCH /api/v1/education/:id` y recargan el listado.
+- El mensaje de acciones rapidas se conserva despues de recargar datos desde la API.
+- Añadida cobertura e2e del flujo subir estudio -> mensaje de reordenado.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1915,7 +1929,7 @@ Verificacion realizada en este hito:
 - Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo y reordenado por botones; faltan drag/drop y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo y reordenado por botones; faltan selector de media y drag/drop.
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias y selector de niveles; falta orden drag/drop.
-- Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado y edición completa por dialogo; faltan selector de adjuntos/media y orden drag/drop.
+- Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo y reordenado por botones; faltan selector de adjuntos/media y drag/drop.
 - Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado y edición completa por dialogo; faltan selector de adjuntos/media y orden drag/drop.
 - Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima y confirmación para cambios grandes; falta edición por bloques.
 - Editor CV por bloques: el editor principal está conectado a campos básicos; faltan bloques estructurados para experiencia, educación, certificaciones, skills, proyectos, idiomas y secciones personalizadas.

@@ -806,6 +806,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Descripcion estudio").fill("Programa ampliado de gestion.");
   await page.getByRole("button", { name: "Guardar estudio" }).click();
   await expect(page.getByText("Estudio actualizado: Project Management avanzado.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Bajar Project Management" })).toBeVisible();
+  await page.getByRole("button", { name: "Subir Project Management" }).click();
+  await expect(page.getByText("Estudio reordenado: Project Management.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Project Management" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();

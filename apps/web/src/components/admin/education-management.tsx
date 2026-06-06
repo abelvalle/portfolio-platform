@@ -101,12 +101,12 @@ export function EducationManagement() {
     }
   }
 
-  async function patchEducation(id: string, data: Partial<EducationMutation>) {
+  async function patchEducation(id: string, data: Partial<EducationMutation>, successMessage = "Estudio actualizado.") {
     setBusyId(id);
     try {
       await adminClient.updateEducation(id, data);
-      setMessage("Estudio actualizado.");
       await loadEducation();
+      setMessage(successMessage);
     } catch {
       setMessage("No se pudo actualizar el estudio.");
     } finally {
@@ -233,10 +233,10 @@ export function EducationManagement() {
                 <Button type="button" variant="outline" size="icon" onClick={() => patchEducation(item.id, { visible: !item.visible })} disabled={busyId === item.id}>
                   {item.visible ? <EyeOff /> : <Eye />}
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => patchEducation(item.id, { order: item.order - 1 })} disabled={busyId === item.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Subir ${item.title}`} onClick={() => patchEducation(item.id, { order: item.order - 1 }, `Estudio reordenado: ${item.title}.`)} disabled={busyId === item.id}>
                   <ArrowUp />
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => patchEducation(item.id, { order: item.order + 1 })} disabled={busyId === item.id}>
+                <Button type="button" variant="outline" size="icon" aria-label={`Bajar ${item.title}`} onClick={() => patchEducation(item.id, { order: item.order + 1 }, `Estudio reordenado: ${item.title}.`)} disabled={busyId === item.id}>
                   <ArrowDown />
                 </Button>
                 <Button type="button" variant="outline" size="icon" aria-label={`Eliminar ${item.title}`} onClick={() => setPendingDeleteEducation(item)} disabled={busyId === item.id}>
