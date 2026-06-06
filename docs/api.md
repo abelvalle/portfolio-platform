@@ -248,6 +248,8 @@ Los previews A4 web publico/admin exponen el mismo contrato `data-cv-section` pa
 
 Los items de contacto renderizados por preview web y HTML server-side exponen `data-cv-contact-item="true"` y omiten campos vacios.
 
+La suite API incluye un guard visual automatizado que genera PDF real, rasteriza la primera pagina con `pdfjs-dist` en Playwright y compara la imagen resultante contra el render HTML server-side usado por el exportador.
+
 PDF y DOCX incluyen tambien proyectos destacados y secciones personalizadas cuando existen en `structuredJson`.
 
 La formacion exportada incluye metadatos avanzados cuando existen en `structuredJson`: descripcion y URL en educacion, y URL de certificado e ID de credencial en certificaciones. Los campos vacios no se renderizan.

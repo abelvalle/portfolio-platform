@@ -3656,11 +3656,25 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run build:web`
 
+### Diff visual automatizado HTML/PDF A4
+
+- `cv-export-visual.spec.ts` genera un PDF real desde el HTML A4 server-side y rasteriza la primera pagina con `pdfjs-dist` dentro de Playwright.
+- El test compara la captura HTML contra el PNG rasterizado del PDF con umbral de diferencia media y ratio de diferencias significativas.
+- Anadida dependencia dev `pdfjs-dist@4.10.38` solo en el workspace API para esta verificacion visual, manteniendo compatibilidad Node >=20.
+- Revalidado `npm audit --audit-level=moderate`: la deuda restante sigue limitada a la cadena `next`/`postcss` ya conocida.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- cv-export-visual.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `npm.cmd audit --audit-level=moderate` (falla por deuda conocida `next`/`postcss`)
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
-- Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side, guard de overflow HTML y smoke de PDF real; DOCX comparte orden de bloques, tiene smoke real de paquete Word y valida metadatos ricos dentro de `word/document.xml`, aunque sigue usando renderer propio, y falta diff visual automatizado contra PDF generado/rasterizado.
+- Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side, guard de overflow HTML, smoke de PDF real y diff visual automatizado contra PDF rasterizado; DOCX comparte orden de bloques, tiene smoke real de paquete Word y valida metadatos ricos dentro de `word/document.xml`, aunque sigue usando renderer propio.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; servicios y contrato HTTP cubren MediaAsset generado descargable desde storage local con version persistida en memoria; existe harness opcional `RUN_DB_E2E=true`, pero falta validarlo con credenciales Postgres reales porque Docker daemon no esta disponible y la instancia local no acepta las credenciales de ejemplo.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
@@ -3680,7 +3694,7 @@ Verificacion realizada en este hito:
 - Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones, filas drag/drop y draft/publish desde UI.
 - Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples, bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, formularios granulares de experiencia/skills/proyectos/educacion/certificaciones con alta, duplicado y borrado de items, orden exportable `sectionOrder` con drag/drop visual y fallback por botones, duplicado y reordenado drag/drop de secciones personalizadas, borrador/revision/publicacion para `structuredJson` y draft/publish de metadatos no JSON; falta drag/drop visual en entidades CMS principales.
 - Editor CV por bloques: el editor principal está conectado a campos básicos y Versiones CV ya tiene bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, duplicado de versiones, orden de bloques exportable, alta/duplicado/borrado granular multi-item, edición granular de una experiencia, una skill, un proyecto, un item de educacion y una certificacion, listas internas visuales para responsabilidades/logros de experiencia, tecnologias internas de proyectos, URL externa de educacion e ID de credencial de certificaciones; los metadatos avanzados de formacion ya se exportan en HTML/PDF y DOCX. Falta granularidad equivalente en campos internos avanzados de otros bloques.
-- Preview A4 admin avanzado: el preview está sincronizado, comparte componente/contrato A4 con previews publicas, permite seleccionar plantilla, muestra metadatos secundarios de formacion/certificaciones, idiomas, proyectos destacados cuando existen y tiene guard e2e de ratio A4/overflow horizontal; el contenido largo todavia puede tener overflow vertical hasta implementar paginación real, y falta comparacion pixel-perfect con exportacion PDF.
+- Preview A4 admin avanzado: el preview está sincronizado, comparte componente/contrato A4 con previews publicas, permite seleccionar plantilla, muestra metadatos secundarios de formacion/certificaciones, idiomas, proyectos destacados cuando existen y tiene guard e2e de ratio A4/overflow horizontal; el contenido largo todavia puede tener overflow vertical hasta implementar paginación real, y la comparacion visual HTML/PDF existe en backend con umbrales tolerantes.
 - LinkedIn OAuth persistente: el callback ya intercambia `code` y obtiene `userinfo` sanitizado; falta persistir/sincronizar perfil con una entidad segura de integración y credenciales reales.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; falta extenderlo a otros futuros módulos.
@@ -3691,6 +3705,6 @@ Verificacion realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. Diff visual automatizado entre preview A4 y PDF generado.
-2. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
-3. Paginacion real del preview A4 admin/publico.
+1. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
+2. Paginacion real del preview A4 admin/publico.
+3. Resolver `npm audit` de `next`/`postcss` cuando exista ruta compatible sin downgrade forzado.
