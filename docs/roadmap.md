@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:27 CEST.
+Estado actualizado: 2026-06-06 04:32 CEST.
 
 ## Hitos completados
 
@@ -795,6 +795,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### DTO validado para perfil publico
+
+- Añadido `UpdateProfileDto` para `PATCH /api/v1/profile`.
+- El endpoint acepta solo campos propios del perfil, `draftJson` y `publishedAt`.
+- El DTO valida email, longitudes razonables y rechaza `null` en campos no nulos.
+- Añadidos tests del `ValidationPipe` para whitelist, email invalido y campos no nulos.
+- `docs/api.md` documenta el comportamiento validado del endpoint.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -831,7 +846,6 @@ Verificacion realizada en este hito:
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.
 - Restauración por entidad CMS: existe restore para tema visual y perfil público; falta restaurar otras entidades cuando entren al workflow draft/publish.
-- DTOs de perfil: el flujo está conectado, pero `PATCH /profile` sigue aceptando payload genérico; falta validación específica para borradores y campos publicados.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: falta borrado físico diferido, cuotas, antivirus y auditoría granular de subidas.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.

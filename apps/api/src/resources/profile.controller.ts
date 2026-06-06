@@ -4,6 +4,7 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { Roles } from '../common/guards/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { UpdateProfileDto } from './profile.dto';
 import { ResourcesService } from './resources.service';
 
 @ApiTags('profile')
@@ -20,7 +21,7 @@ export class ProfileController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin, UserRole.editor)
   @Patch()
-  updateProfile(@Body() body: Record<string, unknown>) {
+  updateProfile(@Body() body: UpdateProfileDto) {
     return this.resourcesService.updateProfile(body);
   }
 }

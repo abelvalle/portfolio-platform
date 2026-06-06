@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import type { UpdateProfileDto } from './profile.dto';
 
 const DATE_KEYS = new Set([
   'startDate',
@@ -93,7 +94,7 @@ export class ResourcesService {
     return this.prisma.profile.findFirst();
   }
 
-  async updateProfile(data: Record<string, unknown>) {
+  async updateProfile(data: UpdateProfileDto) {
     const existing = await this.prisma.profile.findFirst();
     if (!existing) {
       return this.prisma.profile.create({ data: data as never });
