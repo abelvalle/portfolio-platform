@@ -244,6 +244,12 @@ export const adminClient = {
 };
 
 export const cvClient = {
+  primary() {
+    return apiFetch<CvItem>("/cv");
+  },
+  update(id: string, data: Partial<CvMutation>) {
+    return apiFetch<CvItem>(`/cv/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
   versions() {
     return apiFetch<CvVersionItem[]>("/cv-versions");
   },
@@ -538,6 +544,19 @@ export type CvVersionItem = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type CvItem = {
+  id: string;
+  slug: string;
+  name: string;
+  headline: string;
+  summary: string;
+  status: "draft" | "published" | "archived";
+  isPrimary: boolean;
+  updatedAt: string;
+};
+
+export type CvMutation = Pick<CvItem, "name" | "headline" | "summary" | "status">;
 
 export type CvVersionMutation = Pick<CvVersionItem, "cvId" | "name" | "slug" | "targetRole" | "language" | "status"> & {
   description?: string | null;
