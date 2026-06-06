@@ -257,7 +257,16 @@ export const cvClient = {
     return apiFetch<CvVersionItem>(`/cv-versions/${id}`, { method: "DELETE" });
   },
   templates() {
-    return apiFetch("/cv-templates");
+    return apiFetch<CvTemplateItem[]>("/cv-templates?includeHidden=true");
+  },
+  createTemplate(data: CvTemplateMutation) {
+    return apiFetch<CvTemplateItem>("/cv-templates", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateTemplate(id: string, data: Partial<CvTemplateMutation>) {
+    return apiFetch<CvTemplateItem>(`/cv-templates/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteTemplate(id: string) {
+    return apiFetch<CvTemplateItem>(`/cv-templates/${id}`, { method: "DELETE" });
   },
   adapt(data: { baseCvVersionId: string; targetRole: string; targetCompany?: string; jobDescription: string }) {
     return apiFetch("/cv/adapt-to-role", { method: "POST", body: JSON.stringify(data) });
@@ -537,6 +546,18 @@ export type CvVersionMutation = Pick<CvVersionItem, "cvId" | "name" | "slug" | "
   structuredJson?: unknown;
   isPrimary?: boolean;
 };
+
+export type CvTemplateItem = {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  config: Record<string, unknown>;
+  visible: boolean;
+  order: number;
+};
+
+export type CvTemplateMutation = Omit<CvTemplateItem, "id">;
 
 export const mediaClient = {
   list() {

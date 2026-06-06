@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 03:19 CEST.
+Estado actualizado: 2026-06-06 03:23 CEST.
 
 ## Hitos completados
 
@@ -517,6 +517,21 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Plantillas CV admin conectadas a API
+
+- Reemplazado el selector hardcodeado de `/admin/cv/templates` por carga real desde `GET /api/v1/cv-templates?includeHidden=true`.
+- Añadido formulario para crear plantillas con slug automático, color principal, tipografía, densidad, foto, iconos y descripción.
+- Añadidas acciones rápidas para ocultar/mostrar, ajustar orden y borrar con soft delete.
+- Añadidos estados de carga, error, vacío y refresco manual.
+- Añadida cobertura e2e desktop/mobile de la ruta admin de plantillas CV.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -546,6 +561,7 @@ Verificación realizada en este hito:
 - Estudios UI avanzada: el CRUD básico está conectado; faltan edición completa inline, selector de adjuntos/media, orden drag/drop y confirmación modal de borrado.
 - Certificaciones UI avanzada: el CRUD básico está conectado; faltan edición completa inline, selector de adjuntos/media, orden drag/drop y confirmación modal de borrado.
 - Versiones CV UI avanzada: la tabla está conectada; faltan edición completa de `structuredJson`, selector de plantilla, generación PDF/DOCX desde fila y endpoint robusto para marcar una única versión principal.
+- Plantillas CV UI avanzada: el CRUD básico está conectado; faltan edición completa de JSON, preview embebido por plantilla, validación visual de tokens y confirmación modal de borrado.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.
