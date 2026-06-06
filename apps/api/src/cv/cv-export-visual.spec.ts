@@ -75,11 +75,26 @@ describe('CvExportService visual rendering', () => {
         .evaluateAll((nodes) =>
           nodes.map((node) => node.getAttribute('data-cv-section')),
         );
+      const metrics = await pageLocator.evaluate((node) => {
+        const element = node as HTMLElement;
+        return {
+          clientHeight: element.clientHeight,
+          clientWidth: element.clientWidth,
+          scrollHeight: element.scrollHeight,
+          scrollWidth: element.scrollWidth,
+        };
+      });
       const screenshot = await pageLocator.screenshot();
 
       expect(box).not.toBeNull();
       expect(box?.width).toBeGreaterThan(700);
       expect((box?.height || 0) / (box?.width || 1)).toBeCloseTo(297 / 210, 1);
+      expect(metrics.scrollWidth).toBeLessThanOrEqual(
+        metrics.clientWidth + 1,
+      );
+      expect(metrics.scrollHeight).toBeLessThanOrEqual(
+        metrics.clientHeight + 1,
+      );
       expect(sections).toEqual(
         expect.arrayContaining([
           'header',

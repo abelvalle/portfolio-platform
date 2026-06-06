@@ -3420,11 +3420,21 @@ Verificacion realizada en este hito:
 
 - `git diff --check`
 
+### Guard visual de overflow en HTML A4 server-side
+
+- `cv-export-visual.spec.ts` mide `clientWidth/scrollWidth` y `clientHeight/scrollHeight` del render A4 server-side.
+- El smoke visual ahora detecta regresiones de overflow horizontal o recorte vertical en el HTML usado para PDF antes de rasterizar el PDF.
+- Se mantiene pendiente la comparacion pixel-perfect contra PDF generado/rasterizado.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- cv-export-visual.spec.ts`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
-- Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side y smoke de PDF real; DOCX comparte orden de bloques y tiene smoke real de paquete Word, aunque sigue usando renderer propio, y falta diff visual automatizado contra PDF generado/rasterizado.
+- Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side, guard de overflow HTML y smoke de PDF real; DOCX comparte orden de bloques y tiene smoke real de paquete Word, aunque sigue usando renderer propio, y falta diff visual automatizado contra PDF generado/rasterizado.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; servicios y contrato HTTP cubren MediaAsset generado descargable desde storage local con version persistida en memoria; existe harness opcional `RUN_DB_E2E=true`, pero falta validarlo con credenciales Postgres reales porque Docker daemon no esta disponible y la instancia local no acepta las credenciales de ejemplo.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
