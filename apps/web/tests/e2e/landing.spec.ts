@@ -15,6 +15,8 @@ async function expectA4PreviewLayout(page: Page) {
     expect(metric.horizontalOverflow).toBeLessThanOrEqual(2);
     expect(metric.verticalOverflow).toBeLessThanOrEqual(2);
   }
+  await expect(page.locator("[data-cv-page-label='true']")).toHaveCount(metrics.length);
+  await expect(page.locator("[data-cv-page-label='true']").first()).toHaveText(`1 / ${metrics.length}`);
   return metrics.length;
 }
 

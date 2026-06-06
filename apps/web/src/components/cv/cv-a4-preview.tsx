@@ -198,7 +198,7 @@ export function CvA4Preview({
       {pages.map((pageBlocks, pageIndex) => (
         <article
           key={`page-${pageIndex + 1}`}
-          className="cv-page aspect-[210/297] w-full min-w-[620px] overflow-hidden bg-white p-8 text-slate-950 shadow-2xl sm:p-10"
+          className="cv-page relative aspect-[210/297] w-full min-w-[620px] overflow-hidden bg-white p-8 text-slate-950 shadow-2xl sm:p-10"
           data-cv-preview="a4"
           data-cv-renderer="web-preview"
           data-cv-density={density}
@@ -241,6 +241,9 @@ export function CvA4Preview({
               <Fragment key={block.key}>{block.node}</Fragment>
             ))}
           </div>
+          <span className="pointer-events-none absolute bottom-4 right-6 rounded border border-slate-200 bg-white/90 px-2 py-0.5 text-[10px] font-medium text-slate-500" data-cv-page-label="true">
+            {pageIndex + 1} / {pages.length}
+          </span>
         </article>
       ))}
     </div>
