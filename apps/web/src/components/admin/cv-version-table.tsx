@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Archive, ArrowDown, ArrowUp, Copy, Download, Eye, FileText, GripVertical, RefreshCw, Rocket, Save, Star, Trash2 } from "lucide-react";
+import { Archive, ArrowDown, ArrowUp, Copy, Download, Eye, FileText, GripVertical, Plus, RefreshCw, Rocket, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -29,6 +29,8 @@ type ExperienceFormDraft = {
   responsibilities: string;
   achievements: string;
 };
+
+type ExperienceListField = "responsibilities" | "achievements";
 
 type SkillFormDraft = {
   index: number;
@@ -433,6 +435,10 @@ function splitBlockLines(value: string) {
 
 function splitTextareaLines(value: string) {
   return value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+}
+
+function editableTextareaLines(value: string) {
+  return value ? value.split(/\r?\n/) : [];
 }
 
 function listField(data: Record<string, unknown>, field: string) {
@@ -1837,6 +1843,53 @@ export function CvVersionTable() {
     }, "Experiencia");
   }
 
+  function setExperienceListItems(field: ExperienceListField, items: string[]) {
+    setExperienceFormDraft((current) => ({
+      ...current,
+      [field]: items.join("\n")
+    }));
+  }
+
+  function addExperienceListItem(field: ExperienceListField) {
+    const currentItems = editableTextareaLines(experienceFormDraft[field]);
+    const placeholder = field === "responsibilities"
+      ? "Responsabilidad pendiente de revisar"
+      : "Logro pendiente de revisar";
+    setExperienceListItems(field, [...currentItems, placeholder]);
+  }
+
+  function updateExperienceListItem(field: ExperienceListField, index: number, value: string) {
+    const nextItems = editableTextareaLines(experienceFormDraft[field]);
+    nextItems[index] = value;
+    setExperienceListItems(field, nextItems);
+  }
+
+  function moveExperienceListItem(field: ExperienceListField, index: number, direction: -1 | 1) {
+    const currentItems = editableTextareaLines(experienceFormDraft[field]);
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= currentItems.length) {
+      return;
+    }
+    const nextItems = [...currentItems];
+    [nextItems[index], nextItems[targetIndex]] = [nextItems[targetIndex], nextItems[index]];
+    setExperienceListItems(field, nextItems);
+  }
+
+  function duplicateExperienceListItem(field: ExperienceListField, index: number) {
+    const currentItems = editableTextareaLines(experienceFormDraft[field]);
+    const item = currentItems[index]?.trim();
+    if (!item) {
+      return;
+    }
+    const nextItems = [...currentItems.slice(0, index + 1), `${item} copia`, ...currentItems.slice(index + 1)];
+    setExperienceListItems(field, nextItems);
+  }
+
+  function deleteExperienceListItem(field: ExperienceListField, index: number) {
+    const currentItems = editableTextareaLines(experienceFormDraft[field]);
+    setExperienceListItems(field, currentItems.filter((_, itemIndex) => itemIndex !== index));
+  }
+
   function deleteProjectFormItem() {
     deleteStructuredListItem("projects", projectFormDraft.index, (nextStructuredJson, nextIndex) => {
       setProjectsDraft(projectsFromStructuredJson(nextStructuredJson));
@@ -2024,6 +2077,8 @@ export function CvVersionTable() {
   const certificationOptions = splitBlockLines(certificationsDraft);
   const sectionOptions = splitTextareaLines(sectionsDraft);
   const sectionOrderItems = splitBlockLines(sectionOrderDraft);
+  const responsibilityItems = editableTextareaLines(experienceFormDraft.responsibilities);
+  const achievementItems = editableTextareaLines(experienceFormDraft.achievements);
 
   return (
     <div className="grid gap-6">
@@ -2538,6 +2593,39 @@ export function CvVersionTable() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="experienceFormResponsibilities">Responsabilidades experiencia</Label>
+                <div aria-label="Items granulares de responsabilidades" className="grid gap-2 rounded-md border border-border p-2">
+                  {responsibilityItems.length ? (
+                    responsibilityItems.map((item, index) => (
+                      <div key={`responsibility-${index}`} className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                        <Input
+                          aria-label={`Responsabilidad experiencia ${index + 1}`}
+                          value={item}
+                          onChange={(event) => updateExperienceListItem("responsibilities", index, event.target.value)}
+                        />
+                        <div className="flex gap-1">
+                          <Button type="button" variant="outline" size="icon" aria-label={`Subir responsabilidad ${index + 1}`} onClick={() => moveExperienceListItem("responsibilities", index, -1)} disabled={index === 0}>
+                            <ArrowUp className="size-4" aria-hidden="true" />
+                          </Button>
+                          <Button type="button" variant="outline" size="icon" aria-label={`Bajar responsabilidad ${index + 1}`} onClick={() => moveExperienceListItem("responsibilities", index, 1)} disabled={index === responsibilityItems.length - 1}>
+                            <ArrowDown className="size-4" aria-hidden="true" />
+                          </Button>
+                          <Button type="button" variant="outline" size="icon" aria-label={`Duplicar responsabilidad ${index + 1}`} onClick={() => duplicateExperienceListItem("responsibilities", index)}>
+                            <Copy className="size-4" aria-hidden="true" />
+                          </Button>
+                          <Button type="button" variant="outline" size="icon" aria-label={`Borrar responsabilidad ${index + 1}`} onClick={() => deleteExperienceListItem("responsibilities", index)}>
+                            <Trash2 className="size-4" aria-hidden="true" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sin responsabilidades detalladas.</p>
+                  )}
+                  <Button type="button" variant="outline" className="h-auto w-fit gap-2 whitespace-normal text-left" aria-label="Añadir responsabilidad experiencia" onClick={() => addExperienceListItem("responsibilities")}>
+                    <Plus className="size-4" aria-hidden="true" />
+                    Añadir responsabilidad
+                  </Button>
+                </div>
                 <Textarea
                   id="experienceFormResponsibilities"
                   rows={4}
@@ -2547,6 +2635,39 @@ export function CvVersionTable() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="experienceFormAchievements">Logros experiencia</Label>
+                <div aria-label="Items granulares de logros" className="grid gap-2 rounded-md border border-border p-2">
+                  {achievementItems.length ? (
+                    achievementItems.map((item, index) => (
+                      <div key={`achievement-${index}`} className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                        <Input
+                          aria-label={`Logro experiencia ${index + 1}`}
+                          value={item}
+                          onChange={(event) => updateExperienceListItem("achievements", index, event.target.value)}
+                        />
+                        <div className="flex gap-1">
+                          <Button type="button" variant="outline" size="icon" aria-label={`Subir logro ${index + 1}`} onClick={() => moveExperienceListItem("achievements", index, -1)} disabled={index === 0}>
+                            <ArrowUp className="size-4" aria-hidden="true" />
+                          </Button>
+                          <Button type="button" variant="outline" size="icon" aria-label={`Bajar logro ${index + 1}`} onClick={() => moveExperienceListItem("achievements", index, 1)} disabled={index === achievementItems.length - 1}>
+                            <ArrowDown className="size-4" aria-hidden="true" />
+                          </Button>
+                          <Button type="button" variant="outline" size="icon" aria-label={`Duplicar logro ${index + 1}`} onClick={() => duplicateExperienceListItem("achievements", index)}>
+                            <Copy className="size-4" aria-hidden="true" />
+                          </Button>
+                          <Button type="button" variant="outline" size="icon" aria-label={`Borrar logro ${index + 1}`} onClick={() => deleteExperienceListItem("achievements", index)}>
+                            <Trash2 className="size-4" aria-hidden="true" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sin logros detallados.</p>
+                  )}
+                  <Button type="button" variant="outline" className="h-auto w-fit gap-2 whitespace-normal text-left" aria-label="Añadir logro experiencia" onClick={() => addExperienceListItem("achievements")}>
+                    <Plus className="size-4" aria-hidden="true" />
+                    Añadir logro
+                  </Button>
+                </div>
                 <Textarea
                   id="experienceFormAchievements"
                   rows={4}
