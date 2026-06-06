@@ -1,11 +1,5 @@
-import { DashboardCards } from "@/components/admin/dashboard-cards";
-import { DataTable } from "@/components/admin/data-table";
+import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard";
 
 export default function AnalyticsPage() {
-  return (
-    <div className="grid gap-6">
-      <DashboardCards />
-      <DataTable rows={[{ evento: "landing_visit", ruta: "/", etiqueta: "home", fecha: "pendiente" }]} />
-    </div>
-  );
+  return <AnalyticsDashboard />;
 }

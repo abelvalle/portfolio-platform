@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 02:40 CEST.
+Estado actualizado: 2026-06-06 02:44 CEST.
 
 ## Hitos completados
 
@@ -369,6 +369,22 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Analítica admin conectada a API
+
+- Reemplazada `/admin/analytics` estática por `AnalyticsDashboard`.
+- La UI carga resumen desde `GET /api/v1/analytics/summary`.
+- La UI lista eventos recientes desde `GET /api/v1/analytics`.
+- Añadidas tarjetas reales para visitas landing, descargas CV, formularios y vistas de proyecto.
+- Añadida tabla responsive de eventos recientes con estados de carga, error y vacío.
+- Añadida cobertura e2e desktop/mobile de la ruta admin de analítica.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -390,6 +406,7 @@ Verificación realizada en este hito:
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada; faltan filtro por fecha, vista detalle/modal y preparación visual de integración email.
+- Analítica avanzada: el panel está conectado a eventos; faltan filtros por fecha, series temporales, exportación y retención/anonimización configurable.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual, pero falta extenderlo a profile, experiencias, proyectos, skills y CV.

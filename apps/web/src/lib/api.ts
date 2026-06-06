@@ -154,6 +154,12 @@ export const adminClient = {
   deleteContactMessage(id: string) {
     return apiFetch<ContactMessage>(`/contact-messages/${id}`, { method: "DELETE" });
   },
+  analyticsSummary() {
+    return apiFetch<AnalyticsSummary>("/analytics/summary");
+  },
+  analyticsEvents() {
+    return apiFetch<AnalyticsEvent[]>("/analytics");
+  },
   updateTheme(data: unknown) {
     return apiFetch("/theme", { method: "PATCH", body: JSON.stringify(data) });
   },
@@ -255,6 +261,21 @@ export type ContactMessage = {
   subject?: string | null;
   message: string;
   status: string;
+  createdAt: string;
+};
+
+export type AnalyticsSummary = {
+  totalVisits: number;
+  cvDownloads: number;
+  contactSubmits: number;
+  projectViews: number;
+};
+
+export type AnalyticsEvent = {
+  id: string;
+  type: string;
+  path?: string | null;
+  label?: string | null;
   createdAt: string;
 };
 
