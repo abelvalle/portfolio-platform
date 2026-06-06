@@ -484,6 +484,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("Desde")).toBeVisible();
   await expect(page.getByLabel("Hasta")).toBeVisible();
   await expect(page.getByText("Oferta PM")).toBeVisible();
+  await page.getByRole("button", { name: "Borrar mensaje de Recruiter Demo" }).click();
+  await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancelar" }).click();
   await page.getByRole("button", { name: "Detalle" }).click();
   await expect(page.getByRole("link", { name: "Responder email" })).toHaveAttribute("href", /mailto:recruiter%40example\.com/);
 

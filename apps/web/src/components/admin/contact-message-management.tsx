@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Eye, MailOpen, RefreshCw, Reply, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { adminClient, type ContactMessage } from "@/lib/api";
@@ -22,6 +23,7 @@ export function ContactMessageManagement() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [message, setMessage] = useState("Cargando mensajes.");
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingDeleteMessage, setPendingDeleteMessage] = useState<ContactMessage | null>(null);
 
   const loadMessages = useCallback(async (status = filter) => {
     setIsLoading(true);
@@ -68,9 +70,10 @@ export function ContactMessageManagement() {
   async function deleteMessage(item: ContactMessage) {
     try {
       await adminClient.deleteContactMessage(item.id);
+      setPendingDeleteMessage(null);
       setMessages((current) => current.filter((messageItem) => messageItem.id !== item.id));
       setSelectedMessageId((current) => (current === item.id ? null : current));
-      setMessage("Mensaje eliminado.");
+      setMessage(`Mensaje eliminado: ${item.email}.`);
     } catch {
       setMessage("No se pudo eliminar el mensaje.");
     }
@@ -134,7 +137,7 @@ export function ContactMessageManagement() {
               <MailOpen data-icon="inline-start" />
               {selectedMessage.status === "unread" ? "Marcar leido" : "Marcar no leido"}
             </Button>
-            <Button type="button" variant="destructive" size="sm" onClick={() => deleteMessage(selectedMessage)}>
+            <Button type="button" variant="destructive" size="sm" aria-label={`Borrar mensaje de ${selectedMessage.name}`} onClick={() => setPendingDeleteMessage(selectedMessage)}>
               <Trash2 data-icon="inline-start" />
               Borrar mensaje
             </Button>
@@ -163,7 +166,7 @@ export function ContactMessageManagement() {
                   <MailOpen data-icon="inline-start" />
                   {item.status === "unread" ? "Leido" : "No leido"}
                 </Button>
-                <Button type="button" variant="destructive" size="sm" onClick={() => deleteMessage(item)}>
+                <Button type="button" variant="destructive" size="sm" aria-label={`Borrar mensaje de ${item.name}`} onClick={() => setPendingDeleteMessage(item)}>
                   <Trash2 data-icon="inline-start" />
                   Borrar
                 </Button>
@@ -175,6 +178,25 @@ export function ContactMessageManagement() {
           <div className="rounded-lg border border-border p-8 text-center text-sm text-muted-foreground">Sin mensajes para los filtros actuales.</div>
         )}
       </section>
+
+      <Dialog open={Boolean(pendingDeleteMessage)} onOpenChange={(open) => !open && setPendingDeleteMessage(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar borrado</DialogTitle>
+            <DialogDescription>
+              Esta accion eliminara el mensaje de {pendingDeleteMessage?.name} ({pendingDeleteMessage?.email}). Marca como leido si solo quieres retirarlo de pendientes.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingDeleteMessage(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => pendingDeleteMessage && deleteMessage(pendingDeleteMessage)}>
+              Borrar mensaje
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
