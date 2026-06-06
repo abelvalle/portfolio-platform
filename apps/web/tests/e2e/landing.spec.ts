@@ -659,7 +659,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("heading", { name: "Editar skill" })).toBeVisible();
   await page.getByLabel("Nombre skill").fill("Scrum avanzado");
   await page.getByLabel("Categoria skill").fill("Agile");
-  await page.getByLabel("Nivel skill").fill("Experto");
+  await page.getByLabel("Nivel skill").selectOption("Experto");
   await page.getByRole("button", { name: "Guardar skill" }).click();
   await expect(page.getByText("Skill actualizada: Scrum avanzado.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Scrum" }).click();

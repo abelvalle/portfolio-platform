@@ -16,6 +16,7 @@ const emptyDraft = {
   order: 0,
   visible: true
 };
+const skillLevelOptions = ["", "Basico", "Intermedio", "Avanzado", "Experto"];
 
 export function SkillManagement() {
   const [items, setItems] = useState<SkillItem[]>([]);
@@ -256,7 +257,16 @@ export function SkillManagement() {
         </div>
         <div className="grid gap-2">
           <Label htmlFor="skillLevel">Nivel</Label>
-          <Input id="skillLevel" value={draft.level} onChange={(event) => setDraft((current) => ({ ...current, level: event.target.value }))} />
+          <select
+            id="skillLevel"
+            className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+            value={draft.level}
+            onChange={(event) => setDraft((current) => ({ ...current, level: event.target.value }))}
+          >
+            {skillLevelOptions.map((level) => (
+              <option key={level || "empty"} value={level}>{level || "Sin nivel"}</option>
+            ))}
+          </select>
         </div>
         <div className="flex flex-wrap gap-2 md:col-span-4">
           <Button type="button" variant={draft.visible ? "default" : "outline"} onClick={() => setDraft((current) => ({ ...current, visible: !current.visible }))}>
@@ -327,7 +337,16 @@ export function SkillManagement() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="editSkillLevel">Nivel skill</Label>
-              <Input id="editSkillLevel" value={editDraft.level} onChange={(event) => setEditDraft((current) => ({ ...current, level: event.target.value }))} />
+              <select
+                id="editSkillLevel"
+                className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                value={editDraft.level}
+                onChange={(event) => setEditDraft((current) => ({ ...current, level: event.target.value }))}
+              >
+                {skillLevelOptions.map((level) => (
+                  <option key={level || "empty"} value={level}>{level || "Sin nivel"}</option>
+                ))}
+              </select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="editSkillOrder">Orden skill</Label>
