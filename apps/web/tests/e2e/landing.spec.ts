@@ -742,6 +742,24 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           order: 0,
           draftJson: null,
           publishedAt: null
+        },
+        {
+          id: "project-2",
+          name: "Sample Backoffice",
+          slug: "sample-backoffice",
+          description: "Proyecto sample para pruebas de reordenado.",
+          status: "draft",
+          categoryName: "Demo",
+          technologies: ["Next.js"],
+          imageUrl: null,
+          publicUrl: null,
+          repositoryUrl: null,
+          featured: false,
+          visible: false,
+          sample: true,
+          order: 1,
+          draftJson: null,
+          publishedAt: null
         }
       ])
     });
@@ -1271,6 +1289,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.keyboard.press("Enter");
   await expect(page.getByText("Borrador de proyecto publicado. Campos modificados: name, slug, description, technologies, imageUrl.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Portfolio Platform" })).toBeVisible();
+  await expect(page.locator("[data-cms-project-id='project-1']")).toHaveAttribute("draggable", "true");
+  await expect(page.locator("[data-cms-project-id='project-2']")).toHaveAttribute("draggable", "true");
   await page.getByRole("button", { name: "Subir Portfolio Platform" }).click();
   await expect(page.getByText("Proyecto reordenado: Portfolio Platform.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Portfolio Platform" }).click();
