@@ -96,6 +96,8 @@ npm run test:e2e:db
 
 Sin `RUN_DB_E2E=true`, esta prueba se salta para no romper entornos sin Postgres disponible.
 
+Para ejecutarla con Docker Compose, primero debe estar activo Docker Desktop y levantado PostgreSQL con `npm run docker:up`. Si usas una instancia local externa, ajusta `DATABASE_URL` con credenciales reales; las credenciales de ejemplo pueden fallar si tu Postgres local ya tiene otra configuración.
+
 ## Admin
 
 Login: `/login`

@@ -3402,6 +3402,15 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run build`
 
+### README de prerequisitos e2e DB
+
+- `README.md` aclara que el e2e DB opcional requiere Docker Desktop activo si se usa Docker Compose.
+- Tambien indica que una instancia local externa necesita credenciales reales en `DATABASE_URL`, porque las credenciales de ejemplo pueden no coincidir.
+
+Verificacion realizada en este hito:
+
+- `git diff --check`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
