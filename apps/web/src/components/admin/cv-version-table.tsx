@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Archive, Copy, Download, Eye, FileText, RefreshCw, Save, Star, Trash2 } from "lucide-react";
+import { Archive, Copy, Download, Eye, FileText, RefreshCw, Rocket, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cvClient, getApiUrl, type AuditLogItem, type CvTemplateItem, type CvVersionItem, type CvVersionMutation } from "@/lib/api";
+import { adminClient, cvClient, getApiUrl, type AuditLogItem, type CvTemplateItem, type CvVersionItem, type CvVersionMutation, type PublicationCvVersionReview } from "@/lib/api";
 
 type CvVersionDraft = {
   name: string;
@@ -277,6 +277,11 @@ function auditDetailValue(value: unknown): string {
   return "";
 }
 
+function formatPublicationValue(value: unknown) {
+  const text = auditDetailValue(value) || "-";
+  return text.length > 180 ? `${text.slice(0, 180)}...` : text;
+}
+
 function auditMetadata(metadata?: Record<string, unknown> | null) {
   if (!metadata) {
     return "";
@@ -368,10 +373,13 @@ export function CvVersionTable() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isJsonSaving, setIsJsonSaving] = useState(false);
+  const [isDraftSaving, setIsDraftSaving] = useState(false);
+  const [isDraftPublishing, setIsDraftPublishing] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingArchiveVersion, setPendingArchiveVersion] = useState<CvVersionItem | null>(null);
   const [pendingJsonSave, setPendingJsonSave] = useState<{ version: CvVersionItem; structuredJson: unknown } | null>(null);
   const [selectedAuditLog, setSelectedAuditLog] = useState<AuditLogItem | null>(null);
+  const [cvVersionReview, setCvVersionReview] = useState<PublicationCvVersionReview | null>(null);
 
   const syncJsonEditor = useCallback((nextVersions: CvVersionItem[]) => {
     const requestedVersionId = getInitialVersionId();
@@ -604,6 +612,7 @@ export function CvVersionTable() {
   function selectJsonVersion(id: string) {
     const selectedVersion = versions.find((version) => version.id === id);
     setJsonVersionId(id);
+    setCvVersionReview(null);
     setJsonDraft(formatJson(selectedVersion?.structuredJson));
     setSummaryDraft(summaryFromStructuredJson(selectedVersion?.structuredJson));
     setSkillsDraft(skillsFromStructuredJson(selectedVersion?.structuredJson));
@@ -923,6 +932,76 @@ export function CvVersionTable() {
     }
   }
 
+  async function saveCvVersionDraft() {
+    const selectedVersion = versions.find((version) => version.id === jsonVersionId);
+    if (!selectedVersion) {
+      setJsonMessage("Selecciona una version valida antes de guardar borrador.");
+      return;
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    setIsDraftSaving(true);
+    try {
+      await cvClient.updateVersion(selectedVersion.id, { draftJson: { structuredJson: parsed } });
+      const review = await adminClient.publicationCvVersionReview(selectedVersion.id);
+      setCvVersionReview(review);
+      setJsonMessage(`Borrador CV guardado: ${selectedVersion.name}.`);
+    } catch {
+      setJsonMessage("No se pudo guardar el borrador CV.");
+    } finally {
+      setIsDraftSaving(false);
+    }
+  }
+
+  async function reviewCvVersionDraft() {
+    if (!jsonVersionId) {
+      setJsonMessage("Selecciona una version valida antes de revisar.");
+      return;
+    }
+
+    setIsDraftSaving(true);
+    try {
+      const review = await adminClient.publicationCvVersionReview(jsonVersionId);
+      setCvVersionReview(review);
+      setJsonMessage(review.hasDraft ? "Revision de borrador CV cargada." : "No hay cambios pendientes en el borrador CV.");
+    } catch {
+      setJsonMessage("No se pudo revisar el borrador CV.");
+    } finally {
+      setIsDraftSaving(false);
+    }
+  }
+
+  async function publishCvVersionDraft() {
+    if (!jsonVersionId) {
+      setJsonMessage("Selecciona una version valida antes de publicar.");
+      return;
+    }
+
+    setIsDraftPublishing(true);
+    try {
+      const result = await adminClient.publishCvVersionDraft(jsonVersionId);
+      setCvVersionReview(null);
+      setJsonMessage(`Borrador CV publicado. Campos modificados: ${result.changedFields.join(", ")}.`);
+      await loadVersions();
+    } catch {
+      setJsonMessage("No se pudo publicar el borrador CV.");
+    } finally {
+      setIsDraftPublishing(false);
+    }
+  }
+
   function templateLabel(templateId?: string | null) {
     if (!templateId) {
       return "Sin plantilla";
@@ -1188,6 +1267,18 @@ export function CvVersionTable() {
             <Save data-icon="inline-start" />
             {isJsonSaving ? "Guardando JSON..." : "Guardar JSON"}
           </Button>
+          <Button type="button" variant="outline" onClick={saveCvVersionDraft} disabled={isDraftSaving || !jsonVersionId}>
+            <Save data-icon="inline-start" />
+            {isDraftSaving ? "Guardando borrador..." : "Guardar borrador CV"}
+          </Button>
+          <Button type="button" variant="outline" onClick={reviewCvVersionDraft} disabled={isDraftSaving || !jsonVersionId}>
+            <Eye data-icon="inline-start" />
+            Revisar borrador CV
+          </Button>
+          <Button type="button" onClick={publishCvVersionDraft} disabled={isDraftPublishing || !jsonVersionId}>
+            <Rocket data-icon="inline-start" />
+            {isDraftPublishing ? "Publicando..." : "Publicar borrador CV"}
+          </Button>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="summaryBlock">Resumen profesional CV</Label>
@@ -1296,6 +1387,26 @@ export function CvVersionTable() {
           />
         </div>
         <p className="text-sm text-muted-foreground" aria-live="polite">{jsonMessage}</p>
+        {cvVersionReview ? (
+          <div className="grid gap-3 rounded-lg border border-border p-4" aria-label="Revision borrador CV">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="font-semibold">Revision borrador CV</h3>
+                <p className="text-sm text-muted-foreground">Cambios pendientes antes de publicar la version.</p>
+              </div>
+              <Badge>{cvVersionReview.fields.filter((field) => field.changed).length} cambios</Badge>
+            </div>
+            <div className="grid gap-2 text-sm">
+              {cvVersionReview.fields.filter((field) => field.changed).map((field) => (
+                <div key={field.field} className="grid gap-2 rounded-md bg-muted/40 p-3 md:grid-cols-[160px_1fr_1fr]">
+                  <span className="font-mono text-xs font-semibold">{field.field}</span>
+                  <pre className="whitespace-pre-wrap break-words font-sans text-muted-foreground">{formatPublicationValue(field.before)}</pre>
+                  <pre className="whitespace-pre-wrap break-words font-sans">{formatPublicationValue(field.after)}</pre>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="overflow-x-auto rounded-lg border border-border">
@@ -1317,6 +1428,7 @@ export function CvVersionTable() {
                 <span className="mt-2 flex flex-wrap gap-1">
                   {version.generatedPdfId ? <Badge variant="outline">PDF listo</Badge> : null}
                   {version.generatedDocxId ? <Badge variant="outline">DOCX listo</Badge> : null}
+                  {version.draftJson ? <Badge variant="secondary">borrador pendiente</Badge> : null}
                 </span>
                 <span className="mt-2 flex flex-wrap gap-3 text-xs">
                   {version.generatedPdfId ? <a className="text-primary hover:underline" href={getApiUrl(`/media/${version.generatedPdfId}/download`)}>Descargar PDF</a> : null}

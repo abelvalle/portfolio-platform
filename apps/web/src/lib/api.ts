@@ -821,6 +821,18 @@ export type MediaStorageStatus = {
   downloadPattern: string;
 };
 
+export type CvVersionDraftJson = {
+  name?: string;
+  slug?: string;
+  description?: string | null;
+  targetRole?: string;
+  targetCompany?: string | null;
+  language?: string;
+  status?: "draft" | "published" | "archived";
+  templateId?: string | null;
+  structuredJson?: unknown;
+};
+
 export type CvVersionItem = {
   id: string;
   cvId: string;
@@ -836,7 +848,7 @@ export type CvVersionItem = {
   generatedPdfId?: string | null;
   generatedDocxId?: string | null;
   isPrimary: boolean;
-  draftJson?: Partial<CvVersionMutation> | null;
+  draftJson?: CvVersionDraftJson | null;
   publishedAt?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -895,6 +907,7 @@ export type CvVersionMutation = Pick<CvVersionItem, "cvId" | "name" | "slug" | "
   targetCompany?: string | null;
   templateId?: string | null;
   structuredJson?: unknown;
+  draftJson?: CvVersionDraftJson | null;
   isPrimary?: boolean;
 };
 

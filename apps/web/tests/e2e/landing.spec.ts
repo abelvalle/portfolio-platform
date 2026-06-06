@@ -393,8 +393,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify([
-        { id: "cv-base", cvId: "cv-1", name: "CV Base", status: "published", targetRole: "IT Project Manager", language: "es", isPrimary: true, structuredJson: { summary: "Gestion IT general.", skills: [] }, updatedAt: "2026-06-01T08:00:00.000Z" },
-        { id: "cv-adapted", cvId: "cv-1", name: "CV Adaptado", status: "draft", targetRole: "Delivery Manager", language: "es", isPrimary: false, structuredJson: { summary: "Delivery IT orientado a KPIs.", skills: [] }, updatedAt: "2026-06-02T08:00:00.000Z" }
+        { id: "cv-base", cvId: "cv-1", name: "CV Base", status: "published", targetRole: "IT Project Manager", language: "es", isPrimary: true, structuredJson: { summary: "Gestion IT general.", skills: [] }, draftJson: null, publishedAt: "2026-06-01T08:00:00.000Z", updatedAt: "2026-06-01T08:00:00.000Z" },
+        { id: "cv-adapted", cvId: "cv-1", name: "CV Adaptado", status: "draft", targetRole: "Delivery Manager", language: "es", isPrimary: false, structuredJson: { summary: "Delivery IT orientado a KPIs.", skills: [] }, draftJson: null, publishedAt: null, updatedAt: "2026-06-02T08:00:00.000Z" }
       ])
     });
   });
@@ -410,8 +410,31 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         language: "es",
         isPrimary: true,
         structuredJson: data.structuredJson || { summary: "Gestion IT general.", skills: [] },
+        draftJson: data.draftJson ?? null,
+        publishedAt: "2026-06-01T08:00:00.000Z",
         updatedAt: "2026-06-06T09:00:00.000Z"
       })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/cv-versions/cv-base/review", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        entityType: "cv-version",
+        entityId: "cv-base",
+        hasDraft: true,
+        publishedAt: "2026-06-01T08:00:00.000Z",
+        fields: [
+          { field: "structuredJson", before: { summary: "Gestion IT general.", skills: [] }, after: { summary: "Resumen profesional editado por bloques.", skills: [] }, changed: true }
+        ],
+        latestChanges: []
+      })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/cv-versions/cv-base/publish", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ changedFields: ["structuredJson"] })
     });
   });
   await page.route("**/api/v1/cv-versions/cv-adapted-new/set-primary", async (route) => {
@@ -1339,6 +1362,13 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Aplicar resumen" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Resumen profesional editado por bloques/);
+  await page.getByRole("button", { name: "Guardar borrador CV" }).click();
+  await expect(page.getByText("Borrador CV guardado: CV Base.")).toBeVisible();
+  await expect(page.getByLabel("Revision borrador CV")).toBeVisible();
+  await expect(page.getByText("structuredJson")).toBeVisible();
+  await page.getByRole("button", { name: "Publicar borrador CV" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Borrador CV publicado. Campos modificados: structuredJson.")).toBeVisible();
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
   await page.getByLabel("Skills CV").fill("KPIs\nUAT");
