@@ -426,6 +426,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("JSON estructurado")).toHaveValue("[]");
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByText("JSON estructurado debe ser un objeto raiz.")).toBeVisible();
+  await page.getByLabel("JSON estructurado").fill(JSON.stringify({ summary: "x".repeat(300), skills: [] }, null, 2));
+  await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
+  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
   await page.getByRole("button", { name: "Archivar CV Adaptado" }).click({ force: true });
   await expect(page.getByRole("heading", { name: "Confirmar archivado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click({ force: true });

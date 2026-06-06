@@ -69,6 +69,13 @@ function validateStructuredJson(value: unknown) {
   return "";
 }
 
+function isLargeJsonChange(previousValue: unknown, nextValue: unknown) {
+  const previousJson = formatJson(previousValue);
+  const nextJson = formatJson(nextValue);
+
+  return nextJson.length > 1500 || Math.abs(nextJson.length - previousJson.length) > 250;
+}
+
 export function CvVersionTable() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
   const [templates, setTemplates] = useState<CvTemplateItem[]>([]);
@@ -82,6 +89,7 @@ export function CvVersionTable() {
   const [isJsonSaving, setIsJsonSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingArchiveVersion, setPendingArchiveVersion] = useState<CvVersionItem | null>(null);
+  const [pendingJsonSave, setPendingJsonSave] = useState<{ version: CvVersionItem; structuredJson: unknown } | null>(null);
 
   const syncJsonEditor = useCallback((nextVersions: CvVersionItem[]) => {
     const requestedVersionId = getInitialVersionId();
@@ -256,9 +264,20 @@ export function CvVersionTable() {
       return;
     }
 
+    if (isLargeJsonChange(selectedVersion.structuredJson, parsed)) {
+      setPendingJsonSave({ version: selectedVersion, structuredJson: parsed });
+      setJsonMessage("Cambio grande detectado. Confirma antes de guardar.");
+      return;
+    }
+
+    await persistStructuredJson(selectedVersion, parsed);
+  }
+
+  async function persistStructuredJson(selectedVersion: CvVersionItem, structuredJson: unknown) {
     setIsJsonSaving(true);
     try {
-      await cvClient.updateVersion(selectedVersion.id, { structuredJson: parsed });
+      await cvClient.updateVersion(selectedVersion.id, { structuredJson });
+      setPendingJsonSave(null);
       setJsonMessage("JSON estructurado guardado.");
       await loadVersions();
     } catch {
@@ -460,6 +479,30 @@ export function CvVersionTable() {
             </Button>
             <Button type="button" variant="destructive" onClick={() => pendingArchiveVersion && deleteVersion(pendingArchiveVersion)}>
               Archivar version
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(pendingJsonSave)} onOpenChange={(open) => !open && setPendingJsonSave(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar cambio grande</DialogTitle>
+            <DialogDescription>
+              El JSON estructurado de {pendingJsonSave?.version.name} cambia de forma significativa. Revisa la vista previa antes de publicarlo.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingJsonSave(null)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isJsonSaving}
+              onClick={() => pendingJsonSave && persistStructuredJson(pendingJsonSave.version, pendingJsonSave.structuredJson)}
+            >
+              Guardar JSON
             </Button>
           </DialogFooter>
         </DialogContent>
