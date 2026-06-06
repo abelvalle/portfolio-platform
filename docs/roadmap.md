@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 07:45 CEST.
+Estado actualizado: 2026-06-06 07:50 CEST.
 
 ## Hitos completados
 
@@ -1496,6 +1496,22 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Configuracion Prisma preparada para v7
+
+- Añadido `apps/api/prisma.config.ts` con `schema`, `migrations.path` y `migrations.seed`.
+- Eliminado `package.json#prisma.seed` para evitar el aviso de deprecacion hacia Prisma 7.
+- Añadido `dotenv` como dependencia directa de API y carga explicita de `.env` en `prisma.config.ts`.
+- `npm.cmd run db:generate` detecta `prisma.config.ts` y genera Prisma Client correctamente.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run db:generate`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+- `npm.cmd audit --audit-level=moderate` sigue reportando las 2 vulnerabilidades moderadas conocidas de Next/PostCSS, no corregibles sin `--force`.
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1527,7 +1543,6 @@ Verificacion realizada en este hito:
 - Restauración por entidad CMS: existe restore para tema visual y perfil público; falta restaurar otras entidades cuando entren al workflow draft/publish.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete y purga fisica diferida; falta antivirus.
-- Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 - NPM audit: quedan 2 vulnerabilidades moderadas reportadas por `npm install`; no se aplica `audit fix --force` para evitar cambios de versiones fuera de hito.
 
 ## Próximos hitos priorizados
