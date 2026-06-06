@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import type { PortfolioSnapshot } from "@/lib/portfolio-data";
+import { buildPublicThemeStyle } from "@/lib/public-theme";
 import { cn } from "@/lib/utils";
 import { AdminSidebar } from "./admin-sidebar";
 
-export function AdminLayout({ children }: { children: React.ReactNode }) {
+export function AdminLayout({ children, theme }: { children: React.ReactNode; theme: PortfolioSnapshot["theme"] }) {
   return (
-    <div className="grid min-h-dvh bg-background text-foreground lg:grid-cols-[280px_1fr]">
+    <div className="grid min-h-dvh bg-background text-foreground lg:grid-cols-[280px_1fr]" style={buildPublicThemeStyle(theme)}>
       <AdminSidebar />
       <div className="min-w-0">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/90 px-6 backdrop-blur">

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 04:14 CEST.
+Estado actualizado: 2026-06-06 04:17 CEST.
 
 ## Hitos completados
 
@@ -753,6 +753,19 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Tema runtime aplicado al admin
+
+- El layout `/admin` carga el snapshot del portfolio y aplica `snapshot.theme` al shell admin.
+- El admin reutiliza el mismo saneado de tokens que las rutas públicas.
+- La aplicación se mantiene en el frontend y sigue consumiendo la API REST, sin acceso directo a base de datos.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -762,7 +775,7 @@ Verificación realizada en este hito:
 - Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
 - MFA QR/regeneración: existe UI funcional con secret, otpauth URL y recovery codes; falta QR visual local y regeneración controlada de recovery codes.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
-- Tema global desde API: las rutas públicas principales aplican tokens publicados; falta extender la aplicación automática al admin completo y añadir validación visual avanzada de contraste.
+- Tema global desde API: rutas públicas y shell admin aplican tokens publicados; falta validación visual avanzada de contraste.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
 - ATS por oferta concreta: el score actual valida estructura general; falta comparar contra keywords de una oferta específica.
