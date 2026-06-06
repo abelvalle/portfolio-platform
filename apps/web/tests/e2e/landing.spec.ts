@@ -319,6 +319,21 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/admin/publication/theme/review", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        entityType: "theme",
+        entityId: "theme-1",
+        hasDraft: false,
+        publishedAt: "2026-06-06T08:00:00.000Z",
+        fields: [
+          { field: "primaryColor", before: "#C8A96A", after: "#C8A96A", changed: false }
+        ],
+        latestChanges: []
+      })
+    });
+  });
   await page.route("**/api/v1/admin/publication/profile/review", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -333,6 +348,29 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         ],
         latestChanges: []
       })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/changelog", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "change-project",
+          entityType: "project",
+          entityId: "project-1",
+          action: "publish",
+          summary: "Proyecto publicado",
+          createdAt: "2026-06-06T09:00:00.000Z"
+        },
+        {
+          id: "change-cv",
+          entityType: "cv-version",
+          entityId: "cv-base",
+          action: "publish",
+          summary: "Version CV publicada",
+          createdAt: "2026-06-06T09:10:00.000Z"
+        }
+      ])
     });
   });
   await page.route("**/api/v1/users/user-1", async (route) => {
@@ -1397,6 +1435,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/settings/publication");
   await expect(page.getByRole("heading", { name: "Revision de publicacion" })).toBeVisible();
   await expect(page.getByText("Draft / Publish")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Abrir proyecto" })).toHaveAttribute("href", "/admin/portfolio/projects?projectId=project-1");
+  await expect(page.getByRole("link", { name: "Abrir version CV" })).toHaveAttribute("href", "/admin/cv/versions?versionId=cv-base");
 
   await page.goto("/admin/portfolio");
   await expect(page.getByRole("heading", { name: "Perfil publico" })).toBeVisible();

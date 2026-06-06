@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { RefreshCw, Rocket } from "lucide-react";
+import { ExternalLink, RefreshCw, Rocket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { adminClient, type ChangeLogItem, type PublicationThemeReview } from "@/lib/api";
+
+const restorableEntityTypes = new Set(["theme", "profile", "experience", "project", "skill", "education", "certification", "cv-version"]);
 
 export function PublicationReview() {
   const [review, setReview] = useState<PublicationThemeReview | null>(null);
@@ -121,15 +124,26 @@ export function PublicationReview() {
                 <p className="font-medium">{change.summary}</p>
                 <p className="mt-1 text-muted-foreground">{change.entityType} - {change.action}</p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => restoreChange(change.id)}
-                disabled={!["theme", "profile", "experience"].includes(change.entityType) || restoringId === change.id}
-              >
-                {restoringId === change.id ? "Restaurando..." : "Restaurar"}
-              </Button>
+              <div className="flex flex-wrap gap-2 md:justify-end">
+                {publicationEntityHref(change) ? (
+                  <Link
+                    href={publicationEntityHref(change) as string}
+                    className="inline-flex h-7 items-center gap-1 rounded-lg border border-border px-2.5 text-[0.8rem] font-medium transition-colors hover:border-primary/60 focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-3.5"
+                  >
+                    <ExternalLink data-icon="inline-start" />
+                    Abrir {entityLabel(change.entityType)}
+                  </Link>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => restoreChange(change.id)}
+                  disabled={!restorableEntityTypes.has(change.entityType) || restoringId === change.id}
+                >
+                  {restoringId === change.id ? "Restaurando..." : "Restaurar"}
+                </Button>
+              </div>
             </div>
           )) : (
             <p className="text-sm text-muted-foreground">Sin cambios registrados todavia.</p>
@@ -151,4 +165,33 @@ function formatPublicationValue(value: unknown) {
     return JSON.stringify(value);
   }
   return String(value);
+}
+
+function entityLabel(entityType: string) {
+  const labels: Record<string, string> = {
+    theme: "tema",
+    profile: "perfil",
+    experience: "experiencia",
+    project: "proyecto",
+    skill: "skill",
+    education: "estudio",
+    certification: "certificacion",
+    "cv-version": "version CV"
+  };
+  return labels[entityType] || "entidad";
+}
+
+function publicationEntityHref(change: ChangeLogItem) {
+  const queryId = encodeURIComponent(change.entityId || "");
+  const routes: Record<string, string> = {
+    theme: "/admin/portfolio/theme",
+    profile: "/admin/portfolio",
+    experience: queryId ? `/admin/portfolio/experience?experienceId=${queryId}` : "/admin/portfolio/experience",
+    project: queryId ? `/admin/portfolio/projects?projectId=${queryId}` : "/admin/portfolio/projects",
+    skill: queryId ? `/admin/portfolio/skills?skillId=${queryId}` : "/admin/portfolio/skills",
+    education: queryId ? `/admin/portfolio/education?educationId=${queryId}` : "/admin/portfolio/education",
+    certification: queryId ? `/admin/portfolio/certifications?certificationId=${queryId}` : "/admin/portfolio/certifications",
+    "cv-version": queryId ? `/admin/cv/versions?versionId=${queryId}` : "/admin/cv/versions"
+  };
+  return routes[change.entityType] || null;
 }

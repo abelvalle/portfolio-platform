@@ -3877,6 +3877,18 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 
+### Affordances de restauracion CMS por entidad
+
+- `/admin/settings/publication` habilita `Restaurar` para todas las entidades soportadas por el backend: tema, perfil, experiencias, proyectos, skills, estudios, certificaciones y versiones CV.
+- Cada entrada de changelog muestra un enlace contextual `Abrir ...` hacia la pantalla admin de la entidad afectada.
+- La e2e cubre enlaces contextuales para proyecto y version CV.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3905,7 +3917,7 @@ Verificacion realizada en este hito:
 - LinkedIn OAuth persistente: el callback ya intercambia `code` y obtiene `userinfo` sanitizado; falta persistir/sincronizar perfil con una entidad segura de integración y credenciales reales.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; falta extenderlo a otros futuros módulos.
-- Restauración por entidad CMS: existe restore para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; falta exponer affordances especificas por entidad en UI mas alla del changelog general.
+- Restauración por entidad CMS: existe restore para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; `/admin/settings/publication` ya expone enlaces contextuales por entidad y habilita restore para todas las entidades soportadas. Falta llevar affordances de restore a pantallas especificas de cada modulo si se necesita un flujo mas directo.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete, purga fisica diferida y bloqueo local de firma EICAR; falta integracion antivirus externa real.
 - NPM audit: quedan 2 vulnerabilidades moderadas en la cadena `next`/`postcss` confirmadas con `npm.cmd audit --audit-level=moderate`; `next@16.2.7` es la ultima version estable y todavia depende de `postcss@8.4.31`, no se aplica `audit fix --force` porque propone un downgrade rompedor a `next@9.3.3`.
