@@ -1528,8 +1528,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"skills\"/);
   await page.getByRole("button", { name: "Duplicar seccion" }).click();
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/Publicaciones copia/);
-  await page.getByRole("button", { name: "Bajar seccion" }).click();
+  await page.getByRole("button", { name: "Bajar seccion", exact: true }).click();
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Charlas\"[\s\S]*\"title\": \"Publicaciones copia\"/);
+  await expect(page.getByLabel("Secciones visuales CV").locator("[data-cv-custom-section-index='2']")).toHaveAttribute("draggable", "true");
+  await page.getByRole("button", { name: "Subir seccion Publicaciones copia" }).click();
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Publicaciones\"[\s\S]*\"title\": \"Publicaciones copia\"[\s\S]*\"title\": \"Charlas\"/);
   await page.getByRole("button", { name: "Guardar JSON", exact: true }).first().focus();
   await page.keyboard.press("Enter");
   await confirmJsonSaveIfNeeded();

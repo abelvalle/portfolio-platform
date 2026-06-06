@@ -666,6 +666,7 @@ export function CvVersionTable() {
   const [sectionsDraft, setSectionsDraft] = useState("");
   const [sectionOrderDraft, setSectionOrderDraft] = useState(defaultCvSectionOrder.join("\n"));
   const [draggedSectionOrderIndex, setDraggedSectionOrderIndex] = useState<number | null>(null);
+  const [draggedCustomSectionIndex, setDraggedCustomSectionIndex] = useState<number | null>(null);
   const [sectionActionIndex, setSectionActionIndex] = useState(0);
   const [jsonMessage, setJsonMessage] = useState("Selecciona una version para editar su JSON estructurado.");
   const [isLoading, setIsLoading] = useState(true);
@@ -1671,17 +1672,30 @@ export function CvVersionTable() {
     }, "Seccion personalizada duplicada en el JSON. Guarda JSON para persistirla.");
   }
 
-  function moveCustomSection(direction: -1 | 1) {
+  function moveCustomSectionToIndex(fromIndex: number, toIndex: number) {
     updateCustomSections((sections) => {
-      const index = Math.min(Math.max(sectionActionIndex, 0), sections.length - 1);
-      const nextIndex = Math.min(Math.max(index + direction, 0), sections.length - 1);
+      const index = Math.min(Math.max(fromIndex, 0), sections.length - 1);
+      const nextIndex = Math.min(Math.max(toIndex, 0), sections.length - 1);
       if (nextIndex === index) {
         return { sections, index };
       }
       const nextSections = [...sections];
-      [nextSections[index], nextSections[nextIndex]] = [nextSections[nextIndex], nextSections[index]];
+      const [movedSection] = nextSections.splice(index, 1);
+      nextSections.splice(nextIndex, 0, movedSection);
       return { sections: nextSections, index: nextIndex };
     }, "Seccion personalizada reordenada en el JSON. Guarda JSON para persistirla.");
+  }
+
+  function moveCustomSection(direction: -1 | 1) {
+    moveCustomSectionToIndex(sectionActionIndex, sectionActionIndex + direction);
+  }
+
+  function handleCustomSectionDrop(toIndex: number) {
+    if (draggedCustomSectionIndex === null) {
+      return;
+    }
+    moveCustomSectionToIndex(draggedCustomSectionIndex, toIndex);
+    setDraggedCustomSectionIndex(null);
   }
 
   function deleteStructuredListItem(
@@ -2905,6 +2919,60 @@ export function CvVersionTable() {
             Aplicar secciones
           </Button>
           <div className="grid gap-3 border-t border-border pt-3">
+            <div className="grid gap-2" aria-label="Secciones visuales CV">
+              {sectionOptions.length ? sectionOptions.map((item, index) => {
+                const [rawTitle, ...contentParts] = item.split(":");
+                const sectionTitle = rawTitle.trim() || `Seccion ${index + 1}`;
+                const sectionContent = contentParts.join(":").trim();
+                return (
+                  <div
+                    key={`${item}-${index}`}
+                    className="grid gap-2 rounded-md border border-border bg-background p-2 text-sm md:grid-cols-[auto_1fr_auto_auto] md:items-center"
+                    data-cv-custom-section-index={index}
+                    draggable={Boolean(jsonVersionId)}
+                    onDragStart={() => setDraggedCustomSectionIndex(index)}
+                    onDragEnd={() => setDraggedCustomSectionIndex(null)}
+                    onDragOver={(event) => {
+                      if (jsonVersionId) {
+                        event.preventDefault();
+                      }
+                    }}
+                    onDrop={() => handleCustomSectionDrop(index)}
+                  >
+                    <GripVertical className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                    <div className="min-w-0">
+                      <div className="font-medium">{sectionTitle}</div>
+                      {sectionContent ? <div className="truncate text-xs text-muted-foreground">{sectionContent}</div> : null}
+                    </div>
+                    <Badge variant="outline">{index + 1}</Badge>
+                    <div className="flex gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Subir seccion ${sectionTitle}`}
+                        onClick={() => moveCustomSectionToIndex(index, index - 1)}
+                        disabled={!jsonVersionId || index === 0}
+                      >
+                        <ArrowUp className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Bajar seccion ${sectionTitle}`}
+                        onClick={() => moveCustomSectionToIndex(index, index + 1)}
+                        disabled={!jsonVersionId || index >= sectionOptions.length - 1}
+                      >
+                        <ArrowDown className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              }) : (
+                <p className="text-sm text-muted-foreground">Sin secciones personalizadas.</p>
+              )}
+            </div>
             <div className="grid gap-2 md:grid-cols-[minmax(220px,1fr)_auto_auto_auto] md:items-end">
               <div className="grid gap-2">
                 <Label htmlFor="sectionActionIndex">Seccion personalizada CV</Label>

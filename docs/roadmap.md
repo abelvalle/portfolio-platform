@@ -3104,6 +3104,23 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Drag/drop visual de secciones CV
+
+- `/admin/cv/versions` incorpora una lista visual reordenable para secciones personalizadas del CV.
+- Cada seccion personalizada se puede arrastrar y soltar, con botones de subir/bajar como fallback accesible.
+- La accion reutiliza la ruta existente de `updateCustomSections`, por lo que actualiza el JSON estructurado y mantiene el guardado explicito.
+- Anadida cobertura e2e desktop/mobile para verificar draggability y reordenado visual de `Publicaciones copia`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3126,7 +3143,7 @@ Verificacion realizada en este hito:
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones y draft/publish desde UI; falta drag/drop.
-- Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples, bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, formularios granulares de experiencia/skills/proyectos/educacion/certificaciones con alta, duplicado y borrado de items, orden exportable `sectionOrder` con drag/drop visual y fallback por botones, duplicado y reordenado de secciones personalizadas, borrador/revision/publicacion para `structuredJson` y draft/publish de metadatos no JSON; falta drag/drop visual para secciones personalizadas y entidades CMS.
+- Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples, bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, formularios granulares de experiencia/skills/proyectos/educacion/certificaciones con alta, duplicado y borrado de items, orden exportable `sectionOrder` con drag/drop visual y fallback por botones, duplicado y reordenado drag/drop de secciones personalizadas, borrador/revision/publicacion para `structuredJson` y draft/publish de metadatos no JSON; falta drag/drop visual en entidades CMS principales.
 - Editor CV por bloques: el editor principal está conectado a campos básicos y Versiones CV ya tiene bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, duplicado de versiones, orden de bloques exportable, alta/duplicado/borrado granular multi-item y edición granular de una experiencia, una skill, un proyecto, un item de educacion y una certificacion; falta granularidad equivalente en campos internos multiples.
 - Preview A4 admin avanzado: el preview está sincronizado, comparte componente/contrato A4 con previews publicas y permite seleccionar plantilla; faltan paginación real y comparacion pixel-perfect con exportacion PDF.
 - LinkedIn OAuth persistente: el callback ya intercambia `code` y obtiene `userinfo` sanitizado; falta persistir/sincronizar perfil con una entidad segura de integración y credenciales reales.
@@ -3141,4 +3158,4 @@ Verificacion realizada en este hito:
 
 1. Diff visual automatizado entre preview A4 y PDF generado.
 2. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
-3. Drag/drop visual en secciones personalizadas CV y entidades CMS principales.
+3. Drag/drop visual en entidades CMS principales.
