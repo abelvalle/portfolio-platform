@@ -695,6 +695,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         labels: [
           { name: "Delivery Manager", count: 2 },
           { name: "IT Project Manager", count: 1 }
+        ],
+        paths: [
+          { name: "/admin/cv/adapt?targetRoleId=target-role-1", count: 2 },
+          { name: "/admin/cv/adapt", count: 1 }
         ]
       })
     });
@@ -1986,6 +1990,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("social")).toBeVisible();
   await expect(page.getByText("Roles objetivo CV")).toBeVisible();
   await expect(page.getByText("Delivery Manager").first()).toBeVisible();
+  await expect(page.getByText("Contextos")).toBeVisible();
+  await expect(page.getByText("/admin/cv/adapt?targetRoleId=target-role-1")).toBeVisible();
   await expect(page.getByText("2026-06-06").first()).toBeVisible();
   await expect(page.getByText("landing_visit").first()).toBeVisible();
   await page.getByLabel("Tipo de evento").selectOption("cv_download");

@@ -289,7 +289,10 @@ export function AnalyticsDashboard() {
           </div>
           <Badge variant="outline">cv_adaptation</Badge>
         </div>
-        <SegmentList title="Roles mas usados" items={labels?.labels || []} empty="Sin adaptaciones CV registradas." />
+        <div className="grid gap-5 md:grid-cols-2">
+          <SegmentList title="Roles mas usados" items={labels?.labels || []} empty="Sin adaptaciones CV registradas." />
+          <SegmentList title="Contextos" items={labels?.paths || []} empty="Sin rutas de adaptacion registradas." />
+        </div>
       </section>
 
       <section className="overflow-x-auto rounded-lg border border-border">
@@ -386,7 +389,7 @@ function SegmentList({
       {items.length ? items.map((item) => (
         <div key={item.name} className="grid gap-2">
           <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="font-medium">{item.name}</span>
+            <span className="break-all font-medium">{item.name}</span>
             <span className="text-muted-foreground">{item.count}</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-muted">

@@ -206,10 +206,10 @@ describe('AnalyticsService filters', () => {
   it('aggregates event labels for target role usage', async () => {
     const prisma = mockPrisma();
     prisma.analyticsEvent.findMany.mockResolvedValue([
-      { label: 'Delivery Manager' },
-      { label: 'Delivery Manager' },
-      { label: 'IT Project Manager' },
-      { label: null },
+      { label: 'Delivery Manager', path: '/admin/cv/adapt?targetRoleId=1' },
+      { label: 'Delivery Manager', path: '/admin/cv/adapt?targetRoleId=1' },
+      { label: 'IT Project Manager', path: '/admin/cv/adapt' },
+      { label: null, path: null },
     ]);
     const service = createService(prisma);
 
@@ -217,13 +217,18 @@ describe('AnalyticsService filters', () => {
 
     expect(prisma.analyticsEvent.findMany).toHaveBeenCalledWith({
       where: { type: 'cv_adaptation' },
-      select: { label: true },
+      select: { label: true, path: true },
     });
     expect(result).toEqual({
       labels: [
         { name: 'Delivery Manager', count: 2 },
         { name: 'IT Project Manager', count: 1 },
         { name: 'sin_etiqueta', count: 1 },
+      ],
+      paths: [
+        { name: '/admin/cv/adapt?targetRoleId=1', count: 2 },
+        { name: '/admin/cv/adapt', count: 1 },
+        { name: 'sin_ruta', count: 1 },
       ],
     });
   });
