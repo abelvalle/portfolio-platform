@@ -196,6 +196,15 @@ export const adminClient = {
   projects() {
     return apiFetch<ProjectItem[]>("/projects?includeHidden=true");
   },
+  projectCategories() {
+    return apiFetch<ProjectCategoryItem[]>("/project-categories?includeHidden=true");
+  },
+  createProjectCategory(data: ProjectCategoryMutation) {
+    return apiFetch<ProjectCategoryItem>("/project-categories", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateProjectCategory(id: string, data: Partial<ProjectCategoryMutation>) {
+    return apiFetch<ProjectCategoryItem>(`/project-categories/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
   createProject(data: ProjectMutation) {
     return apiFetch<ProjectItem>("/projects", { method: "POST", body: JSON.stringify(data) });
   },
@@ -514,6 +523,15 @@ export type ProjectItem = {
 };
 
 export type ProjectMutation = Omit<ProjectItem, "id">;
+
+export type ProjectCategoryItem = {
+  id: string;
+  name: string;
+  order: number;
+  visible: boolean;
+};
+
+export type ProjectCategoryMutation = Omit<ProjectCategoryItem, "id">;
 
 export type SkillItem = {
   id: string;

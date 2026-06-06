@@ -72,6 +72,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET|POST|PATCH|DELETE /skills` (writes: `manage_portfolio`)
 - `GET|POST|PATCH|DELETE /skill-categories` (writes: `manage_portfolio`)
 - `GET|POST|PATCH|DELETE /projects` (writes: `manage_portfolio`)
+- `GET|POST|PATCH|DELETE /project-categories` (writes: `manage_portfolio`)
 - `POST /contact-messages`
 - `GET /contact-messages?status=unread&from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_messages`)
 - `GET /contact-messages/webhook/status` (`read_messages`)

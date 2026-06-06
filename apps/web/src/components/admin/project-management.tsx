@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { adminClient, type ProjectItem, type ProjectMutation } from "@/lib/api";
+import { adminClient, type ProjectCategoryItem, type ProjectItem, type ProjectMutation } from "@/lib/api";
 
 type ProjectDraft = {
   name: string;
@@ -71,7 +71,9 @@ function buildMutation(draft: ProjectDraft, order: number): ProjectMutation {
 
 export function ProjectManagement() {
   const [items, setItems] = useState<ProjectItem[]>([]);
+  const [categories, setCategories] = useState<ProjectCategoryItem[]>([]);
   const [draft, setDraft] = useState<ProjectDraft>(emptyDraft);
+  const [categoryDraft, setCategoryDraft] = useState({ name: "", order: 0, visible: true });
   const [message, setMessage] = useState("Cargando proyectos.");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -88,13 +90,54 @@ export function ProjectManagement() {
   async function loadProjects() {
     setIsLoading(true);
     try {
-      const nextItems = await adminClient.projects();
+      const [nextItems, nextCategories] = await Promise.all([
+        adminClient.projects(),
+        adminClient.projectCategories()
+      ]);
       setItems(nextItems);
+      setCategories(nextCategories);
       setMessage(nextItems.length ? "Proyectos sincronizados con la API." : "Sin proyectos registrados.");
     } catch {
       setMessage("No se pudieron cargar proyectos. Comprueba la sesion admin.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function createCategory() {
+    const payload = {
+      name: categoryDraft.name.trim(),
+      order: categoryDraft.order,
+      visible: categoryDraft.visible
+    };
+    if (!payload.name) {
+      setMessage("Nombre de categoria obligatorio.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await adminClient.createProjectCategory(payload);
+      setCategoryDraft({ name: "", order: categories.length, visible: true });
+      await loadProjects();
+      setMessage(`Categoria creada: ${payload.name}.`);
+    } catch {
+      setMessage("No se pudo crear la categoria.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function toggleCategory(category: ProjectCategoryItem) {
+    setBusyId(`category:${category.id}`);
+    try {
+      await adminClient.updateProjectCategory(category.id, { visible: !category.visible });
+      await loadProjects();
+      setMessage(`Categoria ${category.visible ? "ocultada" : "mostrada"}: ${category.name}.`);
+    } catch {
+      setMessage("No se pudo actualizar la categoria.");
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -164,14 +207,52 @@ export function ProjectManagement() {
         <p className="mt-4 text-sm text-muted-foreground" aria-live="polite">{message}</p>
       </section>
 
+      <section className="grid gap-5 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="grid min-w-60 flex-1 gap-2">
+            <Label htmlFor="projectCategoryName">Categoria nueva</Label>
+            <Input id="projectCategoryName" value={categoryDraft.name} onChange={(event) => setCategoryDraft((current) => ({ ...current, name: event.target.value }))} />
+          </div>
+          <div className="grid w-28 gap-2">
+            <Label htmlFor="projectCategoryOrder">Orden</Label>
+            <Input id="projectCategoryOrder" type="number" value={categoryDraft.order} onChange={(event) => setCategoryDraft((current) => ({ ...current, order: Number(event.target.value) }))} />
+          </div>
+          <Button type="button" onClick={createCategory} disabled={isSaving}>
+            <Save data-icon="inline-start" />
+            Crear categoria
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {categories.length ? categories.map((category) => (
+            <Button
+              key={category.id}
+              type="button"
+              variant={category.visible ? "outline" : "secondary"}
+              onClick={() => toggleCategory(category)}
+              disabled={busyId === `category:${category.id}`}
+            >
+              {category.name}
+              <Badge variant={category.visible ? "default" : "secondary"}>{category.visible ? "visible" : "oculta"}</Badge>
+            </Button>
+          )) : (
+            <p className="text-sm text-muted-foreground">Sin categorias registradas.</p>
+          )}
+        </div>
+      </section>
+
       <section className="grid gap-5 rounded-lg border border-border bg-card p-5 lg:grid-cols-2">
+        <datalist id="projectCategoryOptions">
+          {categories.map((category) => (
+            <option key={category.id} value={category.name} />
+          ))}
+        </datalist>
         <div className="grid gap-2">
           <Label htmlFor="projectName">Nombre</Label>
           <Input id="projectName" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="categoryName">Categoria</Label>
-          <Input id="categoryName" value={draft.categoryName} onChange={(event) => setDraft((current) => ({ ...current, categoryName: event.target.value }))} />
+          <Input id="categoryName" list="projectCategoryOptions" value={draft.categoryName} onChange={(event) => setDraft((current) => ({ ...current, categoryName: event.target.value }))} />
         </div>
         <div className="grid gap-2 lg:col-span-2">
           <Label htmlFor="projectDescription">Descripcion</Label>

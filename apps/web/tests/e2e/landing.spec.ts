@@ -425,6 +425,44 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route(/\/api\/v1\/project-categories(\?.*)?$/, async (route) => {
+    if (route.request().method() === "POST") {
+      const data = JSON.parse(route.request().postData() || "{}");
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "project-category-new",
+          name: data.name,
+          order: data.order ?? 1,
+          visible: data.visible ?? true
+        })
+      });
+      return;
+    }
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "project-category-1",
+          name: "Portfolio",
+          order: 0,
+          visible: true
+        }
+      ])
+    });
+  });
+  await page.route("**/api/v1/project-categories/project-category-1", async (route) => {
+    const data = JSON.parse(route.request().postData() || "{}");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "project-category-1",
+        name: "Portfolio",
+        order: 0,
+        visible: data.visible ?? false
+      })
+    });
+  });
   await page.route("**/api/v1/projects/project-1", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -642,6 +680,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/portfolio/projects");
   await expect(page.getByRole("heading", { name: "Proyectos" })).toBeVisible();
   await expect(page.getByRole("main").getByText("Portfolio Platform")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Portfolio visible/ })).toBeVisible();
+  await page.getByLabel("Categoria nueva").fill("Producto");
+  await page.getByRole("button", { name: "Crear categoria" }).click();
+  await expect(page.getByText("Categoria creada: Producto.")).toBeVisible();
+  await page.getByRole("button", { name: /Portfolio visible/ }).click();
+  await expect(page.getByText("Categoria ocultada: Portfolio.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Portfolio Platform" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();
