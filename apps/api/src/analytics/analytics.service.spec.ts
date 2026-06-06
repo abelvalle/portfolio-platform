@@ -118,6 +118,47 @@ describe('AnalyticsService filters', () => {
     });
     expect(result).toMatchObject({ retentionDays: 30, deleted: 3 });
   });
+
+  it('builds daily time series with empty days in ranged filters', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsEvent.findMany.mockResolvedValue([
+      {
+        createdAt: new Date('2026-06-01T10:00:00.000Z'),
+        type: 'landing_visit',
+      },
+      { createdAt: new Date('2026-06-01T11:00:00.000Z'), type: 'cv_download' },
+      {
+        createdAt: new Date('2026-06-03T12:00:00.000Z'),
+        type: 'landing_visit',
+      },
+    ]);
+    const service = createService(prisma);
+
+    const result = await service.timeSeries({
+      from: '2026-06-01',
+      to: '2026-06-03',
+    });
+
+    expect(prisma.analyticsEvent.findMany).toHaveBeenCalledWith({
+      where: {
+        createdAt: {
+          gte: new Date('2026-06-01T00:00:00.000Z'),
+          lte: new Date('2026-06-03T23:59:59.999Z'),
+        },
+      },
+      select: { createdAt: true, type: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(result).toEqual([
+      {
+        date: '2026-06-01',
+        total: 2,
+        types: { landing_visit: 1, cv_download: 1 },
+      },
+      { date: '2026-06-02', total: 0, types: {} },
+      { date: '2026-06-03', total: 1, types: { landing_visit: 1 } },
+    ]);
+  });
 });
 
 function createService(

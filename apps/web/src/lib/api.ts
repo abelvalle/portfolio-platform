@@ -244,6 +244,9 @@ export const adminClient = {
   analyticsEvents(filters?: AnalyticsEventFilters) {
     return apiFetch<AnalyticsEvent[]>(withQuery("/analytics", filters));
   },
+  analyticsTimeSeries(filters?: AnalyticsEventFilters) {
+    return apiFetch<AnalyticsTimeSeriesPoint[]>(withQuery("/analytics/timeseries", filters));
+  },
   appModules() {
     return apiFetch<AppModuleItem[]>("/app-modules?includeHidden=true");
   },
@@ -524,6 +527,12 @@ export type AnalyticsEvent = {
   path?: string | null;
   label?: string | null;
   createdAt: string;
+};
+
+export type AnalyticsTimeSeriesPoint = {
+  date: string;
+  total: number;
+  types: Record<string, number>;
 };
 
 export type AppModuleItem = {

@@ -80,6 +80,35 @@ export class AnalyticsService {
     });
   }
 
+  async timeSeries(filters: AnalyticsEventsQueryDto = {}) {
+    const events = await this.prisma.analyticsEvent.findMany({
+      where: this.eventWhere(filters),
+      select: { createdAt: true, type: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    const byDay = this.seedTimeSeries(filters);
+
+    for (const event of events) {
+      const date = event.createdAt.toISOString().slice(0, 10);
+      const point = byDay.get(date) || {
+        date,
+        total: 0,
+        types: new Map<string, number>(),
+      };
+      point.total += 1;
+      point.types.set(event.type, (point.types.get(event.type) || 0) + 1);
+      byDay.set(date, point);
+    }
+
+    return [...byDay.values()]
+      .sort((left, right) => left.date.localeCompare(right.date))
+      .map((point) => ({
+        date: point.date,
+        total: point.total,
+        types: Object.fromEntries(point.types.entries()),
+      }));
+  }
+
   private eventWhere(filters: AnalyticsEventsQueryDto) {
     return {
       ...this.dateRangeWhere(filters),
@@ -106,6 +135,30 @@ export class AnalyticsService {
     }
 
     return Object.keys(createdAt).length ? { createdAt } : {};
+  }
+
+  private seedTimeSeries(filters: AnalyticsDateRangeQueryDto) {
+    const byDay = new Map<
+      string,
+      { date: string; total: number; types: Map<string, number> }
+    >();
+    const from = filters.from ? startOfDayUtc(filters.from) : null;
+    const to = filters.to ? startOfDayUtc(filters.to) : null;
+
+    if (!from || !to) {
+      return byDay;
+    }
+
+    for (
+      const cursor = new Date(from);
+      cursor.getTime() <= to.getTime();
+      cursor.setUTCDate(cursor.getUTCDate() + 1)
+    ) {
+      const date = cursor.toISOString().slice(0, 10);
+      byDay.set(date, { date, total: 0, types: new Map() });
+    }
+
+    return byDay;
   }
 
   private hashIp(ip?: string) {

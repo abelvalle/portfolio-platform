@@ -101,6 +101,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `POST /analytics/events`
 - `GET /analytics/summary?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_analytics`)
 - `GET /analytics/privacy` (`read_analytics`)
+- `GET /analytics/timeseries?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
 - `POST /analytics/retention/prune` (`manage_analytics`)
 - `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
 
@@ -115,6 +116,8 @@ Variables de privacidad:
 - `ANALYTICS_RETENTION_DAYS`: si es un numero positivo, habilita purga de eventos anteriores a ese umbral.
 
 `GET /analytics/privacy` devuelve configuracion no sensible: dias de retencion, si se guarda user-agent y si hay sal configurada.
+
+`GET /analytics/timeseries` agrupa eventos por dia y tipo. Si se envian `from` y `to`, devuelve tambien dias intermedios sin eventos con `total: 0`.
 
 `POST /analytics/retention/prune` borra eventos anteriores a la retencion configurada y requiere `manage_analytics`.
 

@@ -217,6 +217,21 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       body: JSON.stringify({ totalVisits: 3, cvDownloads: 1, contactSubmits: 1, projectViews: 1 })
     });
   });
+  await page.route(/\/api\/v1\/analytics\/timeseries(\?.*)?$/, async (route) => {
+    const url = new URL(route.request().url());
+    const eventType = url.searchParams.get("type");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(
+        eventType === "cv_download"
+          ? [{ date: "2026-06-05", total: 1, types: { cv_download: 1 } }]
+          : [
+              { date: "2026-06-05", total: 1, types: { cv_download: 1 } },
+              { date: "2026-06-06", total: 2, types: { landing_visit: 2 } }
+            ]
+      )
+    });
+  });
   await page.route(/\/api\/v1\/analytics(\?.*)?$/, async (route) => {
     const url = new URL(route.request().url());
     const eventType = url.searchParams.get("type");
@@ -570,6 +585,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("Hasta")).toBeVisible();
   await expect(page.getByLabel("Tipo de evento")).toBeVisible();
   await expect(page.getByText("Tendencias", { exact: true })).toBeVisible();
+  await expect(page.getByText("Serie diaria")).toBeVisible();
+  await expect(page.getByText("2026-06-06").first()).toBeVisible();
   await expect(page.getByText("landing_visit").first()).toBeVisible();
   await page.getByLabel("Tipo de evento").selectOption("cv_download");
   await expect(page.getByText("cv_download").first()).toBeVisible();

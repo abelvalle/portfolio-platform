@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { adminClient, type AnalyticsEvent, type AnalyticsSummary } from "@/lib/api";
+import { adminClient, type AnalyticsEvent, type AnalyticsSummary, type AnalyticsTimeSeriesPoint } from "@/lib/api";
 
 const summaryLabels: Array<[keyof AnalyticsSummary, string]> = [
   ["totalVisits", "Visitas landing"],
@@ -26,6 +26,7 @@ const eventTypeOptions = [
 export function AnalyticsDashboard() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
+  const [timeSeries, setTimeSeries] = useState<AnalyticsTimeSeriesPoint[]>([]);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [eventType, setEventType] = useState("");
@@ -36,12 +37,14 @@ export function AnalyticsDashboard() {
     setIsLoading(true);
     try {
       const filters = { from: fromDate || undefined, to: toDate || undefined };
-      const [nextSummary, nextEvents] = await Promise.all([
+      const [nextSummary, nextEvents, nextTimeSeries] = await Promise.all([
         adminClient.analyticsSummary(filters),
-        adminClient.analyticsEvents({ ...filters, type: eventType || undefined })
+        adminClient.analyticsEvents({ ...filters, type: eventType || undefined }),
+        adminClient.analyticsTimeSeries({ ...filters, type: eventType || undefined })
       ]);
       setSummary(nextSummary);
       setEvents(nextEvents);
+      setTimeSeries(nextTimeSeries);
       setMessage("Analitica sincronizada con filtros de API.");
     } catch {
       setMessage("No se pudo cargar analitica. Comprueba sesion admin.");
@@ -60,8 +63,9 @@ export function AnalyticsDashboard() {
   const filteredEvents = useMemo(() => {
     return events.filter((event) => isInsideDateRange(event.createdAt, fromDate, toDate) && (!eventType || event.type === eventType));
   }, [eventType, events, fromDate, toDate]);
-  const trend = useMemo(() => buildAnalyticsTrend(filteredEvents), [filteredEvents]);
+  const trend = useMemo(() => buildAnalyticsTrend(timeSeries), [timeSeries]);
   const maxTypeCount = Math.max(...trend.topTypes.map((item) => item.count), 1);
+  const maxDayCount = Math.max(...trend.daily.map((item) => item.total), 1);
 
   function exportCsv() {
     const blob = new Blob([buildCsv(filteredEvents)], { type: "text/csv;charset=utf-8" });
@@ -153,6 +157,23 @@ export function AnalyticsDashboard() {
           </div>
         </div>
         <div className="grid gap-3">
+          <p className="text-sm font-medium text-muted-foreground">Serie diaria</p>
+          {trend.daily.length ? trend.daily.map((item) => (
+            <div key={item.date} className="grid gap-2">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="font-medium">{item.date}</span>
+                <span className="text-muted-foreground">{item.total}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary/70" style={{ width: `${(item.total / maxDayCount) * 100}%` }} />
+              </div>
+            </div>
+          )) : (
+            <p className="text-sm text-muted-foreground">Sin serie historica para los filtros actuales.</p>
+          )}
+        </div>
+        <div className="grid gap-3">
+          <p className="text-sm font-medium text-muted-foreground">Top eventos</p>
           {trend.topTypes.length ? trend.topTypes.map((item) => (
             <div key={item.type} className="grid gap-2">
               <div className="flex items-center justify-between gap-3 text-sm">
@@ -215,39 +236,31 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
 
-function buildAnalyticsTrend(events: AnalyticsEvent[]) {
-  const byDay = new Map<string, number>();
+function buildAnalyticsTrend(points: AnalyticsTimeSeriesPoint[]) {
   const byType = new Map<string, number>();
 
-  for (const event of events) {
-    const day = toDayKey(event.createdAt);
-    byDay.set(day, (byDay.get(day) || 0) + 1);
-    byType.set(event.type, (byType.get(event.type) || 0) + 1);
+  for (const point of points) {
+    for (const [type, count] of Object.entries(point.types)) {
+      byType.set(type, (byType.get(type) || 0) + count);
+    }
   }
 
-  const topDay = [...byDay.entries()].sort((a, b) => b[1] - a[1])[0];
+  const topDay = [...points].sort((a, b) => b.total - a.total)[0];
   const topTypes = [...byType.entries()]
     .map(([type, count]) => ({ type, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 3);
 
   return {
-    totalEvents: events.length,
-    activeDays: byDay.size,
-    topDay: topDay?.[0] || "",
-    topDayCount: topDay?.[1] || 0,
+    totalEvents: points.reduce((total, point) => total + point.total, 0),
+    activeDays: points.filter((point) => point.total > 0).length,
+    topDay: topDay?.date || "",
+    topDayCount: topDay?.total || 0,
     topType: topTypes[0]?.type || "",
     topTypeCount: topTypes[0]?.count || 0,
-    topTypes
+    topTypes,
+    daily: points.slice(-14)
   };
-}
-
-function toDayKey(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "sin-fecha";
-  }
-  return date.toISOString().slice(0, 10);
 }
 
 function buildCsv(events: AnalyticsEvent[]) {

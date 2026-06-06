@@ -51,6 +51,14 @@ export class AnalyticsController {
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_analytics')
+  @Get('timeseries')
+  timeSeries(@Query() query: AnalyticsEventsQueryDto) {
+    return this.analyticsService.timeSeries(query);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('manage_analytics')
   @Post('retention/prune')
   pruneRetention() {
