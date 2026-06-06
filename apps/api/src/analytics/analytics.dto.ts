@@ -31,3 +31,11 @@ export class AnalyticsDateRangeQueryDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   to?: string;
 }
+
+export class AnalyticsEventsQueryDto extends AnalyticsDateRangeQueryDto {
+  @ApiProperty({ required: false, example: 'cv_download' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  type?: string;
+}

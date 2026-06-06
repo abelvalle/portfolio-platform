@@ -16,6 +16,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { AnalyticsService } from './analytics.service';
 import {
   AnalyticsDateRangeQueryDto,
+  AnalyticsEventsQueryDto,
   CreateAnalyticsEventDto,
 } from './analytics.dto';
 
@@ -45,7 +46,7 @@ export class AnalyticsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin, UserRole.editor, UserRole.viewer)
   @Get()
-  list(@Query() query: AnalyticsDateRangeQueryDto) {
+  list(@Query() query: AnalyticsEventsQueryDto) {
     return this.analyticsService.list(query);
   }
 }

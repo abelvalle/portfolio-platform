@@ -210,13 +210,16 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     });
   });
   await page.route(/\/api\/v1\/analytics(\?.*)?$/, async (route) => {
+    const url = new URL(route.request().url());
+    const eventType = url.searchParams.get("type");
+    const events = [
+      { id: "event-1", type: "landing_visit", path: "/", label: "Landing", createdAt: "2026-06-06T08:00:00.000Z" },
+      { id: "event-2", type: "landing_visit", path: "/", label: "Landing", createdAt: "2026-06-06T09:00:00.000Z" },
+      { id: "event-3", type: "cv_download", path: "/cv", label: "CV", createdAt: "2026-06-05T09:00:00.000Z" }
+    ];
     await route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify([
-        { id: "event-1", type: "landing_visit", path: "/", label: "Landing", createdAt: "2026-06-06T08:00:00.000Z" },
-        { id: "event-2", type: "landing_visit", path: "/", label: "Landing", createdAt: "2026-06-06T09:00:00.000Z" },
-        { id: "event-3", type: "cv_download", path: "/cv", label: "CV", createdAt: "2026-06-05T09:00:00.000Z" }
-      ])
+      body: JSON.stringify(eventType ? events.filter((event) => event.type === eventType) : events)
     });
   });
   await page.route(/\/api\/v1\/admin\/dashboard(\?.*)?$/, async (route) => {
@@ -495,6 +498,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("button", { name: "Exportar CSV" })).toBeVisible();
   await expect(page.getByLabel("Desde")).toBeVisible();
   await expect(page.getByLabel("Hasta")).toBeVisible();
+  await expect(page.getByLabel("Tipo de evento")).toBeVisible();
   await expect(page.getByText("Tendencias", { exact: true })).toBeVisible();
   await expect(page.getByText("landing_visit").first()).toBeVisible();
+  await page.getByLabel("Tipo de evento").selectOption("cv_download");
+  await expect(page.getByText("cv_download").first()).toBeVisible();
+  await expect(page.getByText("1 eventos").first()).toBeVisible();
 });

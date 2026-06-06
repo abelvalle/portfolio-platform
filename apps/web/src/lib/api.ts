@@ -237,7 +237,7 @@ export const adminClient = {
   analyticsSummary(filters?: DateRangeFilters) {
     return apiFetch<AnalyticsSummary>(withQuery("/analytics/summary", filters));
   },
-  analyticsEvents(filters?: DateRangeFilters) {
+  analyticsEvents(filters?: AnalyticsEventFilters) {
     return apiFetch<AnalyticsEvent[]>(withQuery("/analytics", filters));
   },
   appModules() {
@@ -508,6 +508,10 @@ export type AnalyticsSummary = {
 export type DateRangeFilters = {
   from?: string;
   to?: string;
+};
+
+export type AnalyticsEventFilters = DateRangeFilters & {
+  type?: string;
 };
 
 export type AnalyticsEvent = {

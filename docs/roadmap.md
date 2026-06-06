@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 06:12 CEST.
+Estado actualizado: 2026-06-06 06:17 CEST.
 
 ## Hitos completados
 
@@ -1139,6 +1139,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Segmentacion basica de analitica por evento
+
+- `GET /api/v1/analytics` acepta query param opcional `type` para filtrar eventos por tipo.
+- `/admin/analytics` incorpora selector de tipo de evento y aplica el filtro a tabla, tendencias y CSV.
+- El resumen de tarjetas mantiene lectura global por rango de fechas para no mezclar semanticas.
+- `docs/api.md` documenta el nuevo query param.
+- Añadidos tests unitarios de API y cobertura e2e desktop/mobile para segmentar por `cv_download`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1157,7 +1172,7 @@ Verificacion realizada en este hito:
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado y respuesta `mailto`; falta integracion real con proveedor email.
-- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha, exportación CSV y tendencias básicas; faltan segmentación avanzada por evento, retención/anonimización configurable y series históricas más profundas.
+- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV y tendencias básicas; faltan retención/anonimización configurable y series históricas más profundas.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API y pulso operativo; falta segmentación avanzada.
 - Experiencias UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, reordenado drag/drop y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa en formulario, selector de media, categorías gestionadas visualmente y orden drag/drop.

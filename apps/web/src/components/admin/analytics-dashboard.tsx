@@ -15,11 +15,20 @@ const summaryLabels: Array<[keyof AnalyticsSummary, string]> = [
   ["projectViews", "Vistas proyecto"]
 ];
 
+const eventTypeOptions = [
+  { label: "Todos", value: "" },
+  { label: "Visita landing", value: "landing_visit" },
+  { label: "Descarga CV", value: "cv_download" },
+  { label: "Formulario contacto", value: "contact_submit" },
+  { label: "Vista proyecto", value: "project_view" }
+];
+
 export function AnalyticsDashboard() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [eventType, setEventType] = useState("");
   const [message, setMessage] = useState("Cargando analitica.");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,7 +38,7 @@ export function AnalyticsDashboard() {
       const filters = { from: fromDate || undefined, to: toDate || undefined };
       const [nextSummary, nextEvents] = await Promise.all([
         adminClient.analyticsSummary(filters),
-        adminClient.analyticsEvents(filters)
+        adminClient.analyticsEvents({ ...filters, type: eventType || undefined })
       ]);
       setSummary(nextSummary);
       setEvents(nextEvents);
@@ -39,7 +48,7 @@ export function AnalyticsDashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [fromDate, toDate]);
+  }, [eventType, fromDate, toDate]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -49,8 +58,8 @@ export function AnalyticsDashboard() {
   }, [loadAnalytics]);
 
   const filteredEvents = useMemo(() => {
-    return events.filter((event) => isInsideDateRange(event.createdAt, fromDate, toDate));
-  }, [events, fromDate, toDate]);
+    return events.filter((event) => isInsideDateRange(event.createdAt, fromDate, toDate) && (!eventType || event.type === eventType));
+  }, [eventType, events, fromDate, toDate]);
   const trend = useMemo(() => buildAnalyticsTrend(filteredEvents), [filteredEvents]);
   const maxTypeCount = Math.max(...trend.topTypes.map((item) => item.count), 1);
 
@@ -84,7 +93,7 @@ export function AnalyticsDashboard() {
             </Button>
           </div>
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:max-w-xl">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:max-w-3xl lg:grid-cols-3">
           <div className="grid gap-2">
             <Label htmlFor="analyticsFromDate">Desde</Label>
             <Input id="analyticsFromDate" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
@@ -92,6 +101,19 @@ export function AnalyticsDashboard() {
           <div className="grid gap-2">
             <Label htmlFor="analyticsToDate">Hasta</Label>
             <Input id="analyticsToDate" type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="analyticsEventType">Tipo de evento</Label>
+            <select
+              id="analyticsEventType"
+              className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+              value={eventType}
+              onChange={(event) => setEventType(event.target.value)}
+            >
+              {eventTypeOptions.map((option) => (
+                <option key={option.value || "all"} value={option.value}>{option.label}</option>
+              ))}
+            </select>
           </div>
         </div>
         <p className="mt-4 text-sm text-muted-foreground" aria-live="polite">{message}</p>

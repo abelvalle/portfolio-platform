@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   AnalyticsDateRangeQueryDto,
+  AnalyticsEventsQueryDto,
   CreateAnalyticsEventDto,
 } from './analytics.dto';
 
@@ -42,12 +43,19 @@ export class AnalyticsService {
     return { totalVisits, cvDownloads, contactSubmits, projectViews };
   }
 
-  list(filters: AnalyticsDateRangeQueryDto = {}) {
+  list(filters: AnalyticsEventsQueryDto = {}) {
     return this.prisma.analyticsEvent.findMany({
-      where: this.dateRangeWhere(filters),
+      where: this.eventWhere(filters),
       orderBy: { createdAt: 'desc' },
       take: 200,
     });
+  }
+
+  private eventWhere(filters: AnalyticsEventsQueryDto) {
+    return {
+      ...this.dateRangeWhere(filters),
+      ...(filters.type ? { type: filters.type } : {}),
+    };
   }
 
   private dateRangeWhere(

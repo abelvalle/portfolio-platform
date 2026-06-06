@@ -92,7 +92,7 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `POST /media/upload`
 - `POST /analytics/events`
 - `GET /analytics/summary?from=YYYY-MM-DD&to=YYYY-MM-DD`
-- `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD`
+- `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download`
 
 ## CV
 
