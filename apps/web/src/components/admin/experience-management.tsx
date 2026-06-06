@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, Pencil, RefreshCw, Save, Star, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -150,12 +150,12 @@ export function ExperienceManagement() {
     }
   }
 
-  async function patchExperience(id: string, data: Partial<ExperienceMutation>) {
+  async function patchExperience(id: string, data: Partial<ExperienceMutation>, successMessage = "Experiencia actualizada.") {
     setBusyId(id);
     try {
       await adminClient.updateExperience(id, data);
-      setMessage("Experiencia actualizada.");
       await loadExperiences();
+      setMessage(successMessage);
     } catch {
       setMessage("No se pudo actualizar la experiencia.");
     } finally {
@@ -277,8 +277,8 @@ export function ExperienceManagement() {
       </section>
 
       <section className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-[920px]">
-          <div className="grid grid-cols-[1.3fr_1.3fr_140px_130px_220px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+        <div className="min-w-[1000px]">
+          <div className="grid grid-cols-[1.3fr_1.3fr_140px_130px_280px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
             <span>Empresa</span>
             <span>Cargo</span>
             <span>Fechas</span>
@@ -286,7 +286,7 @@ export function ExperienceManagement() {
             <span>Acciones</span>
           </div>
           {items.length ? items.map((item) => (
-            <div key={item.id} className="grid grid-cols-[1.3fr_1.3fr_140px_130px_220px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+            <div key={item.id} className="grid grid-cols-[1.3fr_1.3fr_140px_130px_280px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <span className="font-medium">{item.company}</span>
               <span className="text-muted-foreground">{item.role}</span>
               <span className="text-muted-foreground">{formatDate(item.startDate)} - {formatDate(item.endDate)}</span>
@@ -303,6 +303,12 @@ export function ExperienceManagement() {
                 </Button>
                 <Button type="button" variant="outline" size="icon" onClick={() => patchExperience(item.id, { featured: !item.featured })} disabled={busyId === item.id}>
                   <Star />
+                </Button>
+                <Button type="button" variant="outline" size="icon" aria-label={`Subir ${item.company}`} onClick={() => patchExperience(item.id, { order: item.order - 1 }, `Experiencia reordenada: ${item.company}.`)} disabled={busyId === item.id}>
+                  <ArrowUp />
+                </Button>
+                <Button type="button" variant="outline" size="icon" aria-label={`Bajar ${item.company}`} onClick={() => patchExperience(item.id, { order: item.order + 1 }, `Experiencia reordenada: ${item.company}.`)} disabled={busyId === item.id}>
+                  <ArrowDown />
                 </Button>
                 <Button type="button" variant="outline" size="icon" aria-label={`Eliminar ${item.company}`} onClick={() => setPendingDeleteExperience(item)} disabled={busyId === item.id}>
                   <Trash2 />

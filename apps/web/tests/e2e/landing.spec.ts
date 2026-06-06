@@ -713,7 +713,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
-  await expect(page.getByText("Visitas landing")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Visitas landing/ })).toBeVisible();
   await expect(page.getByText("Pulso operativo")).toBeVisible();
   await expect(page.getByText("Segmentacion operativa")).toBeVisible();
   await expect(page.getByText("Cohorts mensuales")).toBeVisible();
@@ -745,6 +745,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("technologies experiencia").fill("Next.js\nNestJS");
   await page.getByRole("button", { name: "Guardar experiencia" }).click();
   await expect(page.getByText("Experiencia actualizada: Demo Company Updated.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Bajar Demo Company" })).toBeVisible();
+  await page.getByRole("button", { name: "Subir Demo Company" }).click();
+  await expect(page.getByText("Experiencia reordenada: Demo Company.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Demo Company" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();
