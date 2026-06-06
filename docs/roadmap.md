@@ -3605,6 +3605,15 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run build:web`
 
+### Documentacion de adaptationMeta granular
+
+- `docs/api.md` documenta la trazabilidad guardada al revisar una adaptacion CV desde admin.
+- La nota cubre bloques, skills, experiencias completas y campos internos de experiencia aceptados/rechazados.
+
+Verificacion realizada en este hito:
+
+- `git diff --check`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.

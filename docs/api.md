@@ -174,6 +174,8 @@ Variables de privacidad:
 
 Las sugerencias IA quedan pendientes de revisión y solo pueden reordenar skills/experiencias existentes; no se aceptan empresas, títulos, fechas ni certificaciones nuevas.
 
+Cuando el admin revisa una propuesta desde `/admin/cv/adapt`, la version draft creada conserva trazabilidad en `structuredJson.adaptationMeta`: `acceptedBlocks`, `rejectedBlocks`, `acceptedSkills`, `rejectedSkills`, `acceptedExperiences`, `rejectedExperiences`, `acceptedExperienceFields` y `rejectedExperienceFields`.
+
 ### ATS
 
 `GET /cv/:id/ats-report` valida la versión principal del CV y devuelve:
