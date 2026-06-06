@@ -226,6 +226,12 @@ export const adminClient = {
   analyticsEvents() {
     return apiFetch<AnalyticsEvent[]>("/analytics");
   },
+  appModules() {
+    return apiFetch<AppModuleItem[]>("/app-modules?includeHidden=true");
+  },
+  updateAppModule(id: string, data: Partial<AppModuleItem>) {
+    return apiFetch<AppModuleItem>(`/app-modules/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
   profile() {
     return apiFetch<ProfileSettings>("/profile");
   },
@@ -487,6 +493,17 @@ export type AnalyticsEvent = {
   path?: string | null;
   label?: string | null;
   createdAt: string;
+};
+
+export type AppModuleItem = {
+  id: string;
+  key: string;
+  name: string;
+  description?: string | null;
+  enabled: boolean;
+  order: number;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type ProfileSettings = {

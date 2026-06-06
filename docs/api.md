@@ -70,6 +70,8 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `POST /admin/publication/profile/publish`
 - `GET /admin/publication/changelog`
 - `POST /admin/publication/changelog/:id/restore`
+- `GET /app-modules`
+- `PATCH /app-modules/:id`
 - `GET|POST /users`
 - `PATCH|DELETE /users/:id`
 - `GET /users/permissions`

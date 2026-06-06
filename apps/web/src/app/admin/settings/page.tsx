@@ -1,9 +1,12 @@
+import Link from "next/link";
 import { DataTable } from "@/components/admin/data-table";
 import { EntityForm } from "@/components/admin/entity-form";
 import { MfaSettings } from "@/components/admin/mfa-settings";
 import { WebhookSettings } from "@/components/admin/webhook-settings";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   return (
@@ -30,14 +33,17 @@ export default function SettingsPage() {
           ]} />
         </CardContent>
       </Card>
-      <section id="modules">
-        <DataTable rows={[
-          { modulo: "Dashboard", activo: true },
-          { modulo: "Portfolio", activo: true },
-          { modulo: "CV Manager", activo: true },
-          { modulo: "Modulos futuros", activo: true }
-        ]} />
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Modulos de la plataforma</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 text-sm text-muted-foreground">
+          <p>Activa, desactiva y ordena los modulos disponibles del panel desde una pantalla dedicada.</p>
+          <div>
+            <Link className={cn(buttonVariants({ variant: "outline" }))} href="/admin/settings/modules">Gestionar modulos</Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

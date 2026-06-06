@@ -25,7 +25,7 @@ const items = [
   { href: "/admin/settings/publication", label: "Publicacion", icon: Rocket },
   { href: "/admin/settings/users", label: "Usuarios", icon: ShieldCheck },
   { href: "/admin/settings", label: "Configuración", icon: Settings },
-  { href: "/admin/settings#modules", label: "Módulos futuros", icon: Layers }
+  { href: "/admin/settings/modules", label: "Módulos", icon: Layers }
 ];
 
 export function AdminSidebar() {
