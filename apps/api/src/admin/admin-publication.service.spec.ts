@@ -60,17 +60,68 @@ describe('AdminPublicationService', () => {
       BadRequestException,
     );
   });
+
+  it('restores theme values from a changelog entry', async () => {
+    const prisma = mockPrisma({
+      theme: {
+        id: 'theme-1',
+        primaryColor: '#222222',
+        secondaryColor: '#222222',
+        backgroundColor: '#000000',
+        textColor: '#ffffff',
+        fontFamily: 'Inter',
+        borderRadius: '8px',
+        cardStyle: 'subtle',
+        animationIntensity: 'medium',
+        colorMode: 'dark',
+      },
+      change: {
+        id: 'change-1',
+        entityType: 'theme',
+        entityId: 'theme-1',
+        beforeJson: {
+          primaryColor: '#111111',
+          secondaryColor: '#222222',
+          backgroundColor: '#000000',
+          textColor: '#ffffff',
+          fontFamily: 'Inter',
+          borderRadius: '8px',
+          cardStyle: 'subtle',
+          animationIntensity: 'medium',
+          colorMode: 'dark',
+        },
+      },
+    });
+    const service = new AdminPublicationService(prisma);
+
+    const result = await service.restoreThemeChange('change-1', 'user-1');
+
+    expect(result.changedFields).toEqual(['primaryColor']);
+    expect(prisma.themeSettings.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ primaryColor: '#111111' }),
+      }),
+    );
+  });
 });
 
-function mockPrisma({ theme }: { theme: Record<string, unknown> }) {
+function mockPrisma({
+  theme,
+  change,
+}: {
+  theme: Record<string, unknown>;
+  change?: Record<string, unknown>;
+}) {
   return {
     themeSettings: {
       findFirst: jest.fn().mockResolvedValue(theme),
-      update: jest.fn(),
+      findUnique: jest.fn().mockResolvedValue(theme),
+      update: jest.fn().mockResolvedValue(theme),
     },
     changeLog: {
       findMany: jest.fn().mockResolvedValue([]),
       create: jest.fn(),
+      findUnique: jest.fn().mockResolvedValue(change),
     },
     auditLog: {
       create: jest.fn(),

@@ -65,6 +65,7 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `GET /admin/publication/theme/review`
 - `POST /admin/publication/theme/publish`
 - `GET /admin/publication/changelog`
+- `POST /admin/publication/changelog/:id/restore`
 - `GET|POST /users`
 - `PATCH|DELETE /users/:id`
 - `GET /users/permissions`
@@ -194,6 +195,7 @@ El primer workflow draft/publish real está conectado a `ThemeSettings`, que ya 
 - `GET /admin/publication/theme/review`: protegido para `admin`, `editor` y `viewer`; devuelve comparación campo a campo entre tema publicado y borrador.
 - `POST /admin/publication/theme/publish`: protegido para `admin` y `editor`; publica el borrador, limpia `draftJson`, actualiza `publishedAt` y registra `ChangeLog` + `AuditLog`.
 - `GET /admin/publication/changelog`: protegido para `admin`, `editor` y `viewer`; lista cambios recientes.
+- `POST /admin/publication/changelog/:id/restore`: protegido para `admin` y `editor`; restaura un cambio de tema usando `beforeJson` y registra una nueva entrada `restore`.
 
 Ejemplo de respuesta de revisión:
 

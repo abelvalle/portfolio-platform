@@ -122,6 +122,72 @@ export class AdminPublicationService {
     };
   }
 
+  async restoreThemeChange(changeLogId: string, actorUserId?: string) {
+    const change = await this.prisma.changeLog.findUnique({
+      where: { id: changeLogId },
+    });
+    if (!change || change.entityType !== 'theme' || !change.entityId) {
+      throw new NotFoundException('Theme change not found');
+    }
+
+    const restoreValues = this.readThemeDraft(change.beforeJson);
+    if (!restoreValues) {
+      throw new BadRequestException('Theme change cannot be restored');
+    }
+
+    const theme = await this.prisma.themeSettings.findUnique({
+      where: { id: change.entityId },
+    });
+    if (!theme) {
+      throw new NotFoundException('Theme settings not found');
+    }
+
+    const before = this.pickThemeValues(theme);
+    const after: ThemeValues = { ...before, ...restoreValues };
+    const changedFields = THEME_FIELDS.filter(
+      (field) => before[field] !== after[field],
+    );
+    if (!changedFields.length) {
+      throw new BadRequestException('Theme is already at this version');
+    }
+
+    const restored = await this.prisma.themeSettings.update({
+      where: { id: theme.id },
+      data: {
+        ...after,
+        draftJson: Prisma.DbNull,
+        publishedAt: new Date(),
+      },
+    });
+
+    await this.prisma.changeLog.create({
+      data: {
+        entityType: 'theme',
+        entityId: theme.id,
+        action: 'restore',
+        summary: `Restored theme change ${changeLogId}`,
+        beforeJson: before as never,
+        afterJson: after as never,
+        actorUserId,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: actorUserId,
+        action: 'restore',
+        resource: 'theme',
+        resourceId: theme.id,
+        metadata: { changeLogId, changedFields } as never,
+      },
+    });
+
+    return {
+      restored,
+      changedFields,
+    };
+  }
+
   latestChanges(entityType?: string) {
     return this.prisma.changeLog.findMany({
       where: entityType ? { entityType } : undefined,

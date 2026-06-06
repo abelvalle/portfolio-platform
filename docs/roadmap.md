@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 02:19 CEST.
+Estado actualizado: 2026-06-06 02:22 CEST.
 
 ## Hitos completados
 
@@ -275,6 +275,23 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Restauración de versiones en publicación
+
+- Añadido endpoint `POST /api/v1/admin/publication/changelog/:id/restore`.
+- La restauración usa `ChangeLog.beforeJson` para revertir cambios de tema visual.
+- La restauración limpia `draftJson`, actualiza `publishedAt` y crea un nuevo `ChangeLog` con acción `restore`.
+- También registra `AuditLog` con `changeLogId` y campos restaurados.
+- La pantalla `/admin/settings/publication` permite restaurar entradas recientes de tema.
+- Añadido test unitario para restauración de `primaryColor` desde una entrada de changelog.
+- `docs/api.md` actualizado con el endpoint de restauración.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -298,7 +315,7 @@ Verificación realizada en este hito:
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual, pero falta extenderlo a profile, experiencias, proyectos, skills y CV.
-- Restauración de versiones: `ChangeLog` guarda antes/después, pero falta endpoint/UI para restaurar una versión anterior.
+- Restauración por entidad CMS: existe restore para tema visual, pero falta restaurar otras entidades cuando entren al workflow draft/publish.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: falta borrado físico diferido, cuotas, antivirus y auditoría granular de subidas.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.

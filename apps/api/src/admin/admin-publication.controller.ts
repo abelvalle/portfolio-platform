@@ -1,4 +1,4 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../common/guards/current-user.decorator';
@@ -29,5 +29,11 @@ export class AdminPublicationController {
   @Post('theme/publish')
   publishTheme(@CurrentUser() user: { id?: string }) {
     return this.publicationService.publishThemeDraft(user?.id);
+  }
+
+  @Roles(UserRole.admin, UserRole.editor)
+  @Post('changelog/:id/restore')
+  restoreChange(@Param('id') id: string, @CurrentUser() user: { id?: string }) {
+    return this.publicationService.restoreThemeChange(id, user?.id);
   }
 }

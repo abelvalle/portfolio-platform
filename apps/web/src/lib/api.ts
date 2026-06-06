@@ -106,6 +106,9 @@ export const adminClient = {
   publishThemeDraft() {
     return apiFetch<{ changedFields: string[] }>("/admin/publication/theme/publish", { method: "POST" });
   },
+  restorePublicationChange(id: string) {
+    return apiFetch<{ changedFields: string[] }>(`/admin/publication/changelog/${id}/restore`, { method: "POST" });
+  },
   changeLog() {
     return apiFetch<ChangeLogItem[]>("/admin/publication/changelog");
   },

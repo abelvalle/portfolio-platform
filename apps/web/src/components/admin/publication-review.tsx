@@ -11,6 +11,7 @@ export function PublicationReview() {
   const [message, setMessage] = useState("Cargando revision de publicacion.");
   const [isLoading, setIsLoading] = useState(true);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
 
   useEffect(() => {
     void loadReview();
@@ -39,6 +40,19 @@ export function PublicationReview() {
       setMessage("No se pudo publicar. Revisa que exista un borrador con cambios.");
     } finally {
       setIsPublishing(false);
+    }
+  }
+
+  async function restoreChange(id: string) {
+    setRestoringId(id);
+    try {
+      const result = await adminClient.restorePublicationChange(id);
+      setMessage(`Version restaurada. Campos modificados: ${result.changedFields.join(", ")}.`);
+      await loadReview();
+    } catch {
+      setMessage("No se pudo restaurar este cambio.");
+    } finally {
+      setRestoringId(null);
     }
   }
 
@@ -97,9 +111,20 @@ export function PublicationReview() {
         <h2 className="text-xl font-semibold">Ultimos cambios</h2>
         <div className="mt-4 grid gap-3">
           {review?.latestChanges.length ? review.latestChanges.map((change) => (
-            <div key={change.id} className="rounded-lg border border-border p-3 text-sm">
-              <p className="font-medium">{change.summary}</p>
-              <p className="mt-1 text-muted-foreground">{change.entityType} - {change.action}</p>
+            <div key={change.id} className="grid gap-3 rounded-lg border border-border p-3 text-sm md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <p className="font-medium">{change.summary}</p>
+                <p className="mt-1 text-muted-foreground">{change.entityType} - {change.action}</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => restoreChange(change.id)}
+                disabled={change.entityType !== "theme" || restoringId === change.id}
+              >
+                {restoringId === change.id ? "Restaurando..." : "Restaurar"}
+              </Button>
             </div>
           )) : (
             <p className="text-sm text-muted-foreground">Sin cambios registrados todavia.</p>
