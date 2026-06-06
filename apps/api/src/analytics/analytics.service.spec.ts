@@ -206,10 +206,30 @@ describe('AnalyticsService filters', () => {
   it('aggregates event labels for target role usage', async () => {
     const prisma = mockPrisma();
     prisma.analyticsEvent.findMany.mockResolvedValue([
-      { label: 'Delivery Manager', path: '/admin/cv/adapt?targetRoleId=1' },
-      { label: 'Delivery Manager', path: '/admin/cv/adapt?targetRoleId=1' },
-      { label: 'IT Project Manager', path: '/admin/cv/adapt' },
-      { label: null, path: null },
+      {
+        label: 'Delivery Manager',
+        path: '/admin/cv/adapt?baseCvVersionId=cv-base&targetRoleId=1',
+        metadata: {
+          basecvversionid: 'cv-base',
+          targetroleid: 'target-role-1',
+          hastargetcompany: 'false',
+        },
+      },
+      {
+        label: 'Delivery Manager',
+        path: '/admin/cv/adapt?baseCvVersionId=cv-base&targetRoleId=1',
+        metadata: {
+          basecvversionid: 'cv-base',
+          targetroleid: 'target-role-1',
+          hastargetcompany: 'false',
+        },
+      },
+      {
+        label: 'IT Project Manager',
+        path: '/admin/cv/adapt',
+        metadata: { basecvversionid: 'cv-alt', hastargetcompany: 'true' },
+      },
+      { label: null, path: null, metadata: null },
     ]);
     const service = createService(prisma);
 
@@ -217,7 +237,7 @@ describe('AnalyticsService filters', () => {
 
     expect(prisma.analyticsEvent.findMany).toHaveBeenCalledWith({
       where: { type: 'cv_adaptation' },
-      select: { label: true, path: true },
+      select: { label: true, path: true, metadata: true },
     });
     expect(result).toEqual({
       labels: [
@@ -226,9 +246,19 @@ describe('AnalyticsService filters', () => {
         { name: 'sin_etiqueta', count: 1 },
       ],
       paths: [
-        { name: '/admin/cv/adapt?targetRoleId=1', count: 2 },
+        {
+          name: '/admin/cv/adapt?baseCvVersionId=cv-base&targetRoleId=1',
+          count: 2,
+        },
         { name: '/admin/cv/adapt', count: 1 },
         { name: 'sin_ruta', count: 1 },
+      ],
+      contexts: [
+        {
+          name: 'base=cv-base | role=target-role-1 | company=false',
+          count: 2,
+        },
+        { name: 'base=cv-alt | company=true', count: 1 },
       ],
     });
   });

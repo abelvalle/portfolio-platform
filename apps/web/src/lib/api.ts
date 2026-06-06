@@ -747,6 +747,7 @@ export type AnalyticsChannels = {
 export type AnalyticsLabels = {
   labels: Array<{ name: string; count: number }>;
   paths: Array<{ name: string; count: number }>;
+  contexts: Array<{ name: string; count: number }>;
 };
 
 export type AnalyticsFunnel = {

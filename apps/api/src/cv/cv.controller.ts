@@ -179,9 +179,12 @@ export class CvController {
         {
           type: 'cv_adaptation',
           label: body.targetRole,
-          path: body.targetRoleId
-            ? `/cv/adapt-to-role?targetRoleId=${body.targetRoleId}`
-            : '/cv/adapt-to-role',
+          path: this.adaptationAnalyticsPath(body),
+          context: {
+            baseCvVersionId: body.baseCvVersionId,
+            targetRoleId: body.targetRoleId,
+            hasTargetCompany: body.targetCompany ? 'true' : 'false',
+          },
         },
         request.ip,
         request.headers['user-agent'],
@@ -196,5 +199,15 @@ export class CvController {
   @Post('compare-versions')
   compare(@Body() body: CompareVersionsDto) {
     return this.adaptationService.compare(body);
+  }
+
+  private adaptationAnalyticsPath(body: AdaptCvDto) {
+    const params = new URLSearchParams();
+    params.set('baseCvVersionId', body.baseCvVersionId);
+    if (body.targetRoleId) {
+      params.set('targetRoleId', body.targetRoleId);
+    }
+    const query = params.toString();
+    return query ? `/cv/adapt-to-role?${query}` : '/cv/adapt-to-role';
   }
 }

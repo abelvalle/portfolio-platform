@@ -9,6 +9,10 @@ import {
   CreateAnalyticsEventDto,
 } from './analytics.dto';
 
+type AnalyticsEventInput = CreateAnalyticsEventDto & {
+  context?: Record<string, string | null | undefined>;
+};
+
 @Injectable()
 export class AnalyticsService {
   constructor(
@@ -16,12 +20,17 @@ export class AnalyticsService {
     private readonly configService: ConfigService,
   ) {}
 
-  record(dto: CreateAnalyticsEventDto, ip?: string, userAgent?: string) {
-    const { source, channel, ...event } = dto;
+  record(dto: AnalyticsEventInput, ip?: string, userAgent?: string) {
+    const { source, channel, context, ...event } = dto;
     return this.prisma.analyticsEvent.create({
       data: {
         ...event,
-        metadata: this.attributionMetadata({ ...event, source, channel }),
+        metadata: this.attributionMetadata({
+          ...event,
+          source,
+          channel,
+          context,
+        }),
         ipHash: this.hashIp(ip),
         userAgent: this.storeUserAgent() ? userAgent : null,
       },
@@ -140,19 +149,28 @@ export class AnalyticsService {
   async labels(filters: AnalyticsEventsQueryDto = {}) {
     const events = await this.prisma.analyticsEvent.findMany({
       where: this.eventWhere(filters),
-      select: { label: true, path: true },
+      select: { label: true, path: true, metadata: true },
     });
     const labels = new Map<string, number>();
     const paths = new Map<string, number>();
+    const contexts = new Map<string, number>();
 
     for (const event of events) {
       const label = this.cleanLabel(event.label) || 'sin_etiqueta';
       const path = this.cleanPath(event.path) || 'sin_ruta';
+      const context = this.contextSegment(event.metadata);
       labels.set(label, (labels.get(label) || 0) + 1);
       paths.set(path, (paths.get(path) || 0) + 1);
+      if (context) {
+        contexts.set(context, (contexts.get(context) || 0) + 1);
+      }
     }
 
-    return { labels: this.topSegments(labels), paths: this.topSegments(paths) };
+    return {
+      labels: this.topSegments(labels),
+      paths: this.topSegments(paths),
+      contexts: this.topSegments(contexts),
+    };
   }
 
   async funnel(filters: AnalyticsDateRangeQueryDto = {}) {
@@ -328,12 +346,15 @@ export class AnalyticsService {
     return Number.isFinite(configured) && configured > 0 ? configured : null;
   }
 
-  private attributionMetadata(dto: CreateAnalyticsEventDto) {
+  private attributionMetadata(dto: AnalyticsEventInput) {
     const attribution = this.resolveAttribution(
       { source: dto.source, channel: dto.channel },
       dto.path,
     );
-    return attribution as never;
+    return {
+      ...attribution,
+      ...this.cleanContext(dto.context),
+    } as never;
   }
 
   private resolveAttribution(metadata: unknown, path?: string | null) {
@@ -376,6 +397,31 @@ export class AnalyticsService {
     return typeof value === 'string' && value.trim()
       ? value.trim().slice(0, 160)
       : null;
+  }
+
+  private cleanContext(context?: Record<string, string | null | undefined>) {
+    const cleaned: Record<string, string> = {};
+    for (const [key, value] of Object.entries(context || {})) {
+      const cleanKey = this.cleanSegment(key);
+      const cleanValue = this.cleanLabel(value);
+      if (cleanKey && cleanValue) {
+        cleaned[cleanKey] = cleanValue;
+      }
+    }
+    return cleaned;
+  }
+
+  private contextSegment(metadata: unknown) {
+    const record = this.metadataRecord(metadata);
+    const base = this.cleanLabel(record.basecvversionid);
+    const role = this.cleanLabel(record.targetroleid);
+    const company = this.cleanLabel(record.hastargetcompany);
+    const parts = [
+      base ? `base=${base}` : null,
+      role ? `role=${role}` : null,
+      company ? `company=${company}` : null,
+    ].filter(Boolean);
+    return parts.length ? parts.join(' | ') : null;
   }
 
   private metadataRecord(metadata: unknown): Record<string, unknown> {

@@ -95,7 +95,12 @@ describe('CvController adaptations', () => {
       {
         type: 'cv_adaptation',
         label: 'Delivery Manager',
-        path: '/cv/adapt-to-role?targetRoleId=target-role-1',
+        path: '/cv/adapt-to-role?baseCvVersionId=cv-base&targetRoleId=target-role-1',
+        context: {
+          baseCvVersionId: 'cv-base',
+          targetRoleId: 'target-role-1',
+          hasTargetCompany: 'false',
+        },
       },
       '127.0.0.1',
       'ua',

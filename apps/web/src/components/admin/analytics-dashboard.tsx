@@ -324,9 +324,10 @@ export function AnalyticsDashboard() {
           </div>
           <Badge variant="outline">cv_adaptation</Badge>
         </div>
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-3">
           <SegmentList title="Roles mas usados" items={labels?.labels || []} empty="Sin adaptaciones CV registradas." />
           <SegmentList title="Contextos" items={labels?.paths || []} empty="Sin rutas de adaptacion registradas." />
+          <SegmentList title="Versiones base" items={labels?.contexts || []} empty="Sin contexto de versiones registrado." />
         </div>
       </section>
 

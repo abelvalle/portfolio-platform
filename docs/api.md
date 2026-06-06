@@ -131,7 +131,8 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 ```json
 {
   "labels": [{ "name": "Delivery Manager", "count": 2 }],
-  "paths": [{ "name": "/admin/cv/adapt?targetRoleId=target-role-1", "count": 2 }]
+  "paths": [{ "name": "/cv/adapt-to-role?baseCvVersionId=cv-base&targetRoleId=target-role-1", "count": 2 }],
+  "contexts": [{ "name": "base=cv-base | role=target-role-1 | company=false", "count": 2 }]
 }
 ```
 
@@ -189,7 +190,7 @@ Las sugerencias IA quedan pendientes de revisión y solo pueden reordenar skills
 
 Cuando el admin revisa una propuesta desde `/admin/cv/adapt`, la version draft creada conserva trazabilidad en `structuredJson.adaptationMeta`: `acceptedBlocks`, `rejectedBlocks`, `acceptedSkills`, `rejectedSkills`, `acceptedExperiences`, `rejectedExperiences`, `acceptedExperienceFields` y `rejectedExperienceFields`.
 
-Cada llamada a `POST /cv/adapt-to-role` registra un evento server-side `cv_adaptation` con `label` igual al puesto objetivo y `path` de contexto, usable desde `GET /analytics/labels?type=cv_adaptation`.
+Cada llamada a `POST /cv/adapt-to-role` registra un evento server-side `cv_adaptation` con `label` igual al puesto objetivo, `path` con version base/rol guardado y metadata agregable (`baseCvVersionId`, `targetRoleId`, `hasTargetCompany`), usable desde `GET /analytics/labels?type=cv_adaptation`.
 
 ### ATS
 
