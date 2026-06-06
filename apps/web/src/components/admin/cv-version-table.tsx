@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Archive, Copy, Download, Eye, FileText, RefreshCw, Rocket, Save, Star, Trash2 } from "lucide-react";
+import { Archive, ArrowDown, ArrowUp, Copy, Download, Eye, FileText, GripVertical, RefreshCw, Rocket, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -119,6 +119,15 @@ const emptyCertificationFormDraft: CertificationFormDraft = {
 const auditActionOptions = ["", "create", "update", "archive", "set_primary", "generate_pdf", "generate_docx"];
 const auditPageSize = 6;
 const defaultCvSectionOrder = ["summary", "experiences", "formation", "skills", "languages", "projects", "sections"];
+const cvSectionOrderLabels: Record<string, string> = {
+  summary: "Resumen",
+  experiences: "Experiencia",
+  formation: "Formacion",
+  skills: "Skills",
+  languages: "Idiomas",
+  projects: "Proyectos",
+  sections: "Secciones"
+};
 const cvSectionOrderAliases: Record<string, string> = {
   resumen: "summary",
   "resumen profesional": "summary",
@@ -656,6 +665,7 @@ export function CvVersionTable() {
   const [experienceFormDraft, setExperienceFormDraft] = useState(emptyExperienceFormDraft);
   const [sectionsDraft, setSectionsDraft] = useState("");
   const [sectionOrderDraft, setSectionOrderDraft] = useState(defaultCvSectionOrder.join("\n"));
+  const [draggedSectionOrderIndex, setDraggedSectionOrderIndex] = useState<number | null>(null);
   const [sectionActionIndex, setSectionActionIndex] = useState(0);
   const [jsonMessage, setJsonMessage] = useState("Selecciona una version para editar su JSON estructurado.");
   const [isLoading, setIsLoading] = useState(true);
@@ -1592,6 +1602,30 @@ export function CvVersionTable() {
     setJsonMessage("Orden de bloques aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
+  function updateSectionOrderItems(items: string[], message: string) {
+    setSectionOrderDraft(items.join("\n"));
+    setJsonMessage(message);
+  }
+
+  function moveSectionOrderItem(fromIndex: number, toIndex: number) {
+    const currentItems = splitBlockLines(sectionOrderDraft);
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= currentItems.length || toIndex >= currentItems.length || fromIndex === toIndex) {
+      return;
+    }
+    const nextItems = [...currentItems];
+    const [movedItem] = nextItems.splice(fromIndex, 1);
+    nextItems.splice(toIndex, 0, movedItem);
+    updateSectionOrderItems(nextItems, "Orden visual actualizado. Aplica el orden de bloques y guarda JSON para persistirlo.");
+  }
+
+  function handleSectionOrderDrop(toIndex: number) {
+    if (draggedSectionOrderIndex === null) {
+      return;
+    }
+    moveSectionOrderItem(draggedSectionOrderIndex, toIndex);
+    setDraggedSectionOrderIndex(null);
+  }
+
   function updateCustomSections(mutator: (sections: Record<string, unknown>[]) => { sections: Record<string, unknown>[]; index: number }, message: string) {
     let parsed: unknown;
     try {
@@ -1975,6 +2009,7 @@ export function CvVersionTable() {
   const educationOptions = splitBlockLines(educationDraft);
   const certificationOptions = splitBlockLines(certificationsDraft);
   const sectionOptions = splitTextareaLines(sectionsDraft);
+  const sectionOrderItems = splitBlockLines(sectionOrderDraft);
 
   return (
     <div className="grid gap-6">
@@ -2802,6 +2837,60 @@ export function CvVersionTable() {
             <Button type="button" variant="outline" className="w-fit" onClick={applySectionOrderBlock} disabled={!jsonVersionId}>
               Aplicar orden de bloques
             </Button>
+          </div>
+          <div className="grid gap-2 rounded-lg border border-border bg-muted/20 p-3" aria-label="Orden visual CV">
+            {sectionOrderItems.length ? sectionOrderItems.map((item, index) => {
+              const normalizedItem = normalizeCvSectionOrderItem(item);
+              const displayLabel = cvSectionOrderLabels[normalizedItem] || item;
+              const isInvalid = !normalizedItem;
+              return (
+                <div
+                  key={`${item}-${index}`}
+                  className="grid gap-2 rounded-md border border-border bg-background p-2 text-sm md:grid-cols-[auto_1fr_auto_auto] md:items-center"
+                  data-cv-section-order-item={item}
+                  draggable={Boolean(jsonVersionId)}
+                  onDragStart={() => setDraggedSectionOrderIndex(index)}
+                  onDragEnd={() => setDraggedSectionOrderIndex(null)}
+                  onDragOver={(event) => {
+                    if (jsonVersionId) {
+                      event.preventDefault();
+                    }
+                  }}
+                  onDrop={() => handleSectionOrderDrop(index)}
+                >
+                  <GripVertical className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <div className="font-medium">{displayLabel}</div>
+                    <div className="truncate font-mono text-xs text-muted-foreground">{item}</div>
+                  </div>
+                  {isInvalid ? <Badge variant="secondary">invalido</Badge> : <Badge variant="outline">{index + 1}</Badge>}
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Subir bloque ${item}`}
+                      onClick={() => moveSectionOrderItem(index, index - 1)}
+                      disabled={!jsonVersionId || index === 0}
+                    >
+                      <ArrowUp className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Bajar bloque ${item}`}
+                      onClick={() => moveSectionOrderItem(index, index + 1)}
+                      disabled={!jsonVersionId || index >= sectionOrderItems.length - 1}
+                    >
+                      <ArrowDown className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            }) : (
+              <p className="text-sm text-muted-foreground">Sin bloques definidos.</p>
+            )}
           </div>
         </div>
         <div className="grid gap-2">
