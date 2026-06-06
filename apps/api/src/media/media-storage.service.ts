@@ -6,7 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { createReadStream, type ReadStream } from 'node:fs';
-import { access, mkdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, unlink, writeFile } from 'node:fs/promises';
 import {
   basename,
   extname,
@@ -82,6 +82,30 @@ export class MediaStorageService {
     }
 
     return createReadStream(target);
+  }
+
+  async deleteLocalFile(storageKey?: string | null) {
+    this.assertLocalProvider();
+    const key = storageKey?.trim();
+    if (!key) {
+      return false;
+    }
+
+    const target = resolve(key);
+    const root = resolve(this.storageRoot);
+    const relativePath = relative(root, target);
+    if (relativePath.startsWith('..') || isAbsolute(relativePath)) {
+      throw new BadRequestException('Media file is outside configured storage');
+    }
+
+    try {
+      await access(target);
+    } catch {
+      return false;
+    }
+
+    await unlink(target);
+    return true;
   }
 
   private validateFile(file: UploadedMediaFile) {

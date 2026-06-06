@@ -1,8 +1,10 @@
 import {
+  IsBoolean,
   IsInt,
   IsObject,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -106,4 +108,16 @@ export class UploadMediaDto {
   @IsString()
   @MaxLength(80)
   type?: string;
+}
+
+export class PurgeDeletedMediaDto {
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(3650)
+  retentionDays?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  dryRun?: boolean;
 }

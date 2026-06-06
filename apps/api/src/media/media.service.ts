@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateMediaAssetDto,
+  PurgeDeletedMediaDto,
   UpdateMediaAssetDto,
   UploadMediaDto,
 } from './media.dto';
@@ -116,6 +117,57 @@ export class MediaService {
     return asset;
   }
 
+  async purgeDeleted(data: PurgeDeletedMediaDto = {}, actorUserId?: string) {
+    const retentionDays = data.retentionDays ?? 30;
+    const dryRun = data.dryRun ?? false;
+    const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+    const assets = await this.prisma.mediaAsset.findMany({
+      where: {
+        deletedAt: { lte: cutoff },
+        storageKey: { not: null },
+      },
+      orderBy: { deletedAt: 'asc' },
+    });
+    const result = {
+      retentionDays,
+      cutoff,
+      dryRun,
+      scanned: assets.length,
+      deletedFiles: 0,
+      missingFiles: 0,
+      assetIds: assets.map((asset) => asset.id),
+    };
+
+    if (dryRun) {
+      await this.audit('purge-deleted-dry-run', 'storage', actorUserId, result);
+      return result;
+    }
+
+    for (const asset of assets) {
+      const deleted = await this.storage.deleteLocalFile(asset.storageKey);
+      if (deleted) {
+        result.deletedFiles += 1;
+      } else {
+        result.missingFiles += 1;
+      }
+
+      await this.prisma.mediaAsset.update({
+        where: { id: asset.id },
+        data: {
+          storageKey: null,
+          metadata: {
+            ...this.metadataRecord(asset.metadata),
+            physicalDeletedAt: new Date().toISOString(),
+            physicalDeleteMissing: !deleted,
+          } as never,
+        },
+      });
+    }
+
+    await this.audit('purge-deleted', 'storage', actorUserId, result);
+    return result;
+  }
+
   async download(id: string) {
     const asset = await this.findOne(id);
     const stream = await this.storage.createReadStream(asset.storageKey);
@@ -155,5 +207,12 @@ export class MediaService {
         metadata: metadata as never,
       },
     });
+  }
+
+  private metadataRecord(metadata: unknown): Record<string, unknown> {
+    if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
+      return metadata as Record<string, unknown>;
+    }
+    return {};
   }
 }

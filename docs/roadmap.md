@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 06:54 CEST.
+Estado actualizado: 2026-06-06 07:01 CEST.
 
 ## Hitos completados
 
@@ -1283,6 +1283,23 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Purga fisica diferida de Media local
+
+- `POST /api/v1/media/storage/purge-deleted` permite a `admin` purgar archivos locales de assets ya marcados con `deletedAt`.
+- La purga usa `retentionDays` opcional y `dryRun` para revisar candidatos sin borrar archivos.
+- `MediaStorageService.deleteLocalFile` valida que el archivo este dentro de `STORAGE_DIR` antes de eliminarlo.
+- Los assets purgados limpian `storageKey` y registran metadata de borrado fisico.
+- La accion registra `AuditLog` con actor, candidatos y resumen de archivos eliminados o ausentes.
+- `docs/api.md` documenta el endpoint y sus efectos.
+- Añadidos tests unitarios de purga real, `dryRun` y borrado local seguro.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1316,7 +1333,7 @@ Verificacion realizada en este hito:
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.
 - Restauración por entidad CMS: existe restore para tema visual y perfil público; falta restaurar otras entidades cuando entren al workflow draft/publish.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
-- Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional y auditoria de upload/delete; falta borrado fisico diferido y antivirus.
+- Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete y purga fisica diferida; falta antivirus.
 - Prisma muestra aviso futuro de configuración en `package.json` para Prisma 7.
 - NPM audit: quedan 2 vulnerabilidades moderadas reportadas por `npm install`; no se aplica `audit fix --force` para evitar cambios de versiones fuera de hito.
 

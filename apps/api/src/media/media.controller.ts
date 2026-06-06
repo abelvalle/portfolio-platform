@@ -22,6 +22,7 @@ import { Roles } from '../common/guards/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import {
   CreateMediaAssetDto,
+  PurgeDeletedMediaDto,
   UpdateMediaAssetDto,
   UploadMediaDto,
 } from './media.dto';
@@ -44,6 +45,17 @@ export class MediaController {
   @Get('storage/status')
   storageStatus() {
     return this.mediaService.storageStatus();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.admin)
+  @Post('storage/purge-deleted')
+  purgeDeleted(
+    @Body() body: PurgeDeletedMediaDto,
+    @CurrentUser() user: { id?: string },
+  ) {
+    return this.mediaService.purgeDeleted(body, user?.id);
   }
 
   @Get(':id/download')

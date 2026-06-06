@@ -145,4 +145,110 @@ describe('MediaService', () => {
       }),
     });
   });
+
+  it('purges deleted media files after the retention window', async () => {
+    const deletedAt = new Date('2026-06-01T08:00:00.000Z');
+    const prisma = {
+      mediaAsset: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: 'media-1',
+            storageKey: 'storage/uploads/cv-demo.pdf',
+            metadata: { source: 'test' },
+            deletedAt,
+          },
+          {
+            id: 'media-2',
+            storageKey: 'storage/uploads/missing.pdf',
+            metadata: null,
+            deletedAt,
+          },
+        ]),
+        update: jest.fn(),
+      },
+      auditLog: {
+        create: jest.fn(),
+      },
+    };
+    const storage = {
+      deleteLocalFile: jest
+        .fn()
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false),
+    };
+    const service = new MediaService(prisma as never, storage as never);
+
+    const result = await service.purgeDeleted({ retentionDays: 7 }, 'user-1');
+
+    expect(prisma.mediaAsset.findMany).toHaveBeenCalledWith({
+      where: {
+        deletedAt: { lte: expect.any(Date) },
+        storageKey: { not: null },
+      },
+      orderBy: { deletedAt: 'asc' },
+    });
+    expect(storage.deleteLocalFile).toHaveBeenCalledTimes(2);
+    expect(prisma.mediaAsset.update).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject({
+      retentionDays: 7,
+      dryRun: false,
+      scanned: 2,
+      deletedFiles: 1,
+      missingFiles: 1,
+      assetIds: ['media-1', 'media-2'],
+    });
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        action: 'purge-deleted',
+        resource: 'media',
+        resourceId: 'storage',
+      }),
+    });
+  });
+
+  it('reports purge candidates without deleting files in dry run mode', async () => {
+    const prisma = {
+      mediaAsset: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: 'media-1',
+            storageKey: 'storage/uploads/cv-demo.pdf',
+            metadata: null,
+          },
+        ]),
+        update: jest.fn(),
+      },
+      auditLog: {
+        create: jest.fn(),
+      },
+    };
+    const storage = {
+      deleteLocalFile: jest.fn(),
+    };
+    const service = new MediaService(prisma as never, storage as never);
+
+    const result = await service.purgeDeleted(
+      { retentionDays: 0, dryRun: true },
+      'user-1',
+    );
+
+    expect(storage.deleteLocalFile).not.toHaveBeenCalled();
+    expect(prisma.mediaAsset.update).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      retentionDays: 0,
+      dryRun: true,
+      scanned: 1,
+      deletedFiles: 0,
+      missingFiles: 0,
+      assetIds: ['media-1'],
+    });
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'purge-deleted-dry-run',
+        resource: 'media',
+        resourceId: 'storage',
+      }),
+    });
+  });
 });
