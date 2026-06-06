@@ -184,6 +184,18 @@ export const adminClient = {
   deleteProject(id: string) {
     return apiFetch<ProjectItem>(`/projects/${id}`, { method: "DELETE" });
   },
+  skills() {
+    return apiFetch<SkillItem[]>("/skills?includeHidden=true");
+  },
+  createSkill(data: SkillMutation) {
+    return apiFetch<SkillItem>("/skills", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateSkill(id: string, data: Partial<SkillMutation>) {
+    return apiFetch<SkillItem>(`/skills/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteSkill(id: string) {
+    return apiFetch<SkillItem>(`/skills/${id}`, { method: "DELETE" });
+  },
   analyticsSummary() {
     return apiFetch<AnalyticsSummary>("/analytics/summary");
   },
@@ -364,6 +376,17 @@ export type ProjectItem = {
 };
 
 export type ProjectMutation = Omit<ProjectItem, "id">;
+
+export type SkillItem = {
+  id: string;
+  name: string;
+  categoryName?: string | null;
+  level?: string | null;
+  order: number;
+  visible: boolean;
+};
+
+export type SkillMutation = Omit<SkillItem, "id">;
 
 export type AnalyticsSummary = {
   totalVisits: number;

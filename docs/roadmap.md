@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 03:06 CEST.
+Estado actualizado: 2026-06-06 03:09 CEST.
 
 ## Hitos completados
 
@@ -454,6 +454,22 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### CRUD básico de skills conectado
+
+- Reemplazada `/admin/portfolio/skills` placeholder por `SkillManagement`.
+- La pantalla lista skills desde `GET /api/v1/skills?includeHidden=true`.
+- Añadido formulario para crear skills con nombre, categoría, nivel y visibilidad.
+- Añadidas acciones rápidas para ocultar/mostrar, ajustar orden y borrar con soft delete.
+- Añadidos estados de carga, error, vacío y refresco manual.
+- Añadida cobertura e2e desktop/mobile de la ruta admin de skills.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -479,6 +495,7 @@ Verificación realizada en este hito:
 - Dashboard avanzado: el resumen está conectado; faltan filtros temporales, drill-down desde tarjetas y control real de módulos desde UI.
 - Experiencias UI avanzada: el CRUD básico está conectado; faltan edición completa en formulario, reordenado drag/drop, confirmación modal de borrado y asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD básico está conectado; faltan edición completa en formulario, selector de media, categorías gestionadas visualmente, orden drag/drop y confirmación modal de borrado.
+- Skills UI avanzada: el CRUD básico está conectado; faltan edición completa inline, categorías gestionadas como entidad, orden drag/drop y niveles con selector consistente.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.
