@@ -196,6 +196,18 @@ export const adminClient = {
   deleteSkill(id: string) {
     return apiFetch<SkillItem>(`/skills/${id}`, { method: "DELETE" });
   },
+  education() {
+    return apiFetch<EducationItem[]>("/education?includeHidden=true");
+  },
+  createEducation(data: EducationMutation) {
+    return apiFetch<EducationItem>("/education", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateEducation(id: string, data: Partial<EducationMutation>) {
+    return apiFetch<EducationItem>(`/education/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteEducation(id: string) {
+    return apiFetch<EducationItem>(`/education/${id}`, { method: "DELETE" });
+  },
   analyticsSummary() {
     return apiFetch<AnalyticsSummary>("/analytics/summary");
   },
@@ -387,6 +399,21 @@ export type SkillItem = {
 };
 
 export type SkillMutation = Omit<SkillItem, "id">;
+
+export type EducationItem = {
+  id: string;
+  title: string;
+  institution: string;
+  date: string;
+  description?: string | null;
+  type: string;
+  certificateUrl?: string | null;
+  attachmentId?: string | null;
+  order: number;
+  visible: boolean;
+};
+
+export type EducationMutation = Omit<EducationItem, "id">;
 
 export type AnalyticsSummary = {
   totalVisits: number;
