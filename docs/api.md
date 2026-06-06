@@ -205,7 +205,7 @@ Endpoints:
 - `GET /media`: lista assets no eliminados.
 - `GET /media/:id`: obtiene metadata de un asset.
 - `GET /media/:id/download`: descarga el binario asociado a `storageKey`.
-- `GET /media/storage/status`: protegido para `admin` y `editor`; devuelve proveedor, límites y MIME types.
+- `GET /media/storage/status`: protegido para `admin` y `editor`; devuelve proveedor, límites, MIME types y métricas `assetCount`/`usedBytes`.
 - `POST /media/upload`: protegido para `admin` y `editor`; acepta `multipart/form-data` con `file`, `altText` opcional y `type` opcional.
 - `POST|PATCH|DELETE /media`: protegido para `admin` y `editor`; mantiene registro manual/edición/soft delete de metadata.
 

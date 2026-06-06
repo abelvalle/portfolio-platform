@@ -17,8 +17,22 @@ export class MediaService {
     private readonly storage: MediaStorageService,
   ) {}
 
-  storageStatus() {
-    return this.storage.getStatus();
+  async storageStatus() {
+    const [assetCount, sizeAggregate] = await Promise.all([
+      this.prisma.mediaAsset.count({ where: { deletedAt: null } }),
+      this.prisma.mediaAsset.aggregate({
+        where: { deletedAt: null },
+        _sum: { size: true },
+      }),
+    ]);
+    const usedBytes = sizeAggregate._sum.size || 0;
+
+    return {
+      ...this.storage.getStatus(),
+      assetCount,
+      usedBytes,
+      usedMb: Number((usedBytes / 1024 / 1024).toFixed(2)),
+    };
   }
 
   list() {

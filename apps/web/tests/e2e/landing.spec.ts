@@ -369,6 +369,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         provider: "local",
         storageDir: "storage",
         maxFileSizeMb: 10,
+        assetCount: 1,
+        usedBytes: 2048,
+        usedMb: 0,
         allowedMimeTypes: ["application/pdf"],
         uploadEndpoint: "/api/v1/media/upload",
         downloadPattern: "/api/v1/media/:id/download"
@@ -532,6 +535,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/media");
   await expect(page.getByRole("heading", { name: "Biblioteca media" })).toBeVisible();
+  await expect(page.getByText("assets 1")).toBeVisible();
+  await expect(page.getByText("uso 2 KB")).toBeVisible();
   await expect(page.getByText("CV Demo.pdf")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar CV Demo.pdf" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
