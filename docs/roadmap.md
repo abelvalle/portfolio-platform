@@ -3235,11 +3235,24 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run build`
 - `npm.cmd --prefix apps/api run test -- cv-export-visual.spec.ts`
 
+### Smoke real de generacion PDF CV
+
+- Anadida prueba `cv-export-pdf.spec.ts` con `CvExportService.generatePdf` y Playwright real.
+- La prueba escribe un PDF fisico en storage temporal, valida cabecera `%PDF-`, nombre con slug de plantilla y URL media generada.
+- El caso usa HTML/CSS A4 server-side con plantilla `ATS-friendly` compacta para cubrir el flujo binario real, no solo mocks del navegador.
+- Este hito cubre la generacion PDF real desde backend; el diff visual automatizado contra PDF rasterizado sigue pendiente.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/api run build`
+- `npm.cmd --prefix apps/api run test -- cv-export-pdf.spec.ts`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
-- Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web y hay smoke visual A4 del renderer server-side; DOCX sigue usando renderer propio aunque comparte orden de bloques, y falta diff visual automatizado contra PDF generado/rasterizado.
+- Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side y smoke de PDF real; DOCX sigue usando renderer propio aunque comparte orden de bloques, y falta diff visual automatizado contra PDF generado/rasterizado.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; servicios y contrato HTTP cubren MediaAsset generado descargable desde storage local con version persistida en memoria; existe harness opcional `RUN_DB_E2E=true`, pero falta validarlo con credenciales Postgres reales porque Docker daemon no estaba disponible y la instancia local no acepto las credenciales de ejemplo.
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
@@ -3272,4 +3285,4 @@ Verificacion realizada en este hito:
 
 1. Diff visual automatizado entre preview A4 y PDF generado.
 2. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
-3. Prueba e2e con PostgreSQL aislado para generar y descargar archivos CV persistidos por HTTP.
+3. Smoke real de generacion DOCX CV y validacion minima del ZIP Word.
