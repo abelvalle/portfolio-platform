@@ -20,6 +20,13 @@ async function expectA4PreviewLayout(page: Page) {
   return metrics.length;
 }
 
+async function expectCvSectionOnPage(page: Page, section: string, pageIndex: string) {
+  const actualPageIndex = await page.locator(`[data-cv-section='${section}']`).first().evaluate((element) =>
+    element.closest("[data-cv-preview='a4']")?.getAttribute("data-page-index")
+  );
+  expect(actualPageIndex).toBe(pageIndex);
+}
+
 test("landing intro, hero and command palette work", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("lang", "es");
@@ -77,6 +84,7 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await expect(page.locator("[data-cv-section='summary']")).toBeVisible();
   await expect(page.locator("[data-cv-section='languages']")).toContainText("Inglés B1");
   await expect(page.locator("[data-cv-section='projects']")).toContainText("Portfolio Platform");
+  await expectCvSectionOnPage(page, "formation", "2");
 
   await page.goto("/en/cv/templates/ats-friendly");
   await expect(page.getByRole("heading", { name: "ATS-friendly" })).toBeVisible();
@@ -89,6 +97,7 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-cv-template", "ats-friendly");
   await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-cv-density", "normal");
   await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-page-count", String(englishPageCount));
+  await expectCvSectionOnPage(page, "formation", "2");
 });
 
 test("admin publication page is reachable behind the session proxy", async ({ context, page }) => {

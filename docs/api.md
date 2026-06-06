@@ -252,7 +252,7 @@ Los previews A4 web publico/admin exponen el mismo contrato `data-cv-section` pa
 
 Los items de contacto renderizados por preview web y HTML server-side exponen `data-cv-contact-item="true"` y omiten campos vacios.
 
-Los previews A4 web pueden renderizar varias hojas con `data-cv-preview-pages`, `data-page-index`, `data-page-count` y marcador visible `data-cv-page-label`, manteniendo cada hoja con ratio A4 y scroll horizontal estable en pantallas moviles.
+Los previews A4 web pueden renderizar varias hojas con `data-cv-preview-pages`, `data-page-index`, `data-page-count` y marcador visible `data-cv-page-label`, manteniendo cada hoja con ratio A4 y scroll horizontal estable en pantallas moviles. Si `snapshot.cv.sectionOrder` contiene `page-break`, el preview web respeta ese salto manual.
 
 La suite API incluye un guard visual automatizado que genera PDF real, rasteriza la primera pagina con `pdfjs-dist` en Playwright y compara la imagen resultante contra el render HTML server-side usado por el exportador.
 

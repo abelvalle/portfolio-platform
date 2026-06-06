@@ -30,6 +30,7 @@ export const portfolioFallback = {
     name: "CV General Abel Valle Rosa",
     headline: abelProfile.headline,
     summary: cvSummary,
+    sectionOrder: ["summary", "experiences", "page-break", "skills", "languages", "formation", "projects", "sections"],
     url: "/media/Abel_Valle_Rosa_CV_ES.pdf"
   }
 };

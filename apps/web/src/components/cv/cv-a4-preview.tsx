@@ -191,7 +191,8 @@ export function CvA4Preview({
       : null
   ];
   const blocks = blockCandidates.filter((block): block is PreviewBlock => Boolean(block));
-  const pages = paginatePreviewBlocks(blocks, isCompact);
+  const orderedBlocks = orderPreviewBlocks(blocks, snapshot.cv.sectionOrder);
+  const pages = paginatePreviewBlocks(orderedBlocks, isCompact);
 
   return (
     <div className={cn("mx-auto grid w-full max-w-[860px] gap-6 overflow-x-auto pb-2", className)} data-cv-preview-pages="true" data-cv-page-count={pages.length}>
@@ -259,6 +260,15 @@ function paginatePreviewBlocks(blocks: PreviewBlock[], isCompact: boolean) {
   let limit = firstPageLimit;
 
   for (const block of blocks) {
+    if (block.key.startsWith("page-break")) {
+      if (currentPage.length) {
+        pages.push(currentPage);
+        currentPage = [];
+        currentWeight = 0;
+        limit = nextPageLimit;
+      }
+      continue;
+    }
     if (currentPage.length && currentWeight + block.weight > limit) {
       pages.push(currentPage);
       currentPage = [];
@@ -274,6 +284,71 @@ function paginatePreviewBlocks(blocks: PreviewBlock[], isCompact: boolean) {
   }
 
   return pages.length ? pages : [[]];
+}
+
+function orderPreviewBlocks(blocks: PreviewBlock[], sectionOrder?: string[]) {
+  const fixedBlocks = blocks.filter((block) => block.key === "contact");
+  const sectionBlocks = blocks.filter((block) => block.key !== "contact");
+  const blocksByKey = new Map(sectionBlocks.map((block) => [block.key, block]));
+  const orderedBlocks: PreviewBlock[] = [...fixedBlocks];
+  const usedSections = new Set<string>();
+
+  for (const item of sectionOrder || []) {
+    const normalizedItem = normalizePreviewOrderItem(item);
+    if (!normalizedItem) {
+      continue;
+    }
+    if (normalizedItem === "page-break") {
+      orderedBlocks.push({
+        key: `page-break-${orderedBlocks.length}`,
+        node: null,
+        weight: 0
+      });
+      continue;
+    }
+    const block = blocksByKey.get(normalizedItem);
+    if (block && !usedSections.has(normalizedItem)) {
+      orderedBlocks.push(block);
+      usedSections.add(normalizedItem);
+    }
+  }
+
+  for (const block of sectionBlocks) {
+    if (!usedSections.has(block.key)) {
+      orderedBlocks.push(block);
+    }
+  }
+
+  return orderedBlocks;
+}
+
+function normalizePreviewOrderItem(item: string) {
+  const aliases: Record<string, string> = {
+    summary: "summary",
+    resumen: "summary",
+    experience: "experiences",
+    experiences: "experiences",
+    experiencia: "experiences",
+    experiencias: "experiences",
+    formation: "formation",
+    formacion: "formation",
+    education: "formation",
+    educacion: "formation",
+    certifications: "formation",
+    certificaciones: "formation",
+    skills: "skills",
+    languages: "languages",
+    idiomas: "languages",
+    projects: "projects",
+    proyectos: "projects",
+    sections: "sections",
+    secciones: "sections",
+    "page-break": "page-break",
+    pagebreak: "page-break",
+    salto: "page-break",
+    "salto de pagina": "page-break"
+  };
+  return aliases[item.trim().toLowerCase()];
 }
 
 function skillCategory(skill: PreviewSkillItem) {

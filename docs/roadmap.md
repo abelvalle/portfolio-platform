@@ -3738,6 +3738,18 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 - `npm.cmd run build:web`
 
+### Saltos manuales en preview A4 web
+
+- `PortfolioSnapshot.cv.sectionOrder` puede transportar `page-break` hacia `CvA4Preview`.
+- El fallback publico inicial incluye un salto manual despues de experiencia para separar formacion/proyectos en la segunda hoja.
+- El e2e publico valida que `formation` cae en `data-page-index="2"` en ES y EN.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "public CV template detail"`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3775,4 +3787,4 @@ Verificacion realizada en este hito:
 
 1. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
 2. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.
-3. Extender saltos manuales al preview A4 web cuando las versiones CV alimenten el snapshot publico.
+3. Conectar `sectionOrder` real de la version CV primaria al endpoint de snapshot publico del backend.
