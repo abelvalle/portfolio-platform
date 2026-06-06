@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 14:41 CEST.
+Estado actualizado: 2026-06-06 14:49 CEST.
 
 ## Hitos completados
 
@@ -2421,6 +2421,24 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Timeline visual de auditoria CV por version
+
+- Cuando `Version auditoria` tiene valor, `/admin/cv/versions` muestra `Timeline version CV`.
+- La timeline usa los eventos ya filtrados por `resourceId`, accion, fecha y usuario.
+- Cada evento resume accion, fecha y metadata principal para lectura rapida.
+- Añadida cobertura e2e para verificar que la timeline aparece al filtrar `cv-base`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- QA visual Playwright fallback en `/admin/cv/versions` desktop con mocks de versiones/auditoria; Browser integrado no expuso herramienta navegable en esta sesion.
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -2431,7 +2449,7 @@ Verificacion realizada en este hito:
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: el wizard ya permite aceptar/rechazar bloques principales, skills individuales y experiencias individuales con trazabilidad; falta revision granular de campos internos de cada experiencia.
 - Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; falta vista historica dedicada de todas las publicaciones CV.
-- Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, version/recurso, fecha y usuario, con detalle por evento, exportacion CSV visible y exportacion server-side del historico filtrado; falta una timeline historica visual por version.
+- Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, version/recurso, fecha y usuario, con timeline visual por version, detalle por evento, exportacion CSV visible y exportacion server-side del historico filtrado; falta vista de publicaciones CV agregada entre versiones.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: hay trazabilidad persistente y vista admin de entregas/test; falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto` y privacidad configurable de metadata técnica; falta integracion real con proveedor email.

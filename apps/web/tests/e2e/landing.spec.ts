@@ -1075,6 +1075,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await versionAuditRequestPromise;
   await expect(page.getByLabel("Version auditoria")).toHaveValue("cv-base");
   await expect(page.getByText("Auditoria filtrada por version: CV Base.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Timeline version CV" })).toBeVisible();
+  await expect(page.getByLabel("Timeline auditoria version").getByText("cv-base")).toBeVisible();
   await page.getByLabel("Accion").selectOption("update");
   await expect(page.getByLabel("Evento update")).toBeVisible();
   const auditFilterRequestPromise = page.waitForRequest((request) => {

@@ -1044,6 +1044,31 @@ export function CvVersionTable() {
           </Button>
         </div>
         <p className="text-sm text-muted-foreground" aria-live="polite">{auditMessage}</p>
+        {auditResourceId.trim() ? (
+          <div className="grid gap-3 rounded-lg border border-border p-4" aria-label="Timeline auditoria version">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-semibold">Timeline version CV</h3>
+                <p className="text-sm text-muted-foreground">Eventos filtrados por {auditResourceId.trim()}.</p>
+              </div>
+              <Badge variant="outline">{auditLogs.length} eventos</Badge>
+            </div>
+            <div className="grid gap-3 border-l border-border pl-4">
+              {auditLogs.length ? auditLogs.map((log) => (
+                <div key={`timeline-${log.id}`} className="relative grid gap-1">
+                  <span className="absolute -left-[21px] top-1 size-2 rounded-full bg-primary" aria-hidden="true" />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge>{log.action}</Badge>
+                    <span className="text-xs text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{auditMetadata(log.metadata) || log.resourceId || "Sin metadata."}</p>
+                </div>
+              )) : (
+                <p className="text-sm text-muted-foreground">Sin eventos para esta version.</p>
+              )}
+            </div>
+          </div>
+        ) : null}
         {auditLogs.length ? (
           <div className="grid gap-2">
             {auditLogs.map((log) => (
