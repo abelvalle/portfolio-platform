@@ -1,9 +1,8 @@
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Roles } from '../common/guards/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/guards/permissions.decorator';
 import { ResourcesService } from './resources.service';
 import { UpdateThemeDto } from './theme.dto';
 
@@ -18,8 +17,8 @@ export class ThemeController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.admin, UserRole.editor)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_portfolio')
   @Patch()
   updateTheme(@Body() body: UpdateThemeDto) {
     return this.resourcesService.updateTheme(body);

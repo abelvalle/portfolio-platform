@@ -62,8 +62,8 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 
 ## Endpoints principales
 
-- `GET /profile`, `PATCH /profile`
-- `GET /theme`, `PATCH /theme`
+- `GET /profile`, `PATCH /profile` (`manage_portfolio`)
+- `GET /theme`, `PATCH /theme` (`manage_portfolio`)
 - `GET|POST|PATCH|DELETE /experiences`
 - `GET|POST|PATCH|DELETE /education`
 - `GET|POST|PATCH|DELETE /certifications`

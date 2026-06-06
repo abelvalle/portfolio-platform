@@ -46,6 +46,18 @@ describe('PermissionsGuard', () => {
     expect(guard.canActivate(mockContext(UserRole.editor))).toBe(false);
   });
 
+  it('allows editors to manage portfolio content', () => {
+    const guard = new PermissionsGuard(mockReflector(['manage_portfolio']));
+
+    expect(guard.canActivate(mockContext(UserRole.editor))).toBe(true);
+  });
+
+  it('rejects viewers from managing portfolio content', () => {
+    const guard = new PermissionsGuard(mockReflector(['manage_portfolio']));
+
+    expect(guard.canActivate(mockContext(UserRole.viewer))).toBe(false);
+  });
+
   it('allows routes without explicit permissions', () => {
     const guard = new PermissionsGuard(mockReflector(undefined));
 
