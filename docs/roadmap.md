@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 05:55 CEST.
+Estado actualizado: 2026-06-06 05:59 CEST.
 
 ## Hitos completados
 
@@ -1097,6 +1097,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Confirmacion de borrado en plantillas CV
+
+- `/admin/cv/templates` ya no elimina plantillas directamente desde el boton de papelera.
+- Se añade modal de confirmacion con nombre de plantilla y recomendacion de ocultarla si solo debe retirarse de previews publicas y exportaciones.
+- El boton de papelera tiene `aria-label` descriptivo para navegacion accesible.
+- Añadida cobertura e2e para abrir y cancelar el modal con una plantilla mockeada desde `/api/v1/cv-templates`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1125,7 +1139,7 @@ Verificacion realizada en este hito:
 - Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima; faltan edición por bloques y confirmación modal para cambios grandes.
 - Editor CV por bloques: el editor principal está conectado a campos básicos; faltan bloques estructurados para experiencia, educación, certificaciones, skills, proyectos, idiomas y secciones personalizadas.
 - Preview A4 admin avanzado: el preview está sincronizado; falta render fiel a la plantilla seleccionada, paginación real y comparación pixel-perfect con exportación PDF.
-- Plantillas CV UI avanzada: el CRUD básico está conectado; faltan edición completa de JSON, preview embebido por plantilla, validación visual de tokens y confirmación modal de borrado.
+- Plantillas CV UI avanzada: el CRUD básico está conectado con confirmación modal de borrado; faltan edición completa de JSON, preview embebido por plantilla y validación visual de tokens.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.

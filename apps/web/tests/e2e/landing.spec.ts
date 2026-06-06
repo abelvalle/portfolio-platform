@@ -176,6 +176,22 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route(/\/api\/v1\/cv-templates(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "template-ats",
+          name: "ATS-friendly",
+          slug: "ats-friendly",
+          description: "Plantilla demo para ATS.",
+          config: { primaryColor: "#111827", fontFamily: "Inter", density: "compact" },
+          visible: true,
+          order: 0
+        }
+      ])
+    });
+  });
   await page.route("**/api/v1/cv/compare-versions", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -410,6 +426,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/cv/templates");
   await expect(page.getByRole("heading", { name: "Plantillas de CV" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ATS-friendly" })).toBeVisible();
+  await page.getByRole("button", { name: "Eliminar ATS-friendly" }).click();
+  await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancelar" }).click();
 
   await page.goto("/admin/cv/adapt");
   await expect(page.getByRole("heading", { name: "Adaptar CV" })).toBeVisible();

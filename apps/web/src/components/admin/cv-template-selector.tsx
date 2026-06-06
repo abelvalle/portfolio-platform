@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Eye, EyeOff, RefreshCw, Save, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,6 +47,7 @@ export function CvTemplateSelector() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDeleteTemplate, setPendingDeleteTemplate] = useState<CvTemplateItem | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -111,11 +113,12 @@ export function CvTemplateSelector() {
     }
   }
 
-  async function deleteTemplate(id: string) {
-    setBusyId(id);
+  async function deleteTemplate(template: CvTemplateItem) {
+    setBusyId(template.id);
     try {
-      await cvClient.deleteTemplate(id);
-      setMessage("Plantilla eliminada.");
+      await cvClient.deleteTemplate(template.id);
+      setPendingDeleteTemplate(null);
+      setMessage(`Plantilla eliminada: ${template.name}.`);
       await loadTemplates();
     } catch {
       setMessage("No se pudo eliminar la plantilla.");
@@ -207,7 +210,7 @@ export function CvTemplateSelector() {
               <Button type="button" variant="outline" size="icon" onClick={() => patchTemplate(template.id, { order: template.order + 1 })} disabled={busyId === template.id}>
                 <ArrowDown />
               </Button>
-              <Button type="button" variant="outline" size="icon" onClick={() => deleteTemplate(template.id)} disabled={busyId === template.id}>
+              <Button type="button" variant="outline" size="icon" aria-label={`Eliminar ${template.name}`} onClick={() => setPendingDeleteTemplate(template)} disabled={busyId === template.id}>
                 <Trash2 />
               </Button>
             </div>
@@ -218,6 +221,25 @@ export function CvTemplateSelector() {
           </div>
         )}
       </section>
+
+      <Dialog open={Boolean(pendingDeleteTemplate)} onOpenChange={(open) => !open && setPendingDeleteTemplate(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar borrado</DialogTitle>
+            <DialogDescription>
+              Esta accion eliminara la plantilla {pendingDeleteTemplate?.name}. Puedes ocultarla si solo quieres retirarla de previews publicas y exportaciones.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingDeleteTemplate(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => pendingDeleteTemplate && deleteTemplate(pendingDeleteTemplate)}>
+              Eliminar plantilla
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
