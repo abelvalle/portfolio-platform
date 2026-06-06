@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 02:36 CEST.
+Estado actualizado: 2026-06-06 02:40 CEST.
 
 ## Hitos completados
 
@@ -350,6 +350,25 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Bandeja admin de mensajes conectada
+
+- Reemplazada `/admin/messages` estática por `ContactMessageManagement`.
+- La UI lista mensajes desde `GET /api/v1/contact-messages`.
+- Añadidos filtros por estado: todos, no leídos y leídos.
+- Permite marcar mensajes como leído/no leído con `PATCH /api/v1/contact-messages/:id/status`.
+- Permite borrar mensajes con `DELETE /api/v1/contact-messages/:id`.
+- Añadidos estados de carga, error y vacío.
+- Añadida cobertura e2e desktop/mobile de la ruta admin de mensajes.
+
+Verificación realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -370,6 +389,7 @@ Verificación realizada en este hito:
 - Permisos por acción: existe matriz de permisos, pero los guards todavía se basan en roles por endpoint.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
+- Mensajes UI avanzada: la bandeja está conectada; faltan filtro por fecha, vista detalle/modal y preparación visual de integración email.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual, pero falta extenderlo a profile, experiencias, proyectos, skills y CV.

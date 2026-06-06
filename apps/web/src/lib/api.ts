@@ -145,6 +145,15 @@ export const adminClient = {
   testContactWebhook() {
     return apiFetch<ContactWebhookTestResult>("/contact-messages/webhook/test", { method: "POST" });
   },
+  contactMessages(status?: string) {
+    return apiFetch<ContactMessage[]>(`/contact-messages${status ? `?status=${encodeURIComponent(status)}` : ""}`);
+  },
+  updateContactMessageStatus(id: string, status: string) {
+    return apiFetch<ContactMessage>(`/contact-messages/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
+  },
+  deleteContactMessage(id: string) {
+    return apiFetch<ContactMessage>(`/contact-messages/${id}`, { method: "DELETE" });
+  },
   updateTheme(data: unknown) {
     return apiFetch("/theme", { method: "PATCH", body: JSON.stringify(data) });
   },
@@ -237,6 +246,16 @@ export type ContactWebhookStatus = {
 export type ContactWebhookTestResult = {
   configured: boolean;
   dispatched: boolean;
+};
+
+export type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  subject?: string | null;
+  message: string;
+  status: string;
+  createdAt: string;
 };
 
 export type MediaAsset = {

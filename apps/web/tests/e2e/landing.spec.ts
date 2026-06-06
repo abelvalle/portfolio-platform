@@ -60,4 +60,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/settings");
   await expect(page.getByText("Seguridad admin")).toBeVisible();
   await expect(page.getByText("Webhooks contacto")).toBeVisible();
+
+  await page.goto("/admin/messages");
+  await expect(page.getByRole("heading", { name: "Mensajes de contacto" })).toBeVisible();
 });
