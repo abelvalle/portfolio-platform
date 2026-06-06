@@ -11,10 +11,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { Roles } from '../common/guards/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermissions } from '../common/guards/permissions.decorator';
 import { ResourcesService } from './resources.service';
 
 export function createResourceController(
@@ -37,24 +36,24 @@ export function createResourceController(
     }
 
     @ApiBearerAuth()
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(UserRole.admin, UserRole.editor)
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
+    @RequirePermissions('manage_portfolio')
     @Post()
     create(@Body() body: Record<string, unknown>) {
       return this.resourcesService.create(model, body);
     }
 
     @ApiBearerAuth()
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(UserRole.admin, UserRole.editor)
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
+    @RequirePermissions('manage_portfolio')
     @Patch(':id')
     update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
       return this.resourcesService.update(model, id, body);
     }
 
     @ApiBearerAuth()
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(UserRole.admin, UserRole.editor)
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
+    @RequirePermissions('manage_portfolio')
     @Delete(':id')
     remove(@Param('id') id: string) {
       return this.resourcesService.remove(model, id);

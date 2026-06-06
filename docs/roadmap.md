@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 07:23 CEST.
+Estado actualizado: 2026-06-06 07:25 CEST.
 
 ## Hitos completados
 
@@ -1390,6 +1390,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Permisos granulares en CRUD CMS genericos
+
+- La fabrica `createResourceController` usa `manage_portfolio` en `POST`, `PATCH` y `DELETE`.
+- Quedan cubiertos experiencias, educacion, certificaciones, skills, categorias, proyectos, page sections y app modules.
+- Los `GET` publicos de estas entidades se mantienen sin autenticacion igual que antes.
+- `docs/api.md` documenta la escritura de los CRUD CMS con `manage_portfolio`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1404,7 +1418,7 @@ Verificacion realizada en este hito:
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
 - Adaptación CV a versión final: el wizard ya propone datos desde API; falta aceptar/rechazar cambios por bloque y crear/publicar una `CvVersion` adaptada desde la propuesta.
-- Permisos por acción: existe matriz de permisos y guard granular aplicado a `/users`, `/analytics`, dashboard admin, mensajes, media, profile y theme; falta extenderlo al resto de endpoints admin.
+- Permisos por acción: existe matriz de permisos y guard granular aplicado a `/users`, `/analytics`, dashboard admin, mensajes, media, profile/theme y CRUD CMS genericos; falta extenderlo a CV, publication, integrations y otros endpoints admin restantes.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado y respuesta `mailto`; falta integracion real con proveedor email.

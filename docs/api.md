@@ -64,11 +64,11 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 
 - `GET /profile`, `PATCH /profile` (`manage_portfolio`)
 - `GET /theme`, `PATCH /theme` (`manage_portfolio`)
-- `GET|POST|PATCH|DELETE /experiences`
-- `GET|POST|PATCH|DELETE /education`
-- `GET|POST|PATCH|DELETE /certifications`
-- `GET|POST|PATCH|DELETE /skills`
-- `GET|POST|PATCH|DELETE /projects`
+- `GET|POST|PATCH|DELETE /experiences` (writes: `manage_portfolio`)
+- `GET|POST|PATCH|DELETE /education` (writes: `manage_portfolio`)
+- `GET|POST|PATCH|DELETE /certifications` (writes: `manage_portfolio`)
+- `GET|POST|PATCH|DELETE /skills` (writes: `manage_portfolio`)
+- `GET|POST|PATCH|DELETE /projects` (writes: `manage_portfolio`)
 - `POST /contact-messages`
 - `GET /contact-messages?status=unread&from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_messages`)
 - `GET /contact-messages/webhook/status` (`read_messages`)
@@ -82,7 +82,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /admin/publication/changelog`
 - `POST /admin/publication/changelog/:id/restore`
 - `GET /app-modules`
-- `PATCH /app-modules/:id`
+- `PATCH /app-modules/:id` (`manage_portfolio`)
 - `GET|POST /users` (`manage_users`)
 - `PATCH|DELETE /users/:id` (`manage_users`)
 - `GET /users/permissions` (`manage_users`)
