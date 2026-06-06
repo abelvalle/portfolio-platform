@@ -935,6 +935,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"name\": \"KPIs\"/);
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
+  await page.getByLabel("Idiomas CV").fill("Español - Nativo\nIngles - Intermedio");
+  await page.getByRole("button", { name: "Aplicar idiomas" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"level\": \"Nativo\"/);
+  await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
+  await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
   await page.getByLabel("JSON estructurado").fill("[]");
   await expect(page.getByLabel("JSON estructurado")).toHaveValue("[]");
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });

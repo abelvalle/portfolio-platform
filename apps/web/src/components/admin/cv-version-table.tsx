@@ -74,6 +74,30 @@ function skillsFromStructuredJson(value: unknown) {
     .join("\n");
 }
 
+function languagesFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return "";
+  }
+  const languages = (value as Record<string, unknown>).languages;
+  if (!Array.isArray(languages)) {
+    return "";
+  }
+  return languages
+    .map((language) => {
+      if (typeof language === "string") {
+        return language;
+      }
+      if (language && typeof language === "object" && "name" in language) {
+        const name = (language as { name?: unknown }).name;
+        const level = (language as { level?: unknown }).level;
+        return typeof name === "string" && typeof level === "string" ? `${name} - ${level}` : typeof name === "string" ? name : "";
+      }
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
 function splitBlockLines(value: string) {
   return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
 }
@@ -120,6 +144,7 @@ export function CvVersionTable() {
   const [jsonDraft, setJsonDraft] = useState("{}");
   const [summaryDraft, setSummaryDraft] = useState("");
   const [skillsDraft, setSkillsDraft] = useState("");
+  const [languagesDraft, setLanguagesDraft] = useState("");
   const [jsonMessage, setJsonMessage] = useState("Selecciona una version para editar su JSON estructurado.");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -137,6 +162,7 @@ export function CvVersionTable() {
       setJsonDraft("{}");
       setSummaryDraft("");
       setSkillsDraft("");
+      setLanguagesDraft("");
       setJsonMessage("Sin versiones disponibles para editar.");
       return;
     }
@@ -145,6 +171,7 @@ export function CvVersionTable() {
       setJsonDraft(formatJson(selectedVersion.structuredJson));
       setSummaryDraft(summaryFromStructuredJson(selectedVersion.structuredJson));
       setSkillsDraft(skillsFromStructuredJson(selectedVersion.structuredJson));
+      setLanguagesDraft(languagesFromStructuredJson(selectedVersion.structuredJson));
       setJsonMessage(
         requestedVersionId === selectedVersion.id
           ? "Version enlazada desde el comparador cargada para edicion."
@@ -284,6 +311,7 @@ export function CvVersionTable() {
     setJsonDraft(formatJson(selectedVersion?.structuredJson));
     setSummaryDraft(summaryFromStructuredJson(selectedVersion?.structuredJson));
     setSkillsDraft(skillsFromStructuredJson(selectedVersion?.structuredJson));
+    setLanguagesDraft(languagesFromStructuredJson(selectedVersion?.structuredJson));
     setJsonMessage(selectedVersion ? "JSON estructurado cargado desde la version seleccionada." : "Version no encontrada.");
   }
 
@@ -335,6 +363,34 @@ export function CvVersionTable() {
     }
     setJsonDraft(formatJson(nextStructuredJson));
     setJsonMessage("Bloque skills aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function applyLanguagesBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el bloque.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const nextLanguages = splitBlockLines(languagesDraft).map((line) => {
+      const [name, ...levelParts] = line.split("-").map((part) => part.trim()).filter(Boolean);
+      return levelParts.length ? { name, level: levelParts.join(" - ") } : { name };
+    }).filter((language) => language.name);
+    if (nextLanguages.length) {
+      nextStructuredJson.languages = nextLanguages;
+    } else {
+      delete nextStructuredJson.languages;
+    }
+    setJsonDraft(formatJson(nextStructuredJson));
+    setJsonMessage("Bloque idiomas aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
   async function saveStructuredJson() {
@@ -496,6 +552,18 @@ export function CvVersionTable() {
           />
           <Button type="button" variant="outline" className="w-fit" onClick={applySkillsBlock} disabled={!jsonVersionId}>
             Aplicar skills
+          </Button>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="languagesBlock">Idiomas CV</Label>
+          <Textarea
+            id="languagesBlock"
+            rows={3}
+            value={languagesDraft}
+            onChange={(event) => setLanguagesDraft(event.target.value)}
+          />
+          <Button type="button" variant="outline" className="w-fit" onClick={applyLanguagesBlock} disabled={!jsonVersionId}>
+            Aplicar idiomas
           </Button>
         </div>
         <div className="grid gap-2">
