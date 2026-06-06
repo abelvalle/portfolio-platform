@@ -137,6 +137,21 @@ export class AnalyticsService {
     };
   }
 
+  async labels(filters: AnalyticsEventsQueryDto = {}) {
+    const events = await this.prisma.analyticsEvent.findMany({
+      where: this.eventWhere(filters),
+      select: { label: true },
+    });
+    const labels = new Map<string, number>();
+
+    for (const event of events) {
+      const label = this.cleanLabel(event.label) || 'sin_etiqueta';
+      labels.set(label, (labels.get(label) || 0) + 1);
+    }
+
+    return { labels: this.topSegments(labels) };
+  }
+
   async funnel(filters: AnalyticsDateRangeQueryDto = {}) {
     const summary = await this.summary(filters);
     const steps = [
@@ -281,6 +296,12 @@ export class AnalyticsService {
   private cleanSegment(value: unknown) {
     return typeof value === 'string' && value.trim()
       ? value.trim().toLowerCase().slice(0, 80)
+      : null;
+  }
+
+  private cleanLabel(value: unknown) {
+    return typeof value === 'string' && value.trim()
+      ? value.trim().slice(0, 160)
       : null;
   }
 

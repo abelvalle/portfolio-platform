@@ -58,3 +58,47 @@ describe('CvController downloads', () => {
     }
   });
 });
+
+describe('CvController adaptations', () => {
+  it('tracks CV adaptation requests server-side', async () => {
+    const adaptationService = {
+      adapt: jest.fn().mockResolvedValue({
+        request: { id: 'adaptation-1' },
+        proposed: { summary: 'Adapted' },
+      }),
+    };
+    const analyticsService = {
+      record: jest.fn().mockResolvedValue({ id: 'event-1' }),
+    };
+    const controller = new CvController(
+      {} as never,
+      adaptationService as never,
+      analyticsService as never,
+    );
+
+    const result = await controller.adapt(
+      {
+        baseCvVersionId: 'cv-base',
+        targetRoleId: 'target-role-1',
+        targetRole: 'Delivery Manager',
+        jobDescription:
+          'Buscamos Delivery Manager con KPIs, UAT, stakeholders y reporting.',
+      },
+      {
+        ip: '127.0.0.1',
+        headers: { 'user-agent': 'ua' },
+      } as never,
+    );
+
+    expect(result.request.id).toBe('adaptation-1');
+    expect(analyticsService.record).toHaveBeenCalledWith(
+      {
+        type: 'cv_adaptation',
+        label: 'Delivery Manager',
+        path: '/cv/adapt-to-role?targetRoleId=target-role-1',
+      },
+      '127.0.0.1',
+      'ua',
+    );
+  });
+});

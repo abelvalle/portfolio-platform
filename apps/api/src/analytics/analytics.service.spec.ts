@@ -203,6 +203,31 @@ describe('AnalyticsService filters', () => {
     });
   });
 
+  it('aggregates event labels for target role usage', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsEvent.findMany.mockResolvedValue([
+      { label: 'Delivery Manager' },
+      { label: 'Delivery Manager' },
+      { label: 'IT Project Manager' },
+      { label: null },
+    ]);
+    const service = createService(prisma);
+
+    const result = await service.labels({ type: 'cv_adaptation' });
+
+    expect(prisma.analyticsEvent.findMany).toHaveBeenCalledWith({
+      where: { type: 'cv_adaptation' },
+      select: { label: true },
+    });
+    expect(result).toEqual({
+      labels: [
+        { name: 'Delivery Manager', count: 2 },
+        { name: 'IT Project Manager', count: 1 },
+        { name: 'sin_etiqueta', count: 1 },
+      ],
+    });
+  });
+
   it('builds a landing to CV/contact conversion funnel', async () => {
     const prisma = mockPrisma();
     prisma.analyticsEvent.count

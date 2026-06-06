@@ -307,6 +307,9 @@ export const adminClient = {
   analyticsChannels(filters?: AnalyticsEventFilters) {
     return apiFetch<AnalyticsChannels>(withQuery("/analytics/channels", filters));
   },
+  analyticsLabels(filters?: AnalyticsEventFilters) {
+    return apiFetch<AnalyticsLabels>(withQuery("/analytics/labels", filters));
+  },
   analyticsFunnel(filters?: DateRangeFilters) {
     return apiFetch<AnalyticsFunnel>(withQuery("/analytics/funnel", filters));
   },
@@ -735,6 +738,10 @@ export type AnalyticsTimeSeriesPoint = {
 export type AnalyticsChannels = {
   sources: Array<{ name: string; count: number }>;
   channels: Array<{ name: string; count: number }>;
+};
+
+export type AnalyticsLabels = {
+  labels: Array<{ name: string; count: number }>;
 };
 
 export type AnalyticsFunnel = {

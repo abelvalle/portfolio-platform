@@ -172,8 +172,22 @@ export class CvController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('manage_cv')
   @Post('adapt-to-role')
-  adapt(@Body() body: AdaptCvDto) {
-    return this.adaptationService.adapt(body);
+  async adapt(@Body() body: AdaptCvDto, @Req() request: Request) {
+    const result = await this.adaptationService.adapt(body);
+    void this.analyticsService
+      .record(
+        {
+          type: 'cv_adaptation',
+          label: body.targetRole,
+          path: body.targetRoleId
+            ? `/cv/adapt-to-role?targetRoleId=${body.targetRoleId}`
+            : '/cv/adapt-to-role',
+        },
+        request.ip,
+        request.headers['user-agent'],
+      )
+      .catch(() => undefined);
+    return result;
   }
 
   @ApiBearerAuth()

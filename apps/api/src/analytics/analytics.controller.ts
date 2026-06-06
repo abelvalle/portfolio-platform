@@ -68,6 +68,14 @@ export class AnalyticsController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('read_analytics')
+  @Get('labels')
+  labels(@Query() query: AnalyticsEventsQueryDto) {
+    return this.analyticsService.labels(query);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_analytics')
   @Get('funnel')
   funnel(@Query() query: AnalyticsDateRangeQueryDto) {
     return this.analyticsService.funnel(query);
