@@ -110,7 +110,7 @@ export const authClient = {
 
 export const adminClient = {
   dashboard() {
-    return apiFetch("/admin/dashboard");
+    return apiFetch<AdminDashboard>("/admin/dashboard");
   },
   publicationThemeReview() {
     return apiFetch<PublicationThemeReview>("/admin/publication/theme/review");
@@ -226,6 +226,26 @@ export type ChangeLogItem = {
   action: string;
   summary: string;
   createdAt: string;
+};
+
+export type AdminDashboard = {
+  cards: {
+    totalVisits: number;
+    publishedProjects: number;
+    visibleExperiences: number;
+    receivedMessages: number;
+    primaryCv: string;
+    cvUpdatedAt?: string | null;
+  };
+  latestChanges: ChangeLogItem[];
+  modules: Array<{
+    id: string;
+    key: string;
+    name: string;
+    description?: string | null;
+    enabled: boolean;
+    order: number;
+  }>;
 };
 
 export type AdminUserRole = "admin" | "editor" | "viewer";

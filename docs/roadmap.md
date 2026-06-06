@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 02:54 CEST.
+Estado actualizado: 2026-06-06 02:59 CEST.
 
 ## Hitos completados
 
@@ -406,6 +406,22 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Dashboard admin conectado a API
+
+- Reemplazadas las tarjetas estáticas de `/admin` por datos desde `GET /api/v1/admin/dashboard`.
+- El dashboard muestra visitas, proyectos publicados, experiencias visibles, mensajes recibidos, CV principal y fecha de actualización del CV.
+- Añadidos estados de carga/error y acción manual de refresco.
+- Añadido panel de últimos cambios desde `ChangeLog`.
+- Añadido panel de módulos activos desde `AppModule`.
+- Añadida cobertura e2e desktop/mobile de la ruta raíz admin.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -428,6 +444,7 @@ Verificación realizada en este hito:
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - Mensajes UI avanzada: la bandeja está conectada; faltan filtro por fecha, vista detalle/modal y preparación visual de integración email.
 - Analítica avanzada: el panel está conectado a eventos; faltan filtros por fecha, series temporales, exportación y retención/anonimización configurable.
+- Dashboard avanzado: el resumen está conectado; faltan filtros temporales, drill-down desde tarjetas y control real de módulos desde UI.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual y perfil público; falta extenderlo a experiencias, proyectos, skills, educación, certificaciones y CV.
