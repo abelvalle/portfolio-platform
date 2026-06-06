@@ -607,6 +607,23 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route("**/api/v1/certifications/certification-1", async (route) => {
+    const data = JSON.parse(route.request().postData() || "{}");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "certification-1",
+        title: data.title || "Scrum Master",
+        institution: data.institution || "Demo Academy",
+        date: data.date || "2025",
+        description: data.description ?? "Certificacion demo",
+        certificateUrl: data.certificateUrl ?? null,
+        attachmentId: data.attachmentId ?? null,
+        order: data.order ?? 0,
+        visible: data.visible ?? true
+      })
+    });
+  });
   await page.route(/\/api\/v1\/experiences(\?.*)?$/, async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -757,6 +774,14 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/portfolio/certifications");
   await expect(page.getByRole("heading", { name: "Certificaciones" })).toBeVisible();
   await expect(page.getByRole("main").getByText("Scrum Master")).toBeVisible();
+  await page.getByRole("button", { name: "Editar Scrum Master" }).click();
+  await expect(page.getByRole("heading", { name: "Editar certificacion" })).toBeVisible();
+  await page.getByLabel("Titulo certificacion").fill("Scrum Master avanzado");
+  await page.getByLabel("Institucion certificacion").fill("Demo Academy");
+  await page.getByLabel("Fecha certificacion").fill("2026");
+  await page.getByLabel("Descripcion certificacion").fill("Certificacion ampliada de agilidad.");
+  await page.getByRole("button", { name: "Guardar certificacion" }).click();
+  await expect(page.getByText("Certificacion actualizada: Scrum Master avanzado.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Scrum Master" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();
