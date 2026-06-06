@@ -245,7 +245,16 @@ export const adminClient = {
 
 export const cvClient = {
   versions() {
-    return apiFetch("/cv-versions");
+    return apiFetch<CvVersionItem[]>("/cv-versions");
+  },
+  createVersion(data: CvVersionMutation) {
+    return apiFetch<CvVersionItem>("/cv-versions", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateVersion(id: string, data: Partial<CvVersionMutation>) {
+    return apiFetch<CvVersionItem>(`/cv-versions/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteVersion(id: string) {
+    return apiFetch<CvVersionItem>(`/cv-versions/${id}`, { method: "DELETE" });
   },
   templates() {
     return apiFetch("/cv-templates");
@@ -500,6 +509,33 @@ export type MediaStorageStatus = {
   allowedMimeTypes: string[];
   uploadEndpoint: string;
   downloadPattern: string;
+};
+
+export type CvVersionItem = {
+  id: string;
+  cvId: string;
+  templateId?: string | null;
+  name: string;
+  slug: string;
+  description?: string | null;
+  targetRole: string;
+  targetCompany?: string | null;
+  language: string;
+  status: "draft" | "published" | "archived";
+  structuredJson?: unknown;
+  generatedPdfId?: string | null;
+  generatedDocxId?: string | null;
+  isPrimary: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CvVersionMutation = Pick<CvVersionItem, "cvId" | "name" | "slug" | "targetRole" | "language" | "status"> & {
+  description?: string | null;
+  targetCompany?: string | null;
+  templateId?: string | null;
+  structuredJson?: unknown;
+  isPrimary?: boolean;
 };
 
 export const mediaClient = {
