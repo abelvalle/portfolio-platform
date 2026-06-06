@@ -56,6 +56,8 @@ Los cambios de estado MFA se registran en `AuditLog` con acciones `auth.mfa.setu
 
 MFA no está activado por defecto en seed para evitar bloquear el primer acceso admin.
 
+La política opcional `AUTH_MFA_REQUIRED_ROLES=admin` fuerza MFA por rol. Si un usuario de un rol requerido intenta iniciar sesión sin MFA confirmado, la API no emite tokens y registra `auth.mfa.policy_blocked_login` en `AuditLog`. Mantener vacía la variable conserva el comportamiento del seed.
+
 ## Permisos
 
 La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por accion. El primer guard por permiso se aplica a `/users` con `manage_users`; esto permite evolucionar endpoints hacia permisos granulares sin cambiar el contrato JWT.

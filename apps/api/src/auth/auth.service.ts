@@ -26,6 +26,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (this.isMfaRequiredForRole(user.role) && !user.mfaEnabled) {
+      await this.auditMfa(user.id, 'auth.mfa.policy_blocked_login', {
+        role: user.role,
+      });
+      throw new UnauthorizedException('MFA is required for this role');
+    }
+
     if (user.mfaEnabled) {
       return {
         mfaRequired: true,
@@ -81,6 +88,7 @@ export class AuthService {
     const user = await this.findUserOrThrow(userId);
     return {
       enabled: user.mfaEnabled,
+      policyRequired: this.isMfaRequiredForRole(user.role),
       confirmedAt: user.mfaConfirmedAt,
       lastUsedAt: user.mfaLastUsedAt,
       recoveryCodesRemaining: user.mfaRecoveryCodeHashes.length,
@@ -296,6 +304,16 @@ export class AuthService {
       this.configService.get<string>('JWT_ACCESS_SECRET') ||
       'change-me-access-secret'
     );
+  }
+
+  private isMfaRequiredForRole(role: string) {
+    const requiredRoles = this.configService
+      .get<string>('AUTH_MFA_REQUIRED_ROLES')
+      ?.split(',')
+      .map((requiredRole) => requiredRole.trim())
+      .filter(Boolean);
+
+    return requiredRoles?.includes(role) ?? false;
   }
 
   private auditMfa(

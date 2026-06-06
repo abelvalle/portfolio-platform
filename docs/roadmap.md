@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 07:37 CEST.
+Estado actualizado: 2026-06-06 07:40 CEST.
 
 ## Hitos completados
 
@@ -1464,6 +1464,22 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Politica MFA obligatoria por rol
+
+- Añadida variable `AUTH_MFA_REQUIRED_ROLES` para forzar MFA por rol sin activarlo por defecto en seed.
+- Si un rol requerido intenta iniciar sesion sin MFA confirmado, la API no emite tokens.
+- El bloqueo se registra en `AuditLog` con accion `auth.mfa.policy_blocked_login` sin secretos.
+- `GET /api/v1/auth/mfa/status` incluye `policyRequired`.
+- `.env.example` y `docs/api.md` documentan la politica.
+- Añadidos tests unitarios de bloqueo por politica y estado `policyRequired`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -1471,7 +1487,6 @@ Verificacion realizada en este hito:
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
 - Renderer fiel al preview: PDF/DOCX aplican tokens de plantilla, pero todavía no generan desde el mismo HTML/CSS A4 del preview público.
 - Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
-- MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
 - QA de guardado autenticado: falta prueba e2e con API real y sesión admin para validar `PATCH /theme` end to end desde UI.
 - ATS end to end con DB real: falta prueba e2e que genere archivos ATS desde una versión persistida y valide descarga.
 - ATS por oferta concreta: el score actual valida estructura general; falta comparar contra keywords de una oferta específica.

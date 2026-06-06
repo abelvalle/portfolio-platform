@@ -1,3 +1,5 @@
+import { UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 
 describe('AuthService MFA audit', () => {
@@ -70,11 +72,48 @@ describe('AuthService MFA audit', () => {
       }),
     });
   });
+
+  it('blocks token issuance when MFA policy requires the user role', async () => {
+    const prisma = mockPrisma(
+      userFixture({
+        passwordHash: await bcrypt.hash('Password123', 4),
+        mfaEnabled: false,
+      }),
+    );
+    const service = createService(prisma, {
+      AUTH_MFA_REQUIRED_ROLES: 'admin',
+    });
+
+    await expect(
+      service.login('abel@example.com', 'Password123'),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'auth.mfa.policy_blocked_login',
+        metadata: { role: 'admin' },
+      }),
+    });
+  });
+
+  it('reports whether MFA is required by policy', async () => {
+    const prisma = mockPrisma(userFixture({ role: 'admin' }));
+    const service = createService(prisma, {
+      AUTH_MFA_REQUIRED_ROLES: 'admin',
+    });
+
+    await expect(service.getMfaStatus('user-1')).resolves.toMatchObject({
+      enabled: false,
+      policyRequired: true,
+    });
+  });
 });
 
-function createService(prisma: ReturnType<typeof mockPrisma>) {
+function createService(
+  prisma: ReturnType<typeof mockPrisma>,
+  config: Record<string, string> = {},
+) {
   const jwtService = {};
-  const configService = { get: jest.fn() };
+  const configService = { get: jest.fn((key: string) => config[key]) };
   const mfaService = {
     generateSecret: jest.fn().mockReturnValue('SECRET'),
     buildOtpAuthUrl: jest.fn().mockReturnValue('otpauth://totp/test'),
