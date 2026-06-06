@@ -121,6 +121,31 @@ function projectsFromStructuredJson(value: unknown) {
     .join("\n");
 }
 
+function educationFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return "";
+  }
+  const education = (value as Record<string, unknown>).education;
+  if (!Array.isArray(education)) {
+    return "";
+  }
+  return education
+    .map((item) => {
+      if (typeof item === "string") {
+        return item;
+      }
+      if (item && typeof item === "object" && "title" in item) {
+        const title = (item as { title?: unknown }).title;
+        const institution = (item as { institution?: unknown }).institution;
+        const date = (item as { date?: unknown }).date;
+        return [title, institution, date].filter((part) => typeof part === "string" && part).join(" - ");
+      }
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
 function splitBlockLines(value: string) {
   return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
 }
@@ -169,6 +194,7 @@ export function CvVersionTable() {
   const [skillsDraft, setSkillsDraft] = useState("");
   const [languagesDraft, setLanguagesDraft] = useState("");
   const [projectsDraft, setProjectsDraft] = useState("");
+  const [educationDraft, setEducationDraft] = useState("");
   const [jsonMessage, setJsonMessage] = useState("Selecciona una version para editar su JSON estructurado.");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -188,6 +214,7 @@ export function CvVersionTable() {
       setSkillsDraft("");
       setLanguagesDraft("");
       setProjectsDraft("");
+      setEducationDraft("");
       setJsonMessage("Sin versiones disponibles para editar.");
       return;
     }
@@ -198,6 +225,7 @@ export function CvVersionTable() {
       setSkillsDraft(skillsFromStructuredJson(selectedVersion.structuredJson));
       setLanguagesDraft(languagesFromStructuredJson(selectedVersion.structuredJson));
       setProjectsDraft(projectsFromStructuredJson(selectedVersion.structuredJson));
+      setEducationDraft(educationFromStructuredJson(selectedVersion.structuredJson));
       setJsonMessage(
         requestedVersionId === selectedVersion.id
           ? "Version enlazada desde el comparador cargada para edicion."
@@ -339,6 +367,7 @@ export function CvVersionTable() {
     setSkillsDraft(skillsFromStructuredJson(selectedVersion?.structuredJson));
     setLanguagesDraft(languagesFromStructuredJson(selectedVersion?.structuredJson));
     setProjectsDraft(projectsFromStructuredJson(selectedVersion?.structuredJson));
+    setEducationDraft(educationFromStructuredJson(selectedVersion?.structuredJson));
     setJsonMessage(selectedVersion ? "JSON estructurado cargado desde la version seleccionada." : "Version no encontrada.");
   }
 
@@ -443,6 +472,38 @@ export function CvVersionTable() {
     }
     setJsonDraft(formatJson(nextStructuredJson));
     setJsonMessage("Bloque proyectos aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function applyEducationBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el bloque.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const nextEducation = splitBlockLines(educationDraft).map((line) => {
+      const [title, institution, ...dateParts] = line.split("-").map((part) => part.trim()).filter(Boolean);
+      return {
+        title,
+        ...(institution ? { institution } : {}),
+        ...(dateParts.length ? { date: dateParts.join(" - ") } : {})
+      };
+    }).filter((item) => item.title);
+    if (nextEducation.length) {
+      nextStructuredJson.education = nextEducation;
+    } else {
+      delete nextStructuredJson.education;
+    }
+    setJsonDraft(formatJson(nextStructuredJson));
+    setJsonMessage("Bloque educacion aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
   async function saveStructuredJson() {
@@ -628,6 +689,18 @@ export function CvVersionTable() {
           />
           <Button type="button" variant="outline" className="w-fit" onClick={applyProjectsBlock} disabled={!jsonVersionId}>
             Aplicar proyectos
+          </Button>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="educationBlock">Educacion CV</Label>
+          <Textarea
+            id="educationBlock"
+            rows={3}
+            value={educationDraft}
+            onChange={(event) => setEducationDraft(event.target.value)}
+          />
+          <Button type="button" variant="outline" className="w-fit" onClick={applyEducationBlock} disabled={!jsonVersionId}>
+            Aplicar educacion
           </Button>
         </div>
         <div className="grid gap-2">
