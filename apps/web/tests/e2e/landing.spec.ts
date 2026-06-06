@@ -776,6 +776,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           cohorts: [
             { period: "2026-05", count: 4 },
             { period: "2026-06", count: 6 }
+          ],
+          cohortSources: [
+            { period: "2026-05", source: "linkedin", channel: "social", count: 4 },
+            { period: "2026-06", source: "direct", channel: "direct", count: 3 },
+            { period: "2026-06", source: "email", channel: "newsletter", count: 3 }
           ]
         },
         latestChanges: [],
@@ -1332,7 +1337,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Pulso operativo")).toBeVisible();
   await expect(page.getByText("Segmentacion operativa")).toBeVisible();
   await expect(page.getByText("Cohorts mensuales")).toBeVisible();
-  await expect(page.getByText("2026-06")).toBeVisible();
+  await expect(page.getByText("2026-06", { exact: true })).toBeVisible();
+  await expect(page.getByText("Fuentes por mes")).toBeVisible();
+  await expect(page.getByText("2026-06 - email/newsletter")).toBeVisible();
   await expect(page.getByText("cv_download")).toBeVisible();
   await expect(page.getByText("Conversion contacto")).toBeVisible();
   await expect(page.getByRole("link", { name: /Ver eventos/ })).toHaveAttribute("href", "/admin/analytics");

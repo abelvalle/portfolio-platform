@@ -55,7 +55,7 @@ export class AdminService {
       this.prisma.appModule.findMany({ orderBy: { order: 'asc' } }),
       this.prisma.analyticsEvent.findMany({
         where: { ...dateWhere, type: 'landing_visit' },
-        select: { createdAt: true },
+        select: { createdAt: true, metadata: true, path: true },
         orderBy: { createdAt: 'asc' },
         take: 1000,
       }),
@@ -84,6 +84,7 @@ export class AdminService {
           totalModules: modules.length,
         },
         cohorts: this.monthlyCohorts(landingCohortEvents),
+        cohortSources: this.monthlySourceCohorts(landingCohortEvents),
       },
       latestChanges: changes,
       modules,
@@ -122,6 +123,68 @@ export class AdminService {
       .map(([period, count]) => ({ period, count }))
       .sort((left, right) => left.period.localeCompare(right.period))
       .slice(-6);
+  }
+
+  private monthlySourceCohorts(
+    events: Array<{ createdAt: Date; metadata: unknown; path?: string | null }>,
+  ) {
+    const cohorts = new Map<string, number>();
+    for (const event of events) {
+      const period = event.createdAt.toISOString().slice(0, 7);
+      const attribution = this.resolveAttribution(event.metadata, event.path);
+      const key = `${period}|${attribution.source}|${attribution.channel}`;
+      cohorts.set(key, (cohorts.get(key) || 0) + 1);
+    }
+
+    return [...cohorts.entries()]
+      .map(([key, count]) => {
+        const [period, source, channel] = key.split('|');
+        return { period, source, channel, count };
+      })
+      .sort(
+        (left, right) =>
+          left.period.localeCompare(right.period) ||
+          right.count - left.count ||
+          left.source.localeCompare(right.source),
+      )
+      .slice(-8);
+  }
+
+  private resolveAttribution(metadata: unknown, path?: string | null) {
+    const record = this.metadataRecord(metadata);
+    const pathParams = this.pathSearchParams(path);
+    const source =
+      this.cleanSegment(record.source) ||
+      this.cleanSegment(pathParams.get('utm_source')) ||
+      this.cleanSegment(pathParams.get('source')) ||
+      'direct';
+    const channel =
+      this.cleanSegment(record.channel) ||
+      this.cleanSegment(pathParams.get('utm_medium')) ||
+      (source === 'direct' ? 'direct' : 'referral');
+
+    return { source, channel };
+  }
+
+  private metadataRecord(metadata: unknown): Record<string, unknown> {
+    if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
+      return metadata as Record<string, unknown>;
+    }
+    return {};
+  }
+
+  private pathSearchParams(path?: string | null) {
+    try {
+      return new URL(path || '/', 'https://portfolio.local').searchParams;
+    } catch {
+      return new URLSearchParams();
+    }
+  }
+
+  private cleanSegment(value: unknown) {
+    return typeof value === 'string' && value.trim()
+      ? value.trim().toLowerCase().slice(0, 80)
+      : null;
   }
 }
 

@@ -22,9 +22,21 @@ describe('AdminService dashboard filters', () => {
       { id: 'module-2', enabled: false },
     ]);
     prisma.analyticsEvent.findMany.mockResolvedValue([
-      { createdAt: new Date('2026-05-30T10:00:00.000Z') },
-      { createdAt: new Date('2026-06-01T10:00:00.000Z') },
-      { createdAt: new Date('2026-06-02T10:00:00.000Z') },
+      {
+        createdAt: new Date('2026-05-30T10:00:00.000Z'),
+        metadata: { source: 'linkedin', channel: 'social' },
+        path: '/',
+      },
+      {
+        createdAt: new Date('2026-06-01T10:00:00.000Z'),
+        metadata: null,
+        path: '/?utm_source=email&utm_medium=newsletter',
+      },
+      {
+        createdAt: new Date('2026-06-02T10:00:00.000Z'),
+        metadata: null,
+        path: '/',
+      },
     ]);
     const service = new AdminService(prisma as never);
 
@@ -56,6 +68,26 @@ describe('AdminService dashboard filters', () => {
         { period: '2026-05', count: 1 },
         { period: '2026-06', count: 2 },
       ],
+      cohortSources: [
+        {
+          period: '2026-05',
+          source: 'linkedin',
+          channel: 'social',
+          count: 1,
+        },
+        {
+          period: '2026-06',
+          source: 'direct',
+          channel: 'direct',
+          count: 1,
+        },
+        {
+          period: '2026-06',
+          source: 'email',
+          channel: 'newsletter',
+          count: 1,
+        },
+      ],
     });
     expect(prisma.analyticsEvent.count).toHaveBeenCalledWith({
       where: { createdAt, type: 'landing_visit' },
@@ -73,7 +105,7 @@ describe('AdminService dashboard filters', () => {
     });
     expect(prisma.analyticsEvent.findMany).toHaveBeenCalledWith({
       where: { createdAt, type: 'landing_visit' },
-      select: { createdAt: true },
+      select: { createdAt: true, metadata: true, path: true },
       orderBy: { createdAt: 'asc' },
       take: 1000,
     });

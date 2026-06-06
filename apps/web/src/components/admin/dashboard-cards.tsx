@@ -148,15 +148,30 @@ export function DashboardCards() {
         <CardHeader>
           <CardTitle>Cohorts mensuales</CardTitle>
         </CardHeader>
-        <CardContent>
-          {dashboard?.segments?.cohorts?.length ? (
-            <SegmentGroup
-              title="Visitas landing"
-              items={dashboard.segments.cohorts.map((cohort) => [cohort.period, cohort.count] as [string, number])}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">Sin cohorts de visitas para los filtros actuales.</p>
-          )}
+        <CardContent className="grid gap-5 md:grid-cols-2">
+          <div>
+            {dashboard?.segments?.cohorts?.length ? (
+              <SegmentGroup
+                title="Visitas landing"
+                items={dashboard.segments.cohorts.map((cohort) => [cohort.period, cohort.count] as [string, number])}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">Sin cohorts de visitas para los filtros actuales.</p>
+            )}
+          </div>
+          <div>
+            {dashboard?.segments?.cohortSources?.length ? (
+              <SegmentGroup
+                title="Fuentes por mes"
+                items={dashboard.segments.cohortSources.map((cohort) => [
+                  `${cohort.period} - ${cohort.source}/${cohort.channel}`,
+                  cohort.count
+                ] as [string, number])}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">Sin fuentes por mes para los filtros actuales.</p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -213,7 +228,7 @@ function SegmentGroup({
       {items.map(([label, value]) => (
         <div key={label} className="grid gap-2">
           <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="font-medium">{label}</span>
+            <span className="break-all font-medium">{label}</span>
             <span className="text-muted-foreground">{value}</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-muted">
