@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, RefreshCw, Save, Star, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Pencil, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -50,6 +50,30 @@ function splitList(value: string) {
   return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
 }
 
+function toInputDate(value?: string | null) {
+  return value ? value.slice(0, 10) : "";
+}
+
+function experienceToDraft(item: ExperienceItem): DraftExperience {
+  return {
+    company: item.company,
+    role: item.role,
+    startDate: toInputDate(item.startDate),
+    endDate: toInputDate(item.endDate),
+    current: item.current,
+    location: item.location || "",
+    modality: item.modality || "not_specified",
+    description: item.description,
+    achievements: item.achievements.join("\n"),
+    responsibilities: item.responsibilities.join("\n"),
+    technologies: item.technologies.join("\n"),
+    methodologies: item.methodologies.join("\n"),
+    skills: item.skills.join("\n"),
+    visible: item.visible,
+    featured: item.featured
+  };
+}
+
 function buildMutation(draft: DraftExperience, order: number): ExperienceMutation {
   return {
     company: draft.company.trim(),
@@ -83,6 +107,8 @@ export function ExperienceManagement() {
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingDeleteExperience, setPendingDeleteExperience] = useState<ExperienceItem | null>(null);
+  const [editingExperience, setEditingExperience] = useState<ExperienceItem | null>(null);
+  const [editDraft, setEditDraft] = useState<DraftExperience>(emptyDraft);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -146,6 +172,34 @@ export function ExperienceManagement() {
       await loadExperiences();
     } catch {
       setMessage("No se pudo eliminar la experiencia.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  function openEditExperience(item: ExperienceItem) {
+    setEditingExperience(item);
+    setEditDraft(experienceToDraft(item));
+  }
+
+  async function updateEditingExperience() {
+    if (!editingExperience) {
+      return;
+    }
+    const payload = buildMutation(editDraft, editingExperience.order);
+    if (!payload.company || !payload.role || !payload.startDate || !payload.description) {
+      setMessage("Empresa, cargo, fecha inicio y descripcion son obligatorios.");
+      return;
+    }
+
+    setBusyId(editingExperience.id);
+    try {
+      await adminClient.updateExperience(editingExperience.id, payload);
+      setEditingExperience(null);
+      await loadExperiences();
+      setMessage(`Experiencia actualizada: ${payload.company}.`);
+    } catch {
+      setMessage("No se pudo actualizar la experiencia.");
     } finally {
       setBusyId(null);
     }
@@ -223,8 +277,8 @@ export function ExperienceManagement() {
       </section>
 
       <section className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-[880px]">
-          <div className="grid grid-cols-[1.3fr_1.3fr_140px_130px_180px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+        <div className="min-w-[920px]">
+          <div className="grid grid-cols-[1.3fr_1.3fr_140px_130px_220px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
             <span>Empresa</span>
             <span>Cargo</span>
             <span>Fechas</span>
@@ -232,7 +286,7 @@ export function ExperienceManagement() {
             <span>Acciones</span>
           </div>
           {items.length ? items.map((item) => (
-            <div key={item.id} className="grid grid-cols-[1.3fr_1.3fr_140px_130px_180px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+            <div key={item.id} className="grid grid-cols-[1.3fr_1.3fr_140px_130px_220px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <span className="font-medium">{item.company}</span>
               <span className="text-muted-foreground">{item.role}</span>
               <span className="text-muted-foreground">{formatDate(item.startDate)} - {formatDate(item.endDate)}</span>
@@ -241,6 +295,9 @@ export function ExperienceManagement() {
                 {item.featured ? <Badge variant="outline">destacada</Badge> : null}
               </span>
               <span className="flex gap-1">
+                <Button type="button" variant="outline" size="icon" aria-label={`Editar ${item.company}`} onClick={() => openEditExperience(item)} disabled={busyId === item.id}>
+                  <Pencil />
+                </Button>
                 <Button type="button" variant="outline" size="icon" onClick={() => patchExperience(item.id, { visible: !item.visible })} disabled={busyId === item.id}>
                   {item.visible ? <EyeOff /> : <Eye />}
                 </Button>
@@ -257,6 +314,72 @@ export function ExperienceManagement() {
           )}
         </div>
       </section>
+
+      <Dialog open={Boolean(editingExperience)} onOpenChange={(open) => !open && setEditingExperience(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Editar experiencia</DialogTitle>
+            <DialogDescription>
+              Actualiza empresa, cargo, fechas, modalidad, descripcion, listas asociadas y visibilidad.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid max-h-[70vh] gap-4 overflow-y-auto pr-1 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="editExperienceCompany">Empresa experiencia</Label>
+              <Input id="editExperienceCompany" value={editDraft.company} onChange={(event) => setEditDraft((current) => ({ ...current, company: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editExperienceRole">Cargo experiencia</Label>
+              <Input id="editExperienceRole" value={editDraft.role} onChange={(event) => setEditDraft((current) => ({ ...current, role: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editExperienceStartDate">Fecha inicio experiencia</Label>
+              <Input id="editExperienceStartDate" type="date" value={editDraft.startDate} onChange={(event) => setEditDraft((current) => ({ ...current, startDate: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editExperienceEndDate">Fecha fin experiencia</Label>
+              <Input id="editExperienceEndDate" type="date" value={editDraft.endDate} disabled={editDraft.current} onChange={(event) => setEditDraft((current) => ({ ...current, endDate: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editExperienceLocation">Ubicacion experiencia</Label>
+              <Input id="editExperienceLocation" value={editDraft.location} onChange={(event) => setEditDraft((current) => ({ ...current, location: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editExperienceModality">Modalidad experiencia</Label>
+              <Input id="editExperienceModality" value={editDraft.modality} onChange={(event) => setEditDraft((current) => ({ ...current, modality: event.target.value }))} />
+            </div>
+            <div className="grid gap-2 md:col-span-2">
+              <Label htmlFor="editExperienceDescription">Descripcion experiencia</Label>
+              <Textarea id="editExperienceDescription" rows={4} value={editDraft.description} onChange={(event) => setEditDraft((current) => ({ ...current, description: event.target.value }))} />
+            </div>
+            {(["achievements", "responsibilities", "technologies", "methodologies", "skills"] as const).map((field) => (
+              <div className="grid gap-2" key={field}>
+                <Label htmlFor={`editExperience${field}`}>{field} experiencia</Label>
+                <Textarea id={`editExperience${field}`} rows={3} value={editDraft[field]} onChange={(event) => setEditDraft((current) => ({ ...current, [field]: event.target.value }))} />
+              </div>
+            ))}
+            <div className="flex flex-wrap gap-2 md:col-span-2">
+              <Button type="button" variant={editDraft.current ? "default" : "outline"} onClick={() => setEditDraft((current) => ({ ...current, current: !current.current }))}>
+                Actual
+              </Button>
+              <Button type="button" variant={editDraft.visible ? "default" : "outline"} onClick={() => setEditDraft((current) => ({ ...current, visible: !current.visible }))}>
+                Visible
+              </Button>
+              <Button type="button" variant={editDraft.featured ? "default" : "outline"} onClick={() => setEditDraft((current) => ({ ...current, featured: !current.featured }))}>
+                Destacada
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditingExperience(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={updateEditingExperience} disabled={Boolean(editingExperience && busyId === editingExperience.id)}>
+              Guardar experiencia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(pendingDeleteExperience)} onOpenChange={(open) => !open && setPendingDeleteExperience(null)}>
         <DialogContent>

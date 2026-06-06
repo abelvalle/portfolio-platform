@@ -650,6 +650,31 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       ])
     });
   });
+  await page.route("**/api/v1/experiences/experience-1", async (route) => {
+    const data = JSON.parse(route.request().postData() || "{}");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "experience-1",
+        company: data.company || "Demo Company",
+        role: data.role || "IT Project Manager",
+        startDate: data.startDate || "2025-01-01",
+        endDate: data.endDate ?? null,
+        current: data.current ?? true,
+        location: data.location || "Zaragoza",
+        modality: data.modality || "hybrid",
+        description: data.description || "Experiencia demo",
+        achievements: data.achievements || [],
+        responsibilities: data.responsibilities || [],
+        technologies: data.technologies || [],
+        methodologies: data.methodologies || [],
+        skills: data.skills || [],
+        order: data.order ?? 0,
+        visible: data.visible ?? true,
+        featured: data.featured ?? true
+      })
+    });
+  });
   await page.route("**/api/v1/media/storage/status", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -712,6 +737,14 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/portfolio/experience");
   await expect(page.getByRole("heading", { name: "Experiencia profesional" })).toBeVisible();
   await expect(page.getByRole("main").getByText("Demo Company")).toBeVisible();
+  await page.getByRole("button", { name: "Editar Demo Company" }).click();
+  await expect(page.getByRole("heading", { name: "Editar experiencia" })).toBeVisible();
+  await page.getByLabel("Empresa experiencia").fill("Demo Company Updated");
+  await page.getByLabel("Cargo experiencia").fill("Delivery Manager");
+  await page.getByLabel("Descripcion experiencia").fill("Experiencia ampliada en delivery y reporting.");
+  await page.getByLabel("technologies experiencia").fill("Next.js\nNestJS");
+  await page.getByRole("button", { name: "Guardar experiencia" }).click();
+  await expect(page.getByText("Experiencia actualizada: Demo Company Updated.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Demo Company" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar borrado" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();
