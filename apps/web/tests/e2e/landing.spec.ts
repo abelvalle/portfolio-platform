@@ -107,4 +107,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/analytics");
   await expect(page.getByRole("heading", { name: "Analitica" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Exportar CSV" })).toBeVisible();
+  await expect(page.getByLabel("Desde")).toBeVisible();
+  await expect(page.getByLabel("Hasta")).toBeVisible();
 });
