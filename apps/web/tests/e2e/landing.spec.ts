@@ -53,6 +53,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
   await expect(page.getByText("Visitas landing")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Ver eventos/ })).toHaveAttribute("href", "/admin/analytics");
 
   await page.goto("/admin/settings/publication");
   await expect(page.getByRole("heading", { name: "Revision de publicacion" })).toBeVisible();
