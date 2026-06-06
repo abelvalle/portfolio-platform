@@ -107,6 +107,26 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/cv-versions", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        { id: "cv-base", name: "CV Base", status: "published", language: "es", isPrimary: true, updatedAt: "2026-06-01T08:00:00.000Z" },
+        { id: "cv-adapted", name: "CV Adaptado", status: "draft", language: "es", isPrimary: false, updatedAt: "2026-06-02T08:00:00.000Z" }
+      ])
+    });
+  });
+  await page.route("**/api/v1/cv/compare-versions", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        summary: { base: "Gestion IT general.", adapted: "Delivery IT orientado a KPIs." },
+        skillsOrder: { base: ["Agile", "UAT"], adapted: ["KPIs", "Agile"] },
+        highlightedExperience: { base: ["Consultoria"], adapted: ["Delivery Manager"] },
+        sectionOrder: { base: ["Resumen", "Experiencia"], adapted: ["Skills", "Resumen"] }
+      })
+    });
+  });
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
@@ -153,6 +173,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/cv/compare");
   await expect(page.getByRole("heading", { name: "Comparar CV" })).toBeVisible();
+  await page.getByRole("button", { name: "Comparar versiones" }).click();
+  await expect(page.getByText("Solo en adaptado").first()).toBeVisible();
+  await expect(page.getByText("KPIs", { exact: true })).toBeVisible();
 
   await page.goto("/admin/cv/editor");
   await expect(page.getByRole("heading", { name: "Editor de CV" })).toBeVisible();

@@ -11,6 +11,16 @@ function joinList(items?: string[]) {
   return items?.length ? items.join(", ") : "Sin datos.";
 }
 
+function listDiff(base?: string[], adapted?: string[]) {
+  const baseItems = base || [];
+  const adaptedItems = adapted || [];
+  return {
+    common: adaptedItems.filter((item) => baseItems.includes(item)),
+    added: adaptedItems.filter((item) => !baseItems.includes(item)),
+    removed: baseItems.filter((item) => !adaptedItems.includes(item))
+  };
+}
+
 export function CvCompareView() {
   const [versions, setVersions] = useState<CvVersionItem[]>([]);
   const [baseId, setBaseId] = useState("");
@@ -113,31 +123,58 @@ export function CvCompareView() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         {[
-          ["Resumen profesional", result?.summary?.base, result?.summary?.adapted],
-          ["Orden de skills", joinList(result?.skillsOrder?.base), joinList(result?.skillsOrder?.adapted)],
-          ["Experiencia destacada", joinList(result?.highlightedExperience?.base), joinList(result?.highlightedExperience?.adapted)],
-          ["Orden de secciones", joinList(result?.sectionOrder?.base), joinList(result?.sectionOrder?.adapted)]
-        ].map(([title, base, adapted]) => (
+          { title: "Resumen profesional", base: result?.summary?.base, adapted: result?.summary?.adapted, type: "text" },
+          { title: "Orden de skills", base: joinList(result?.skillsOrder?.base), adapted: joinList(result?.skillsOrder?.adapted), type: "list", rawBase: result?.skillsOrder?.base, rawAdapted: result?.skillsOrder?.adapted },
+          { title: "Experiencia destacada", base: joinList(result?.highlightedExperience?.base), adapted: joinList(result?.highlightedExperience?.adapted), type: "list", rawBase: result?.highlightedExperience?.base, rawAdapted: result?.highlightedExperience?.adapted },
+          { title: "Orden de secciones", base: joinList(result?.sectionOrder?.base), adapted: joinList(result?.sectionOrder?.adapted), type: "list", rawBase: result?.sectionOrder?.base, rawAdapted: result?.sectionOrder?.adapted }
+        ].map(({ title, base, adapted, type, rawBase, rawAdapted }) => {
+          const changed = base !== adapted;
+          const diff = type === "list" ? listDiff(rawBase, rawAdapted) : null;
+
+          return (
           <Card key={title}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-2">
                 <span>{title}</span>
-                <Badge variant={base === adapted ? "outline" : "default"}>{base === adapted ? "igual" : "diferente"}</Badge>
+                <Badge variant={changed ? "default" : "outline"}>{changed ? "diferente" : "igual"}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 text-sm text-muted-foreground">
-              <div>
+              <div className={changed ? "rounded-lg border border-destructive/30 bg-destructive/5 p-3" : undefined}>
                 <p className="font-medium text-foreground">Base</p>
                 <p className="mt-1">{base || "Sin datos."}</p>
               </div>
-              <div>
+              <div className={changed ? "rounded-lg border border-primary/30 bg-primary/5 p-3" : undefined}>
                 <p className="font-medium text-foreground">Adaptado</p>
                 <p className="mt-1">{adapted || "Sin datos."}</p>
               </div>
+              {diff ? <ListDiffSummary common={diff.common} added={diff.added} removed={diff.removed} /> : null}
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </section>
+    </div>
+  );
+}
+
+function ListDiffSummary({ common, added, removed }: { common: string[]; added: string[]; removed: string[] }) {
+  return (
+    <div className="grid gap-3 rounded-lg border border-border p-3">
+      <DiffGroup label="Solo en adaptado" items={added} variant="default" />
+      <DiffGroup label="Solo en base" items={removed} variant="destructive" />
+      <DiffGroup label="Comun" items={common} variant="outline" />
+    </div>
+  );
+}
+
+function DiffGroup({ label, items, variant }: { label: string; items: string[]; variant: "default" | "destructive" | "outline" }) {
+  return (
+    <div>
+      <p className="text-xs font-medium uppercase tracking-normal text-muted-foreground">{label}</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {items.length ? items.map((item) => <Badge key={item} variant={variant}>{item}</Badge>) : <span className="text-xs text-muted-foreground">Sin cambios.</span>}
+      </div>
     </div>
   );
 }

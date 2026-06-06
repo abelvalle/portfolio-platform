@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 05:02 CEST.
+Estado actualizado: 2026-06-06 05:07 CEST.
 
 ## Hitos completados
 
@@ -915,6 +915,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Diff visual por campo en comparador CV
+
+- `/admin/cv/compare` resalta campos diferentes con paneles base/adaptado.
+- Campos de lista muestran chips para elementos comunes, solo base y solo adaptado.
+- El resumen profesional mantiene comparacion textual con estado visual diferente/igual.
+- Añadida cobertura e2e con versiones y resultado de comparacion mockeados.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -929,7 +943,7 @@ Verificacion realizada en este hito:
 - IA real end to end: falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
 - Adaptación CV a versión final: el wizard ya propone datos desde API; falta aceptar/rechazar cambios por bloque y crear/publicar una `CvVersion` adaptada desde la propuesta.
-- Comparador CV avanzado: la comparación está conectada; faltan diff visual por campo, resaltado inline y enlaces directos para editar la versión adaptada.
+- Comparador CV avanzado: la comparación muestra diff visual por campo; faltan resaltado inline palabra a palabra y enlaces directos para editar la versión adaptada.
 - Usuarios UI avanzada: el CRUD básico está conectado con busqueda y confirmacion de baja; faltan edición de nombre/password inline y paginación.
 - Permisos por acción: existe matriz de permisos, pero los guards todavía se basan en roles por endpoint.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
