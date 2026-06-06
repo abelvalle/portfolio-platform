@@ -225,6 +225,28 @@ function splitBlockLines(value: string) {
   return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
 }
 
+function listField(data: Record<string, unknown>, field: string) {
+  const value = data[field];
+  return Array.isArray(value) ? value : [];
+}
+
+function textField(data: Record<string, unknown> | undefined, field: string) {
+  if (!data) {
+    return "";
+  }
+  const value = data[field];
+  return typeof value === "string" ? value : "";
+}
+
+function findRecord(items: unknown[], matches: (item: Record<string, unknown>) => boolean) {
+  return items.find((item): item is Record<string, unknown> => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      return false;
+    }
+    return matches(item as Record<string, unknown>);
+  });
+}
+
 function getInitialVersionId() {
   if (typeof window === "undefined") {
     return "";
@@ -498,7 +520,11 @@ export function CvVersionTable() {
     }
 
     const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
-    const nextSkills = splitBlockLines(skillsDraft).map((name) => ({ name }));
+    const existingSkills = listField(nextStructuredJson, "skills");
+    const nextSkills = splitBlockLines(skillsDraft).map((name) => ({
+      ...(findRecord(existingSkills, (item) => textField(item, "name") === name) || {}),
+      name
+    }));
     if (nextSkills.length) {
       nextStructuredJson.skills = nextSkills;
     } else {
@@ -523,9 +549,14 @@ export function CvVersionTable() {
     }
 
     const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const existingLanguages = listField(nextStructuredJson, "languages");
     const nextLanguages = splitBlockLines(languagesDraft).map((line) => {
       const [name, ...levelParts] = line.split("-").map((part) => part.trim()).filter(Boolean);
-      return levelParts.length ? { name, level: levelParts.join(" - ") } : { name };
+      return {
+        ...(findRecord(existingLanguages, (item) => textField(item, "name") === name) || {}),
+        name,
+        ...(levelParts.length ? { level: levelParts.join(" - ") } : {})
+      };
     }).filter((language) => language.name);
     if (nextLanguages.length) {
       nextStructuredJson.languages = nextLanguages;
@@ -551,7 +582,11 @@ export function CvVersionTable() {
     }
 
     const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
-    const nextProjects = splitBlockLines(projectsDraft).map((name) => ({ name }));
+    const existingProjects = listField(nextStructuredJson, "projects");
+    const nextProjects = splitBlockLines(projectsDraft).map((name) => ({
+      ...(findRecord(existingProjects, (item) => textField(item, "name") === name) || {}),
+      name
+    }));
     if (nextProjects.length) {
       nextStructuredJson.projects = nextProjects;
     } else {
@@ -576,9 +611,14 @@ export function CvVersionTable() {
     }
 
     const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const existingEducation = listField(nextStructuredJson, "education");
     const nextEducation = splitBlockLines(educationDraft).map((line) => {
       const [title, institution, ...dateParts] = line.split("-").map((part) => part.trim()).filter(Boolean);
+      const existing = findRecord(existingEducation, (item) =>
+        textField(item, "title") === title && (!institution || textField(item, "institution") === institution)
+      );
       return {
+        ...(existing || {}),
         title,
         ...(institution ? { institution } : {}),
         ...(dateParts.length ? { date: dateParts.join(" - ") } : {})
@@ -608,9 +648,14 @@ export function CvVersionTable() {
     }
 
     const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const existingCertifications = listField(nextStructuredJson, "certifications");
     const nextCertifications = splitBlockLines(certificationsDraft).map((line) => {
       const [title, institution, ...dateParts] = line.split("-").map((part) => part.trim()).filter(Boolean);
+      const existing = findRecord(existingCertifications, (item) =>
+        textField(item, "title") === title && (!institution || textField(item, "institution") === institution)
+      );
       return {
+        ...(existing || {}),
         title,
         ...(institution ? { institution } : {}),
         ...(dateParts.length ? { date: dateParts.join(" - ") } : {})
@@ -640,15 +685,19 @@ export function CvVersionTable() {
     }
 
     const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const existingExperiences = Array.isArray(nextStructuredJson.experiences)
+      ? nextStructuredJson.experiences
+      : listField(nextStructuredJson, "experience");
     const nextExperiences = splitBlockLines(experiencesDraft).map((line) => {
       const [role, company, ...periodParts] = line.split("-").map((part) => part.trim()).filter(Boolean);
+      const existing = findRecord(existingExperiences, (item) =>
+        textField(item, "role") === role && (!company || textField(item, "company") === company)
+      );
       return {
+        ...(existing || { description: "", responsibilities: [], achievements: [] }),
         role,
         ...(company ? { company } : {}),
-        ...(periodParts.length ? { period: periodParts.join(" - ") } : {}),
-        description: "",
-        responsibilities: [],
-        achievements: []
+        ...(periodParts.length ? { period: periodParts.join(" - ") } : {})
       };
     }).filter((item) => item.role);
     if (nextExperiences.length) {
@@ -676,9 +725,12 @@ export function CvVersionTable() {
     }
 
     const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const existingSections = listField(nextStructuredJson, "sections");
     const nextSections = splitBlockLines(sectionsDraft).map((line) => {
       const [title, ...contentParts] = line.split(":").map((part) => part.trim()).filter(Boolean);
+      const existing = findRecord(existingSections, (item) => textField(item, "title") === title);
       return {
+        ...(existing || {}),
         title,
         ...(contentParts.length ? { content: contentParts.join(": ") } : {})
       };

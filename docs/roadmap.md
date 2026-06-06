@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 12:41 CEST.
+Estado actualizado: 2026-06-06 12:47 CEST.
 
 ## Hitos completados
 
@@ -2117,6 +2117,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Preservacion de campos ricos al aplicar bloques CV
+
+- Los bloques simples de `/admin/cv/versions` conservan objetos existentes cuando coinciden por nombre, titulo o rol/empresa.
+- Skills, idiomas, proyectos, educacion, certificaciones, experiencia y secciones ya no descartan metadata, descripciones, responsabilidades o contenido adicional al aplicar una lista simple.
+- Experiencia preserva `description`, `responsibilities`, `achievements` y otros campos existentes si el rol/empresa coincide.
+- Añadida cobertura e2e para comprobar que experiencia y proyectos mantienen detalles ricos al aplicar bloques.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run build`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -2137,7 +2151,7 @@ Verificacion realizada en este hito:
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles y reordenado por botones; falta drag/drop.
 - Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; falta drag/drop.
 - Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; falta drag/drop.
-- Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes y bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones; faltan formularios avanzados por bloque y preservacion granular de campos ricos al aplicar listas simples.
+- Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples y bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones; faltan formularios avanzados por bloque.
 - Editor CV por bloques: el editor principal está conectado a campos básicos y Versiones CV ya tiene bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones; faltan duplicado de bloques y edición granular de responsabilidades/logros.
 - Preview A4 admin avanzado: el preview está sincronizado; falta render fiel a la plantilla seleccionada, paginación real y comparación pixel-perfect con exportación PDF.
 - LinkedIn OAuth persistente: el callback ya intercambia `code` y obtiene `userinfo` sanitizado; falta persistir/sincronizar perfil con una entidad segura de integración y credenciales reales.
