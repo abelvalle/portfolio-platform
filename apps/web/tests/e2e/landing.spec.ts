@@ -152,6 +152,21 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/users/user-1", async (route) => {
+    const data = JSON.parse(route.request().postData() || "{}");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "user-1",
+        email: "editor@example.com",
+        name: data.name || "Editor Demo",
+        role: data.role || "editor",
+        mfaEnabled: false,
+        createdAt: "2026-06-01T08:00:00.000Z",
+        updatedAt: "2026-06-06T08:00:00.000Z"
+      })
+    });
+  });
   await page.route("**/api/v1/cv-versions", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -238,6 +253,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Buscar usuarios").fill("editor");
   await expect(page.getByText("Pagina 1 de 1")).toBeVisible();
   await expect(page.getByText("editor@example.com")).toBeVisible();
+  await page.getByLabel("Nombre de editor@example.com").fill("Editor Actualizado");
+  await page.getByLabel("Password nueva de editor@example.com").fill("Password123");
+  await page.getByRole("button", { name: "Guardar datos" }).click();
+  await expect(page.getByText("Datos actualizados para editor@example.com.")).toBeVisible();
+  await expect(page.getByLabel("Password nueva de editor@example.com")).toHaveValue("");
   await page.getByRole("button", { name: "Baja" }).click();
   await expect(page.getByRole("heading", { name: "Confirmar baja" })).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();

@@ -10,6 +10,7 @@ import { adminClient, type AdminUser, type AdminUserRole } from "@/lib/api";
 
 const roles: AdminUserRole[] = ["admin", "editor", "viewer"];
 const userPageSize = 5;
+type UserProfileDraft = { name: string; password: string };
 
 export function UserManagement() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -18,6 +19,7 @@ export function UserManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [draftUser, setDraftUser] = useState({ email: "", name: "", role: "viewer" as AdminUserRole, password: "" });
+  const [profileDrafts, setProfileDrafts] = useState<Record<string, UserProfileDraft>>({});
   const [roleDrafts, setRoleDrafts] = useState<Record<string, AdminUserRole>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,6 +52,7 @@ export function UserManagement() {
       setUsers(nextUsers);
       setPermissions(nextPermissions);
       setRoleDrafts(Object.fromEntries(nextUsers.map((user) => [user.id, user.role])));
+      setProfileDrafts(Object.fromEntries(nextUsers.map((user) => [user.id, { name: user.name || "", password: "" }])));
       setMessage("Usuarios sincronizados con la API.");
     } catch {
       setMessage("No se pudieron cargar usuarios. Comprueba sesion admin.");
@@ -75,6 +78,7 @@ export function UserManagement() {
       });
       setUsers((current) => [...current, created]);
       setRoleDrafts((current) => ({ ...current, [created.id]: created.role }));
+      setProfileDrafts((current) => ({ ...current, [created.id]: { name: created.name || "", password: "" } }));
       setDraftUser({ email: "", name: "", role: "viewer", password: "" });
       setMessage("Usuario creado correctamente.");
     } catch {
@@ -92,6 +96,32 @@ export function UserManagement() {
       setMessage(`Rol actualizado para ${updated.email}.`);
     } catch {
       setMessage("No se pudo actualizar el rol.");
+    }
+  }
+
+  async function updateProfile(user: AdminUser) {
+    const draft = profileDrafts[user.id] || { name: user.name || "", password: "" };
+    const name = draft.name.trim();
+    const password = draft.password.trim();
+    if (name === (user.name || "") && !password) {
+      setMessage("No hay cambios de datos para guardar.");
+      return;
+    }
+    if (password && password.length < 8) {
+      setMessage("La password debe tener al menos 8 caracteres.");
+      return;
+    }
+
+    try {
+      const updated = await adminClient.updateUser(user.id, {
+        name,
+        ...(password ? { password } : {})
+      });
+      setUsers((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      setProfileDrafts((current) => ({ ...current, [updated.id]: { name: updated.name || "", password: "" } }));
+      setMessage(`Datos actualizados para ${updated.email}.`);
+    } catch {
+      setMessage("No se pudieron actualizar los datos del usuario.");
     }
   }
 
@@ -140,7 +170,7 @@ export function UserManagement() {
       </form>
 
       <section className="overflow-x-auto rounded-lg border border-border">
-        <div className="min-w-[760px]">
+        <div className="min-w-[900px]">
           <div className="border-b border-border p-3">
             <div className="grid max-w-sm grid-cols-[auto_1fr] items-center gap-2 rounded-lg border border-input px-2.5">
               <Search className="size-4 text-muted-foreground" />
@@ -156,17 +186,37 @@ export function UserManagement() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-[1.4fr_120px_120px_180px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
+          <div className="grid grid-cols-[1.5fr_120px_120px_240px] border-b border-border bg-muted/40 p-3 text-sm font-medium">
             <span>Usuario</span>
             <span>Rol</span>
             <span>MFA</span>
             <span>Acciones</span>
           </div>
           {filteredUsers.length ? paginatedUsers.map((user) => (
-            <div key={user.id} className="grid grid-cols-[1.4fr_120px_120px_180px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
+            <div key={user.id} className="grid grid-cols-[1.5fr_120px_120px_240px] gap-3 border-b border-border p-3 text-sm last:border-b-0">
               <div className="min-w-0">
                 <p className="truncate font-medium">{user.email}</p>
-                <p className="truncate text-muted-foreground">{user.name || "Sin nombre"}</p>
+                <div className="mt-2 grid gap-2">
+                  <Input
+                    aria-label={`Nombre de ${user.email}`}
+                    value={(profileDrafts[user.id] || { name: user.name || "", password: "" }).name}
+                    onChange={(event) => setProfileDrafts((current) => ({
+                      ...current,
+                      [user.id]: { ...(current[user.id] || { name: user.name || "", password: "" }), name: event.target.value }
+                    }))}
+                    placeholder="Nombre"
+                  />
+                  <Input
+                    aria-label={`Password nueva de ${user.email}`}
+                    value={(profileDrafts[user.id] || { name: user.name || "", password: "" }).password}
+                    onChange={(event) => setProfileDrafts((current) => ({
+                      ...current,
+                      [user.id]: { ...(current[user.id] || { name: user.name || "", password: "" }), password: event.target.value }
+                    }))}
+                    placeholder="Password nueva opcional"
+                    type="password"
+                  />
+                </div>
               </div>
               <select
                 className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
@@ -177,9 +227,13 @@ export function UserManagement() {
               </select>
               <span>{user.mfaEnabled ? <Badge>activo</Badge> : <Badge variant="outline">pendiente</Badge>}</span>
               <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => updateProfile(user)}>
+                  <Save data-icon="inline-start" />
+                  Guardar datos
+                </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => updateRole(user)}>
                   <Save data-icon="inline-start" />
-                  Guardar
+                  Guardar rol
                 </Button>
                 <Button type="button" variant="destructive" size="sm" onClick={() => setPendingDeleteUser(user)}>
                   <Trash2 data-icon="inline-start" />
