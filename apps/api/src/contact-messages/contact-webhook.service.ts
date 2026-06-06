@@ -2,12 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ContactMessage } from '@prisma/client';
 import { createHmac } from 'node:crypto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ContactWebhookService {
   private readonly logger = new Logger(ContactWebhookService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   status() {
     return {
@@ -38,12 +42,15 @@ export class ContactWebhookService {
       },
     });
 
-    return this.postWebhook(url, body, 'contact.message.created');
+    return this.postWebhook(url, body, 'contact.message.created', {
+      messageId: message.id,
+    });
   }
 
   async testDispatch() {
     const url = this.webhookUrl;
     if (!url) {
+      await this.auditDelivery('contact.webhook.test', false, false);
       return { configured: false, dispatched: false };
     }
 
@@ -59,7 +66,12 @@ export class ContactWebhookService {
     return { configured: true, ...result };
   }
 
-  private async postWebhook(url: string, body: string, event: string) {
+  private async postWebhook(
+    url: string,
+    body: string,
+    event: string,
+    metadata: Record<string, unknown> = {},
+  ) {
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -70,12 +82,46 @@ export class ContactWebhookService {
       if (!response.ok) {
         this.logger.warn(`Contact webhook returned ${response.status}`);
       }
-      return { dispatched: response.ok };
+      await this.auditDelivery(event, true, response.ok, {
+        ...metadata,
+        status: response.status,
+      });
+      return { dispatched: response.ok, status: response.status };
+    } catch (error) {
+      const message = (error as Error).message;
+      this.logger.warn(`Contact webhook unavailable: ${message}`);
+      await this.auditDelivery(event, true, false, {
+        ...metadata,
+        error: message,
+      });
+      return { dispatched: false };
+    }
+  }
+
+  private async auditDelivery(
+    event: string,
+    configured: boolean,
+    dispatched: boolean,
+    metadata: Record<string, unknown> = {},
+  ) {
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'contact.webhook.delivery',
+          resource: 'contact-webhook',
+          resourceId: event,
+          metadata: {
+            event,
+            configured,
+            dispatched,
+            ...metadata,
+          } as never,
+        },
+      });
     } catch (error) {
       this.logger.warn(
-        `Contact webhook unavailable: ${(error as Error).message}`,
+        `Contact webhook audit failed: ${(error as Error).message}`,
       );
-      return { dispatched: false };
     }
   }
 
