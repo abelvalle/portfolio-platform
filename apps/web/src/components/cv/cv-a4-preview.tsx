@@ -17,6 +17,7 @@ const previewCopy = {
     experience: "Experiencia",
     skills: "Skills",
     education: "Formacion",
+    projects: "Proyectos",
     contact: "Contacto",
     current: "Actual"
   },
@@ -25,6 +26,7 @@ const previewCopy = {
     experience: "Experience",
     skills: "Skills",
     education: "Education",
+    projects: "Projects",
     contact: "Contact",
     current: "Present"
   }
@@ -49,6 +51,9 @@ export function CvA4Preview({
   const visibleExperiences = snapshot.experiences.slice(0, isCompact ? 2 : 3);
   const visibleSkills = snapshot.skills.slice(0, isCompact ? 10 : 14);
   const visibleEducation = [...snapshot.education, ...snapshot.certifications].slice(0, isCompact ? 2 : 4);
+  const visibleProjects = snapshot.projects
+    .filter((project) => project.status === "published" || project.featured)
+    .slice(0, 1);
 
   return (
     <article
@@ -136,6 +141,26 @@ export function CvA4Preview({
             ))}
           </div>
         </PreviewSection>
+
+        {visibleProjects.length > 0 ? (
+          <PreviewSection title={copy.projects} color={color} section="projects">
+            <div className="grid gap-2">
+              {visibleProjects.map((project) => (
+                <div key={project.name}>
+                  <p className="font-semibold">{project.name}</p>
+                  <p className="text-slate-700">{project.description}</p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {project.technologies.slice(0, 4).map((technology) => (
+                      <span key={`${project.name}-${technology}`} className="rounded border border-slate-200 px-1.5 py-0.5 text-[9px] text-slate-500">
+                        {technology}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </PreviewSection>
+        ) : null}
       </div>
     </article>
   );

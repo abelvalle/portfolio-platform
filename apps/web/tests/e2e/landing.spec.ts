@@ -64,6 +64,7 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-renderer", "web-preview");
   await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "minimalista");
   await expect(page.locator("[data-cv-section='summary']")).toBeVisible();
+  await expect(page.locator("[data-cv-section='projects']")).toContainText("Portfolio Platform");
 
   await page.goto("/en/cv/templates/ats-friendly");
   await expect(page.getByRole("heading", { name: "ATS-friendly" })).toBeVisible();
@@ -1807,6 +1808,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.locator("[data-cv-section='experiences']")).toBeVisible();
   await expect(page.locator("[data-cv-section='formation']")).toContainText("Formación superior en desarrollo de aplicaciones.");
   await expect(page.locator("[data-cv-section='formation']")).toContainText("Certificación incluida en el CV actual.");
+  await expect(page.locator("[data-cv-section='projects']")).toContainText("Portfolio Platform");
   await expect(page.getByRole("heading", { name: "Validacion ATS" })).toBeVisible();
   await page.getByRole("button", { name: "Generar reporte ATS" }).click();
   await expect(page.getByText("Score 88 - strong")).toBeVisible();
