@@ -19,12 +19,14 @@ import { Roles } from '../common/guards/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateContactMessageDto } from './contact-message.dto';
 import { ContactMessagesService } from './contact-messages.service';
+import { ContactWebhookService } from './contact-webhook.service';
 
 @ApiTags('contact-messages')
 @Controller('contact-messages')
 export class ContactMessagesController {
   constructor(
     private readonly contactMessagesService: ContactMessagesService,
+    private readonly contactWebhookService: ContactWebhookService,
   ) {}
 
   @Throttle({ default: { ttl: 60_000, limit: 3 } })
@@ -35,6 +37,22 @@ export class ContactMessagesController {
       request.ip,
       request.headers['user-agent'],
     );
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.admin, UserRole.editor, UserRole.viewer)
+  @Get('webhook/status')
+  webhookStatus() {
+    return this.contactWebhookService.status();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.admin, UserRole.editor)
+  @Post('webhook/test')
+  testWebhook() {
+    return this.contactWebhookService.testDispatch();
   }
 
   @ApiBearerAuth()

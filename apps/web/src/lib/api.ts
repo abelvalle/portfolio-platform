@@ -139,6 +139,12 @@ export const adminClient = {
   deleteUser(id: string) {
     return apiFetch<AdminUser>(`/users/${id}`, { method: "DELETE" });
   },
+  contactWebhookStatus() {
+    return apiFetch<ContactWebhookStatus>("/contact-messages/webhook/status");
+  },
+  testContactWebhook() {
+    return apiFetch<ContactWebhookTestResult>("/contact-messages/webhook/test", { method: "POST" });
+  },
   updateTheme(data: unknown) {
     return apiFetch("/theme", { method: "PATCH", body: JSON.stringify(data) });
   },
@@ -218,6 +224,19 @@ export type MfaSetup = {
 export type MfaConfirm = {
   enabled: boolean;
   recoveryCodes: string[];
+};
+
+export type ContactWebhookStatus = {
+  configured: boolean;
+  hasSecret: boolean;
+  event: string;
+  testEvent: string;
+  timeoutMs: number;
+};
+
+export type ContactWebhookTestResult = {
+  configured: boolean;
+  dispatched: boolean;
 };
 
 export type MediaAsset = {

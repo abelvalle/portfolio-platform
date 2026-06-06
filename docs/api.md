@@ -61,6 +61,8 @@ MFA no está activado por defecto en seed para evitar bloquear el primer acceso 
 - `GET|POST|PATCH|DELETE /skills`
 - `GET|POST|PATCH|DELETE /projects`
 - `POST /contact-messages`
+- `GET /contact-messages/webhook/status`
+- `POST /contact-messages/webhook/test`
 - `GET /admin/dashboard`
 - `GET /admin/publication/theme/review`
 - `POST /admin/publication/theme/publish`
@@ -149,6 +151,11 @@ Las exportaciones ATS siguen priorizando compatibilidad: fuerzan color textual y
 ```
 
 Si `CONTACT_WEBHOOK_URL` está configurado, cada mensaje guardado dispara un `POST` externo con evento `contact.message.created`. Si `CONTACT_WEBHOOK_SECRET` existe, se añade firma HMAC SHA-256 en `X-Portfolio-Signature`.
+
+Endpoints admin de webhook:
+
+- `GET /contact-messages/webhook/status`: protegido para `admin`, `editor` y `viewer`; indica si URL/secret están configurados sin exponer valores.
+- `POST /contact-messages/webhook/test`: protegido para `admin` y `editor`; envía un evento `contact.webhook.test` sin datos personales.
 
 ## Integraciones
 

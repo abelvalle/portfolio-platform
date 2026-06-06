@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 02:32 CEST.
+Estado actualizado: 2026-06-06 02:36 CEST.
 
 ## Hitos completados
 
@@ -331,6 +331,25 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### UI y prueba de webhooks de contacto
+
+- Añadido estado de webhook en `ContactWebhookService` sin exponer URL ni secreto.
+- Añadido evento de prueba `contact.webhook.test` sin datos personales.
+- Añadidos endpoints protegidos:
+  - `GET /api/v1/contact-messages/webhook/status`
+  - `POST /api/v1/contact-messages/webhook/test`
+- Añadida card `Webhooks contacto` en `/admin/settings`.
+- La UI muestra configuración, firma HMAC, evento, timeout y permite lanzar prueba manual.
+- Añadido test unitario para estado configurado con secreto.
+- `docs/api.md` actualizado con endpoints de webhook.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -349,7 +368,7 @@ Verificación realizada en este hito:
 - Aceptar/rechazar sugerencias IA desde UI: actualmente se guardan como metadata pendiente, falta workflow visual de revisión granular.
 - Usuarios UI avanzada: el CRUD básico está conectado; faltan edición de nombre/password inline, búsqueda, paginación y confirmación modal de baja.
 - Permisos por acción: existe matriz de permisos, pero los guards todavía se basan en roles por endpoint.
-- Webhooks admin UI: falta pantalla para configurar/testear webhooks desde el panel; ahora se gestionan por variables de entorno.
+- Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
 - Reintentos webhooks: falta cola/retry persistente para destinos externos caídos.
 - LinkedIn OAuth callback: está preparada la URL de autorización, pero falta implementar intercambio de `code` por token y sincronización real de perfil.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.

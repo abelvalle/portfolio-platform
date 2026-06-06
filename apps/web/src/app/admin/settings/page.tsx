@@ -1,6 +1,7 @@
 import { DataTable } from "@/components/admin/data-table";
 import { EntityForm } from "@/components/admin/entity-form";
 import { MfaSettings } from "@/components/admin/mfa-settings";
+import { WebhookSettings } from "@/components/admin/webhook-settings";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -9,6 +10,7 @@ export default function SettingsPage() {
     <div className="grid gap-6">
       <EntityForm title="Configuracion" fields={["Idioma principal", "CORS frontend", "Email de contacto", "CTA principal"]} />
       <MfaSettings />
+      <WebhookSettings />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
