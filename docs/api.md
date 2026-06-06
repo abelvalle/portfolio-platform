@@ -122,6 +122,20 @@ Las sugerencias IA quedan pendientes de revisión y solo pueden reordenar skills
 
 Las exportaciones ATS generan PDF/DOCX con layout textual, nombres de archivo `-ats` y metadata de score ATS.
 
+### Exportación con plantilla
+
+`POST /cv/:id/generate-pdf` y `POST /cv/:id/generate-docx` usan la plantilla asociada a la versión primaria/publicada (`CvVersion.template`).
+
+La exportación aplica:
+
+- `primaryColor` para títulos y secciones.
+- `fontFamily` en DOCX y HTML de preview/export.
+- `density=compact` para ajustar tamaños y espaciado.
+- `slug` de plantilla en el nombre de archivo generado.
+- metadata `template` en `MediaAsset` y `CvGeneratedFile`.
+
+Las exportaciones ATS siguen priorizando compatibilidad: fuerzan color textual y densidad normal aunque la versión tenga otra plantilla.
+
 ## Ejemplo contacto
 
 ```json

@@ -103,12 +103,14 @@ export class CvService {
     const file = await this.exporter.generatePdf(
       version.id,
       version.structuredJson as never,
+      { template: this.exportTemplate(version) },
     );
     return this.persistGeneratedFile(
       version.id,
       file,
       'pdf',
       'application/pdf',
+      this.generationMetadata(version),
     );
   }
 
@@ -117,12 +119,14 @@ export class CvService {
     const file = await this.exporter.generateDocx(
       version.id,
       version.structuredJson as never,
+      { template: this.exportTemplate(version) },
     );
     return this.persistGeneratedFile(
       version.id,
       file,
       'docx',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      this.generationMetadata(version),
     );
   }
 
@@ -137,14 +141,18 @@ export class CvService {
     const file = await this.exporter.generatePdf(
       version.id,
       version.structuredJson as never,
-      { ats: true },
+      { ats: true, template: this.exportTemplate(version) },
     );
     return this.persistGeneratedFile(
       version.id,
       file,
       'pdf',
       'application/pdf',
-      { ats: true, atsScore: report.score, atsStatus: report.status },
+      this.generationMetadata(version, {
+        ats: true,
+        atsScore: report.score,
+        atsStatus: report.status,
+      }),
     );
   }
 
@@ -154,14 +162,18 @@ export class CvService {
     const file = await this.exporter.generateDocx(
       version.id,
       version.structuredJson as never,
-      { ats: true },
+      { ats: true, template: this.exportTemplate(version) },
     );
     return this.persistGeneratedFile(
       version.id,
       file,
       'docx',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      { ats: true, atsScore: report.score, atsStatus: report.status },
+      this.generationMetadata(version, {
+        ats: true,
+        atsScore: report.score,
+        atsStatus: report.status,
+      }),
     );
   }
 
@@ -172,12 +184,38 @@ export class CvService {
         deletedAt: null,
         OR: [{ isPrimary: true }, { status: PublishStatus.published }],
       },
+      include: { template: true },
       orderBy: [{ isPrimary: 'desc' }, { updatedAt: 'desc' }],
     });
     if (!version) {
       throw new NotFoundException('CV version not found');
     }
     return version;
+  }
+
+  private exportTemplate(version: {
+    template?: { name: string; slug: string; config: unknown } | null;
+  }) {
+    if (!version.template) {
+      return undefined;
+    }
+    return {
+      name: version.template.name,
+      slug: version.template.slug,
+      config: version.template.config,
+    };
+  }
+
+  private generationMetadata(
+    version: {
+      template?: { name: string; slug: string; config: unknown } | null;
+    },
+    metadata: Record<string, unknown> = {},
+  ) {
+    return {
+      ...metadata,
+      template: this.exportTemplate(version),
+    };
   }
 
   private async persistGeneratedFile(

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-06 02:12 CEST.
+Estado actualizado: 2026-06-06 02:19 CEST.
 
 ## Hitos completados
 
@@ -255,12 +255,33 @@ Verificación realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run test:e2e`
 
+### Exportación PDF/DOCX aplicando plantilla seleccionada
+
+- `CvService` carga `CvVersion.template` al resolver la versión primaria/publicada.
+- `CvExportService` recibe configuración de plantilla en exportaciones PDF, DOCX y render HTML.
+- Los archivos generados incluyen el slug de plantilla en el nombre.
+- PDF aplica color principal y densidad compacta/normal.
+- DOCX aplica fuente, color de secciones y densidad compacta/normal.
+- Las exportaciones ATS mantienen prioridad ATS: color textual y densidad normal.
+- `MediaAsset` y `CvGeneratedFile` guardan metadata `template` junto a cada exportación.
+- `docs/api.md` actualizado con el comportamiento de exportación por plantilla.
+- Añadido test unitario para validar aplicación de fuente, color y densidad en render HTML.
+
+Verificación realizada en este hito:
+
+- `npm.cmd run build:api`
+- `npm.cmd run lint`
+- `npm.cmd run build`
+- `npm.cmd run test`
+- `npm.cmd run test:e2e`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
 - `html lang` global sigue configurado en `es`; para accesibilidad perfecta conviene migrar a rutas con layout por locale.
 - Traducción de CV generado/exportado: el CV online se localiza, pero las exportaciones PDF/DOCX principales siguen usando la versión pública marcada en backend.
-- Exportación por plantilla: el preview A4 existe, pero PDF/DOCX todavía no aplican la plantilla seleccionada por slug público.
+- Renderer fiel al preview: PDF/DOCX aplican tokens de plantilla, pero todavía no generan desde el mismo HTML/CSS A4 del preview público.
+- Override público de plantilla en descarga: la exportación usa la plantilla de la versión primaria; falta endpoint para descargar una versión concreta con slug de plantilla elegido en la URL pública.
 - MFA UI avanzada: falta pantalla de configuración con QR visual, copia de recovery codes y regeneración controlada desde admin.
 - MFA obligatorio por rol/política: el flujo existe, pero no se fuerza todavía para todos los admins.
 - Auditoría MFA granular: conviene registrar setup/confirm/disable en `AuditLog`.
@@ -284,5 +305,5 @@ Verificación realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. Exportación PDF/DOCX aplicando plantilla seleccionada.
-2. Extender draft/publish a entidades CMS principales.
+1. Extender draft/publish a entidades CMS principales.
+2. Renderer HTML/CSS server-side fiel al preview A4 público.
