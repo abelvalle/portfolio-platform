@@ -239,6 +239,8 @@ El HTML server-side de preview/export incluye `@page A4`, contenedor `main.cv-pa
 
 PDF y DOCX incluyen tambien proyectos destacados y secciones personalizadas cuando existen en `structuredJson`.
 
+La formacion exportada incluye metadatos avanzados cuando existen en `structuredJson`: descripcion y URL en educacion, y URL de certificado e ID de credencial en certificaciones. Los campos vacios no se renderizan.
+
 Las exportaciones ATS siguen priorizando compatibilidad: fuerzan color textual y densidad normal aunque la versión tenga otra plantilla.
 
 ## Ejemplo contacto
