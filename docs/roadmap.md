@@ -3670,6 +3670,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:api`
 - `npm.cmd audit --audit-level=moderate` (falla por deuda conocida `next`/`postcss`)
 
+### Paginacion real del preview A4 web
+
+- `CvA4Preview` divide el contenido en varias hojas A4 mediante un paginador determinista por bloques.
+- Cada hoja expone `data-page-index`, `data-page-count`, ratio A4 y el contrato existente `data-cv-section`.
+- En movil la hoja mantiene ancho minimo documental dentro de un contenedor con scroll horizontal para evitar reflow y overflow vertical.
+- Los e2e publico/admin validan multiples paginas, ratio A4 y ausencia de overflow interno en desktop y mobile.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "public CV template detail"`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3694,7 +3708,7 @@ Verificacion realizada en este hito:
 - Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones, filas drag/drop y draft/publish desde UI.
 - Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples, bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, formularios granulares de experiencia/skills/proyectos/educacion/certificaciones con alta, duplicado y borrado de items, orden exportable `sectionOrder` con drag/drop visual y fallback por botones, duplicado y reordenado drag/drop de secciones personalizadas, borrador/revision/publicacion para `structuredJson` y draft/publish de metadatos no JSON; falta drag/drop visual en entidades CMS principales.
 - Editor CV por bloques: el editor principal está conectado a campos básicos y Versiones CV ya tiene bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones, duplicado de versiones, orden de bloques exportable, alta/duplicado/borrado granular multi-item, edición granular de una experiencia, una skill, un proyecto, un item de educacion y una certificacion, listas internas visuales para responsabilidades/logros de experiencia, tecnologias internas de proyectos, URL externa de educacion e ID de credencial de certificaciones; los metadatos avanzados de formacion ya se exportan en HTML/PDF y DOCX. Falta granularidad equivalente en campos internos avanzados de otros bloques.
-- Preview A4 admin avanzado: el preview está sincronizado, comparte componente/contrato A4 con previews publicas, permite seleccionar plantilla, muestra metadatos secundarios de formacion/certificaciones, idiomas, proyectos destacados cuando existen y tiene guard e2e de ratio A4/overflow horizontal; el contenido largo todavia puede tener overflow vertical hasta implementar paginación real, y la comparacion visual HTML/PDF existe en backend con umbrales tolerantes.
+- Preview A4 admin avanzado: el preview está sincronizado, comparte componente/contrato A4 con previews publicas, permite seleccionar plantilla, muestra metadatos secundarios de formacion/certificaciones, idiomas, proyectos destacados cuando existen, pagina en varias hojas A4 y tiene guard e2e de ratio A4/overflow interno; la comparacion visual HTML/PDF existe en backend con umbrales tolerantes.
 - LinkedIn OAuth persistente: el callback ya intercambia `code` y obtiene `userinfo` sanitizado; falta persistir/sincronizar perfil con una entidad segura de integración y credenciales reales.
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; falta extenderlo a otros futuros módulos.
@@ -3706,5 +3720,5 @@ Verificacion realizada en este hito:
 ## Próximos hitos priorizados
 
 1. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
-2. Paginacion real del preview A4 admin/publico.
-3. Resolver `npm audit` de `next`/`postcss` cuando exista ruta compatible sin downgrade forzado.
+2. Resolver `npm audit` de `next`/`postcss` cuando exista ruta compatible sin downgrade forzado.
+3. Refinar paginacion del PDF server-side para documentos largos de mas de dos paginas.

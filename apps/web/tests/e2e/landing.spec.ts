@@ -1,15 +1,21 @@
 import { expect, test, type Page } from "@playwright/test";
 
 async function expectA4PreviewLayout(page: Page) {
-  const metrics = await page.locator("[data-cv-preview='a4']").evaluate((element) => {
+  const metrics = await page.locator("[data-cv-preview='a4']").evaluateAll((elements) => elements.map((element) => {
     const rect = element.getBoundingClientRect();
     return {
       aspectDelta: Math.abs(rect.width / rect.height - 210 / 297),
-      horizontalOverflow: element.scrollWidth - element.clientWidth
+      horizontalOverflow: element.scrollWidth - element.clientWidth,
+      verticalOverflow: element.scrollHeight - element.clientHeight
     };
-  });
-  expect(metrics.aspectDelta).toBeLessThan(0.02);
-  expect(metrics.horizontalOverflow).toBeLessThanOrEqual(2);
+  }));
+  expect(metrics.length).toBeGreaterThan(0);
+  for (const metric of metrics) {
+    expect(metric.aspectDelta).toBeLessThan(0.02);
+    expect(metric.horizontalOverflow).toBeLessThanOrEqual(2);
+    expect(metric.verticalOverflow).toBeLessThanOrEqual(2);
+  }
+  return metrics.length;
 }
 
 test("landing intro, hero and command palette work", async ({ page }) => {
@@ -56,13 +62,15 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await page.goto("/cv/templates/minimalista");
   await expect(page.getByRole("heading", { name: "Minimalista" })).toBeVisible();
   await expect(page.getByText("Preview A4")).toBeVisible();
-  await expectA4PreviewLayout(page);
+  const spanishPageCount = await expectA4PreviewLayout(page);
+  expect(spanishPageCount).toBeGreaterThanOrEqual(2);
   await expect(page.getByText("/cv/templates/minimalista")).toBeVisible();
   await expect(page.getByRole("link", { name: "Todas las plantillas" })).toHaveAttribute("href", "/cv/templates");
   await expect(page.getByRole("link", { name: "Descargar CV" })).toHaveAttribute("href", /\/api\/v1\/cv\/download\?template=minimalista$/);
-  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-page-size", "A4");
-  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-renderer", "web-preview");
-  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "minimalista");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-page-size", "A4");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-cv-renderer", "web-preview");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-cv-template", "minimalista");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-page-count", String(spanishPageCount));
   await expect(page.locator("[data-cv-section='contact'] [data-cv-contact-item='true']")).toHaveCount(3);
   await expect(page.locator("[data-cv-section='summary']")).toBeVisible();
   await expect(page.locator("[data-cv-section='languages']")).toContainText("Inglés B1");
@@ -71,12 +79,14 @@ test("public CV template detail previews are shareable", async ({ page }) => {
   await page.goto("/en/cv/templates/ats-friendly");
   await expect(page.getByRole("heading", { name: "ATS-friendly" })).toBeVisible();
   await expect(page.getByText("A4 preview")).toBeVisible();
-  await expectA4PreviewLayout(page);
+  const englishPageCount = await expectA4PreviewLayout(page);
+  expect(englishPageCount).toBeGreaterThanOrEqual(2);
   await expect(page.getByText("/en/cv/templates/ats-friendly")).toBeVisible();
   await expect(page.getByRole("link", { name: "All templates" })).toHaveAttribute("href", "/en/cv/templates");
   await expect(page.getByRole("link", { name: "Download resume" })).toHaveAttribute("href", /\/api\/v1\/cv\/download\?template=ats-friendly$/);
-  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "ats-friendly");
-  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-density", "normal");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-cv-template", "ats-friendly");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-cv-density", "normal");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-page-count", String(englishPageCount));
 });
 
 test("admin publication page is reachable behind the session proxy", async ({ context, page }) => {
@@ -1843,14 +1853,16 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/cv/editor");
   await expect(page.getByRole("heading", { name: "Editor de CV" })).toBeVisible();
-  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-page-size", "A4");
-  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-renderer", "web-preview");
-  await expectA4PreviewLayout(page);
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-page-size", "A4");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-cv-renderer", "web-preview");
+  const adminPageCount = await expectA4PreviewLayout(page);
+  expect(adminPageCount).toBeGreaterThanOrEqual(2);
   await expect(page.getByLabel("Plantilla preview admin")).toHaveValue("ats-friendly");
-  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "ats-friendly");
-  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-density", "compact");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-cv-template", "ats-friendly");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-cv-density", "compact");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-page-count", String(adminPageCount));
   await page.getByLabel("Plantilla preview admin").selectOption("");
-  await expect(page.locator("[data-cv-preview='a4']")).toHaveAttribute("data-cv-template", "default");
+  await expect(page.locator("[data-cv-preview='a4']").first()).toHaveAttribute("data-cv-template", "default");
   const adminContactTexts = await page.locator("[data-cv-section='contact'] [data-cv-contact-item='true']").allTextContents();
   expect(adminContactTexts.every((text) => text.trim().length > 0)).toBeTruthy();
   await expect(page.locator("[data-cv-section='experiences']")).toBeVisible();
