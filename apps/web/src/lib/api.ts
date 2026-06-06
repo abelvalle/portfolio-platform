@@ -148,6 +148,9 @@ export const adminClient = {
   publicationEducationReview(id: string) {
     return apiFetch<PublicationEducationReview>(`/admin/publication/education/${id}/review`);
   },
+  publicationCertificationReview(id: string) {
+    return apiFetch<PublicationCertificationReview>(`/admin/publication/certifications/${id}/review`);
+  },
   publishThemeDraft() {
     return apiFetch<{ changedFields: string[] }>("/admin/publication/theme/publish", { method: "POST" });
   },
@@ -165,6 +168,9 @@ export const adminClient = {
   },
   publishEducationDraft(id: string) {
     return apiFetch<{ changedFields: string[] }>(`/admin/publication/education/${id}/publish`, { method: "POST" });
+  },
+  publishCertificationDraft(id: string) {
+    return apiFetch<{ changedFields: string[] }>(`/admin/publication/certifications/${id}/publish`, { method: "POST" });
   },
   restorePublicationChange(id: string) {
     return apiFetch<{ changedFields: string[] }>(`/admin/publication/changelog/${id}/restore`, { method: "POST" });
@@ -442,6 +448,10 @@ export type PublicationEducationReview = Omit<PublicationThemeReview, "entityTyp
   entityType: "education";
 };
 
+export type PublicationCertificationReview = Omit<PublicationThemeReview, "entityType"> & {
+  entityType: "certification";
+};
+
 export type ChangeLogItem = {
   id: string;
   entityType: string;
@@ -676,6 +686,8 @@ export type CertificationItem = {
   attachmentId?: string | null;
   order: number;
   visible: boolean;
+  draftJson?: Partial<CertificationMutation> | null;
+  publishedAt?: string | null;
 };
 
 export type CertificationMutation = Omit<CertificationItem, "id">;

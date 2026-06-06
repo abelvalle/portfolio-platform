@@ -930,7 +930,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           certificateUrl: null,
           attachmentId: null,
           order: 0,
-          visible: true
+          visible: true,
+          draftJson: null,
+          publishedAt: null
         }
       ])
     });
@@ -948,8 +950,34 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         certificateUrl: data.certificateUrl ?? null,
         attachmentId: data.attachmentId ?? null,
         order: data.order ?? 0,
-        visible: data.visible ?? true
+        visible: data.visible ?? true,
+        draftJson: data.draftJson ?? null,
+        publishedAt: null
       })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/certifications/certification-1/review", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        entityType: "certification",
+        entityId: "certification-1",
+        hasDraft: true,
+        publishedAt: null,
+        fields: [
+          { field: "title", before: "Scrum Master", after: "Scrum Master avanzado", changed: true },
+          { field: "date", before: "2025", after: "2026", changed: true },
+          { field: "description", before: "Certificacion demo", after: "Certificacion ampliada de agilidad.", changed: true },
+          { field: "attachmentId", before: null, after: "media-1", changed: true }
+        ],
+        latestChanges: []
+      })
+    });
+  });
+  await page.route("**/api/v1/admin/publication/certifications/certification-1/publish", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ changedFields: ["title", "date", "description", "attachmentId"] })
     });
   });
   await page.route(/\/api\/v1\/experiences(\?.*)?$/, async (route) => {
@@ -1214,8 +1242,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByLabel("Descripcion certificacion").fill("Certificacion ampliada de agilidad.");
   await page.getByLabel("Adjunto media certificacion").selectOption("media-1");
   await expect(page.getByLabel("Adjunto ID certificacion")).toHaveValue("media-1");
-  await page.getByRole("button", { name: "Guardar certificacion" }).click();
-  await expect(page.getByText("Certificacion actualizada: Scrum Master avanzado.")).toBeVisible();
+  await page.getByRole("button", { name: "Guardar borrador" }).click();
+  await expect(page.getByText("Borrador de certificacion guardado: Scrum Master avanzado.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Revision borrador certificacion" })).toBeVisible();
+  await page.getByRole("button", { name: "Publicar borrador" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Borrador de certificacion publicado. Campos modificados: title, date, description, attachmentId.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Bajar Scrum Master" })).toBeVisible();
   await page.getByRole("button", { name: "Subir Scrum Master" }).click();
   await expect(page.getByText("Certificacion reordenada: Scrum Master.")).toBeVisible();
@@ -1346,7 +1378,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Scrum Master\"/);
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).click({ force: true });
+  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
   await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
   await page.getByLabel("Experiencia CV").fill("Delivery Manager - Demo Company - 2026");
@@ -1355,7 +1388,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"role\": \"Delivery Manager\"/);
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).click({ force: true });
+  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
   await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
   await page.getByLabel("Secciones personalizadas CV").fill("Publicaciones: Seccion demo pendiente de revision");
@@ -1364,7 +1398,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("JSON estructurado")).toHaveValue(/\"title\": \"Publicaciones\"/);
   await page.getByRole("button", { name: "Guardar JSON" }).click({ force: true });
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).click({ force: true });
+  await page.getByRole("dialog", { name: "Confirmar cambio grande" }).getByRole("button", { name: "Guardar JSON" }).focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Confirmar cambio grande" })).toBeHidden();
   await expect(page.getByText("JSON estructurado guardado.")).toBeVisible();
   await page.getByLabel("JSON estructurado").fill(JSON.stringify({

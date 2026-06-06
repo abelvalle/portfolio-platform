@@ -2736,6 +2736,24 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run test`
 - `npm.cmd --prefix apps/api run test:e2e`
 
+### UI draft/publish para certificaciones
+
+- `/admin/portfolio/certifications` permite guardar borradores de certificaciones desde el dialogo de edicion.
+- La UI llama a `PATCH /api/v1/certifications/:id` con `draftJson` sin publicar cambios directamente.
+- La UI consume `GET /api/v1/admin/publication/certifications/:id/review` para mostrar diffs del borrador.
+- El dialogo muestra una revision resumida con campos modificados, valor publicado y valor propuesto.
+- La accion `Publicar borrador` llama a `POST /api/v1/admin/publication/certifications/:id/publish`.
+- El modal de certificaciones usa ancho responsive, scroll y footer con wrap para evitar recortes.
+- Anadida cobertura e2e desktop/mobile del flujo guardar borrador -> revisar -> publicar.
+- Estabilizada en mobile la confirmacion de cambios grandes del editor de Versiones CV usando foco + Enter en el dialogo.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+- QA visual Playwright fallback en `/admin/portfolio/certifications` con dialogo de borrador visible y sin errores de consola; Browser integrado no expuso herramienta navegable en esta sesion.
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -2757,7 +2775,7 @@ Verificacion realizada en este hito:
 - Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Estudios UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones y draft/publish desde UI; falta drag/drop.
-- Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media y reordenado por botones; faltan drag/drop y draft/publish desde UI.
+- Certificaciones UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, selector de adjuntos/media, reordenado por botones y draft/publish desde UI; falta drag/drop.
 - Versiones CV UI avanzada: el JSON estructurado ya se puede editar con validación semántica mínima, confirmación para cambios grandes, preservacion de campos ricos al aplicar listas simples y bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones; faltan formularios avanzados por bloque.
 - Editor CV por bloques: el editor principal está conectado a campos básicos y Versiones CV ya tiene bloques de resumen/skills/idiomas/proyectos/educación/certificaciones/experiencia/secciones y duplicado de versiones; falta duplicado por bloque y edición granular de responsabilidades/logros.
 - Preview A4 admin avanzado: el preview está sincronizado; falta render fiel a la plantilla seleccionada, paginación real y comparación pixel-perfect con exportación PDF.
@@ -2771,6 +2789,6 @@ Verificacion realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. UI draft/publish para certificaciones.
-2. Workflow draft/publish para CV Manager.
-3. Renderer HTML/CSS server-side fiel al preview A4 público.
+1. Workflow draft/publish para CV Manager.
+2. Renderer HTML/CSS server-side fiel al preview A4 público.
+3. Formularios avanzados por bloque en Versiones CV.
