@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Archive, FileText, RefreshCw, Save, Star, Trash2 } from "lucide-react";
+import { Archive, Copy, FileText, RefreshCw, Save, Star, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -37,6 +37,10 @@ function slugify(value: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function uniqueCopySlug(value: string) {
+  return `${slugify(`${value}-copia`)}-${Date.now().toString(36)}`;
 }
 
 function formatJson(value: unknown) {
@@ -460,6 +464,33 @@ export function CvVersionTable() {
       await loadVersions();
     } catch {
       setMessage("No se pudo marcar esta version como principal.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function duplicateVersion(version: CvVersionItem) {
+    const copyName = `${version.name} copia`;
+    setBusyId(version.id);
+    setMessage(`Duplicando version: ${version.name}.`);
+    try {
+      await cvClient.createVersion({
+        cvId: version.cvId,
+        name: copyName,
+        slug: uniqueCopySlug(version.slug || version.name),
+        description: version.description || null,
+        targetRole: version.targetRole || "General",
+        targetCompany: version.targetCompany || null,
+        language: version.language || "es",
+        status: "draft",
+        templateId: version.templateId || null,
+        structuredJson: version.structuredJson || {},
+        isPrimary: false
+      });
+      await loadVersions();
+      setMessage(`Version duplicada: ${copyName}.`);
+    } catch {
+      setMessage("No se pudo duplicar la version.");
     } finally {
       setBusyId(null);
     }
@@ -1040,6 +1071,10 @@ export function CvVersionTable() {
                 <Button type="button" variant="outline" size="sm" onClick={() => generateVersionFile(version.id, "docx")} disabled={busyId === version.id}>
                   <FileText data-icon="inline-start" />
                   DOCX
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => duplicateVersion(version)} disabled={busyId === version.id}>
+                  <Copy data-icon="inline-start" />
+                  Duplicar
                 </Button>
                 {!version.isPrimary ? (
                   <Button type="button" variant="outline" size="sm" onClick={() => setPrimaryVersion(version.id)} disabled={busyId === version.id}>
