@@ -4,6 +4,14 @@ Base URL local: `http://localhost:4000/api/v1`
 
 Swagger: `http://localhost:4000/api/docs`
 
+Snapshot OpenAPI versionado: `docs/openapi.json`
+
+Para regenerarlo:
+
+```bash
+npm run openapi:generate
+```
+
 ## Autenticación
 
 `POST /auth/login`

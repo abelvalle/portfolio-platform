@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:46 CEST.
+Estado actualizado: 2026-06-07 09:50 CEST.
 
 ## Hitos completados
 
@@ -5509,6 +5509,19 @@ Verificacion realizada en este hito:
 - `gh run view 27086446807 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27086446800 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Snapshot OpenAPI versionado
+
+- Anadido generador `apps/api/src/openapi.generate.ts` para construir OpenAPI desde `AppModule` sin arrancar servidor HTTP.
+- Anadidos scripts `npm run openapi:generate` y `npm --prefix apps/api run openapi:generate`.
+- Generado `docs/openapi.json` con rutas versionadas `/api/v1/*`.
+- README y `docs/api.md` documentan el comando y el artefacto.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run openapi:generate`
+- `Select-String -Path docs/openapi.json -Pattern '"/api/v1/auth/login"|"/api/v1/cv"|"/api/v1/health/live"'`
+- `git diff --check`
 
 ## Deuda técnica abierta
 
