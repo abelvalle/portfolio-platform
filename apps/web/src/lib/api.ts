@@ -325,7 +325,7 @@ export const adminClient = {
   analyticsLabels(filters?: AnalyticsEventFilters) {
     return apiFetch<AnalyticsLabels>(withQuery("/analytics/labels", filters));
   },
-  analyticsFunnel(filters?: DateRangeFilters) {
+  analyticsFunnel(filters?: AnalyticsFunnelFilters) {
     return apiFetch<AnalyticsFunnel>(withQuery("/analytics/funnel", filters));
   },
   analyticsChannelFunnel(filters?: DateRangeFilters) {
@@ -784,6 +784,10 @@ export type DateRangeFilters = {
 
 export type AnalyticsEventFilters = DateRangeFilters & {
   type?: string;
+};
+
+export type AnalyticsFunnelFilters = DateRangeFilters & {
+  steps?: string;
 };
 
 export type AnalyticsEvent = {

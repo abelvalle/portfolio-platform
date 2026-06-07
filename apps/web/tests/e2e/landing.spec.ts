@@ -787,15 +787,25 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     });
   });
   await page.route(/\/api\/v1\/analytics\/funnel(\?.*)?$/, async (route) => {
+    const url = new URL(route.request().url());
+    const steps = url.searchParams.get("steps");
     await route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({
-        steps: [
-          { key: "landing_visit", label: "Visitas landing", count: 20, rateFromStart: 100, rateFromPrevious: 100 },
-          { key: "cv_download", label: "Descargas CV", count: 5, rateFromStart: 25, rateFromPrevious: 25 },
-          { key: "contact_submit", label: "Formularios contacto", count: 2, rateFromStart: 10, rateFromPrevious: 40 }
-        ]
-      })
+      body: JSON.stringify(steps === "landing_visit,project_view,contact_submit"
+        ? {
+            steps: [
+              { key: "landing_visit", label: "Visitas landing", count: 20, rateFromStart: 100, rateFromPrevious: 100 },
+              { key: "project_view", label: "Vistas proyecto", count: 10, rateFromStart: 50, rateFromPrevious: 50 },
+              { key: "contact_submit", label: "Formularios contacto", count: 2, rateFromStart: 10, rateFromPrevious: 20 }
+            ]
+          }
+        : {
+            steps: [
+              { key: "landing_visit", label: "Visitas landing", count: 20, rateFromStart: 100, rateFromPrevious: 100 },
+              { key: "cv_download", label: "Descargas CV", count: 5, rateFromStart: 25, rateFromPrevious: 25 },
+              { key: "contact_submit", label: "Formularios contacto", count: 2, rateFromStart: 10, rateFromPrevious: 40 }
+            ]
+          })
     });
   });
   await page.route(/\/api\/v1\/analytics\/funnel\/channels(\?.*)?$/, async (route) => {
@@ -2160,8 +2170,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByLabel("Hasta")).toBeVisible();
   await expect(page.getByLabel("Tipo de evento")).toBeVisible();
   await expect(page.getByText("Embudo conversion")).toBeVisible();
-  await expect(page.getByText("Landing a CV y contacto")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Landing -> CV -> Contacto" })).toBeVisible();
   await expect(page.getByText("25% desde landing")).toBeVisible();
+  await page.getByLabel("Embudo").selectOption("landing_visit,project_view,contact_submit");
+  await expect(page.getByRole("heading", { name: "Landing -> Proyecto -> Contacto" })).toBeVisible();
+  await expect(page.getByText("Vistas proyecto")).toBeVisible();
+  await expect(page.getByText("50% desde landing")).toBeVisible();
   await expect(page.getByText("Embudo por canal")).toBeVisible();
   await expect(page.getByText("linkedin / social")).toBeVisible();
   await expect(page.getByText("4 - 40%")).toBeVisible();

@@ -34,6 +34,12 @@ const eventTypeOptions = [
   { label: "Adaptacion CV", value: "cv_adaptation" }
 ];
 
+const funnelPresetOptions = [
+  { label: "Landing -> CV -> Contacto", value: "" },
+  { label: "Landing -> Proyecto -> Contacto", value: "landing_visit,project_view,contact_submit" },
+  { label: "Landing -> LinkedIn -> CV", value: "landing_visit,linkedin_click,cv_download" }
+];
+
 export function AnalyticsDashboard() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
@@ -46,6 +52,7 @@ export function AnalyticsDashboard() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [eventType, setEventType] = useState("");
+  const [funnelSteps, setFunnelSteps] = useState("");
   const [message, setMessage] = useState("Cargando analitica.");
   const [isLoading, setIsLoading] = useState(true);
   const [isPruning, setIsPruning] = useState(false);
@@ -60,7 +67,7 @@ export function AnalyticsDashboard() {
         adminClient.analyticsTimeSeries({ ...filters, type: eventType || undefined }),
         adminClient.analyticsChannels({ ...filters, type: eventType || undefined }),
         adminClient.analyticsLabels({ ...filters, type: "cv_adaptation" }),
-        adminClient.analyticsFunnel(filters),
+        adminClient.analyticsFunnel({ ...filters, steps: funnelSteps || undefined }),
         adminClient.analyticsChannelFunnel(filters),
         adminClient.analyticsPrivacy()
       ]);
@@ -78,7 +85,7 @@ export function AnalyticsDashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [eventType, fromDate, toDate]);
+  }, [eventType, fromDate, funnelSteps, toDate]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -93,6 +100,7 @@ export function AnalyticsDashboard() {
   const trend = useMemo(() => buildAnalyticsTrend(timeSeries), [timeSeries]);
   const maxTypeCount = Math.max(...trend.topTypes.map((item) => item.count), 1);
   const maxDayCount = Math.max(...trend.daily.map((item) => item.total), 1);
+  const selectedFunnelLabel = funnelPresetOptions.find((option) => option.value === funnelSteps)?.label || "Embudo configurable";
 
   function exportCsv() {
     const blob = new Blob([buildCsv(filteredEvents)], { type: "text/csv;charset=utf-8" });
@@ -150,7 +158,7 @@ export function AnalyticsDashboard() {
             </Button>
           </div>
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:max-w-3xl lg:grid-cols-3">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:max-w-4xl lg:grid-cols-4">
           <div className="grid gap-2">
             <Label htmlFor="analyticsFromDate">Desde</Label>
             <Input id="analyticsFromDate" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
@@ -169,6 +177,19 @@ export function AnalyticsDashboard() {
             >
               {eventTypeOptions.map((option) => (
                 <option key={option.value || "all"} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="analyticsFunnelPreset">Embudo</Label>
+            <select
+              id="analyticsFunnelPreset"
+              className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+              value={funnelSteps}
+              onChange={(event) => setFunnelSteps(event.target.value)}
+            >
+              {funnelPresetOptions.map((option) => (
+                <option key={option.value || "default"} value={option.value}>{option.label}</option>
               ))}
             </select>
           </div>
@@ -220,9 +241,9 @@ export function AnalyticsDashboard() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="font-mono text-sm text-primary">Embudo conversion</p>
-            <h2 className="mt-1 text-xl font-semibold">Landing a CV y contacto</h2>
+            <h2 className="mt-1 text-xl font-semibold">{selectedFunnelLabel}</h2>
           </div>
-          <Badge variant="outline">basico</Badge>
+          <Badge variant="outline">{funnelSteps ? "custom" : "basico"}</Badge>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {(funnel?.steps || []).map((step) => (
