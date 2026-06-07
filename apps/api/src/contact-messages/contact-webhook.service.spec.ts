@@ -365,6 +365,17 @@ describe('ContactWebhookService', () => {
 
     expect(result).toEqual({ processed: 0, results: [] });
     expect(prisma.contactWebhookRetryJob.findMany).toHaveBeenCalled();
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: {
+        action: 'contact.webhook.retry_cron',
+        resource: 'contact-webhook',
+        resourceId: 'retry-cron',
+        metadata: { processed: 0 },
+      },
+    });
+    expect(JSON.stringify(prisma.auditLog.create.mock.calls)).not.toContain(
+      'cron-secret',
+    );
   });
 
   it('rejects cron retry processing without the configured secret', async () => {

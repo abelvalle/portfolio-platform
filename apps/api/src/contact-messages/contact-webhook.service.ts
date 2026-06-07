@@ -216,7 +216,9 @@ export class ContactWebhookService {
     if (!expectedSecret || !secret || !this.safeEqual(expectedSecret, secret)) {
       throw new ForbiddenException('Invalid cron secret');
     }
-    return this.processDueRetries();
+    const result = await this.processDueRetries();
+    await this.auditCronRetry(result.processed);
+    return result;
   }
 
   private async scheduleRetry(
@@ -317,6 +319,23 @@ export class ContactWebhookService {
     } catch (error) {
       this.logger.warn(
         `Contact webhook audit failed: ${(error as Error).message}`,
+      );
+    }
+  }
+
+  private async auditCronRetry(processed: number) {
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'contact.webhook.retry_cron',
+          resource: 'contact-webhook',
+          resourceId: 'retry-cron',
+          metadata: { processed } as never,
+        },
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Contact webhook retry cron audit failed: ${(error as Error).message}`,
       );
     }
   }

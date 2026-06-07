@@ -345,6 +345,8 @@ Si `CONTACT_WEBHOOK_URL` está configurado, cada mensaje guardado dispara un `PO
 
 Cada intento de entrega o prueba de webhook registra un `AuditLog` con evento, estado HTTP si existe, `retryAttempt` cuando aplica y resultado `configured/dispatched`. No se guardan URL, secreto, cuerpo del mensaje ni contenido personal del contacto en ese registro.
 
+Cada ejecucion valida del cron externo de reintentos registra `AuditLog` con accion `contact.webhook.retry_cron` y solo guarda el conteo `processed`; no guarda header, secreto ni payload.
+
 Si falla una entrega de `contact.message.created`, el backend puede reintentar de forma diferida reconstruyendo el payload desde el mensaje persistido. La política se controla con `CONTACT_WEBHOOK_RETRY_ATTEMPTS` y `CONTACT_WEBHOOK_RETRY_DELAY_MS`.
 
 El worker interno `ContactWebhookRetryWorker` procesa periodicamente jobs pendientes de `ContactWebhookRetryJob`. Se controla con `CONTACT_WEBHOOK_RETRY_WORKER_ENABLED` (`true` por defecto) y `CONTACT_WEBHOOK_RETRY_WORKER_INTERVAL_MS` (60000 ms por defecto). En despliegues con varias replicas puede dejarse activo solo en una instancia o desactivarse para delegar en cron externo.
