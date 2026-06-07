@@ -961,7 +961,40 @@ test("admin publication page is reachable behind the session proxy", async ({ co
             { period: "2026-05", source: "linkedin", channel: "social", count: 4, previousPeriod: "2026-04", previousCount: 0, delta: 4, deltaPercent: 100 },
             { period: "2026-06", source: "direct", channel: "direct", count: 3, previousPeriod: "2026-05", previousCount: 0, delta: 3, deltaPercent: 100 },
             { period: "2026-06", source: "email", channel: "newsletter", count: 3, previousPeriod: "2026-05", previousCount: 1, delta: 2, deltaPercent: 200 }
-          ]
+          ],
+          kpiGoals: {
+            total: 2,
+            achieved: 1,
+            atRisk: 1,
+            items: [
+              {
+                id: "goal-1",
+                key: "sample-cv-downloads",
+                name: "Descargas CV sample/demo",
+                eventType: "cv_download",
+                eventTypes: ["cv_download"],
+                targetCount: 3,
+                count: 3,
+                progressRate: 100,
+                achieved: true,
+                remainingCount: 0,
+                alertLevel: "success"
+              },
+              {
+                id: "goal-2",
+                key: "sample-engagement-actions",
+                name: "Acciones de interes sample/demo",
+                eventType: "project_view",
+                eventTypes: ["project_view", "cv_download", "contact_submit"],
+                targetCount: 6,
+                count: 2,
+                progressRate: 33.3,
+                achieved: false,
+                remainingCount: 4,
+                alertLevel: "warning"
+              }
+            ]
+          }
         },
         latestChanges: [],
         modules: appModules
@@ -1522,7 +1555,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Comparativa cohorts")).toBeVisible();
   await expect(page.getByText("2026-06 vs 2026-05")).toBeVisible();
   await expect(page.getByText("+2 (+50%)")).toBeVisible();
-  await expect(page.getByText("cv_download")).toBeVisible();
+  await expect(page.getByText("cv_download").first()).toBeVisible();
+  await expect(page.getByText("Objetivos KPI")).toBeVisible();
+  await expect(page.getByText("Acciones de interes sample/demo")).toBeVisible();
+  await expect(page.getByText("project_view + cv_download + contact_submit")).toBeVisible();
   await expect(page.getByText("Conversion contacto")).toBeVisible();
   await expect(page.getByRole("link", { name: /Ver eventos/ })).toHaveAttribute("href", "/admin/analytics");
 

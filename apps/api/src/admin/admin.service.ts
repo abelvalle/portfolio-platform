@@ -21,6 +21,7 @@ export class AdminService {
       changes,
       modules,
       landingCohortEvents,
+      kpiGoals,
     ] = await Promise.all([
       this.prisma.analyticsEvent.count({
         where: { ...dateWhere, type: 'landing_visit' },
@@ -59,6 +60,7 @@ export class AdminService {
         orderBy: { createdAt: 'asc' },
         take: 1000,
       }),
+      this.kpiGoalProgress(dateWhere),
     ]);
 
     return {
@@ -88,6 +90,7 @@ export class AdminService {
         cohortComparisons: this.monthlyCohortComparisons(landingCohortEvents),
         cohortSourceComparisons:
           this.monthlySourceCohortComparisons(landingCohortEvents),
+        kpiGoals,
       },
       latestChanges: changes,
       modules,
@@ -250,6 +253,69 @@ export class AdminService {
       ? value.trim().toLowerCase().slice(0, 80)
       : null;
   }
+
+  private async kpiGoalProgress(dateWhere: {
+    createdAt?: Prisma.DateTimeFilter;
+  }) {
+    const goals = await this.prisma.analyticsGoal.findMany({
+      where: { deletedAt: null, visible: true },
+      orderBy: [{ order: 'asc' }, { updatedAt: 'desc' }],
+    });
+    const counts = await Promise.all(
+      goals.map((goal) => {
+        const eventTypes = this.goalEventTypes(goal.eventTypes, goal.eventType);
+        return this.prisma.analyticsEvent.count({
+          where: {
+            ...dateWhere,
+            type: eventTypes.length === 1 ? eventTypes[0] : { in: eventTypes },
+          },
+        });
+      }),
+    );
+    const items = goals.map((goal, index) => {
+      const eventTypes = this.goalEventTypes(goal.eventTypes, goal.eventType);
+      const count = counts[index] || 0;
+      const remainingCount = Math.max(goal.targetCount - count, 0);
+      const progressRate = percent(count, goal.targetCount);
+      const alertLevel = this.goalAlertLevel(count, goal.targetCount);
+      return {
+        id: goal.id,
+        key: goal.key,
+        name: goal.name,
+        eventType: eventTypes[0],
+        eventTypes,
+        targetCount: goal.targetCount,
+        count,
+        progressRate,
+        achieved: count >= goal.targetCount,
+        remainingCount,
+        alertLevel,
+      };
+    });
+
+    return {
+      total: items.length,
+      achieved: items.filter((item) => item.achieved).length,
+      atRisk: items.filter((item) => item.alertLevel === 'warning').length,
+      items,
+    };
+  }
+
+  private goalEventTypes(eventTypes: string[] | undefined, fallback: string) {
+    const source = eventTypes?.length ? eventTypes : [fallback];
+    const normalized = [
+      ...new Set(source.map((eventType) => eventType.trim()).filter(Boolean)),
+    ];
+    return normalized.length ? normalized.slice(0, 6) : [fallback];
+  }
+
+  private goalAlertLevel(count: number, targetCount: number) {
+    const remainingCount = Math.max(targetCount - count, 0);
+    if (!remainingCount) {
+      return 'success';
+    }
+    return !count || percent(count, targetCount) < 50 ? 'warning' : 'info';
+  }
 }
 
 function startOfDayUtc(value: string) {
@@ -264,6 +330,13 @@ function previousMonth(period: string) {
   const [year, month] = period.split('-').map(Number);
   const date = new Date(Date.UTC(year, month - 2, 1));
   return date.toISOString().slice(0, 7);
+}
+
+function percent(value: number, total: number) {
+  if (!total) {
+    return 0;
+  }
+  return Math.round((value / total) * 1000) / 10;
 }
 
 function percentDelta(current: number, previous: number) {

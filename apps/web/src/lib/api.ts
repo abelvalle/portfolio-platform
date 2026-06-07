@@ -635,6 +635,24 @@ export type AdminDashboard = {
       delta: number;
       deltaPercent: number;
     }>;
+    kpiGoals?: {
+      total: number;
+      achieved: number;
+      atRisk: number;
+      items: Array<{
+        id: string;
+        key: string;
+        name: string;
+        eventType: string;
+        eventTypes: string[];
+        targetCount: number;
+        count: number;
+        progressRate: number;
+        achieved: boolean;
+        remainingCount: number;
+        alertLevel: "success" | "info" | "warning";
+      }>;
+    };
   };
   latestChanges: ChangeLogItem[];
   modules: Array<{

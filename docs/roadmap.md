@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 06:41 CEST.
+Estado actualizado: 2026-06-07 06:48 CEST.
 
 ## Hitos completados
 
@@ -4842,6 +4842,22 @@ Verificacion realizada en este hito:
 - `npm.cmd view next@latest dependencies.postcss`
 - `npm.cmd audit --audit-level=moderate`
 
+### Objetivos KPI en Dashboard admin
+
+- `GET /admin/dashboard` devuelve ahora `segments.kpiGoals` con totales, cumplidos, objetivos en riesgo e items visibles.
+- El calculo respeta filtros temporales y soporta objetivos simples o compuestos por `eventTypes`.
+- `/admin` muestra una tarjeta operativa de objetivos KPI con progreso, restantes, nivel de alerta y enlace a Analytics.
+- `docs/api.md` documenta el nuevo segmento del dashboard.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- admin.service.spec.ts`
+- `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "admin"`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:api`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Build web: Next/Node emite `DEP0205 module.register()` durante `npm.cmd run build`; no bloquea produccion, pero conviene revisarlo cuando Next actualice su runtime o cuando se suba la version de Node.
@@ -4859,7 +4875,7 @@ Verificacion realizada en este hito:
 - Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido, settings persistentes, cola `ContactWebhookRetryJob`, procesamiento admin, worker interno configurable, estado visible en admin, fallback local solo cuando el worker esta desactivado, guia de despliegue single/multi-replica, endpoint de cron externo con secreto dedicado y auditoria saneada del cron; falta solo configurar un scheduler externo real en la plataforma de despliegue si se decide no usar worker dedicado.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side, accion masiva filtrada de leido/no leido y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención manual, worker periodico y guía de deployment multi-replica, segmentación fuente/canal, embudo basico, presets UI de embudo configurable por API, embudo multicanal por fuente/canal desde UI, definiciones persistentes de embudos creadas/editadas desde admin y objetivos KPI persistentes simples/compuestos con progreso, restantes y alertas basicas por rango.
-- Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa, cohorts mensuales, cohorts por fuente/canal y comparativas contra mes previo; faltan desgloses mas ricos si se definen nuevos objetivos de negocio.
+- Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa, cohorts mensuales, cohorts por fuente/canal, comparativas contra mes previo y estado de objetivos KPI simples/compuestos; faltan desgloses mas ricos solo si se definen nuevos objetivos de negocio.
 - Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, reordenado por botones, filas drag/drop, draft/publish desde UI y asociación visual de skills/tecnologías mediante chips sobre arrays existentes.
 - Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media, reordenado por botones, filas drag/drop y draft/publish desde UI.
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles, reordenado por botones, filas drag/drop y draft/publish desde UI.

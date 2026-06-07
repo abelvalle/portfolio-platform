@@ -49,6 +49,7 @@ export function DashboardCards() {
     ];
   }, [dashboard]);
   const operationalPulse = useMemo(() => buildOperationalPulse(dashboard), [dashboard]);
+  const kpiGoals = dashboard?.segments?.kpiGoals;
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -115,6 +116,40 @@ export function DashboardCards() {
               <p className="mt-2 text-xs text-muted-foreground">{item.detail}</p>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
+          <CardTitle>Objetivos KPI</CardTitle>
+          <Badge variant={kpiGoals?.atRisk ? "outline" : "default"}>
+            {kpiGoals?.achieved ?? 0}/{kpiGoals?.total ?? 0}
+          </Badge>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <KpiSummary label="Cumplidos" value={kpiGoals?.achieved ?? 0} />
+            <KpiSummary label="En riesgo" value={kpiGoals?.atRisk ?? 0} />
+            <KpiSummary label="Totales" value={kpiGoals?.total ?? 0} />
+          </div>
+          {kpiGoals?.items.length ? kpiGoals.items.slice(0, 4).map((goal) => (
+            <Link key={goal.id} href="/admin/analytics" className="rounded-lg border border-border p-3 text-sm transition-colors hover:border-primary/60">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="font-medium">{goal.name}</span>
+                <Badge variant={goal.alertLevel === "success" ? "default" : "outline"}>{goal.alertLevel}</Badge>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                <span>{goal.count}/{goal.targetCount}</span>
+                <span>{goal.remainingCount} restantes</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(goal.progressRate, 100)}%` }} />
+              </div>
+              <p className="mt-2 break-all text-xs text-muted-foreground">{goal.eventTypes.join(" + ")}</p>
+            </Link>
+          )) : (
+            <p className="text-sm text-muted-foreground">Sin objetivos KPI visibles.</p>
+          )}
         </CardContent>
       </Card>
 
@@ -245,6 +280,15 @@ export function DashboardCards() {
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
+
+function KpiSummary({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-border p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>
   );
 }

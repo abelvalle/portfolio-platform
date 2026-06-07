@@ -5,10 +5,12 @@ describe('AdminService dashboard filters', () => {
   it('applies date range to temporal dashboard data', async () => {
     const prisma = mockPrisma();
     prisma.analyticsEvent.count
+      .mockResolvedValue(0)
       .mockResolvedValueOnce(7)
       .mockResolvedValueOnce(2)
       .mockResolvedValueOnce(1)
-      .mockResolvedValueOnce(4);
+      .mockResolvedValueOnce(4)
+      .mockResolvedValueOnce(3);
     prisma.project.count.mockResolvedValue(3);
     prisma.experience.count.mockResolvedValue(2);
     prisma.contactMessage.count.mockResolvedValue(5);
@@ -41,6 +43,17 @@ describe('AdminService dashboard filters', () => {
         createdAt: new Date('2026-06-02T10:00:00.000Z'),
         metadata: null,
         path: '/',
+      },
+    ]);
+    prisma.analyticsGoal.findMany.mockResolvedValue([
+      {
+        id: 'goal-1',
+        key: 'sample-engagement-actions',
+        name: 'Acciones de interes sample/demo',
+        eventType: 'project_view',
+        eventTypes: ['project_view', 'cv_download', 'contact_submit'],
+        targetCount: 6,
+        order: 0,
       },
     ]);
     const service = new AdminService(prisma as never);
@@ -159,6 +172,26 @@ describe('AdminService dashboard filters', () => {
           deltaPercent: 0,
         },
       ],
+      kpiGoals: {
+        total: 1,
+        achieved: 0,
+        atRisk: 0,
+        items: [
+          {
+            id: 'goal-1',
+            key: 'sample-engagement-actions',
+            name: 'Acciones de interes sample/demo',
+            eventType: 'project_view',
+            eventTypes: ['project_view', 'cv_download', 'contact_submit'],
+            targetCount: 6,
+            count: 3,
+            progressRate: 50,
+            achieved: false,
+            remainingCount: 3,
+            alertLevel: 'info',
+          },
+        ],
+      },
     });
     expect(prisma.analyticsEvent.count).toHaveBeenCalledWith({
       where: { createdAt, type: 'landing_visit' },
@@ -179,6 +212,16 @@ describe('AdminService dashboard filters', () => {
       select: { createdAt: true, metadata: true, path: true },
       orderBy: { createdAt: 'asc' },
       take: 1000,
+    });
+    expect(prisma.analyticsGoal.findMany).toHaveBeenCalledWith({
+      where: { deletedAt: null, visible: true },
+      orderBy: [{ order: 'asc' }, { updatedAt: 'desc' }],
+    });
+    expect(prisma.analyticsEvent.count).toHaveBeenCalledWith({
+      where: {
+        createdAt,
+        type: { in: ['project_view', 'cv_download', 'contact_submit'] },
+      },
     });
   });
 
@@ -213,6 +256,9 @@ function mockPrisma() {
       findMany: jest.fn(),
     },
     appModule: {
+      findMany: jest.fn(),
+    },
+    analyticsGoal: {
       findMany: jest.fn(),
     },
   };
