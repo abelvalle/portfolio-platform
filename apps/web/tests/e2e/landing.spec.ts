@@ -224,6 +224,19 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/integrations/linkedin/status", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        configured: true,
+        profileUrl: "https://www.linkedin.com/in/abelvros/",
+        scopes: ["openid", "profile", "email"],
+        shareEnabled: true,
+        connected: true,
+        lastSyncedAt: "2026-06-07T08:00:00.000Z"
+      })
+    });
+  });
   await page.route("**/api/v1/users", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -2062,6 +2075,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("HTTP 202")).toBeVisible();
   await page.getByRole("button", { name: "Reintentar" }).click();
   await expect(page.getByText("Reintento enviado para message-2.")).toBeVisible();
+  await expect(page.getByText("Cuenta sincronizada")).toBeVisible();
+  await expect(page.getByText("OAuth configurado")).toBeVisible();
   await expect(page.getByText("GET /api/v1/integrations/linkedin/callback")).toBeVisible();
   await page.getByRole("button", { name: "Iniciar setup" }).click();
   await expect(page.getByText("QR local")).toBeVisible();

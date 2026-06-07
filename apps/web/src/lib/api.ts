@@ -202,6 +202,9 @@ export const adminClient = {
   contactWebhookStatus() {
     return apiFetch<ContactWebhookStatus>("/contact-messages/webhook/status");
   },
+  linkedinStatus() {
+    return apiFetch<LinkedinIntegrationStatus>("/integrations/linkedin/status");
+  },
   contactWebhookDeliveries() {
     return apiFetch<ContactWebhookDelivery[]>("/contact-messages/webhook/deliveries");
   },
@@ -598,6 +601,15 @@ export type ContactWebhookStatus = {
   event: string;
   testEvent: string;
   timeoutMs: number;
+};
+
+export type LinkedinIntegrationStatus = {
+  configured: boolean;
+  profileUrl?: string | null;
+  scopes: string[];
+  shareEnabled: boolean;
+  connected?: boolean;
+  lastSyncedAt?: string | null;
 };
 
 export type ContactWebhookTestResult = {

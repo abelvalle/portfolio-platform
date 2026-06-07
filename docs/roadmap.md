@@ -4010,6 +4010,18 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
 
+### Estado LinkedIn conectado en settings
+
+- `/admin/settings` consulta `GET /integrations/linkedin/status` desde el cliente web.
+- La tarjeta LinkedIn muestra OAuth configurado/pendiente, cuenta sincronizada/sin cuenta, share on/off, scopes y ultima sincronizacion.
+- El estado visible evita mostrar email o tokens y mantiene la tabla de endpoints de integracion.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
