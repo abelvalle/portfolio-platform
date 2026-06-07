@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 10:44 CEST.
+Estado actualizado: 2026-06-07 10:45 CEST.
 
 ## Hitos completados
 
@@ -5687,6 +5687,19 @@ Verificacion realizada en este hito:
 - `gh run view 27087634376 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27087634383 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Triage Dependabot majors abiertos
+
+- Se dejan abiertos para revision manual los majors restantes aunque tengan checks verdes:
+- PR #7 `pdfjs-dist 4.10.38 -> 6.0.227`, por impacto potencial en parsing/render de PDF.
+- PR #9 `@eslint/js 9.39.4 -> 10.0.1`, por cambio major parcial del stack ESLint.
+- PR #10 `@types/node 20.19.41 -> 25.9.2`, por desalineacion con runtime CI Node 22.
+- La decision queda alineada con la nueva segmentacion: minor/patch agrupado, major separado y revisado caso a caso.
+
+Verificacion realizada en este hito:
+
+- `gh pr list --repo abelvalle/portfolio-platform --state open --limit 20 --json number,title,headRefName,statusCheckRollup,updatedAt`
+- `git diff --check`
 
 ## Deuda técnica abierta
 
