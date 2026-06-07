@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:59 CEST.
+Estado actualizado: 2026-06-07 10:06 CEST.
 
 ## Hitos completados
 
@@ -5547,6 +5547,19 @@ Verificacion realizada en este hito:
 - `npm.cmd run openapi:check`
 - `Get-Content -Path .github/workflows/ci.yml`
 - `git diff --check`
+
+### CI y CodeQL remotos verdes tras drift check OpenAPI
+
+- Revalidado GitHub Actions despues de anadir `openapi:check` y el drift check del snapshot.
+- Run CI `27086830532` completado correctamente en `develop`.
+- Run CodeQL `27086830535` completado correctamente en `develop`.
+- Los pasos `Generate OpenAPI snapshot` y `Verify OpenAPI snapshot` quedaron verdes dentro de `Quality gates`.
+
+Verificacion realizada en este hito:
+
+- `gh run view 27086830532 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27086830535 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
