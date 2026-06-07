@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:02 CEST.
+Estado actualizado: 2026-06-07 09:07 CEST.
 
 ## Hitos completados
 
@@ -5373,6 +5373,17 @@ Verificacion realizada en este hito:
 - `Get-Content -Path CONTRIBUTING.md`
 - `Get-Content -Path .github/PULL_REQUEST_TEMPLATE.md`
 - `git diff --check`
+
+### CI remoto verde tras guia de contribucion
+
+- Revalidado GitHub Actions despues de anadir `CONTRIBUTING.md` y plantilla PR.
+- Run `27085654767` completado correctamente en `develop`.
+- Jobs verdes: `Quality gates` y `Web e2e smoke`.
+
+Verificacion realizada en este hito:
+
+- `gh run view 27085654767 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
