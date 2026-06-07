@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 11:41 CEST.
+Estado actualizado: 2026-06-07 11:46 CEST.
 
 ## Hitos completados
 
@@ -5830,6 +5830,22 @@ Verificacion realizada en este hito:
 - `gh run view 27088850334 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27088850333 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### CSP frontend sin unsafe-eval en producción
+
+- `apps/web/next.config.ts` ahora genera CSP por fase de Next.
+- En produccion, `script-src` queda en `'self' 'unsafe-inline'` y retira `unsafe-eval`.
+- En desarrollo, `unsafe-eval` se mantiene para tooling local.
+- Deployment documenta la diferencia de CSP por entorno.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web` con `NEXT_PUBLIC_API_URL=https://api.example.com/api/v1`
+- `Select-String -Path apps/web/.next/routes-manifest.json -Pattern "script-src"` confirmando manifiesto sin `unsafe-eval`
+- `next start` en puerto temporal + `curl.exe -I` comprobando header de produccion sin `unsafe-eval`
+- `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"`
+- `git diff --check`
 
 ## Deuda técnica abierta
 
