@@ -344,6 +344,27 @@ function mergeExistingStrings(target: Record<string, unknown>, source: PublicTra
       target[key] = value;
       continue;
     }
+    if (Array.isArray(current) && isPlainObject(value)) {
+      mergeExistingArrayStrings(current, value);
+      continue;
+    }
+    if (isPlainObject(current) && isPlainObject(value)) {
+      mergeExistingStrings(current, value);
+    }
+  }
+}
+
+function mergeExistingArrayStrings(target: unknown[], source: PublicTranslationDictionary) {
+  for (const [key, value] of Object.entries(source)) {
+    const index = Number(key);
+    if (!Number.isInteger(index) || index < 0 || index >= target.length) {
+      continue;
+    }
+    const current = target[index];
+    if (typeof current === "string" && typeof value === "string") {
+      target[index] = value;
+      continue;
+    }
     if (isPlainObject(current) && isPlainObject(value)) {
       mergeExistingStrings(current, value);
     }
