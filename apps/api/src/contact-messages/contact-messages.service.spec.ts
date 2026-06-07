@@ -68,6 +68,32 @@ describe('ContactMessagesService filters', () => {
     expect(csv).not.toContain('userAgent');
   });
 
+  it('bulk updates status using the current filters', async () => {
+    const prisma = mockPrisma();
+    prisma.contactMessage.updateMany.mockResolvedValue({ count: 3 });
+    const service = createService(prisma);
+
+    const result = await service.bulkUpdateStatus({
+      currentStatus: 'unread',
+      targetStatus: 'read',
+      from: '2026-06-01',
+      to: '2026-06-06',
+    });
+
+    expect(prisma.contactMessage.updateMany).toHaveBeenCalledWith({
+      where: {
+        createdAt: {
+          gte: new Date('2026-06-01T00:00:00.000Z'),
+          lte: new Date('2026-06-06T23:59:59.999Z'),
+        },
+        deletedAt: null,
+        status: 'unread',
+      },
+      data: { status: 'read' },
+    });
+    expect(result).toEqual({ count: 3, status: 'read' });
+  });
+
   it('salts contact IP hash and can drop user agent storage', async () => {
     const prisma = mockPrisma();
     prisma.contactMessage.create.mockResolvedValue({ id: 'message-1' });
@@ -122,6 +148,7 @@ function mockPrisma() {
     contactMessage: {
       create: jest.fn(),
       findMany: jest.fn(),
+      updateMany: jest.fn(),
     },
   };
 }

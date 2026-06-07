@@ -220,6 +220,9 @@ export const adminClient = {
   updateContactMessageStatus(id: string, status: string) {
     return apiFetch<ContactMessage>(`/contact-messages/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
   },
+  bulkUpdateContactMessageStatus(data: ContactMessageBulkStatusMutation) {
+    return apiFetch<ContactMessageBulkStatusResult>("/contact-messages/status/bulk", { method: "PATCH", body: JSON.stringify(data) });
+  },
   deleteContactMessage(id: string) {
     return apiFetch<ContactMessage>(`/contact-messages/${id}`, { method: "DELETE" });
   },
@@ -631,6 +634,16 @@ export type ContactMessage = {
 
 export type ContactMessageFilters = DateRangeFilters & {
   status?: string;
+};
+
+export type ContactMessageBulkStatusMutation = DateRangeFilters & {
+  currentStatus?: string;
+  targetStatus: string;
+};
+
+export type ContactMessageBulkStatusResult = {
+  count: number;
+  status: string;
 };
 
 export type ExperienceItem = {

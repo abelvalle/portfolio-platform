@@ -23,6 +23,7 @@ export function ContactMessageManagement() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [message, setMessage] = useState("Cargando mensajes.");
   const [isLoading, setIsLoading] = useState(true);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [pendingDeleteMessage, setPendingDeleteMessage] = useState<ContactMessage | null>(null);
 
   const loadMessages = useCallback(async (status = filter) => {
@@ -64,6 +65,24 @@ export function ContactMessageManagement() {
       setMessage(`Mensaje marcado como ${status}.`);
     } catch {
       setMessage("No se pudo actualizar el estado.");
+    }
+  }
+
+  async function bulkSetStatus(targetStatus: string) {
+    setIsBulkUpdating(true);
+    try {
+      const result = await adminClient.bulkUpdateContactMessageStatus({
+        currentStatus: filter || undefined,
+        targetStatus,
+        from: fromDate || undefined,
+        to: toDate || undefined
+      });
+      await loadMessages(filter);
+      setMessage(`${result.count} mensajes marcados como ${statusLabel(targetStatus)}.`);
+    } catch {
+      setMessage("No se pudo aplicar la accion masiva.");
+    } finally {
+      setIsBulkUpdating(false);
     }
   }
 
@@ -113,6 +132,14 @@ export function ContactMessageManagement() {
               {item.label}
             </Button>
           ))}
+          <Button type="button" variant="outline" size="sm" onClick={() => bulkSetStatus("read")} disabled={isBulkUpdating}>
+            <MailOpen data-icon="inline-start" />
+            Marcar filtrados leidos
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => bulkSetStatus("unread")} disabled={isBulkUpdating}>
+            <MailOpen data-icon="inline-start" />
+            Marcar filtrados no leidos
+          </Button>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:max-w-xl">
           <div className="grid gap-2">
@@ -236,6 +263,14 @@ function formatDate(value: string) {
     return value;
   }
   return new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
+function statusLabel(status: string) {
+  const labels: Record<string, string> = {
+    read: "leidos",
+    unread: "no leidos"
+  };
+  return labels[status] || status;
 }
 
 function buildReplyMailto(item: ContactMessage) {

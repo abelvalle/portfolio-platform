@@ -9,6 +9,7 @@ import { Prisma } from '@prisma/client';
 import sanitizeHtml from 'sanitize-html';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  BulkContactMessageStatusDto,
   ContactMessageQueryDto,
   CreateContactMessageDto,
 } from './contact-message.dto';
@@ -80,6 +81,18 @@ export class ContactMessagesService {
       where: { id },
       data: { status },
     });
+  }
+
+  async bulkUpdateStatus(dto: BulkContactMessageStatusDto) {
+    const result = await this.prisma.contactMessage.updateMany({
+      where: {
+        ...this.dateRangeWhere(dto),
+        deletedAt: null,
+        ...(dto.currentStatus ? { status: dto.currentStatus } : {}),
+      },
+      data: { status: dto.targetStatus },
+    });
+    return { count: result.count, status: dto.targetStatus };
   }
 
   async remove(id: string) {

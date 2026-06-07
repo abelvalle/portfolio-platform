@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermissions } from '../common/guards/permissions.decorator';
 import {
+  BulkContactMessageStatusDto,
   ContactMessageQueryDto,
   CreateContactMessageDto,
 } from './contact-message.dto';
@@ -104,6 +105,14 @@ export class ContactMessagesController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.contactMessagesService.findOne(id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_messages')
+  @Patch('status/bulk')
+  bulkUpdateStatus(@Body() body: BulkContactMessageStatusDto) {
+    return this.contactMessagesService.bulkUpdateStatus(body);
   }
 
   @ApiBearerAuth()

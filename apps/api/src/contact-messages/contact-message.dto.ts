@@ -49,3 +49,26 @@ export class ContactMessageQueryDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   to?: string;
 }
+
+export class BulkContactMessageStatusDto {
+  @ApiProperty({ example: 'read' })
+  @IsString()
+  @MaxLength(40)
+  targetStatus!: string;
+
+  @ApiProperty({ required: false, example: 'unread' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  currentStatus?: string;
+
+  @ApiProperty({ required: false, example: '2026-06-01' })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  from?: string;
+
+  @ApiProperty({ required: false, example: '2026-06-30' })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  to?: string;
+}
