@@ -249,6 +249,20 @@ model ContactMessage {
   deletedAt DateTime?
 }
 
+model ContactWebhookSetting {
+  id            String   @id @default(cuid())
+  enabled       Boolean  @default(false)
+  url           String?
+  event         String   @default("contact.message.created")
+  testEvent     String   @default("contact.webhook.test")
+  timeoutMs     Int      @default(5000)
+  retryAttempts Int      @default(2)
+  retryDelayMs  Int      @default(30000)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+}
+
 model MediaAsset {
   id          String    @id @default(cuid())
   filename    String

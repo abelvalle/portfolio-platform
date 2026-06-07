@@ -4336,6 +4336,23 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
 
+### Configuracion persistente parcial de webhooks
+
+- Añadido modelo Prisma `ContactWebhookSetting` con migracion para URL/eventos/timeouts/reintentos.
+- `ContactWebhookService` combina settings persistidos con fallback de entorno y mantiene `CONTACT_WEBHOOK_SECRET` fuera de DB.
+- La API expone `GET|PATCH /contact-messages/webhook/settings` protegido por `manage_messages`.
+- `/admin/settings` permite editar URL, evento, evento de test, timeout, reintentos, delay y estado activo.
+- Tests cubren settings persistidos y actualizacion sin almacenar secretos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run db:generate`
+- `npm.cmd --prefix apps/api run test -- contact-webhook.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:api`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ya existe modelo/API/seed y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online leen traducciones publicas con fallback local. Falta ampliar seed/editor a todas las microcopias y secciones complejas antes de retirar completamente el fallback.
@@ -4348,7 +4365,7 @@ Verificacion realizada en este hito:
 - Roles objetivo CV: la pantalla admin permite CRUD, el wizard los usa como precarga, el backend persiste el rol elegido y analytics registra/expone uso agregado por rol objetivo, ruta y version base mediante `cv_adaptation` + `analytics/labels`, ya visible en `/admin/analytics`; faltan desgloses historicos avanzados por oferta sin guardar contenido sensible.
 - Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; el historial agregado de publicaciones CV queda visible desde Versiones CV.
 - Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, version/recurso, fecha y usuario, con timeline visual por version, historial agregado de publicaciones CV, detalle por evento, exportacion CSV visible y exportacion server-side del historico filtrado; falta analitica comparativa avanzada de cambios entre publicaciones.
-- Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
+- Webhooks configuracion editable: URL/eventos/timeouts/reintentos ya se editan desde admin y persisten en DB; el secreto HMAC sigue viviendo en variables de entorno por seguridad. Falta soporte de rotacion/validacion guiada de secreto si se decide gestionar secretos fuera de `.env`.
 - Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido y reintentos diferidos en memoria configurables por entorno; falta cola persistente si se requiere tolerancia a reinicios del backend.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side, accion masiva filtrada de leido/no leido y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal, embudo basico, presets UI de embudo configurable por API, embudo multicanal por fuente/canal desde UI y definiciones persistentes de embudos creadas/editadas desde admin; faltan objetivos persistentes mas ricos si se definen nuevos KPIs de negocio.

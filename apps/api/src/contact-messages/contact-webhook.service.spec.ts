@@ -9,6 +9,11 @@ const createPrisma = () => ({
   contactMessage: {
     findUnique: jest.fn(),
   },
+  contactWebhookSetting: {
+    create: jest.fn(),
+    findFirst: jest.fn().mockResolvedValue(null),
+    update: jest.fn(),
+  },
 });
 
 const createService = (
@@ -52,13 +57,13 @@ describe('ContactWebhookService', () => {
     expect(prisma.auditLog.create).not.toHaveBeenCalled();
   });
 
-  it('reports webhook configuration without exposing the secret', () => {
+  it('reports webhook configuration without exposing the secret', async () => {
     const service = createService({
       CONTACT_WEBHOOK_URL: 'https://example.com/webhook',
       CONTACT_WEBHOOK_SECRET: 'secret-value',
     });
 
-    expect(service.status()).toEqual({
+    await expect(service.status()).resolves.toEqual({
       configured: true,
       hasSecret: true,
       event: 'contact.message.created',
@@ -67,6 +72,88 @@ describe('ContactWebhookService', () => {
       retryAttempts: 2,
       retryDelayMs: 30000,
     });
+  });
+
+  it('uses persisted webhook settings without exposing the secret', async () => {
+    const prisma = createPrisma();
+    prisma.contactWebhookSetting.findFirst.mockResolvedValue({
+      id: 'settings-1',
+      enabled: true,
+      url: 'https://db.example.com/webhook',
+      event: 'contact.message.created',
+      testEvent: 'contact.webhook.test',
+      timeoutMs: 8000,
+      retryAttempts: 1,
+      retryDelayMs: 5000,
+    });
+    const service = createService(
+      {
+        CONTACT_WEBHOOK_URL: 'https://env.example.com/webhook',
+        CONTACT_WEBHOOK_SECRET: 'secret-value',
+      },
+      prisma,
+    );
+
+    await expect(service.settings()).resolves.toEqual({
+      id: 'settings-1',
+      enabled: true,
+      url: 'https://db.example.com/webhook',
+      event: 'contact.message.created',
+      testEvent: 'contact.webhook.test',
+      timeoutMs: 8000,
+      retryAttempts: 1,
+      retryDelayMs: 5000,
+      hasSecret: true,
+      source: 'database',
+    });
+  });
+
+  it('updates persisted webhook settings without storing a secret', async () => {
+    const prisma = createPrisma();
+    prisma.contactWebhookSetting.create.mockResolvedValue({
+      id: 'settings-1',
+      enabled: true,
+      url: 'https://db.example.com/webhook',
+      event: 'contact.message.created',
+      testEvent: 'contact.webhook.test',
+      timeoutMs: 8000,
+      retryAttempts: 1,
+      retryDelayMs: 5000,
+    });
+    const service = createService(
+      { CONTACT_WEBHOOK_SECRET: 'secret-value' },
+      prisma,
+    );
+
+    const result = await service.updateSettings({
+      enabled: true,
+      url: 'https://db.example.com/webhook',
+      timeoutMs: 8000,
+      retryAttempts: 1,
+      retryDelayMs: 5000,
+    });
+
+    expect(prisma.contactWebhookSetting.create).toHaveBeenCalledWith({
+      data: {
+        enabled: true,
+        url: 'https://db.example.com/webhook',
+        event: 'contact.message.created',
+        testEvent: 'contact.webhook.test',
+        timeoutMs: 8000,
+        retryAttempts: 1,
+        retryDelayMs: 5000,
+        deletedAt: null,
+      },
+    });
+    expect(
+      JSON.stringify(prisma.contactWebhookSetting.create.mock.calls),
+    ).not.toContain('secret-value');
+    expect(result).toEqual(
+      expect.objectContaining({
+        hasSecret: true,
+        source: 'database',
+      }),
+    );
   });
 
   it('audits successful webhook deliveries without storing secrets or payload body', async () => {

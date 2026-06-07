@@ -1,17 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, RotateCcw, Send } from "lucide-react";
+import { RefreshCw, RotateCcw, Save, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { adminClient, type ContactWebhookDelivery, type ContactWebhookStatus } from "@/lib/api";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { adminClient, type ContactWebhookDelivery, type ContactWebhookSettings, type ContactWebhookStatus } from "@/lib/api";
+
+const emptySettingsDraft = {
+  enabled: false,
+  url: "",
+  event: "contact.message.created",
+  testEvent: "contact.webhook.test",
+  timeoutMs: 5000,
+  retryAttempts: 2,
+  retryDelayMs: 30000
+};
 
 export function WebhookSettings() {
   const [status, setStatus] = useState<ContactWebhookStatus | null>(null);
+  const [settings, setSettings] = useState<ContactWebhookSettings | null>(null);
+  const [settingsDraft, setSettingsDraft] = useState(emptySettingsDraft);
   const [deliveries, setDeliveries] = useState<ContactWebhookDelivery[]>([]);
   const [message, setMessage] = useState("Cargando estado de webhook.");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [retryingMessageId, setRetryingMessageId] = useState<string | null>(null);
 
@@ -22,17 +37,53 @@ export function WebhookSettings() {
   async function loadSettings() {
     setIsLoading(true);
     try {
-      const [nextStatus, nextDeliveries] = await Promise.all([
+      const [nextStatus, nextSettings, nextDeliveries] = await Promise.all([
         adminClient.contactWebhookStatus(),
+        adminClient.contactWebhookSettings(),
         adminClient.contactWebhookDeliveries()
       ]);
       setStatus(nextStatus);
+      setSettings(nextSettings);
+      setSettingsDraft({
+        enabled: nextSettings.enabled,
+        url: nextSettings.url || "",
+        event: nextSettings.event,
+        testEvent: nextSettings.testEvent,
+        timeoutMs: nextSettings.timeoutMs,
+        retryAttempts: nextSettings.retryAttempts,
+        retryDelayMs: nextSettings.retryDelayMs
+      });
       setDeliveries(nextDeliveries);
-      setMessage(nextStatus.configured ? "Webhook configurado por variables de entorno." : "Webhook no configurado.");
+      setMessage(nextStatus.configured ? "Webhook configurado." : "Webhook no configurado.");
     } catch {
       setMessage("No se pudo leer el estado del webhook.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function saveSettings() {
+    setIsSavingSettings(true);
+    try {
+      const nextSettings = await adminClient.updateContactWebhookSettings({
+        ...settingsDraft,
+        url: settingsDraft.url.trim() || null
+      });
+      setSettings(nextSettings);
+      setStatus({
+        configured: nextSettings.enabled && Boolean(nextSettings.url),
+        hasSecret: nextSettings.hasSecret,
+        event: nextSettings.event,
+        testEvent: nextSettings.testEvent,
+        timeoutMs: nextSettings.timeoutMs,
+        retryAttempts: nextSettings.retryAttempts,
+        retryDelayMs: nextSettings.retryDelayMs
+      });
+      setMessage("Configuracion de webhook guardada sin modificar secretos.");
+    } catch {
+      setMessage("No se pudo guardar la configuracion de webhook.");
+    } finally {
+      setIsSavingSettings(false);
     }
   }
 
@@ -72,8 +123,61 @@ export function WebhookSettings() {
       </CardHeader>
       <CardContent className="grid gap-4">
         <p className="text-sm text-muted-foreground">
-          Estado de `CONTACT_WEBHOOK_URL` y firma opcional. Los secretos no se muestran en el panel.
+          URL y politica de entrega persistentes. El secreto HMAC sigue viviendo en variables de entorno y no se muestra.
         </p>
+        <div className="grid gap-3 rounded-lg border border-border/60 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">Configuracion editable</p>
+              <p className="text-xs text-muted-foreground">Origen actual: {settings?.source || "environment"}</p>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={settingsDraft.enabled}
+                onChange={(event) => setSettingsDraft((current) => ({ ...current, enabled: event.target.checked }))}
+              />
+              Activo
+            </label>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-2 md:col-span-2">
+              <Label htmlFor="contactWebhookUrl">URL webhook</Label>
+              <Input
+                id="contactWebhookUrl"
+                value={settingsDraft.url}
+                onChange={(event) => setSettingsDraft((current) => ({ ...current, url: event.target.value }))}
+                placeholder="https://example.com/webhook"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="contactWebhookEvent">Evento</Label>
+              <Input id="contactWebhookEvent" value={settingsDraft.event} onChange={(event) => setSettingsDraft((current) => ({ ...current, event: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="contactWebhookTestEvent">Evento test</Label>
+              <Input id="contactWebhookTestEvent" value={settingsDraft.testEvent} onChange={(event) => setSettingsDraft((current) => ({ ...current, testEvent: event.target.value }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="contactWebhookTimeout">Timeout ms</Label>
+              <Input id="contactWebhookTimeout" type="number" min={1000} max={30000} value={settingsDraft.timeoutMs} onChange={(event) => setSettingsDraft((current) => ({ ...current, timeoutMs: Number(event.target.value) }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="contactWebhookRetryAttempts">Reintentos</Label>
+              <Input id="contactWebhookRetryAttempts" type="number" min={0} max={5} value={settingsDraft.retryAttempts} onChange={(event) => setSettingsDraft((current) => ({ ...current, retryAttempts: Number(event.target.value) }))} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="contactWebhookRetryDelay">Delay retry ms</Label>
+              <Input id="contactWebhookRetryDelay" type="number" min={1000} max={300000} value={settingsDraft.retryDelayMs} onChange={(event) => setSettingsDraft((current) => ({ ...current, retryDelayMs: Number(event.target.value) }))} />
+            </div>
+          </div>
+          <div>
+            <Button type="button" onClick={saveSettings} disabled={isSavingSettings}>
+              <Save data-icon="inline-start" />
+              {isSavingSettings ? "Guardando..." : "Guardar configuracion"}
+            </Button>
+          </div>
+        </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" onClick={loadSettings} disabled={isLoading}>
             <RefreshCw className={isLoading ? "animate-spin" : ""} data-icon="inline-start" />

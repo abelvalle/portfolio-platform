@@ -218,6 +218,15 @@ export const adminClient = {
   contactWebhookStatus() {
     return apiFetch<ContactWebhookStatus>("/contact-messages/webhook/status");
   },
+  contactWebhookSettings() {
+    return apiFetch<ContactWebhookSettings>("/contact-messages/webhook/settings");
+  },
+  updateContactWebhookSettings(data: Partial<ContactWebhookSettingsMutation>) {
+    return apiFetch<ContactWebhookSettings>("/contact-messages/webhook/settings", {
+      method: "PATCH",
+      body: JSON.stringify(data)
+    });
+  },
   linkedinStatus() {
     return apiFetch<LinkedinIntegrationStatus>("/integrations/linkedin/status");
   },
@@ -651,6 +660,25 @@ export type ContactWebhookStatus = {
   timeoutMs: number;
   retryAttempts?: number;
   retryDelayMs?: number;
+};
+
+export type ContactWebhookSettings = ContactWebhookStatus & {
+  id?: string;
+  enabled: boolean;
+  url?: string | null;
+  retryAttempts: number;
+  retryDelayMs: number;
+  source: "database" | "environment";
+};
+
+export type ContactWebhookSettingsMutation = {
+  enabled: boolean;
+  url?: string | null;
+  event: string;
+  testEvent: string;
+  timeoutMs: number;
+  retryAttempts: number;
+  retryDelayMs: number;
 };
 
 export type LinkedinIntegrationStatus = {

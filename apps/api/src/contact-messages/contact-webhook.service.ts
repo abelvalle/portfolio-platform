@@ -3,6 +3,17 @@ import { ConfigService } from '@nestjs/config';
 import { ContactMessage } from '@prisma/client';
 import { createHmac } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { UpdateContactWebhookSettingsDto } from './contact-webhook.dto';
+
+type ContactWebhookRuntimeConfig = {
+  enabled: boolean;
+  url: string | null;
+  event: string;
+  testEvent: string;
+  timeoutMs: number;
+  retryAttempts: number;
+  retryDelayMs: number;
+};
 
 @Injectable()
 export class ContactWebhookService {
@@ -13,15 +24,66 @@ export class ContactWebhookService {
     private readonly prisma: PrismaService,
   ) {}
 
-  status() {
+  async status() {
+    const config = await this.runtimeConfig();
     return {
-      configured: Boolean(this.webhookUrl),
+      configured: Boolean(config.enabled && config.url),
       hasSecret: Boolean(this.webhookSecret),
-      event: 'contact.message.created',
-      testEvent: 'contact.webhook.test',
-      timeoutMs: 5_000,
-      retryAttempts: this.retryAttempts,
-      retryDelayMs: this.retryDelayMs,
+      event: config.event,
+      testEvent: config.testEvent,
+      timeoutMs: config.timeoutMs,
+      retryAttempts: config.retryAttempts,
+      retryDelayMs: config.retryDelayMs,
+    };
+  }
+
+  async settings() {
+    const settings = await this.persistedSettings();
+    const config = await this.runtimeConfig(settings);
+    return {
+      id: settings?.id,
+      enabled: config.enabled,
+      url: config.url,
+      event: config.event,
+      testEvent: config.testEvent,
+      timeoutMs: config.timeoutMs,
+      retryAttempts: config.retryAttempts,
+      retryDelayMs: config.retryDelayMs,
+      hasSecret: Boolean(this.webhookSecret),
+      source: settings ? 'database' : 'environment',
+    };
+  }
+
+  async updateSettings(dto: UpdateContactWebhookSettingsDto) {
+    const existing = await this.persistedSettings();
+    const data = {
+      enabled: dto.enabled ?? existing?.enabled ?? false,
+      url: this.optionalTrim(dto.url ?? existing?.url ?? null),
+      event: dto.event?.trim() || existing?.event || 'contact.message.created',
+      testEvent:
+        dto.testEvent?.trim() || existing?.testEvent || 'contact.webhook.test',
+      timeoutMs: dto.timeoutMs ?? existing?.timeoutMs ?? 5_000,
+      retryAttempts: dto.retryAttempts ?? existing?.retryAttempts ?? 2,
+      retryDelayMs: dto.retryDelayMs ?? existing?.retryDelayMs ?? 30_000,
+      deletedAt: null,
+    };
+    const saved = existing
+      ? await this.prisma.contactWebhookSetting.update({
+          where: { id: existing.id },
+          data,
+        })
+      : await this.prisma.contactWebhookSetting.create({ data });
+    return {
+      id: saved.id,
+      enabled: saved.enabled,
+      url: saved.url,
+      event: saved.event,
+      testEvent: saved.testEvent,
+      timeoutMs: saved.timeoutMs,
+      retryAttempts: saved.retryAttempts,
+      retryDelayMs: saved.retryDelayMs,
+      hasSecret: Boolean(this.webhookSecret),
+      source: 'database',
     };
   }
 
@@ -52,13 +114,13 @@ export class ContactWebhookService {
   }
 
   async dispatch(message: ContactMessage, retryAttempt = 0) {
-    const url = this.webhookUrl;
-    if (!url) {
+    const config = await this.runtimeConfig();
+    if (!config.enabled || !config.url) {
       return { dispatched: false };
     }
 
     const body = JSON.stringify({
-      event: 'contact.message.created',
+      event: config.event,
       data: {
         id: message.id,
         name: message.name,
@@ -71,36 +133,43 @@ export class ContactWebhookService {
     });
 
     const result = await this.postWebhook(
-      url,
+      config.url,
       body,
-      'contact.message.created',
+      config.event,
       {
         messageId: message.id,
         ...(retryAttempt ? { retryAttempt } : {}),
       },
+      config.timeoutMs,
     );
     if (!result.dispatched) {
-      this.scheduleRetry(message.id, retryAttempt + 1);
+      this.scheduleRetry(message.id, retryAttempt + 1, config);
     }
     return result;
   }
 
   async testDispatch() {
-    const url = this.webhookUrl;
-    if (!url) {
+    const config = await this.runtimeConfig();
+    if (!config.enabled || !config.url) {
       await this.auditDelivery('contact.webhook.test', false, false);
       return { configured: false, dispatched: false };
     }
 
     const body = JSON.stringify({
-      event: 'contact.webhook.test',
+      event: config.testEvent,
       data: {
         sentAt: new Date().toISOString(),
         source: 'portfolio-platform',
       },
     });
 
-    const result = await this.postWebhook(url, body, 'contact.webhook.test');
+    const result = await this.postWebhook(
+      config.url,
+      body,
+      config.testEvent,
+      {},
+      config.timeoutMs,
+    );
     return { configured: true, ...result };
   }
 
@@ -116,13 +185,17 @@ export class ContactWebhookService {
     return { messageId, ...result };
   }
 
-  private scheduleRetry(messageId: string, retryAttempt: number) {
-    if (retryAttempt > this.retryAttempts) {
+  private scheduleRetry(
+    messageId: string,
+    retryAttempt: number,
+    config: ContactWebhookRuntimeConfig,
+  ) {
+    if (retryAttempt > config.retryAttempts) {
       return;
     }
     setTimeout(() => {
       void this.retryMessage(messageId, retryAttempt);
-    }, this.retryDelayMs);
+    }, config.retryDelayMs);
   }
 
   private async postWebhook(
@@ -130,13 +203,14 @@ export class ContactWebhookService {
     body: string,
     event: string,
     metadata: Record<string, unknown> = {},
+    timeoutMs = 5_000,
   ) {
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: this.headers(body, event),
         body,
-        signal: AbortSignal.timeout(5_000),
+        signal: AbortSignal.timeout(timeoutMs),
       });
       if (!response.ok) {
         this.logger.warn(`Contact webhook returned ${response.status}`);
@@ -198,25 +272,53 @@ export class ContactWebhookService {
     return headers;
   }
 
-  private get webhookUrl() {
-    return this.configService.get<string>('CONTACT_WEBHOOK_URL');
+  private async runtimeConfig(
+    settings?: Awaited<ReturnType<ContactWebhookService['persistedSettings']>>,
+  ): Promise<ContactWebhookRuntimeConfig> {
+    const persisted = settings ?? (await this.persistedSettings());
+    const envUrl =
+      this.configService.get<string>('CONTACT_WEBHOOK_URL') || null;
+    const url = persisted?.url || envUrl;
+    return {
+      enabled: persisted ? persisted.enabled : Boolean(envUrl),
+      url,
+      event: persisted?.event || 'contact.message.created',
+      testEvent: persisted?.testEvent || 'contact.webhook.test',
+      timeoutMs: this.numberValueInRange(
+        persisted?.timeoutMs,
+        5_000,
+        1_000,
+        30_000,
+      ),
+      retryAttempts: this.numberValueInRange(
+        persisted?.retryAttempts,
+        this.numberConfig('CONTACT_WEBHOOK_RETRY_ATTEMPTS', 2, 0, 5),
+        0,
+        5,
+      ),
+      retryDelayMs: this.numberValueInRange(
+        persisted?.retryDelayMs,
+        this.numberConfig(
+          'CONTACT_WEBHOOK_RETRY_DELAY_MS',
+          30_000,
+          1_000,
+          300_000,
+        ),
+        1_000,
+        300_000,
+      ),
+    };
+  }
+
+  private persistedSettings() {
+    return this.prisma.contactWebhookSetting.findFirst({
+      where: { deletedAt: null },
+      orderBy: { updatedAt: 'desc' },
+    });
   }
 
   private get webhookSecret() {
     return this.configService.get<string>('CONTACT_WEBHOOK_SECRET');
-  }
-
-  private get retryAttempts() {
-    return this.numberConfig('CONTACT_WEBHOOK_RETRY_ATTEMPTS', 2, 0, 5);
-  }
-
-  private get retryDelayMs() {
-    return this.numberConfig(
-      'CONTACT_WEBHOOK_RETRY_DELAY_MS',
-      30_000,
-      1_000,
-      300_000,
-    );
   }
 
   private numberConfig(
@@ -245,5 +347,22 @@ export class ContactWebhookService {
 
   private numberValue(value: unknown) {
     return typeof value === 'number' ? value : null;
+  }
+
+  private numberValueInRange(
+    value: number | null | undefined,
+    fallback: number,
+    minimum: number,
+    maximum: number,
+  ) {
+    if (!Number.isFinite(value)) {
+      return fallback;
+    }
+    return Math.min(Math.max(Math.trunc(Number(value)), minimum), maximum);
+  }
+
+  private optionalTrim(value?: string | null) {
+    const trimmed = value?.trim();
+    return trimmed || null;
   }
 }

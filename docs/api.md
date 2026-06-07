@@ -76,6 +76,8 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `POST /contact-messages`
 - `GET /contact-messages?status=unread&from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_messages`)
 - `GET /contact-messages/webhook/status` (`read_messages`)
+- `GET /contact-messages/webhook/settings` (`manage_messages`)
+- `PATCH /contact-messages/webhook/settings` (`manage_messages`, no acepta secretos)
 - `GET /contact-messages/webhook/deliveries` (`read_messages`)
 - `POST /contact-messages/webhook/messages/:id/retry` (`manage_messages`)
 - `POST /contact-messages/webhook/test` (`manage_messages`)
@@ -334,6 +336,7 @@ Privacidad de contacto:
 Endpoints admin de webhook:
 
 - `GET /contact-messages/webhook/status`: protegido para `admin`, `editor` y `viewer`; indica si URL/secret están configurados y política de retry sin exponer valores.
+- `GET /contact-messages/webhook/settings` y `PATCH /contact-messages/webhook/settings`: protegidos con `manage_messages`; permiten persistir `enabled`, `url`, `event`, `testEvent`, `timeoutMs`, `retryAttempts` y `retryDelayMs`. El secreto HMAC no forma parte del DTO ni se guarda en base de datos.
 - `GET /contact-messages/webhook/deliveries`: protegido para `admin`, `editor` y `viewer`; devuelve los 10 últimos intentos auditados sin URL, secreto ni payload.
 - `POST /contact-messages/webhook/messages/:id/retry`: protegido para `admin` y `editor`; reconstruye el payload desde el mensaje guardado y crea una nueva auditoria de entrega.
 - `POST /contact-messages/webhook/test`: protegido para `admin` y `editor`; envía un evento `contact.webhook.test` sin datos personales.
