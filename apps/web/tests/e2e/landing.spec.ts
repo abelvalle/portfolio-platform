@@ -216,6 +216,17 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/contact-messages/email/test", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        configured: true,
+        dispatched: true,
+        provider: "resend",
+        status: 202
+      })
+    });
+  });
   await page.route("**/api/v1/contact-messages/webhook/settings", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -2223,6 +2234,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Email contacto")).toBeVisible();
   await expect(page.getByText("Proveedor: resend")).toBeVisible();
   await expect(page.getByText("Valores sensibles: ocultos")).toBeVisible();
+  await page.getByRole("button", { name: "Probar email" }).click();
+  await expect(page.getByText("Email de prueba enviado correctamente.")).toBeVisible();
   await expect(page.getByText("Validacion guiada de secreto")).toBeVisible();
   await expect(page.getByText("Rotacion guiada")).toBeVisible();
   await expect(page.getByText("pendiente de validacion")).toBeVisible();

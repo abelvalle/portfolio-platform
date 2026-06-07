@@ -37,6 +37,7 @@ export function WebhookSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
   const [isProcessingRetries, setIsProcessingRetries] = useState(false);
   const [retryingMessageId, setRetryingMessageId] = useState<string | null>(null);
   const [secretCandidate, setSecretCandidate] = useState("");
@@ -112,6 +113,19 @@ export function WebhookSettings() {
       setMessage("No se pudo ejecutar la prueba de webhook.");
     } finally {
       setIsTesting(false);
+    }
+  }
+
+  async function testEmail() {
+    setIsTestingEmail(true);
+    try {
+      const result = await adminClient.testContactEmail();
+      await loadSettings();
+      setMessage(result.dispatched ? "Email de prueba enviado correctamente." : "Email de prueba no enviado.");
+    } catch {
+      setMessage("No se pudo ejecutar la prueba de email.");
+    } finally {
+      setIsTestingEmail(false);
     }
   }
 
@@ -313,6 +327,10 @@ export function WebhookSettings() {
           <Button type="button" onClick={testWebhook} disabled={!status?.configured || isTesting}>
             <Send data-icon="inline-start" />
             {isTesting ? "Probando..." : "Probar webhook"}
+          </Button>
+          <Button type="button" variant="outline" onClick={testEmail} disabled={!emailStatus?.configured || isTestingEmail}>
+            <Send data-icon="inline-start" />
+            {isTestingEmail ? "Probando..." : "Probar email"}
           </Button>
           <Button type="button" variant="outline" onClick={processPendingRetries} disabled={!status?.configured || isProcessingRetries}>
             <RotateCcw data-icon="inline-start" />

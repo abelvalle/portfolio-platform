@@ -87,6 +87,29 @@ describe('ContactEmailNotificationService', () => {
     expect(body.text).not.toContain('ipHash');
     expect(body.text).not.toContain('userAgent');
   });
+
+  it('sends a synthetic test email without contact personal data', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 202 });
+    global.fetch = fetchMock as never;
+    const service = createService({
+      CONTACT_EMAIL_PROVIDER: 'resend',
+      CONTACT_EMAIL_API_KEY: 'secret-key',
+      CONTACT_EMAIL_FROM: 'Portfolio <portfolio@example.com>',
+      CONTACT_EMAIL_TO: 'abel@example.com',
+    });
+
+    const result = await service.testDispatch();
+
+    expect(result).toEqual(
+      expect.objectContaining({ configured: true, dispatched: true }),
+    );
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.subject).toBe('Nuevo mensaje portfolio: Prueba email contacto');
+    expect(body.reply_to).toBe('portfolio@example.com');
+    expect(body.text).toContain('Mensaje de prueba de notificacion email');
+    expect(body.text).not.toContain('Recruiter Demo');
+    expect(body.text).not.toContain('recruiter@example.com');
+  });
 });
 
 function createService(values: Record<string, string> = {}) {

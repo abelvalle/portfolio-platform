@@ -60,7 +60,7 @@ El secreto HMAC de webhooks sigue viviendo en `CONTACT_WEBHOOK_SECRET`; no se gu
 
 La notificacion email es opcional y no sustituye el guardado en base de datos. Para Resend, configura `CONTACT_EMAIL_PROVIDER=resend`, `CONTACT_EMAIL_API_KEY`, `CONTACT_EMAIL_FROM` y `CONTACT_EMAIL_TO`; si `CONTACT_EMAIL_API_URL` queda vacia, se usa `https://api.resend.com/emails`. Para otro proveedor HTTP compatible, usa `CONTACT_EMAIL_PROVIDER=generic` y define `CONTACT_EMAIL_API_URL`.
 
-El panel `/admin/settings` solo muestra si los valores estan configurados. No devuelve ni guarda API key, remitente ni destinatario.
+El panel `/admin/settings` solo muestra si los valores estan configurados. No devuelve ni guarda API key, remitente ni destinatario. Tras desplegar, usa `Probar email` para enviar un mensaje sintetico sin datos personales y confirmar el proveedor.
 
 ### Rotacion de secreto webhook
 

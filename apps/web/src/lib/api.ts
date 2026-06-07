@@ -221,6 +221,9 @@ export const adminClient = {
   contactEmailStatus() {
     return apiFetch<ContactEmailStatus>("/contact-messages/email/status");
   },
+  testContactEmail() {
+    return apiFetch<ContactEmailTestResult>("/contact-messages/email/test", { method: "POST" });
+  },
   contactWebhookSettings() {
     return apiFetch<ContactWebhookSettings>("/contact-messages/webhook/settings");
   },
@@ -718,6 +721,14 @@ export type ContactEmailStatus = {
   fromConfigured: boolean;
   toConfigured: boolean;
   timeoutMs: number;
+};
+
+export type ContactEmailTestResult = {
+  configured: boolean;
+  dispatched: boolean;
+  provider: string;
+  status?: number | null;
+  error?: string | null;
 };
 
 export type ContactWebhookSettings = ContactWebhookStatus & {

@@ -76,6 +76,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `POST /contact-messages`
 - `GET /contact-messages?status=unread&from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_messages`)
 - `GET /contact-messages/email/status` (`read_messages`, no expone valores sensibles)
+- `POST /contact-messages/email/test` (`manage_messages`, envia prueba sin datos personales)
 - `GET /contact-messages/webhook/status` (`read_messages`)
 - `GET /contact-messages/webhook/settings` (`manage_messages`)
 - `PATCH /contact-messages/webhook/settings` (`manage_messages`, no acepta secretos)
@@ -388,6 +389,7 @@ Privacidad de contacto:
 Endpoints admin de webhook:
 
 - `GET /contact-messages/email/status`: protegido para `admin`, `editor` y `viewer`; indica proveedor, si esta configurado y si existen API URL/key/remitente/destinatario sin devolver ningun valor sensible.
+- `POST /contact-messages/email/test`: protegido para `admin` y `editor`; envia un email sintetico de prueba sin datos personales de contactos.
 - `GET /contact-messages/webhook/status`: protegido para `admin`, `editor` y `viewer`; indica si URL/secret están configurados, politica de retry y estado del worker (`retryWorkerEnabled`, `retryWorkerIntervalMs`) sin exponer valores sensibles.
 - `GET /contact-messages/webhook/settings` y `PATCH /contact-messages/webhook/settings`: protegidos con `manage_messages`; permiten persistir `enabled`, `url`, `event`, `testEvent`, `timeoutMs`, `retryAttempts` y `retryDelayMs`. El secreto HMAC no forma parte del DTO ni se guarda en base de datos.
 - `POST /contact-messages/webhook/secret/validate`: protegido con `manage_messages`; compara un `secret` candidato contra `CONTACT_WEBHOOK_SECRET` usando comparacion segura sobre hashes y devuelve solo `configured`, `valid`, `signatureHeader` y `algorithm`.

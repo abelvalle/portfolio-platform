@@ -70,6 +70,14 @@ export class ContactMessagesController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('manage_messages')
+  @Post('email/test')
+  testEmail() {
+    return this.contactEmailNotificationService.testDispatch();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_messages')
   @Get('webhook/settings')
   webhookSettings() {
     return this.contactWebhookService.settings();

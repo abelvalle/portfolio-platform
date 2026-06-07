@@ -23,6 +23,7 @@ describe('Contact webhook settings (e2e)', () => {
   };
   let contactEmailNotificationService: {
     status: jest.Mock;
+    testDispatch: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -84,6 +85,12 @@ describe('Contact webhook settings (e2e)', () => {
         fromConfigured: true,
         toConfigured: true,
         timeoutMs: 5000,
+      }),
+      testDispatch: jest.fn().mockResolvedValue({
+        configured: true,
+        dispatched: true,
+        provider: 'resend',
+        status: 202,
       }),
     };
 
@@ -168,6 +175,24 @@ describe('Contact webhook settings (e2e)', () => {
     );
     expect(JSON.stringify(response.body)).not.toContain('secret-key');
     expect(JSON.stringify(response.body)).not.toContain('abel@example.com');
+  });
+
+  it('sends an email provider test without contact payload', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/contact-messages/email/test')
+      .expect(201);
+
+    expect(contactEmailNotificationService.testDispatch).toHaveBeenCalled();
+    expect(response.body).toEqual({
+      configured: true,
+      dispatched: true,
+      provider: 'resend',
+      status: 202,
+    });
+    expect(JSON.stringify(response.body)).not.toContain('secret-key');
+    expect(JSON.stringify(response.body)).not.toContain(
+      'recruiter@example.com',
+    );
   });
 
   it('updates webhook settings with a validated and sanitized payload', async () => {

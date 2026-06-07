@@ -84,6 +84,23 @@ export class ContactEmailNotificationService {
     }
   }
 
+  testDispatch() {
+    return this.dispatch({
+      id: 'contact-email-test',
+      name: 'Portfolio Platform',
+      email: 'portfolio@example.com',
+      subject: 'Prueba email contacto',
+      message:
+        'Mensaje de prueba de notificacion email. No contiene datos personales de contactos.',
+      status: 'test',
+      ipHash: null,
+      userAgent: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+    });
+  }
+
   private payload(message: ContactMessage, config: ContactEmailRuntimeConfig) {
     const subject = message.subject
       ? `Nuevo mensaje portfolio: ${message.subject}`
