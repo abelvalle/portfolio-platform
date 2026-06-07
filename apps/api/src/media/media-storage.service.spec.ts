@@ -26,6 +26,16 @@ describe('MediaStorageService', () => {
     expect(service.getStatus()).toMatchObject({ quotaMb: 250 });
   });
 
+  it('fails downloads explicitly when the configured provider is not implemented', async () => {
+    const service = new MediaStorageService(
+      mockConfig({ MEDIA_STORAGE_PROVIDER: 's3' }),
+    );
+
+    await expect(service.createReadStream('remote/key.pdf')).rejects.toThrow(
+      'Only local media storage is implemented',
+    );
+  });
+
   it('rejects unsupported media types before writing files', async () => {
     const service = new MediaStorageService(mockConfig());
 

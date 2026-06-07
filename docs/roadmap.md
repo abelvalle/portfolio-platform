@@ -4167,6 +4167,18 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
 
+### Guard explicito de storage externo
+
+- `MediaStorageService.createReadStream` bloquea descargas cuando `MEDIA_STORAGE_PROVIDER` no es `local`.
+- Evita tratar claves remotas como rutas locales mientras no exista adaptador S3/R2/Supabase Storage.
+- Añadido test unitario para provider externo no implementado.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- media-storage.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -4196,7 +4208,7 @@ Verificacion realizada en este hito:
 - LinkedIn API real: falta validación end to end con credenciales reales y límites de la plataforma.
 - Publicación por entidad CMS: existe workflow granular real para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; falta extenderlo a otros futuros módulos.
 - Restauración por entidad CMS: existe restore para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; `/admin/settings/publication` ya expone enlaces contextuales por entidad, habilita restore para todas las entidades soportadas y las pantallas CMS principales enlazan al historial central. Falta restore inline por entidad solo si se requiere un flujo todavia mas directo.
-- Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
+- Media storage externo: existe servicio desacoplado local y los providers no implementados fallan explicitamente en subida/descarga/borrado; falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete, purga fisica diferida y bloqueo local de firma EICAR; falta integracion antivirus externa real.
 - NPM audit: quedan 2 vulnerabilidades moderadas en la cadena `next`/`postcss` confirmadas con `npm.cmd audit --audit-level=moderate`; revalidado que `next@latest` sigue siendo `16.2.7` y todavia depende de `postcss@8.4.31`, mientras Tailwind/shadcn ya usan `postcss@8.5.15`; no se aplica `audit fix --force` porque propone un downgrade rompedor a `next@9.3.3`.
 

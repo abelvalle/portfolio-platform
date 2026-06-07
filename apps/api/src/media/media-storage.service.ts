@@ -68,6 +68,7 @@ export class MediaStorageService {
   }
 
   async createReadStream(storageKey?: string | null): Promise<ReadStream> {
+    this.assertLocalProvider();
     if (!storageKey) {
       throw new NotFoundException('Media file is not available');
     }
