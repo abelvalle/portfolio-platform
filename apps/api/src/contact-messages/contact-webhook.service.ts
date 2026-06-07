@@ -98,6 +98,19 @@ export class ContactWebhookService {
     };
   }
 
+  validateSecret(candidateSecret: string) {
+    const configuredSecret = this.webhookSecret;
+    const configured = Boolean(configuredSecret);
+    return {
+      configured,
+      valid: configuredSecret
+        ? this.safeEqual(configuredSecret, candidateSecret)
+        : false,
+      signatureHeader: 'X-Portfolio-Signature',
+      algorithm: 'hmac-sha256',
+    };
+  }
+
   async deliveries() {
     const logs = await this.prisma.auditLog.findMany({
       where: {

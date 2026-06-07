@@ -78,6 +78,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /contact-messages/webhook/status` (`read_messages`)
 - `GET /contact-messages/webhook/settings` (`manage_messages`)
 - `PATCH /contact-messages/webhook/settings` (`manage_messages`, no acepta secretos)
+- `POST /contact-messages/webhook/secret/validate` (`manage_messages`, compara candidato sin guardarlo)
 - `GET /contact-messages/webhook/deliveries` (`read_messages`)
 - `POST /contact-messages/webhook/messages/:id/retry` (`manage_messages`)
 - `POST /contact-messages/webhook/retries/process` (`manage_messages`)
@@ -381,6 +382,7 @@ Endpoints admin de webhook:
 
 - `GET /contact-messages/webhook/status`: protegido para `admin`, `editor` y `viewer`; indica si URL/secret están configurados, politica de retry y estado del worker (`retryWorkerEnabled`, `retryWorkerIntervalMs`) sin exponer valores sensibles.
 - `GET /contact-messages/webhook/settings` y `PATCH /contact-messages/webhook/settings`: protegidos con `manage_messages`; permiten persistir `enabled`, `url`, `event`, `testEvent`, `timeoutMs`, `retryAttempts` y `retryDelayMs`. El secreto HMAC no forma parte del DTO ni se guarda en base de datos.
+- `POST /contact-messages/webhook/secret/validate`: protegido con `manage_messages`; compara un `secret` candidato contra `CONTACT_WEBHOOK_SECRET` usando comparacion segura sobre hashes y devuelve solo `configured`, `valid`, `signatureHeader` y `algorithm`.
 - `GET /contact-messages/webhook/deliveries`: protegido para `admin`, `editor` y `viewer`; devuelve los 10 últimos intentos auditados sin URL, secreto ni payload.
 - `POST /contact-messages/webhook/messages/:id/retry`: protegido para `admin` y `editor`; reconstruye el payload desde el mensaje guardado y crea una nueva auditoria de entrega.
 - `POST /contact-messages/webhook/retries/process`: protegido para `admin` y `editor`; procesa hasta 10 jobs persistentes pendientes cuyo `runAt` ya vencio.

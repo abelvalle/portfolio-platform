@@ -227,6 +227,12 @@ export const adminClient = {
       body: JSON.stringify(data)
     });
   },
+  validateContactWebhookSecret(secret: string) {
+    return apiFetch<ContactWebhookSecretValidation>("/contact-messages/webhook/secret/validate", {
+      method: "POST",
+      body: JSON.stringify({ secret })
+    });
+  },
   linkedinStatus() {
     return apiFetch<LinkedinIntegrationStatus>("/integrations/linkedin/status");
   },
@@ -699,6 +705,13 @@ export type ContactWebhookSettingsMutation = {
   timeoutMs: number;
   retryAttempts: number;
   retryDelayMs: number;
+};
+
+export type ContactWebhookSecretValidation = {
+  configured: boolean;
+  valid: boolean;
+  signatureHeader: string;
+  algorithm: string;
 };
 
 export type LinkedinIntegrationStatus = {

@@ -191,6 +191,36 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/contact-messages/webhook/settings", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "settings-1",
+        enabled: true,
+        url: "https://example.com/webhook",
+        event: "contact.message.created",
+        testEvent: "contact.webhook.test",
+        timeoutMs: 5000,
+        retryAttempts: 2,
+        retryDelayMs: 30000,
+        retryWorkerEnabled: true,
+        retryWorkerIntervalMs: 60000,
+        hasSecret: true,
+        source: "database"
+      })
+    });
+  });
+  await page.route("**/api/v1/contact-messages/webhook/secret/validate", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        configured: true,
+        valid: true,
+        signatureHeader: "X-Portfolio-Signature",
+        algorithm: "hmac-sha256"
+      })
+    });
+  });
   await page.route("**/api/v1/contact-messages/webhook/deliveries", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -2114,6 +2144,19 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/settings");
   await expect(page.getByText("Seguridad admin")).toBeVisible();
   await expect(page.getByText("Webhooks contacto")).toBeVisible();
+  await expect(page.getByText("Validacion guiada de secreto")).toBeVisible();
+  await page.getByLabel("Secreto candidato").fill("secret-value");
+  const webhookSecretValidationRequest = page.waitForRequest((request) => {
+    if (!request.url().endsWith("/api/v1/contact-messages/webhook/secret/validate") || request.method() !== "POST") {
+      return false;
+    }
+    const data = JSON.parse(request.postData() || "{}");
+    return data.secret === "secret-value";
+  });
+  await page.getByRole("button", { name: "Validar secreto" }).click();
+  await webhookSecretValidationRequest;
+  await expect(page.getByText("Secreto webhook validado correctamente.")).toBeVisible();
+  await expect(page.getByLabel("Secreto candidato")).toHaveValue("");
   await expect(page.getByText("Ultimas entregas webhook")).toBeVisible();
   await expect(page.getByText("Reintentos: 2 cada 30000 ms")).toBeVisible();
   await expect(page.getByText("contact.message.created", { exact: true }).first()).toBeVisible();
@@ -2172,7 +2215,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Embudo conversion")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Landing -> CV -> Contacto" })).toBeVisible();
   await expect(page.getByText("25% desde landing")).toBeVisible();
-  await page.getByLabel("Embudo").selectOption("landing_visit,project_view,contact_submit");
+  await page.getByLabel("Embudo", { exact: true }).selectOption("landing_visit,project_view,contact_submit");
   await expect(page.getByRole("heading", { name: "Landing -> Proyecto -> Contacto" })).toBeVisible();
   await expect(page.getByText("Vistas proyecto")).toBeVisible();
   await expect(page.getByText("50% desde landing")).toBeVisible();

@@ -180,6 +180,39 @@ describe('ContactWebhookService', () => {
     );
   });
 
+  it('validates candidate webhook secrets without exposing the configured secret', () => {
+    const service = createService({
+      CONTACT_WEBHOOK_SECRET: 'secret-value',
+    });
+
+    expect(service.validateSecret('secret-value')).toEqual({
+      configured: true,
+      valid: true,
+      signatureHeader: 'X-Portfolio-Signature',
+      algorithm: 'hmac-sha256',
+    });
+    expect(service.validateSecret('wrong-secret')).toEqual({
+      configured: true,
+      valid: false,
+      signatureHeader: 'X-Portfolio-Signature',
+      algorithm: 'hmac-sha256',
+    });
+    expect(
+      JSON.stringify(service.validateSecret('secret-value')),
+    ).not.toContain('secret-value');
+  });
+
+  it('reports webhook secret validation unavailable when no secret is configured', () => {
+    const service = createService({});
+
+    expect(service.validateSecret('candidate')).toEqual({
+      configured: false,
+      valid: false,
+      signatureHeader: 'X-Portfolio-Signature',
+      algorithm: 'hmac-sha256',
+    });
+  });
+
   it('audits successful webhook deliveries without storing secrets or payload body', async () => {
     const prisma = createPrisma();
     const service = createService(

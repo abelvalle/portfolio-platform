@@ -19,7 +19,10 @@ import type { Request, Response } from 'express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermissions } from '../common/guards/permissions.decorator';
-import { UpdateContactWebhookSettingsDto } from './contact-webhook.dto';
+import {
+  UpdateContactWebhookSettingsDto,
+  ValidateContactWebhookSecretDto,
+} from './contact-webhook.dto';
 import {
   BulkContactMessageStatusDto,
   ContactMessageQueryDto,
@@ -68,6 +71,14 @@ export class ContactMessagesController {
   @Patch('webhook/settings')
   updateWebhookSettings(@Body() body: UpdateContactWebhookSettingsDto) {
     return this.contactWebhookService.updateSettings(body);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_messages')
+  @Post('webhook/secret/validate')
+  validateWebhookSecret(@Body() body: ValidateContactWebhookSecretDto) {
+    return this.contactWebhookService.validateSecret(body.secret);
   }
 
   @ApiBearerAuth()

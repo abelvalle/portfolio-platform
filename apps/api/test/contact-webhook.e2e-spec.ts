@@ -18,6 +18,7 @@ describe('Contact webhook settings (e2e)', () => {
     status: jest.Mock;
     testDispatch: jest.Mock;
     updateSettings: jest.Mock;
+    validateSecret: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -62,6 +63,12 @@ describe('Contact webhook settings (e2e)', () => {
         source: 'database',
         ...data,
       })),
+      validateSecret: jest.fn().mockReturnValue({
+        configured: true,
+        valid: true,
+        signatureHeader: 'X-Portfolio-Signature',
+        algorithm: 'hmac-sha256',
+      }),
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -162,6 +169,33 @@ describe('Contact webhook settings (e2e)', () => {
       .expect(400);
 
     expect(contactWebhookService.updateSettings).not.toHaveBeenCalled();
+  });
+
+  it('validates webhook secrets without returning the candidate value', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/contact-messages/webhook/secret/validate')
+      .send({ secret: 'secret-value' })
+      .expect(201);
+
+    expect(contactWebhookService.validateSecret).toHaveBeenCalledWith(
+      'secret-value',
+    );
+    expect(response.body).toEqual({
+      configured: true,
+      valid: true,
+      signatureHeader: 'X-Portfolio-Signature',
+      algorithm: 'hmac-sha256',
+    });
+    expect(JSON.stringify(response.body)).not.toContain('secret-value');
+  });
+
+  it('rejects empty webhook secret validation payloads', async () => {
+    await request(app.getHttpServer())
+      .post('/contact-messages/webhook/secret/validate')
+      .send({ secret: '' })
+      .expect(400);
+
+    expect(contactWebhookService.validateSecret).not.toHaveBeenCalled();
   });
 
   it('processes pending webhook retry jobs', async () => {

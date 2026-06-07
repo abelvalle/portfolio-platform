@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, RotateCcw, Save, Send } from "lucide-react";
+import { RefreshCw, RotateCcw, Save, Send, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +30,9 @@ export function WebhookSettings() {
   const [isTesting, setIsTesting] = useState(false);
   const [isProcessingRetries, setIsProcessingRetries] = useState(false);
   const [retryingMessageId, setRetryingMessageId] = useState<string | null>(null);
+  const [secretCandidate, setSecretCandidate] = useState("");
+  const [secretValidation, setSecretValidation] = useState<{ configured: boolean; valid: boolean; signatureHeader: string; algorithm: string } | null>(null);
+  const [isValidatingSecret, setIsValidatingSecret] = useState(false);
 
   useEffect(() => {
     void loadSettings();
@@ -127,6 +130,29 @@ export function WebhookSettings() {
     }
   }
 
+  async function validateSecret() {
+    if (!secretCandidate.trim()) {
+      setMessage("Introduce un secreto candidato para validarlo.");
+      return;
+    }
+
+    setIsValidatingSecret(true);
+    try {
+      const result = await adminClient.validateContactWebhookSecret(secretCandidate);
+      setSecretValidation(result);
+      setSecretCandidate("");
+      if (!result.configured) {
+        setMessage("No hay CONTACT_WEBHOOK_SECRET configurado en entorno.");
+      } else {
+        setMessage(result.valid ? "Secreto webhook validado correctamente." : "El secreto indicado no coincide con el configurado.");
+      }
+    } catch {
+      setMessage("No se pudo validar el secreto webhook.");
+    } finally {
+      setIsValidatingSecret(false);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -139,6 +165,41 @@ export function WebhookSettings() {
         <p className="text-sm text-muted-foreground">
           URL y politica de entrega persistentes. El secreto HMAC sigue viviendo en variables de entorno y no se muestra.
         </p>
+        <div className="grid gap-3 rounded-lg border border-border/60 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">Validacion guiada de secreto</p>
+              <p className="text-xs text-muted-foreground">Compara un valor candidato contra `CONTACT_WEBHOOK_SECRET` sin guardarlo ni devolverlo.</p>
+            </div>
+            <Badge variant={secretValidation?.valid ? "default" : "outline"}>
+              {secretValidation ? (secretValidation.valid ? "coincide" : "no coincide") : status?.hasSecret ? "secreto activo" : "sin secreto"}
+            </Badge>
+          </div>
+          <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+            <div className="grid gap-2">
+              <Label htmlFor="contactWebhookSecretCandidate">Secreto candidato</Label>
+              <Input
+                id="contactWebhookSecretCandidate"
+                type="password"
+                autoComplete="off"
+                value={secretCandidate}
+                onChange={(event) => setSecretCandidate(event.target.value)}
+                placeholder="Valor de CONTACT_WEBHOOK_SECRET"
+              />
+            </div>
+            <div className="flex items-end">
+              <Button type="button" variant="outline" onClick={validateSecret} disabled={isValidatingSecret || !secretCandidate.trim()}>
+                <ShieldCheck data-icon="inline-start" />
+                {isValidatingSecret ? "Validando..." : "Validar secreto"}
+              </Button>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+            <Badge variant="outline">{secretValidation?.signatureHeader || "X-Portfolio-Signature"}</Badge>
+            <Badge variant="outline">{secretValidation?.algorithm || "hmac-sha256"}</Badge>
+            <Badge variant="outline">valor no persistido</Badge>
+          </div>
+        </div>
         <div className="grid gap-3 rounded-lg border border-border/60 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>

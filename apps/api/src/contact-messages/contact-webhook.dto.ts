@@ -7,7 +7,9 @@ import {
   IsUrl,
   Matches,
   Max,
+  MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
 
 export class UpdateContactWebhookSettingsDto {
@@ -53,4 +55,12 @@ export class UpdateContactWebhookSettingsDto {
   @Min(1000)
   @Max(300000)
   retryDelayMs?: number;
+}
+
+export class ValidateContactWebhookSecretDto {
+  @ApiProperty({ example: 'candidate-secret' })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(300)
+  secret!: string;
 }
