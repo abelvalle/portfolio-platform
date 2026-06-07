@@ -1,7 +1,12 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ContactMessage } from '@prisma/client';
-import { createHmac } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateContactWebhookSettingsDto } from './contact-webhook.dto';
 
@@ -202,6 +207,16 @@ export class ContactWebhookService {
       results.push(await this.runRetryJob(job.id));
     }
     return { processed: results.length, results };
+  }
+
+  async processDueRetriesFromCron(secret?: string) {
+    const expectedSecret = this.configService.get<string>(
+      'CONTACT_WEBHOOK_RETRY_CRON_SECRET',
+    );
+    if (!expectedSecret || !secret || !this.safeEqual(expectedSecret, secret)) {
+      throw new ForbiddenException('Invalid cron secret');
+    }
+    return this.processDueRetries();
   }
 
   private async scheduleRetry(
@@ -427,5 +442,11 @@ export class ContactWebhookService {
   private optionalTrim(value?: string | null) {
     const trimmed = value?.trim();
     return trimmed || null;
+  }
+
+  private safeEqual(expected: string, actual: string) {
+    const expectedHash = createHash('sha256').update(expected).digest();
+    const actualHash = createHash('sha256').update(actual).digest();
+    return timingSafeEqual(expectedHash, actualHash);
   }
 }

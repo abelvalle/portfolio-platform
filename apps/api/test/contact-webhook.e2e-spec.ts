@@ -13,6 +13,7 @@ describe('Contact webhook settings (e2e)', () => {
     deliveries: jest.Mock;
     retryMessage: jest.Mock;
     processDueRetries: jest.Mock;
+    processDueRetriesFromCron: jest.Mock;
     settings: jest.Mock;
     status: jest.Mock;
     testDispatch: jest.Mock;
@@ -23,6 +24,10 @@ describe('Contact webhook settings (e2e)', () => {
     contactWebhookService = {
       deliveries: jest.fn(),
       processDueRetries: jest.fn().mockResolvedValue({
+        processed: 1,
+        results: [{ messageId: 'message-1', dispatched: true, status: 200 }],
+      }),
+      processDueRetriesFromCron: jest.fn().mockResolvedValue({
         processed: 1,
         results: [{ messageId: 'message-1', dispatched: true, status: 200 }],
       }),
@@ -165,6 +170,21 @@ describe('Contact webhook settings (e2e)', () => {
       .expect(201);
 
     expect(contactWebhookService.processDueRetries).toHaveBeenCalled();
+    expect(response.body).toEqual({
+      processed: 1,
+      results: [{ messageId: 'message-1', dispatched: true, status: 200 }],
+    });
+  });
+
+  it('processes pending webhook retry jobs from cron secret endpoint', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/contact-messages/webhook/retries/cron')
+      .set('X-Portfolio-Cron-Secret', 'cron-secret')
+      .expect(200);
+
+    expect(
+      contactWebhookService.processDueRetriesFromCron,
+    ).toHaveBeenCalledWith('cron-secret');
     expect(response.body).toEqual({
       processed: 1,
       results: [{ messageId: 'message-1', dispatched: true, status: 200 }],

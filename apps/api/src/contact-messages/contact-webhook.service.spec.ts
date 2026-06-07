@@ -353,6 +353,33 @@ describe('ContactWebhookService', () => {
     });
   });
 
+  it('processes due retries from cron with the configured secret', async () => {
+    const prisma = createPrisma();
+    prisma.contactWebhookRetryJob.findMany.mockResolvedValue([]);
+    const service = createService(
+      { CONTACT_WEBHOOK_RETRY_CRON_SECRET: 'cron-secret' },
+      prisma,
+    );
+
+    const result = await service.processDueRetriesFromCron('cron-secret');
+
+    expect(result).toEqual({ processed: 0, results: [] });
+    expect(prisma.contactWebhookRetryJob.findMany).toHaveBeenCalled();
+  });
+
+  it('rejects cron retry processing without the configured secret', async () => {
+    const prisma = createPrisma();
+    const service = createService(
+      { CONTACT_WEBHOOK_RETRY_CRON_SECRET: 'cron-secret' },
+      prisma,
+    );
+
+    await expect(
+      service.processDueRetriesFromCron('wrong-secret'),
+    ).rejects.toThrow('Invalid cron secret');
+    expect(prisma.contactWebhookRetryJob.findMany).not.toHaveBeenCalled();
+  });
+
   it('audits manual test attempts when webhook is not configured', async () => {
     const prisma = createPrisma();
     const service = createService({}, prisma);

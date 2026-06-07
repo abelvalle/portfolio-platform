@@ -28,6 +28,7 @@ Variables:
 - `CONTACT_STORE_USER_AGENT=false` opcional para no guardar user-agent en contacto
 - `CONTACT_WEBHOOK_RETRY_WORKER_ENABLED=true` para procesar reintentos webhook dentro del backend
 - `CONTACT_WEBHOOK_RETRY_WORKER_INTERVAL_MS=60000` para ajustar el intervalo del worker
+- `CONTACT_WEBHOOK_RETRY_CRON_SECRET` si se usa un cron externo para procesar reintentos
 - `ANALYTICS_IP_HASH_SALT` opcional para saltear hashes de IP
 - `ANALYTICS_STORE_USER_AGENT=false` opcional para no guardar user-agent
 - `ANALYTICS_RETENTION_DAYS` opcional para purgar eventos antiguos
@@ -46,7 +47,7 @@ En un despliegue de una sola instancia, deja `CONTACT_WEBHOOK_RETRY_WORKER_ENABL
 En un despliegue con varias replicas, usa una sola de estas opciones:
 
 - Mantener el worker activo solo en una replica dedicada.
-- Desactivar el worker en todas las replicas con `CONTACT_WEBHOOK_RETRY_WORKER_ENABLED=false` y llamar `POST /api/v1/contact-messages/webhook/retries/process` desde un cron externo autenticado.
+- Desactivar el worker en todas las replicas con `CONTACT_WEBHOOK_RETRY_WORKER_ENABLED=false` y llamar `POST /api/v1/contact-messages/webhook/retries/cron` desde un cron externo enviando `X-Portfolio-Cron-Secret`.
 
 El secreto HMAC de webhooks sigue viviendo en `CONTACT_WEBHOOK_SECRET`; no se guarda en base de datos ni se expone desde la API.
 

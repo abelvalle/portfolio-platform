@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -98,6 +100,14 @@ export class ContactMessagesController {
   @Post('webhook/retries/process')
   processWebhookRetries() {
     return this.contactWebhookService.processDueRetries();
+  }
+
+  @HttpCode(200)
+  @Post('webhook/retries/cron')
+  processWebhookRetriesFromCron(
+    @Headers('x-portfolio-cron-secret') secret?: string,
+  ) {
+    return this.contactWebhookService.processDueRetriesFromCron(secret);
   }
 
   @ApiBearerAuth()
