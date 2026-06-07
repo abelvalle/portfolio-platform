@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:48 CEST.
+Estado actualizado: 2026-06-07 08:50 CEST.
 
 ## Hitos completados
 
@@ -5317,6 +5317,17 @@ Verificacion realizada en este hito:
 
 - `gh run view 27085283416 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Filtro CI para documentacion
+
+- Anadidos `paths-ignore` en `push` y `pull_request` para cambios exclusivos en `docs/**` y `README.md`.
+- El objetivo es evitar ejecutar builds completos por commits de roadmap/documentacion, manteniendo CI activa para codigo, lockfiles, workflow e infraestructura.
+- `docs/deployment.md` documenta el comportamiento.
+
+Verificacion realizada en este hito:
+
+- `Get-Content -Path .github/workflows/ci.yml`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

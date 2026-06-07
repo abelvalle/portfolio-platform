@@ -133,3 +133,5 @@ Para ejecutar la prueba e2e opcional con base de datos real, levanta primero Doc
 - smoke e2e Chromium de headers frontend
 
 Los e2e largos con navegador y los e2e con PostgreSQL real se mantienen como validaciones manuales o de entorno dedicado hasta disponer de credenciales/servicios estables en CI.
+
+Los cambios exclusivos en `docs/**` o `README.md` no disparan CI para evitar ejecutar builds completos en actualizaciones de documentacion/roadmap.
