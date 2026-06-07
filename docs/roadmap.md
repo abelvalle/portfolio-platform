@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:50 CEST.
+Estado actualizado: 2026-06-07 09:57 CEST.
 
 ## Hitos completados
 
@@ -5522,6 +5522,19 @@ Verificacion realizada en este hito:
 - `npm.cmd run openapi:generate`
 - `Select-String -Path docs/openapi.json -Pattern '"/api/v1/auth/login"|"/api/v1/cv"|"/api/v1/health/live"'`
 - `git diff --check`
+
+### CI y CodeQL remotos verdes tras snapshot OpenAPI
+
+- Revalidado GitHub Actions despues de anadir el generador y snapshot OpenAPI.
+- Run CI `27086649510` completado correctamente en `develop`.
+- Run CodeQL `27086649501` completado correctamente en `develop`.
+- Jobs verdes: `Quality gates`, `Web e2e smoke` y `Analyze JavaScript and TypeScript`.
+
+Verificacion realizada en este hito:
+
+- `gh run view 27086649510 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27086649501 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
