@@ -4061,6 +4061,17 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 
+### Suite raiz tras export CV y webhooks
+
+- Ejecutada la suite raiz despues de labels localizados en exportacion CV y reintentos automaticos de webhooks.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `24` suites y `121` tests API, smoke web y build Next/Nest correctos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
