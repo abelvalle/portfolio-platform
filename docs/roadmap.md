@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 07:53 CEST.
+Estado actualizado: 2026-06-07 07:55 CEST.
 
 ## Hitos completados
 
@@ -5085,6 +5085,18 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run test`
 - `npm.cmd run build`
+
+### Healthchecks en Docker Compose
+
+- `infra/docker-compose.yml` incorpora healthcheck de Postgres con `pg_isready`.
+- La API espera a Postgres healthy y expone healthcheck sobre `/api/v1/health/live`.
+- La web espera a la API healthy y expone healthcheck HTTP sobre `localhost:3000`.
+- Adminer espera a Postgres healthy.
+- `docs/deployment.md` documenta el orden healthy del stack local.
+
+Verificacion realizada en este hito:
+
+- `docker compose -f infra/docker-compose.yml config`
 
 ## Deuda técnica abierta
 

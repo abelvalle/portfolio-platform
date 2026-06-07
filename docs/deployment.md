@@ -97,6 +97,8 @@ PostgreSQL 16. En local:
 npm run docker:up
 ```
 
+`infra/docker-compose.yml` incluye healthchecks para Postgres, API y web. La API espera a Postgres healthy y la web espera a la API healthy antes de iniciar.
+
 Adminer queda disponible en `http://localhost:8080`.
 
 Para ejecutar la prueba e2e opcional con base de datos real, levanta primero Docker Desktop y PostgreSQL con `npm run docker:up`. Si usas una instancia Postgres local distinta, actualiza `DATABASE_URL` con credenciales reales antes de ejecutar `RUN_DB_E2E=true npm run test:e2e:db`.
