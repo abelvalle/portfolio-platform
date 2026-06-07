@@ -3983,6 +3983,19 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"` (primer intento detecto mock sin tecnologias; segundo intento correcto tras enriquecer el fixture)
 
+### Revalidacion audit Next/PostCSS
+
+- Revalidado `npm audit --audit-level=moderate`: siguen 2 vulnerabilidades moderadas por `postcss <8.5.10` dentro de `next`.
+- `npm.cmd view next@latest version dependencies.postcss` confirma `next@latest = 16.2.7` y `dependencies.postcss = 8.4.31`.
+- `npm.cmd ls next postcss --workspace apps/web` confirma que Tailwind/shadcn ya usan `postcss@8.5.15`, pero Next mantiene su dependencia interna vulnerable.
+- No se aplica `npm audit fix --force` porque sigue proponiendo downgrade rompedor a `next@9.3.3`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd audit --audit-level=moderate` (falla por deuda conocida `next`/`postcss`)
+- `npm.cmd view next@latest version dependencies.postcss`
+- `npm.cmd ls next postcss --workspace apps/web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -4014,7 +4027,7 @@ Verificacion realizada en este hito:
 - Restauración por entidad CMS: existe restore para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; `/admin/settings/publication` ya expone enlaces contextuales por entidad y habilita restore para todas las entidades soportadas. Falta llevar affordances de restore a pantallas especificas de cada modulo si se necesita un flujo mas directo.
 - Media storage externo: existe servicio desacoplado local, pero falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete, purga fisica diferida y bloqueo local de firma EICAR; falta integracion antivirus externa real.
-- NPM audit: quedan 2 vulnerabilidades moderadas en la cadena `next`/`postcss` confirmadas con `npm.cmd audit --audit-level=moderate`; `next@16.2.7` es la ultima version estable y todavia depende de `postcss@8.4.31`, no se aplica `audit fix --force` porque propone un downgrade rompedor a `next@9.3.3`.
+- NPM audit: quedan 2 vulnerabilidades moderadas en la cadena `next`/`postcss` confirmadas con `npm.cmd audit --audit-level=moderate`; revalidado que `next@latest` sigue siendo `16.2.7` y todavia depende de `postcss@8.4.31`, mientras Tailwind/shadcn ya usan `postcss@8.5.15`; no se aplica `audit fix --force` porque propone un downgrade rompedor a `next@9.3.3`.
 
 ## Próximos hitos priorizados
 
