@@ -36,6 +36,15 @@ function isLocalOrigin(origin: string) {
   );
 }
 
+function isValidHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export function unsafeProductionSecretKeys(
   nodeEnv: string | undefined,
   lookup: SecretLookup,
@@ -110,6 +119,29 @@ export function unsafeProductionContactEmailConfigKeys(
   return requiredKeys.filter((key) => !hasValue(lookup(key)));
 }
 
+export function unsafeProductionContactWebhookConfigKeys(
+  nodeEnv: string | undefined,
+  lookup: SecretLookup,
+) {
+  if (nodeEnv !== 'production') {
+    return [];
+  }
+
+  const webhookUrl = lookup('CONTACT_WEBHOOK_URL')?.trim() || '';
+  if (!webhookUrl) {
+    return [];
+  }
+
+  const unsafeKeys: string[] = [];
+  if (!isValidHttpUrl(webhookUrl) || isLocalOrigin(webhookUrl)) {
+    unsafeKeys.push('CONTACT_WEBHOOK_URL');
+  }
+  if (!hasValue(lookup('CONTACT_WEBHOOK_SECRET'))) {
+    unsafeKeys.push('CONTACT_WEBHOOK_SECRET');
+  }
+  return unsafeKeys;
+}
+
 export function unsafeProductionConfigKeys(
   nodeEnv: string | undefined,
   lookup: SecretLookup,
@@ -118,6 +150,7 @@ export function unsafeProductionConfigKeys(
     ...unsafeProductionSecretKeys(nodeEnv, lookup),
     ...unsafeProductionRuntimeConfigKeys(nodeEnv, lookup),
     ...unsafeProductionContactEmailConfigKeys(nodeEnv, lookup),
+    ...unsafeProductionContactWebhookConfigKeys(nodeEnv, lookup),
   ];
 }
 

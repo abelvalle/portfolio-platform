@@ -387,7 +387,7 @@ Las exportaciones ATS siguen priorizando compatibilidad: fuerzan color textual y
 }
 ```
 
-Si `CONTACT_WEBHOOK_URL` está configurado, cada mensaje guardado dispara un `POST` externo con evento `contact.message.created`. Si `CONTACT_WEBHOOK_SECRET` existe, se añade firma HMAC SHA-256 en `X-Portfolio-Signature`.
+Si `CONTACT_WEBHOOK_URL` está configurado, cada mensaje guardado dispara un `POST` externo con evento `contact.message.created`. Si `CONTACT_WEBHOOK_SECRET` existe, se añade firma HMAC SHA-256 en `X-Portfolio-Signature`; en `NODE_ENV=production`, un webhook configurado por entorno requiere ese secreto y no puede apuntar a localhost.
 
 Si `CONTACT_EMAIL_PROVIDER` esta configurado (`resend` o endpoint HTTP compatible), cada mensaje guardado tambien puede disparar un email operativo al destinatario de `CONTACT_EMAIL_TO`. El envio es no bloqueante: el mensaje queda persistido aunque el proveedor de email falle. La API no guarda ni expone `CONTACT_EMAIL_API_KEY`, remitente ni destinatario.
 

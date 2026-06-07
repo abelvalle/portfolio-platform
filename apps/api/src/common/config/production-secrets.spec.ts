@@ -2,6 +2,7 @@ import {
   assertSafeProductionConfig,
   assertSafeProductionSecrets,
   unsafeProductionContactEmailConfigKeys,
+  unsafeProductionContactWebhookConfigKeys,
   unsafeProductionConfigKeys,
   unsafeProductionRuntimeConfigKeys,
   unsafeProductionSecretKeys,
@@ -127,6 +128,67 @@ describe('production secrets guard', () => {
     ).toEqual(['CONTACT_EMAIL_PROVIDER']);
   });
 
+  it('allows contact webhooks to remain disabled in production', () => {
+    expect(
+      unsafeProductionContactWebhookConfigKeys('production', () => undefined),
+    ).toEqual([]);
+    expect(
+      unsafeProductionContactWebhookConfigKeys(
+        'development',
+        () => 'http://localhost:3000/webhook',
+      ),
+    ).toEqual([]);
+  });
+
+  it('requires a signed non-local contact webhook url in production', () => {
+    const safeValues: Record<string, string | undefined> = {
+      CONTACT_WEBHOOK_URL: 'https://hooks.example.com/contact',
+      CONTACT_WEBHOOK_SECRET: 'webhook-secret',
+    };
+
+    expect(
+      unsafeProductionContactWebhookConfigKeys(
+        'production',
+        (key) => safeValues[key],
+      ),
+    ).toEqual([]);
+
+    const missingSecretValues: Record<string, string | undefined> = {
+      CONTACT_WEBHOOK_URL: 'https://hooks.example.com/contact',
+    };
+
+    expect(
+      unsafeProductionContactWebhookConfigKeys(
+        'production',
+        (key) => missingSecretValues[key],
+      ),
+    ).toEqual(['CONTACT_WEBHOOK_SECRET']);
+  });
+
+  it('rejects local or invalid contact webhook urls in production', () => {
+    const localValues: Record<string, string | undefined> = {
+      CONTACT_WEBHOOK_URL: 'http://localhost:3000/webhook',
+      CONTACT_WEBHOOK_SECRET: 'webhook-secret',
+    };
+    const invalidValues: Record<string, string | undefined> = {
+      CONTACT_WEBHOOK_URL: 'not-a-url',
+      CONTACT_WEBHOOK_SECRET: 'webhook-secret',
+    };
+
+    expect(
+      unsafeProductionContactWebhookConfigKeys(
+        'production',
+        (key) => localValues[key],
+      ),
+    ).toEqual(['CONTACT_WEBHOOK_URL']);
+    expect(
+      unsafeProductionContactWebhookConfigKeys(
+        'production',
+        (key) => invalidValues[key],
+      ),
+    ).toEqual(['CONTACT_WEBHOOK_URL']);
+  });
+
   it('combines unsafe secrets and runtime config without exposing values', () => {
     const values: Record<string, string> = {
       JWT_ACCESS_SECRET: 'change-me-access-secret',
@@ -134,6 +196,7 @@ describe('production secrets guard', () => {
       ADMIN_PASSWORD: 'real-admin-password',
       API_CORS_ORIGIN: 'http://localhost:3000',
       CONTACT_EMAIL_PROVIDER: 'generic',
+      CONTACT_WEBHOOK_URL: 'http://localhost:4000/webhook',
     };
 
     expect(
@@ -145,11 +208,13 @@ describe('production secrets guard', () => {
       'CONTACT_EMAIL_API_KEY',
       'CONTACT_EMAIL_FROM',
       'CONTACT_EMAIL_TO',
+      'CONTACT_WEBHOOK_URL',
+      'CONTACT_WEBHOOK_SECRET',
     ]);
     expect(() =>
       assertSafeProductionConfig('production', (key) => values[key]),
     ).toThrow(
-      'JWT_ACCESS_SECRET, API_CORS_ORIGIN, CONTACT_EMAIL_API_URL, CONTACT_EMAIL_API_KEY, CONTACT_EMAIL_FROM, CONTACT_EMAIL_TO',
+      'JWT_ACCESS_SECRET, API_CORS_ORIGIN, CONTACT_EMAIL_API_URL, CONTACT_EMAIL_API_KEY, CONTACT_EMAIL_FROM, CONTACT_EMAIL_TO, CONTACT_WEBHOOK_URL, CONTACT_WEBHOOK_SECRET',
     );
     expect(() =>
       assertSafeProductionConfig('production', (key) => values[key]),

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 10:56 CEST.
+Estado actualizado: 2026-06-07 10:59 CEST.
 
 ## Hitos completados
 
@@ -5719,6 +5719,21 @@ Verificacion realizada en este hito:
 - `gh run view 27087895637 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27087895638 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Guard producción webhook contacto
+
+- Añadido guard de arranque para `NODE_ENV=production` cuando `CONTACT_WEBHOOK_URL` esta configurado por entorno.
+- El webhook sigue siendo opcional; si no hay URL configurada, no exige secreto.
+- Si hay URL, el backend exige `CONTACT_WEBHOOK_SECRET` para firma HMAC SHA-256.
+- El guard rechaza URLs locales o no HTTP/HTTPS para evitar despliegues que apunten accidentalmente a `localhost`.
+- README, API docs y deployment documentan el contrato.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- production-secrets.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

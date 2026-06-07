@@ -70,6 +70,8 @@ Variables opcionales de contacto:
 
 - `CONTACT_IP_HASH_SALT`: sal para hashes de IP en mensajes de contacto.
 - `CONTACT_STORE_USER_AGENT=false`: evita guardar user-agent en mensajes de contacto.
+- `CONTACT_WEBHOOK_URL`: activa webhook externo para nuevos mensajes de contacto.
+- `CONTACT_WEBHOOK_SECRET`: secreto HMAC para firmar webhooks; obligatorio en produccion si `CONTACT_WEBHOOK_URL` esta configurado.
 - `CONTACT_EMAIL_PROVIDER=disabled|resend|generic`: activa notificacion email no bloqueante para nuevos mensajes.
 - `CONTACT_EMAIL_API_KEY`, `CONTACT_EMAIL_FROM`, `CONTACT_EMAIL_TO`: credenciales y routing del proveedor, siempre fuera del repositorio. Si usas `generic`, define tambien `CONTACT_EMAIL_API_URL`.
 

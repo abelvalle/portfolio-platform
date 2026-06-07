@@ -30,6 +30,8 @@ Variables:
 - `MEDIA_EXTERNAL_SCAN_URL`, `MEDIA_EXTERNAL_SCAN_API_KEY` y `MEDIA_EXTERNAL_SCAN_TIMEOUT_MS` opcionales para scanner HTTP externo de uploads
 - `CONTACT_IP_HASH_SALT` opcional para saltear hashes de IP en contacto
 - `CONTACT_STORE_USER_AGENT=false` opcional para no guardar user-agent en contacto
+- `CONTACT_WEBHOOK_URL` opcional para enviar mensajes de contacto a un webhook externo
+- `CONTACT_WEBHOOK_SECRET` para firmar webhooks con HMAC SHA-256
 - `CONTACT_WEBHOOK_RETRY_WORKER_ENABLED=true` para procesar reintentos webhook dentro del backend
 - `CONTACT_WEBHOOK_RETRY_WORKER_INTERVAL_MS=60000` para ajustar el intervalo del worker
 - `CONTACT_WEBHOOK_RETRY_CRON_SECRET` si se usa un cron externo para procesar reintentos
@@ -49,7 +51,7 @@ Comandos:
 - Migraciones: `npm --prefix apps/api run db:deploy`
 - Seed: `npm --prefix apps/api run db:seed`
 
-En `NODE_ENV=production`, el backend falla al arrancar si `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` o `ADMIN_PASSWORD` conservan valores placeholder de `.env.example`, si `API_CORS_ORIGIN` falta o apunta solo a localhost, o si `CONTACT_EMAIL_PROVIDER` esta activado sin las credenciales minimas del proveedor.
+En `NODE_ENV=production`, el backend falla al arrancar si `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` o `ADMIN_PASSWORD` conservan valores placeholder de `.env.example`, si `API_CORS_ORIGIN` falta o apunta solo a localhost, si `CONTACT_WEBHOOK_URL` apunta a localhost o no tiene `CONTACT_WEBHOOK_SECRET`, o si `CONTACT_EMAIL_PROVIDER` esta activado sin las credenciales minimas del proveedor.
 
 `API_CORS_ORIGIN` acepta una lista separada por comas. Como la API usa cookies/tokens con `credentials: true`, no uses `*`; el bootstrap lo descarta y exige origenes explicitos.
 
@@ -78,7 +80,7 @@ En un despliegue con varias replicas, usa una sola de estas opciones:
 - Mantener el worker activo solo en una replica dedicada.
 - Desactivar el worker en todas las replicas con `CONTACT_WEBHOOK_RETRY_WORKER_ENABLED=false` y llamar `POST /api/v1/contact-messages/webhook/retries/cron` desde un cron externo enviando `X-Portfolio-Cron-Secret`.
 
-El secreto HMAC de webhooks sigue viviendo en `CONTACT_WEBHOOK_SECRET`; no se guarda en base de datos ni se expone desde la API.
+El secreto HMAC de webhooks sigue viviendo en `CONTACT_WEBHOOK_SECRET`; no se guarda en base de datos ni se expone desde la API. Si configuras `CONTACT_WEBHOOK_URL` por variable de entorno en produccion, el backend exige tambien `CONTACT_WEBHOOK_SECRET` y una URL HTTP/HTTPS no local antes de arrancar.
 
 ### Notificacion email de contacto
 
