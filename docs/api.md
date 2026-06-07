@@ -64,6 +64,9 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 
 ## Endpoints principales
 
+- `GET /`
+- `GET /health/live`
+- `GET /health/ready` (comprueba Prisma/PostgreSQL)
 - `GET /profile`, `PATCH /profile` (`manage_portfolio`)
 - `GET /theme`, `PATCH /theme` (`manage_portfolio`)
 - `GET|POST|PATCH|DELETE /experiences` (writes: `manage_portfolio`)

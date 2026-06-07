@@ -43,6 +43,8 @@ API: `http://localhost:4000/api/v1`
 
 Swagger: `http://localhost:4000/api/docs`
 
+Health: `http://localhost:4000/api/v1/health/live` y `/health/ready`
+
 ## PostgreSQL con Docker
 
 ```bash

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 07:48 CEST.
+Estado actualizado: 2026-06-07 07:51 CEST.
 
 ## Hitos completados
 
@@ -5060,6 +5060,19 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run test`
 - `npm.cmd run build`
+
+### Health checks de despliegue API
+
+- Anadidos endpoints `GET /health/live` y `GET /health/ready` bajo `/api/v1`.
+- Liveness devuelve uptime/timestamp sin tocar dependencias externas.
+- Readiness valida Prisma/PostgreSQL con `SELECT 1` y devuelve 503 si la base de datos no responde.
+- README, `docs/api.md` y `docs/deployment.md` documentan los endpoints para Render/Fly/Railway.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- app.controller.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
 
 ## Deuda técnica abierta
 
