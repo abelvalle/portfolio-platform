@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 11:21 CEST.
+Estado actualizado: 2026-06-07 11:25 CEST.
 
 ## Hitos completados
 
@@ -5790,6 +5790,9 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:web` con `NEXT_PUBLIC_API_URL=https://api.example.com/api/v1`
 - `npm.cmd run build` con `NEXT_PUBLIC_API_URL=https://api.example.com/api/v1`
 - `git diff --check`
+- `gh run view 27088515267 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27088515259 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
