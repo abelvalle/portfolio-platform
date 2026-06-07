@@ -53,6 +53,15 @@ En un despliegue con varias replicas, usa una sola de estas opciones:
 
 El secreto HMAC de webhooks sigue viviendo en `CONTACT_WEBHOOK_SECRET`; no se guarda en base de datos ni se expone desde la API.
 
+### Worker de retencion Analytics
+
+Si `ANALYTICS_RETENTION_DAYS` esta configurado, `ANALYTICS_RETENTION_WORKER_ENABLED=true` activa una purga periodica interna de eventos antiguos.
+
+En multi-replica, evita que todas las instancias purguen a la vez:
+
+- Mantener el worker activo solo en una replica dedicada.
+- O desactivar el worker con `ANALYTICS_RETENTION_WORKER_ENABLED=false` y ejecutar `POST /api/v1/analytics/retention/prune` desde una tarea programada con sesion admin/credenciales de backend.
+
 ## Base de datos
 
 PostgreSQL 16. En local:
