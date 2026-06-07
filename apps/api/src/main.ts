@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { securityHeadersMiddleware } from './common/security/security-headers';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,6 +13,7 @@ async function bootstrap() {
     configService.get<string>('API_CORS_ORIGIN') || 'http://localhost:3000';
 
   app.setGlobalPrefix('api/v1');
+  app.use(securityHeadersMiddleware);
   app.enableCors({
     origin: corsOrigin.split(','),
     credentials: true,

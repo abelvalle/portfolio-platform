@@ -53,6 +53,11 @@ Health checks:
 - Liveness: `GET /api/v1/health/live`
 - Readiness: `GET /api/v1/health/ready` comprueba Prisma/PostgreSQL y devuelve 503 si la base de datos no responde.
 
+Headers:
+
+- La API aplica un baseline defensivo en todas las respuestas: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` y `Cross-Origin-Resource-Policy`.
+- El frontend aplica CSP y headers equivalentes desde `apps/web/next.config.ts`; si `NEXT_PUBLIC_API_URL` apunta a otro dominio, queda permitido como origen de `connect-src`.
+
 ### Render Blueprint
 
 `infra/render.yaml` define un Blueprint para desplegar el backend Docker y una base de datos PostgreSQL gestionada. En Render, usa `infra/render.yaml` como Blueprint Path. Los secretos quedan con `sync: false`; debes cargarlos en el panel o gestor de secretos antes de publicar.

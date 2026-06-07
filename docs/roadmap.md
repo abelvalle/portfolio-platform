@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:06 CEST.
+Estado actualizado: 2026-06-07 08:11 CEST.
 
 ## Hitos completados
 
@@ -5136,6 +5136,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 - `docker compose -f infra/docker-compose.yml config`
+- `git diff --check`
+
+### Headers de seguridad baseline
+
+- La API aplica headers defensivos en todas las respuestas mediante middleware testeable.
+- El frontend aplica CSP y headers equivalentes desde `apps/web/next.config.ts`.
+- `docs/deployment.md` documenta el baseline de headers y el uso de `NEXT_PUBLIC_API_URL` como origen permitido para `connect-src`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- security-headers.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:api`
+- `npm.cmd run build:web`
 - `git diff --check`
 
 ## Deuda técnica abierta
