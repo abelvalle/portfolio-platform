@@ -150,6 +150,22 @@ describe('AnalyticsService filters', () => {
     expect(result).toMatchObject({ retentionDays: 30, deleted: 3 });
   });
 
+  it('reports retention worker privacy status without sensitive values', () => {
+    const service = createService(mockPrisma(), {
+      ANALYTICS_RETENTION_DAYS: '30',
+      ANALYTICS_RETENTION_WORKER_INTERVAL_MS: '120000',
+      ANALYTICS_IP_HASH_SALT: 'salt',
+    });
+
+    expect(service.privacyStatus()).toEqual({
+      retentionDays: 30,
+      storeUserAgent: true,
+      ipHashSaltConfigured: true,
+      retentionWorkerEnabled: true,
+      retentionWorkerIntervalMs: 120000,
+    });
+  });
+
   it('builds daily time series with empty days in ranged filters', async () => {
     const prisma = mockPrisma();
     prisma.analyticsEvent.findMany.mockResolvedValue([

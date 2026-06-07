@@ -45,12 +45,16 @@ export class AnalyticsService {
   }
 
   privacyStatus() {
+    const retentionDays = this.retentionDays();
+    const retentionWorker = this.retentionWorkerStatus(retentionDays);
     return {
-      retentionDays: this.retentionDays(),
+      retentionDays,
       storeUserAgent: this.storeUserAgent(),
       ipHashSaltConfigured: Boolean(
         this.configService.get<string>('ANALYTICS_IP_HASH_SALT'),
       ),
+      retentionWorkerEnabled: retentionWorker.enabled,
+      retentionWorkerIntervalMs: retentionWorker.intervalMs,
     };
   }
 
@@ -495,6 +499,34 @@ export class AnalyticsService {
       this.configService.get<string>('ANALYTICS_RETENTION_DAYS') || 0,
     );
     return Number.isFinite(configured) && configured > 0 ? configured : null;
+  }
+
+  private retentionWorkerStatus(retentionDays: number | null) {
+    return {
+      enabled:
+        Boolean(retentionDays) &&
+        this.configService.get<string>('ANALYTICS_RETENTION_WORKER_ENABLED') !==
+          'false',
+      intervalMs: this.numberConfig(
+        'ANALYTICS_RETENTION_WORKER_INTERVAL_MS',
+        86_400_000,
+        60_000,
+        604_800_000,
+      ),
+    };
+  }
+
+  private numberConfig(
+    key: string,
+    fallback: number,
+    minimum: number,
+    maximum: number,
+  ) {
+    const configured = Number(this.configService.get<string>(key) || fallback);
+    if (!Number.isFinite(configured)) {
+      return fallback;
+    }
+    return Math.min(Math.max(Math.trunc(configured), minimum), maximum);
   }
 
   private attributionMetadata(dto: AnalyticsEventInput) {

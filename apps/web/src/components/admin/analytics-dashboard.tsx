@@ -415,6 +415,8 @@ export function AnalyticsDashboard() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">retencion {privacy?.retentionDays ? `${privacy.retentionDays} dias` : "off"}</Badge>
+          <Badge variant="outline">worker {privacy?.retentionWorkerEnabled ? "on" : "off"}</Badge>
+          <Badge variant="outline">intervalo {privacy?.retentionWorkerIntervalMs ?? 86400000} ms</Badge>
           <Badge variant="outline">user-agent {privacy?.storeUserAgent === false ? "off" : "on"}</Badge>
           <Badge variant="outline">salt IP {privacy?.ipHashSaltConfigured ? "on" : "off"}</Badge>
         </div>

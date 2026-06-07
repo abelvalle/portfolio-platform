@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 05:28 CEST.
+Estado actualizado: 2026-06-07 05:32 CEST.
 
 ## Hitos completados
 
@@ -4650,6 +4650,20 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run test -- analytics.service.spec.ts`
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
+
+### Estado visible del worker Analytics
+
+- `GET /analytics/privacy` expone `retentionWorkerEnabled` y `retentionWorkerIntervalMs`.
+- `/admin/analytics` muestra badges de worker e intervalo junto a privacidad analytics.
+- El contrato no expone secretos ni datos personales.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- analytics.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:api`
+- `npm.cmd run build:web`
 
 ## Deuda técnica abierta
 

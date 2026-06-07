@@ -199,7 +199,7 @@ Variables de privacidad:
 - `ANALYTICS_RETENTION_WORKER_ENABLED`: usa `false` para desactivar la purga periodica interna.
 - `ANALYTICS_RETENTION_WORKER_INTERVAL_MS`: intervalo de purga interna cuando hay retencion configurada.
 
-`GET /analytics/privacy` devuelve configuracion no sensible: dias de retencion, si se guarda user-agent y si hay sal configurada.
+`GET /analytics/privacy` devuelve configuracion no sensible: dias de retencion, si se guarda user-agent, si hay sal configurada, si el worker de retencion esta activo y su intervalo efectivo.
 
 `GET /analytics/timeseries` agrupa eventos por dia y tipo. Si se envian `from` y `to`, devuelve tambien dias intermedios sin eventos con `total: 0`.
 

@@ -948,6 +948,8 @@ export type AnalyticsPrivacyStatus = {
   retentionDays: number | null;
   storeUserAgent: boolean;
   ipHashSaltConfigured: boolean;
+  retentionWorkerEnabled?: boolean;
+  retentionWorkerIntervalMs?: number;
 };
 
 export type AnalyticsRetentionPruneResult = {
