@@ -30,6 +30,7 @@ const PageSectionsController = createResourceController(
 const AppModulesController = createResourceController(
   'app-modules',
   'appModule',
+  'manage_settings',
 );
 
 @Module({

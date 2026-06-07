@@ -4096,6 +4096,18 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"` (primer intento detecto mock `app-modules` faltante; segundo intento correcto tras cubrirlo)
 
+### Permisos endurecidos para modulos
+
+- Las escrituras sobre `app-modules` pasan de `manage_portfolio` a `manage_settings`.
+- El cambio reserva activar/desactivar modulos a administradores con permiso de configuracion.
+- Añadida prueba del factory de controladores para asegurar permisos por defecto y override explicito.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- resource-controller.factory.spec.ts permissions.guard.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
