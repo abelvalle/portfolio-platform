@@ -142,6 +142,35 @@ export function unsafeProductionContactWebhookConfigKeys(
   return unsafeKeys;
 }
 
+export function unsafeProductionMediaConfigKeys(
+  nodeEnv: string | undefined,
+  lookup: SecretLookup,
+) {
+  if (nodeEnv !== 'production') {
+    return [];
+  }
+
+  const unsafeKeys: string[] = [];
+  const provider = (lookup('MEDIA_STORAGE_PROVIDER') || 'local')
+    .trim()
+    .toLowerCase();
+  if (provider !== 'local') {
+    unsafeKeys.push('MEDIA_STORAGE_PROVIDER');
+  }
+
+  const externalScanEnabled = lookup('MEDIA_EXTERNAL_SCAN_ENABLED') !== 'false';
+  const externalScanUrl = lookup('MEDIA_EXTERNAL_SCAN_URL')?.trim() || '';
+  if (
+    externalScanEnabled &&
+    externalScanUrl &&
+    (!isValidHttpUrl(externalScanUrl) || isLocalOrigin(externalScanUrl))
+  ) {
+    unsafeKeys.push('MEDIA_EXTERNAL_SCAN_URL');
+  }
+
+  return unsafeKeys;
+}
+
 export function unsafeProductionConfigKeys(
   nodeEnv: string | undefined,
   lookup: SecretLookup,
@@ -151,6 +180,7 @@ export function unsafeProductionConfigKeys(
     ...unsafeProductionRuntimeConfigKeys(nodeEnv, lookup),
     ...unsafeProductionContactEmailConfigKeys(nodeEnv, lookup),
     ...unsafeProductionContactWebhookConfigKeys(nodeEnv, lookup),
+    ...unsafeProductionMediaConfigKeys(nodeEnv, lookup),
   ];
 }
 

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 11:03 CEST.
+Estado actualizado: 2026-06-07 11:06 CEST.
 
 ## Hitos completados
 
@@ -5737,6 +5737,21 @@ Verificacion realizada en este hito:
 - `gh run view 27088045015 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27088045007 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Guard producción media storage
+
+- Añadido guard de arranque para `NODE_ENV=production` sobre configuracion de media.
+- Mientras no exista adaptador externo real, `MEDIA_STORAGE_PROVIDER` debe ser `local`; valores como `s3` o `r2` fallan al arrancar en vez de romper uploads en runtime.
+- Si `MEDIA_EXTERNAL_SCAN_URL` esta configurado y el scanner no esta desactivado, la URL debe ser HTTP/HTTPS y no local.
+- El scanner externo sigue siendo opcional; URL vacia o `MEDIA_EXTERNAL_SCAN_ENABLED=false` no bloquean produccion.
+- README, API docs y deployment documentan el contrato.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- production-secrets.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

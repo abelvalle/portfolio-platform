@@ -4,6 +4,7 @@ import {
   unsafeProductionContactEmailConfigKeys,
   unsafeProductionContactWebhookConfigKeys,
   unsafeProductionConfigKeys,
+  unsafeProductionMediaConfigKeys,
   unsafeProductionRuntimeConfigKeys,
   unsafeProductionSecretKeys,
 } from './production-secrets';
@@ -189,6 +190,74 @@ describe('production secrets guard', () => {
     ).toEqual(['CONTACT_WEBHOOK_URL']);
   });
 
+  it('allows implemented local media storage in production', () => {
+    expect(
+      unsafeProductionMediaConfigKeys('production', () => undefined),
+    ).toEqual([]);
+    expect(
+      unsafeProductionMediaConfigKeys('production', (key) =>
+        key === 'MEDIA_STORAGE_PROVIDER' ? 'local' : undefined,
+      ),
+    ).toEqual([]);
+    expect(unsafeProductionMediaConfigKeys('development', () => 's3')).toEqual(
+      [],
+    );
+  });
+
+  it('rejects unimplemented media storage providers in production', () => {
+    expect(
+      unsafeProductionMediaConfigKeys('production', (key) =>
+        key === 'MEDIA_STORAGE_PROVIDER' ? 's3' : undefined,
+      ),
+    ).toEqual(['MEDIA_STORAGE_PROVIDER']);
+  });
+
+  it('rejects local or invalid external media scanner urls in production', () => {
+    const localValues: Record<string, string | undefined> = {
+      MEDIA_STORAGE_PROVIDER: 'local',
+      MEDIA_EXTERNAL_SCAN_ENABLED: 'true',
+      MEDIA_EXTERNAL_SCAN_URL: 'http://127.0.0.1:8080/scan',
+    };
+    const invalidValues: Record<string, string | undefined> = {
+      MEDIA_STORAGE_PROVIDER: 'local',
+      MEDIA_EXTERNAL_SCAN_ENABLED: 'true',
+      MEDIA_EXTERNAL_SCAN_URL: 'not-a-url',
+    };
+
+    expect(
+      unsafeProductionMediaConfigKeys('production', (key) => localValues[key]),
+    ).toEqual(['MEDIA_EXTERNAL_SCAN_URL']);
+    expect(
+      unsafeProductionMediaConfigKeys(
+        'production',
+        (key) => invalidValues[key],
+      ),
+    ).toEqual(['MEDIA_EXTERNAL_SCAN_URL']);
+  });
+
+  it('allows disabled or external media scanner urls in production', () => {
+    const disabledValues: Record<string, string | undefined> = {
+      MEDIA_STORAGE_PROVIDER: 'local',
+      MEDIA_EXTERNAL_SCAN_ENABLED: 'false',
+      MEDIA_EXTERNAL_SCAN_URL: 'not-a-url',
+    };
+    const safeValues: Record<string, string | undefined> = {
+      MEDIA_STORAGE_PROVIDER: 'local',
+      MEDIA_EXTERNAL_SCAN_ENABLED: 'true',
+      MEDIA_EXTERNAL_SCAN_URL: 'https://scanner.example.com/scan',
+    };
+
+    expect(
+      unsafeProductionMediaConfigKeys(
+        'production',
+        (key) => disabledValues[key],
+      ),
+    ).toEqual([]);
+    expect(
+      unsafeProductionMediaConfigKeys('production', (key) => safeValues[key]),
+    ).toEqual([]);
+  });
+
   it('combines unsafe secrets and runtime config without exposing values', () => {
     const values: Record<string, string> = {
       JWT_ACCESS_SECRET: 'change-me-access-secret',
@@ -197,6 +266,8 @@ describe('production secrets guard', () => {
       API_CORS_ORIGIN: 'http://localhost:3000',
       CONTACT_EMAIL_PROVIDER: 'generic',
       CONTACT_WEBHOOK_URL: 'http://localhost:4000/webhook',
+      MEDIA_STORAGE_PROVIDER: 's3',
+      MEDIA_EXTERNAL_SCAN_URL: 'http://127.0.0.1:8080/scan',
     };
 
     expect(
@@ -210,11 +281,13 @@ describe('production secrets guard', () => {
       'CONTACT_EMAIL_TO',
       'CONTACT_WEBHOOK_URL',
       'CONTACT_WEBHOOK_SECRET',
+      'MEDIA_STORAGE_PROVIDER',
+      'MEDIA_EXTERNAL_SCAN_URL',
     ]);
     expect(() =>
       assertSafeProductionConfig('production', (key) => values[key]),
     ).toThrow(
-      'JWT_ACCESS_SECRET, API_CORS_ORIGIN, CONTACT_EMAIL_API_URL, CONTACT_EMAIL_API_KEY, CONTACT_EMAIL_FROM, CONTACT_EMAIL_TO, CONTACT_WEBHOOK_URL, CONTACT_WEBHOOK_SECRET',
+      'JWT_ACCESS_SECRET, API_CORS_ORIGIN, CONTACT_EMAIL_API_URL, CONTACT_EMAIL_API_KEY, CONTACT_EMAIL_FROM, CONTACT_EMAIL_TO, CONTACT_WEBHOOK_URL, CONTACT_WEBHOOK_SECRET, MEDIA_STORAGE_PROVIDER, MEDIA_EXTERNAL_SCAN_URL',
     );
     expect(() =>
       assertSafeProductionConfig('production', (key) => values[key]),

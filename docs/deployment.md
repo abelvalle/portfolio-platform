@@ -26,6 +26,7 @@ Variables:
 - `ADMIN_EMAIL`
 - `ADMIN_PASSWORD`
 - `STORAGE_DIR`
+- `MEDIA_STORAGE_PROVIDER=local`; otros providers fallan en produccion hasta implementar su adaptador
 - `MEDIA_SIGNATURE_SCAN_ENABLED` opcional para activar/desactivar el bloqueo local de firmas EICAR
 - `MEDIA_EXTERNAL_SCAN_URL`, `MEDIA_EXTERNAL_SCAN_API_KEY` y `MEDIA_EXTERNAL_SCAN_TIMEOUT_MS` opcionales para scanner HTTP externo de uploads
 - `CONTACT_IP_HASH_SALT` opcional para saltear hashes de IP en contacto
@@ -51,7 +52,7 @@ Comandos:
 - Migraciones: `npm --prefix apps/api run db:deploy`
 - Seed: `npm --prefix apps/api run db:seed`
 
-En `NODE_ENV=production`, el backend falla al arrancar si `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` o `ADMIN_PASSWORD` conservan valores placeholder de `.env.example`, si `API_CORS_ORIGIN` falta o apunta solo a localhost, si `CONTACT_WEBHOOK_URL` apunta a localhost o no tiene `CONTACT_WEBHOOK_SECRET`, o si `CONTACT_EMAIL_PROVIDER` esta activado sin las credenciales minimas del proveedor.
+En `NODE_ENV=production`, el backend falla al arrancar si `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` o `ADMIN_PASSWORD` conservan valores placeholder de `.env.example`, si `API_CORS_ORIGIN` falta o apunta solo a localhost, si `MEDIA_STORAGE_PROVIDER` no es `local`, si `MEDIA_EXTERNAL_SCAN_URL` apunta a localhost o no es HTTP/HTTPS, si `CONTACT_WEBHOOK_URL` apunta a localhost o no tiene `CONTACT_WEBHOOK_SECRET`, o si `CONTACT_EMAIL_PROVIDER` esta activado sin las credenciales minimas del proveedor.
 
 `API_CORS_ORIGIN` acepta una lista separada por comas. Como la API usa cookies/tokens con `credentials: true`, no uses `*`; el bootstrap lo descarta y exige origenes explicitos.
 
@@ -69,7 +70,7 @@ Headers:
 
 `infra/render.yaml` define un Blueprint para desplegar el backend Docker y una base de datos PostgreSQL gestionada. En Render, usa `infra/render.yaml` como Blueprint Path. Los secretos quedan con `sync: false`; debes cargarlos en el panel o gestor de secretos antes de publicar.
 
-Si configuras `MEDIA_EXTERNAL_SCAN_URL`, valida el proveedor desde `/admin/media` con `Probar scanner`; la prueba usa un archivo sintetico y no escribe nada en storage.
+Si configuras `MEDIA_EXTERNAL_SCAN_URL`, valida el proveedor desde `/admin/media` con `Probar scanner`; la prueba usa un archivo sintetico y no escribe nada en storage. En produccion, el backend exige que esa URL sea HTTP/HTTPS y no local cuando el scanner externo esta activo.
 
 ### Worker de reintentos webhook
 

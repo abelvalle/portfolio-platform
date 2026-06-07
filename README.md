@@ -63,8 +63,9 @@ Variables opcionales de analitica:
 
 Variables opcionales de media:
 
+- `MEDIA_STORAGE_PROVIDER=local`: proveedor activo; los adaptadores externos estan preparados pero aun no implementados.
 - `MEDIA_SIGNATURE_SCAN_ENABLED=false`: desactiva el bloqueo local de firmas EICAR en uploads.
-- `MEDIA_EXTERNAL_SCAN_URL`: activa scanner HTTP externo antes de escribir uploads.
+- `MEDIA_EXTERNAL_SCAN_URL`: activa scanner HTTP externo antes de escribir uploads; en produccion debe ser una URL HTTP/HTTPS no local.
 
 Variables opcionales de contacto:
 
