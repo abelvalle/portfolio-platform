@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 06:06 CEST.
+Estado actualizado: 2026-06-07 06:09 CEST.
 
 ## Hitos completados
 
@@ -4728,6 +4728,17 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:api`
 - `npm.cmd run build:web`
 - QA visual Playwright local en `/admin/analytics` desktop y movil; Browser integrado quedo bloqueado porque esta sesion no expuso `browser.tabs.selected`.
+
+### Suite raiz tras objetivos KPI Analytics
+
+- Ejecutada la suite raiz despues de añadir objetivos KPI persistentes.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `29` suites y `155` tests, smoke web y build Next/Nest correctos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
 
 ## Deuda técnica abierta
 
