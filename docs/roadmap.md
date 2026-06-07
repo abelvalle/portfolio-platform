@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 07:40 CEST.
+Estado actualizado: 2026-06-07 07:46 CEST.
 
 ## Hitos completados
 
@@ -5033,6 +5033,22 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 
+### Prueba manual de scanner media
+
+- Anadido `POST /media/storage/scan/test` protegido por `manage_media`.
+- La prueba envia un archivo sintetico al scanner HTTP externo sin escribir nada en storage.
+- `/admin/media` incorpora boton "Probar scanner" y muestra el resultado operativo.
+- `docs/api.md` y `docs/deployment.md` documentan el endpoint y el flujo post-deploy.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- media-storage.service.spec.ts`
+- `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "admin"`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:api`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Build web: Next/Node emite `DEP0205 module.register()` durante `npm.cmd run build`; no bloquea produccion, pero conviene revisarlo cuando Next actualice su runtime o cuando se suba la version de Node.
@@ -5064,7 +5080,7 @@ Verificacion realizada en este hito:
 - Publicación por entidad CMS: existe workflow granular real para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; falta extenderlo a otros futuros módulos.
 - Restauración por entidad CMS: existe restore para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; `/admin/settings/publication` ya expone enlaces contextuales por entidad, habilita restore para todas las entidades soportadas y las pantallas CMS principales enlazan al historial central. Falta restore inline por entidad solo si se requiere un flujo todavia mas directo.
 - Media storage externo: existe servicio desacoplado local y los providers no implementados fallan explicitamente en subida/descarga/borrado; falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
-- Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete, purga fisica diferida, bloqueo local de firma EICAR y scanner HTTP externo opcional antes de escribir uploads; falta validarlo con un proveedor antivirus real.
+- Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete, purga fisica diferida, bloqueo local de firma EICAR, scanner HTTP externo opcional antes de escribir uploads y prueba sintetica desde admin; falta validarlo con un proveedor antivirus real.
 - NPM audit: quedan 2 vulnerabilidades moderadas en la cadena `next`/`postcss` confirmadas con `npm.cmd audit --audit-level=moderate`; revalidado el 2026-06-07 06:41 CEST que `next@latest` sigue siendo `16.2.7` y todavia depende de `postcss@8.4.31`, mientras Tailwind/shadcn ya usan `postcss@8.5.15`; no se aplica `audit fix --force` porque propone un downgrade rompedor a `next@9.3.3`.
 
 ## Próximos hitos priorizados

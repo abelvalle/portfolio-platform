@@ -70,6 +70,29 @@ export class MediaStorageService {
     };
   }
 
+  async testExternalScan() {
+    if (!this.externalScanEnabled || !this.externalScanUrl) {
+      return { configured: false, scanned: false, clean: null };
+    }
+
+    try {
+      await this.scanWithExternalProvider({
+        originalname: 'media-scan-test.pdf',
+        mimetype: 'application/pdf',
+        size: 15,
+        buffer: Buffer.from('media scan test'),
+      });
+      return { configured: true, scanned: true, clean: true };
+    } catch (error) {
+      return {
+        configured: true,
+        scanned: true,
+        clean: false,
+        error: errorMessage(error),
+      };
+    }
+  }
+
   async createReadStream(storageKey?: string | null): Promise<ReadStream> {
     this.assertLocalProvider();
     if (!storageKey) {
@@ -304,4 +327,8 @@ export class MediaStorageService {
           'image/webp',
         ];
   }
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'unknown error';
 }

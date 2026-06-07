@@ -118,6 +118,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /media/:id`
 - `GET /media/:id/download`
 - `GET /media/storage/status` (`manage_media`)
+- `POST /media/storage/scan/test` (`manage_media`)
 - `POST /media/storage/purge-deleted` (`purge_media`)
 - `POST /media/upload` (`manage_media`)
 - `POST /analytics/events`
@@ -432,6 +433,7 @@ Endpoints:
 - `GET /media/:id/download`: descarga el binario asociado a `storageKey`.
 - `GET /media/storage/status`: protegido con `manage_media`; devuelve proveedor, límites, cuota opcional, MIME types y métricas `assetCount`/`usedBytes`.
 - `POST /media/storage/purge-deleted`: protegido con `purge_media`; purga archivos locales de assets ya eliminados con `retentionDays` opcional y `dryRun`.
+- `POST /media/storage/scan/test`: protegido con `manage_media`; envia un archivo sintetico al scanner externo configurado sin escribirlo en storage.
 - `POST /media/upload`: protegido con `manage_media`; acepta `multipart/form-data` con `file`, `altText` opcional y `type` opcional.
 - `POST|PATCH|DELETE /media`: protegido con `manage_media`; mantiene registro manual/edición/soft delete de metadata.
 - `POST /media/upload`, `DELETE /media/:id` y la purga diferida registran auditoría en `AuditLog`.

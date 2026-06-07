@@ -48,6 +48,14 @@ export class MediaController {
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_media')
+  @Post('storage/scan/test')
+  testExternalScan() {
+    return this.mediaService.testExternalScan();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('purge_media')
   @Post('storage/purge-deleted')
   purgeDeleted(

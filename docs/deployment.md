@@ -46,6 +46,8 @@ Comandos:
 - Migraciones: `npm --prefix apps/api run db:deploy`
 - Seed: `npm --prefix apps/api run db:seed`
 
+Si configuras `MEDIA_EXTERNAL_SCAN_URL`, valida el proveedor desde `/admin/media` con `Probar scanner`; la prueba usa un archivo sintetico y no escribe nada en storage.
+
 ### Worker de reintentos webhook
 
 En un despliegue de una sola instancia, deja `CONTACT_WEBHOOK_RETRY_WORKER_ENABLED=true`. El backend procesara periodicamente `ContactWebhookRetryJob` pendientes y el panel admin mostrara el estado del worker.

@@ -40,6 +40,10 @@ export class MediaService {
     };
   }
 
+  testExternalScan() {
+    return this.storage.testExternalScan();
+  }
+
   list() {
     return this.prisma.mediaAsset.findMany({
       where: { deletedAt: null },

@@ -152,6 +152,41 @@ describe('MediaStorageService', () => {
     ).rejects.toThrow('File rejected by external malware scan');
   });
 
+  it('reports external scan tests as skipped when no scanner is configured', async () => {
+    const service = new MediaStorageService(mockConfig());
+
+    await expect(service.testExternalScan()).resolves.toEqual({
+      configured: false,
+      scanned: false,
+      clean: null,
+    });
+  });
+
+  it('runs a synthetic external scan test without writing files', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue({ verdict: 'clean' }),
+    });
+    global.fetch = fetchMock as never;
+    const service = new MediaStorageService(
+      mockConfig({
+        MEDIA_EXTERNAL_SCAN_URL: 'https://scanner.example.com/scan',
+      }),
+    );
+
+    await expect(service.testExternalScan()).resolves.toEqual({
+      configured: true,
+      scanned: true,
+      clean: true,
+    });
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.filename).toBe('media-scan-test.pdf');
+    expect(body.contentBase64).toBe(
+      Buffer.from('media scan test').toString('base64'),
+    );
+  });
+
   it('deletes local files inside the configured storage directory', async () => {
     const storageDir = `storage-test-${Date.now()}`;
     const uploadDir = join(process.cwd(), storageDir, 'uploads');

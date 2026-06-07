@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { CheckCircle2, RefreshCw, Trash2, Upload } from "lucide-react";
+import { CheckCircle2, RefreshCw, ShieldCheck, Trash2, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,6 +17,7 @@ export function FileUploader() {
   const [message, setMessage] = useState("Listo para subir archivos.");
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [isTestingScan, setIsTestingScan] = useState(false);
   const [pendingDeleteAsset, setPendingDeleteAsset] = useState<MediaAsset | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -82,6 +83,23 @@ export function FileUploader() {
     }
   }
 
+  async function testExternalScan() {
+    setIsTestingScan(true);
+    try {
+      const result = await mediaClient.testExternalScan();
+      await loadMedia();
+      if (!result.configured) {
+        setMessage("Scanner externo no configurado.");
+      } else {
+        setMessage(result.clean ? "Scanner externo validado correctamente." : "Scanner externo devolvio alerta.");
+      }
+    } catch {
+      setMessage("No se pudo probar el scanner externo.");
+    } finally {
+      setIsTestingScan(false);
+    }
+  }
+
   return (
     <section className="grid gap-6 xl:grid-cols-[420px_1fr]">
       <form className="rounded-lg border border-dashed border-border bg-card p-6" onSubmit={handleSubmit}>
@@ -125,6 +143,10 @@ export function FileUploader() {
             <Button type="button" variant="outline" onClick={loadMedia} disabled={isLoading}>
               <RefreshCw className={isLoading ? "animate-spin" : ""} data-icon="inline-start" />
               Actualizar
+            </Button>
+            <Button type="button" variant="outline" onClick={testExternalScan} disabled={!storageStatus?.externalScanConfigured || isTestingScan}>
+              <ShieldCheck data-icon="inline-start" />
+              {isTestingScan ? "Probando..." : "Probar scanner"}
             </Button>
           </div>
 

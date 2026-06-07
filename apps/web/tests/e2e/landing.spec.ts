@@ -1550,6 +1550,12 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/media/storage/scan/test", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ configured: true, scanned: true, clean: true })
+    });
+  });
   await page.route(/\/api\/v1\/media(\?.*)?$/, async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -2289,6 +2295,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("cuota 250 MB")).toBeVisible();
   await expect(page.getByText("scan on")).toBeVisible();
   await expect(page.getByText("av externo on")).toBeVisible();
+  await page.getByRole("button", { name: "Probar scanner" }).click();
+  await expect(page.getByText("Scanner externo validado correctamente.")).toBeVisible();
   await expect(page.getByText("assets 1")).toBeVisible();
   await expect(page.getByText("uso 2 KB")).toBeVisible();
   await expect(page.getByText("CV Demo.pdf")).toBeVisible();

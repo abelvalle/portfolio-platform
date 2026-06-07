@@ -1156,6 +1156,13 @@ export type MediaStorageStatus = {
   downloadPattern: string;
 };
 
+export type MediaScanTestResult = {
+  configured: boolean;
+  scanned: boolean;
+  clean: boolean | null;
+  error?: string | null;
+};
+
 export type CvVersionDraftJson = {
   name?: string;
   slug?: string;
@@ -1312,6 +1319,9 @@ export const mediaClient = {
   },
   storageStatus() {
     return apiFetch<MediaStorageStatus>("/media/storage/status");
+  },
+  testExternalScan() {
+    return apiFetch<MediaScanTestResult>("/media/storage/scan/test", { method: "POST" });
   },
   upload(data: FormData) {
     return apiUpload<MediaAsset>("/media/upload", data);
