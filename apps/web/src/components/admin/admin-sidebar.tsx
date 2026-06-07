@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
   BriefcaseBusiness,
@@ -35,25 +35,28 @@ const items = [
 export function AdminSidebar() {
   const [modules, setModules] = useState<AppModuleItem[]>([]);
 
-  useEffect(() => {
-    let ignore = false;
-
-    adminClient.appModules()
+  const loadModules = useCallback(() => {
+    return adminClient.appModules()
       .then((nextModules) => {
-        if (!ignore) {
-          setModules(nextModules);
-        }
+        setModules(nextModules);
       })
       .catch(() => {
-        if (!ignore) {
-          setModules([]);
-        }
+        setModules([]);
       });
-
-    return () => {
-      ignore = true;
-    };
   }, []);
+
+  useEffect(() => {
+    void loadModules();
+
+    function handleModulesUpdated() {
+      void loadModules();
+    }
+
+    window.addEventListener("app-modules:updated", handleModulesUpdated);
+    return () => {
+      window.removeEventListener("app-modules:updated", handleModulesUpdated);
+    };
+  }, [loadModules]);
 
   const visibleItems = useMemo(() => {
     if (!modules.length) {

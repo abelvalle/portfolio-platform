@@ -36,8 +36,9 @@ export function ModuleManagement() {
     setBusyId(id);
     try {
       await adminClient.updateAppModule(id, data);
-      setMessage(successMessage);
       await loadModules();
+      setMessage(successMessage);
+      window.dispatchEvent(new Event("app-modules:updated"));
     } catch {
       setMessage("No se pudo actualizar el modulo.");
     } finally {

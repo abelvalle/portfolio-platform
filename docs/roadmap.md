@@ -4143,6 +4143,18 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 
+### Refresco en vivo de modulos admin
+
+- `AdminSidebar` escucha el evento `app-modules:updated` y vuelve a consultar `AppModule`.
+- `ModuleManagement` emite el evento despues de activar/desactivar o reordenar un modulo.
+- El e2e valida que activar `Media` en `/admin/settings/modules` hace aparecer el enlace en el sidebar sin recargar la pagina.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"` (primeros intentos detectaron selectores ambiguos y mensaje pisado por reload; corregido y verificado)
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.

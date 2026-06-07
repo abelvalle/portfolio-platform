@@ -858,7 +858,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       body: JSON.stringify(eventType ? events.filter((event) => event.type === eventType) : events)
     });
   });
-  const appModules = [
+  let appModules = [
     { id: "module-1", key: "dashboard", name: "Dashboard", enabled: true, order: 1 },
     { id: "module-2", key: "analytics", name: "Analitica", enabled: true, order: 2 },
     { id: "module-3", key: "media", name: "Media", enabled: false, order: 3 }
@@ -867,6 +867,16 @@ test("admin publication page is reachable behind the session proxy", async ({ co
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify(appModules)
+    });
+  });
+  await page.route(/\/api\/v1\/app-modules\/[^/?]+$/, async (route) => {
+    const id = route.request().url().split("/").pop() || "";
+    const data = JSON.parse(route.request().postData() || "{}");
+    const updatedModule = appModules.find((module) => module.id === id) || appModules[0];
+    appModules = appModules.map((module) => module.id === id ? { ...module, ...data } : module);
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ ...updatedModule, ...data })
     });
   });
   await page.route(/\/api\/v1\/admin\/dashboard(\?.*)?$/, async (route) => {
@@ -2110,6 +2120,11 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/settings/modules");
   await expect(page.getByRole("heading", { name: "Modulos de la plataforma" })).toBeVisible();
+  await expect(page.locator("nav a[href='/admin/media']")).toHaveCount(0);
+  await expect(page.getByText("Media", { exact: true }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Activar", exact: true }).click();
+  await expect(page.getByText("Estado del modulo actualizado.")).toBeVisible();
+  await expect(page.locator("nav a[href='/admin/media']")).toHaveCount(1);
 
   await page.goto("/admin/media");
   await expect(page.getByRole("heading", { name: "Biblioteca media" })).toBeVisible();
