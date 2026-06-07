@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 11:25 CEST.
+Estado actualizado: 2026-06-07 11:29 CEST.
 
 ## Hitos completados
 
@@ -5793,6 +5793,21 @@ Verificacion realizada en este hito:
 - `gh run view 27088515267 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27088515259 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### CSP frontend producción
+
+- Endurecida `connect-src` en `apps/web/next.config.ts`.
+- En produccion, la CSP solo permite conexiones a `'self'` y al origen exacto de `NEXT_PUBLIC_API_URL`.
+- En desarrollo se mantienen localhost y `https:` como fuentes adicionales para mocks y pruebas locales.
+- Deployment documenta la diferencia entre produccion y desarrollo.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web` con `NEXT_PUBLIC_API_URL=https://api.example.com/api/v1`
+- `next start` en puerto temporal + `curl.exe -I http://localhost:3010/` comprobando `connect-src 'self' https://api.example.com` sin localhost ni wildcard `https:` separado
+- `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

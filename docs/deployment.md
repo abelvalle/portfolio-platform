@@ -67,7 +67,7 @@ Health checks:
 Headers:
 
 - La API aplica un baseline defensivo en todas las respuestas: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` y `Cross-Origin-Resource-Policy`.
-- El frontend aplica CSP y headers equivalentes desde `apps/web/next.config.ts`; si `NEXT_PUBLIC_API_URL` apunta a otro dominio, queda permitido como origen de `connect-src`.
+- El frontend aplica CSP y headers equivalentes desde `apps/web/next.config.ts`; en produccion, `connect-src` queda limitado a `'self'` y al origen exacto de `NEXT_PUBLIC_API_URL`. En desarrollo se permiten ademas localhost y `https:` para facilitar mocks y pruebas locales.
 
 ### Render Blueprint
 

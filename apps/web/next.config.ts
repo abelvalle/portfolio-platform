@@ -10,13 +10,22 @@ function apiOrigin() {
   }
 }
 
+function connectSrc() {
+  const sources = ["'self'", apiOrigin()];
+  if (process.env.NODE_ENV !== "production") {
+    sources.push("http://localhost:4000", "https:");
+  }
+
+  return `connect-src ${Array.from(new Set(sources)).join(" ")}`;
+}
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  `connect-src 'self' ${apiOrigin()} http://localhost:4000 https:`,
+  connectSrc(),
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
