@@ -1554,6 +1554,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByRole("button", { name: "Bajar Portfolio Platform" })).toBeVisible();
   await expect(page.locator("[data-cms-project-id='project-1']")).toHaveAttribute("draggable", "true");
   await expect(page.locator("[data-cms-project-id='project-2']")).toHaveAttribute("draggable", "true");
+  await page.locator("[data-cms-project-id='project-1']").dispatchEvent("dragstart");
+  await page.locator("[data-cms-project-id='project-2']").dispatchEvent("dragover");
+  await page.locator("[data-cms-project-id='project-2']").dispatchEvent("drop");
+  await expect(page.getByText("Proyecto reordenado: Portfolio Platform.")).toBeVisible();
   await page.getByRole("button", { name: "Subir Portfolio Platform" }).click();
   await expect(page.getByText("Proyecto reordenado: Portfolio Platform.")).toBeVisible();
   await page.getByRole("button", { name: "Eliminar Portfolio Platform" }).click();
