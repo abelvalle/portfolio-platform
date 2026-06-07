@@ -1311,7 +1311,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           description: "Experiencia demo",
           achievements: [],
           responsibilities: [],
-          technologies: [],
+          technologies: ["Next.js", "NestJS"],
           methodologies: [],
           skills: [],
           order: 0,
@@ -1330,7 +1330,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           description: "Experiencia sample para pruebas de reordenado.",
           achievements: [],
           responsibilities: [],
-          technologies: [],
+          technologies: ["Prisma"],
           methodologies: [],
           skills: [],
           order: 1,
@@ -1473,8 +1473,13 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/portfolio/experience");
   await expect(page.getByRole("heading", { name: "Experiencia profesional" })).toBeVisible();
   await expect(page.getByRole("main").getByText("Demo Company")).toBeVisible();
+  await expect(page.getByText("Asociar skills registradas").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Scrum" }).first()).toBeVisible();
+  await expect(page.getByText("Asociar tecnologias usadas").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next.js" }).first()).toBeVisible();
   await page.getByRole("button", { name: "Editar Demo Company" }).click();
   await expect(page.getByRole("heading", { name: "Editar experiencia" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Editar experiencia" }).getByRole("button", { name: "Scrum" })).toBeVisible();
   await page.getByLabel("Empresa experiencia").fill("Demo Company Updated");
   await page.getByLabel("Cargo experiencia").fill("Delivery Manager");
   await page.getByLabel("Descripcion experiencia").fill("Experiencia ampliada en delivery y reporting.");

@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { adminClient, type ExperienceItem, type ExperienceMutation, type PublicationExperienceReview } from "@/lib/api";
+import { adminClient, type ExperienceItem, type ExperienceMutation, type PublicationExperienceReview, type SkillItem } from "@/lib/api";
 
 type DraftExperience = {
   company: string;
@@ -48,6 +48,16 @@ const emptyDraft: DraftExperience = {
 
 function splitList(value: string) {
   return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
+}
+
+function joinList(values: string[]) {
+  return values.join("\n");
+}
+
+function toggleListValue(value: string, option: string) {
+  const items = splitList(value);
+  const exists = items.some((item) => item.toLowerCase() === option.toLowerCase());
+  return joinList(exists ? items.filter((item) => item.toLowerCase() !== option.toLowerCase()) : [...items, option]);
 }
 
 function toInputDate(value?: string | null) {
@@ -99,8 +109,25 @@ function formatDate(value?: string | null) {
   return value ? new Date(value).toLocaleDateString() : "Actualidad";
 }
 
+function uniqueList(values: string[]) {
+  const seen = new Set<string>();
+  return values.filter((value) => {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized || seen.has(normalized)) {
+      return false;
+    }
+    seen.add(normalized);
+    return true;
+  });
+}
+
+function skillNames(skills: SkillItem[]) {
+  return uniqueList(skills.map((skill) => skill.name));
+}
+
 export function ExperienceManagement() {
   const [items, setItems] = useState<ExperienceItem[]>([]);
+  const [skillOptions, setSkillOptions] = useState<string[]>([]);
   const [draft, setDraft] = useState<DraftExperience>(emptyDraft);
   const [message, setMessage] = useState("Cargando experiencias.");
   const [isLoading, setIsLoading] = useState(true);
@@ -117,9 +144,12 @@ export function ExperienceManagement() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void loadExperiences();
+      void loadSkillOptions();
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
+
+  const technologyOptions = uniqueList(items.flatMap((item) => item.technologies)).slice(0, 12);
 
   async function loadExperiences() {
     setIsLoading(true);
@@ -131,6 +161,15 @@ export function ExperienceManagement() {
       setMessage("No se pudieron cargar experiencias. Comprueba la sesion admin.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function loadSkillOptions() {
+    try {
+      const nextSkills = await adminClient.skills();
+      setSkillOptions(skillNames(nextSkills).slice(0, 16));
+    } catch {
+      setSkillOptions([]);
     }
   }
 
@@ -340,6 +379,18 @@ export function ExperienceManagement() {
             <Textarea id={field} rows={3} value={draft[field]} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} />
           </div>
         ))}
+        <ListQuickPicker
+          label="Asociar skills registradas"
+          options={skillOptions}
+          value={draft.skills}
+          onChange={(value) => setDraft((current) => ({ ...current, skills: value }))}
+        />
+        <ListQuickPicker
+          label="Asociar tecnologias usadas"
+          options={technologyOptions}
+          value={draft.technologies}
+          onChange={(value) => setDraft((current) => ({ ...current, technologies: value }))}
+        />
         <div className="flex flex-wrap gap-2 lg:col-span-2">
           <Button type="button" variant={draft.current ? "default" : "outline"} onClick={() => setDraft((current) => ({ ...current, current: !current.current }))}>
             Actual
@@ -458,6 +509,18 @@ export function ExperienceManagement() {
                 <Textarea id={`editExperience${field}`} rows={3} value={editDraft[field]} onChange={(event) => setEditDraft((current) => ({ ...current, [field]: event.target.value }))} />
               </div>
             ))}
+            <ListQuickPicker
+              label="Asociar skills registradas"
+              options={skillOptions}
+              value={editDraft.skills}
+              onChange={(value) => setEditDraft((current) => ({ ...current, skills: value }))}
+            />
+            <ListQuickPicker
+              label="Asociar tecnologias usadas"
+              options={technologyOptions}
+              value={editDraft.technologies}
+              onChange={(value) => setEditDraft((current) => ({ ...current, technologies: value }))}
+            />
             <div className="flex flex-wrap gap-2 md:col-span-2">
               <Button type="button" variant={editDraft.current ? "default" : "outline"} onClick={() => setEditDraft((current) => ({ ...current, current: !current.current }))}>
                 Actual
@@ -534,6 +597,40 @@ export function ExperienceManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function ListQuickPicker({
+  label,
+  options,
+  value,
+  onChange
+}: {
+  label: string;
+  options: string[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  if (!options.length) {
+    return null;
+  }
+
+  const selected = new Set(splitList(value).map((item) => item.toLowerCase()));
+
+  return (
+    <div className="grid gap-2 lg:col-span-2 md:col-span-2">
+      <p className="text-sm font-medium text-muted-foreground">{label}</p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const isSelected = selected.has(option.toLowerCase());
+          return (
+            <Button key={option} type="button" variant={isSelected ? "default" : "outline"} size="sm" onClick={() => onChange(toggleListValue(value, option))}>
+              {option}
+            </Button>
+          );
+        })}
+      </div>
     </div>
   );
 }
