@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PublicationHistoryLink } from "@/components/admin/publication-history-link";
 import { Textarea } from "@/components/ui/textarea";
 import { adminClient, mediaClient, type CertificationItem, type CertificationMutation, type MediaAsset, type PublicationCertificationReview } from "@/lib/api";
 
@@ -274,10 +275,13 @@ export function CertificationManagement() {
               CRUD basico conectado a la API para certificaciones, URLs y adjuntos.
             </p>
           </div>
-          <Button type="button" variant="outline" onClick={loadCertifications} disabled={isLoading}>
-            <RefreshCw className={isLoading ? "animate-spin" : ""} data-icon="inline-start" />
-            Actualizar
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <PublicationHistoryLink />
+            <Button type="button" variant="outline" onClick={loadCertifications} disabled={isLoading}>
+              <RefreshCw className={isLoading ? "animate-spin" : ""} data-icon="inline-start" />
+              Actualizar
+            </Button>
+          </div>
         </div>
         <p className="mt-4 text-sm text-muted-foreground" aria-live="polite">{message}</p>
       </section>

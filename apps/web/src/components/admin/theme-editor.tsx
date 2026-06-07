@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PublicationHistoryLink } from "@/components/admin/publication-history-link";
 import { Switch } from "@/components/ui/switch";
 import { adminClient } from "@/lib/api";
 import { getThemeContrastChecks } from "@/lib/theme-contrast";
@@ -84,11 +85,12 @@ export function ThemeEditor({ initialTheme }: { initialTheme?: Partial<ThemeToke
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_460px]">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2">
             <Palette />
             Editor visual de estilos
           </CardTitle>
+          <PublicationHistoryLink />
         </CardHeader>
         <CardContent className="grid gap-6">
           <div className="grid gap-4 md:grid-cols-2">

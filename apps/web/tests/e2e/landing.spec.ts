@@ -1474,6 +1474,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/portfolio");
   await expect(page.getByRole("heading", { name: "Perfil publico" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Historial y restore" })).toHaveAttribute("href", "/admin/settings/publication");
   await page.getByLabel("Avatar media").selectOption("/media/uploads/portfolio-cover.jpg");
   await expect(page.getByLabel("Avatar URL")).toHaveValue("/media/uploads/portfolio-cover.jpg");
   await page.getByLabel("Open Graph media").selectOption("/media/uploads/portfolio-cover.jpg");
@@ -1483,11 +1484,13 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/portfolio/theme");
   await expect(page.getByText("Editor visual de estilos")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Historial y restore" })).toHaveAttribute("href", "/admin/settings/publication");
   await expect(page.getByText("Contraste y accesibilidad")).toBeVisible();
   await expect(page.getByText("Texto / fondo")).toBeVisible();
 
   await page.goto("/admin/portfolio/experience");
   await expect(page.getByRole("heading", { name: "Experiencia profesional" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Historial y restore" })).toHaveAttribute("href", "/admin/settings/publication");
   await expect(page.getByRole("main").getByText("Demo Company")).toBeVisible();
   await expect(page.getByText("Asociar skills registradas").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Scrum" }).first()).toBeVisible();
@@ -1517,6 +1520,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/portfolio/projects");
   await expect(page.getByRole("heading", { name: "Proyectos" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Historial y restore" })).toHaveAttribute("href", "/admin/settings/publication");
   await expect(page.getByRole("main").getByText("Portfolio Platform")).toBeVisible();
   await expect(page.getByRole("button", { name: /Portfolio visible/ })).toBeVisible();
   await page.getByLabel("Categoria nueva").fill("Producto");
@@ -1548,6 +1552,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/portfolio/skills");
   await expect(page.getByRole("heading", { name: "Skills" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Historial y restore" })).toHaveAttribute("href", "/admin/settings/publication");
   await expect(page.getByRole("main").getByText("Scrum")).toBeVisible();
   await expect(page.getByRole("button", { name: /Agile visible/ })).toBeVisible();
   await page.getByLabel("Categoria nueva").fill("Cloud");
@@ -1577,6 +1582,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/portfolio/education");
   await expect(page.getByRole("heading", { name: "Estudios" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Historial y restore" })).toHaveAttribute("href", "/admin/settings/publication");
   await expect(page.getByRole("main").getByText("Project Management")).toBeVisible();
   await page.getByRole("button", { name: "Editar Project Management" }).click();
   await expect(page.getByRole("heading", { name: "Editar estudio" })).toBeVisible();
@@ -1603,6 +1609,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/portfolio/certifications");
   await expect(page.getByRole("heading", { name: "Certificaciones" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Historial y restore" })).toHaveAttribute("href", "/admin/settings/publication");
   await expect(page.getByRole("main").getByText("Scrum Master")).toBeVisible();
   await page.getByRole("button", { name: "Editar Scrum Master" }).click();
   await expect(page.getByRole("heading", { name: "Editar certificacion" })).toBeVisible();

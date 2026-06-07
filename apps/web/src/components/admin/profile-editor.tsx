@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PublicationHistoryLink } from "@/components/admin/publication-history-link";
 import { Textarea } from "@/components/ui/textarea";
 import { adminClient, mediaClient, type MediaAsset, type ProfileSettings, type PublicationProfileReview } from "@/lib/api";
 
@@ -156,6 +157,7 @@ export function ProfileEditor() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <PublicationHistoryLink />
             <Button type="button" variant="outline" onClick={loadProfile} disabled={isLoading}>
               <RefreshCw className={isLoading ? "animate-spin" : ""} data-icon="inline-start" />
               Actualizar
