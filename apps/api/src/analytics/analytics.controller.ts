@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -18,7 +21,9 @@ import {
   AnalyticsDateRangeQueryDto,
   AnalyticsEventsQueryDto,
   AnalyticsFunnelQueryDto,
+  CreateAnalyticsFunnelDefinitionDto,
   CreateAnalyticsEventDto,
+  UpdateAnalyticsFunnelDefinitionDto,
 } from './analytics.dto';
 
 @ApiTags('analytics')
@@ -89,6 +94,41 @@ export class AnalyticsController {
   @Get('funnel')
   funnel(@Query() query: AnalyticsFunnelQueryDto) {
     return this.analyticsService.funnel(query);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_analytics')
+  @Get('funnel-definitions')
+  funnelDefinitions(@Query('includeHidden') includeHidden?: string) {
+    return this.analyticsService.funnelDefinitions(includeHidden === 'true');
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_analytics')
+  @Post('funnel-definitions')
+  createFunnelDefinition(@Body() body: CreateAnalyticsFunnelDefinitionDto) {
+    return this.analyticsService.createFunnelDefinition(body);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_analytics')
+  @Patch('funnel-definitions/:id')
+  updateFunnelDefinition(
+    @Param('id') id: string,
+    @Body() body: UpdateAnalyticsFunnelDefinitionDto,
+  ) {
+    return this.analyticsService.updateFunnelDefinition(id, body);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_analytics')
+  @Delete('funnel-definitions/:id')
+  removeFunnelDefinition(@Param('id') id: string) {
+    return this.analyticsService.removeFunnelDefinition(id);
   }
 
   @ApiBearerAuth()

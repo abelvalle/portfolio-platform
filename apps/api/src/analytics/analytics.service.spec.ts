@@ -398,6 +398,79 @@ describe('AnalyticsService filters', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
+  it('lists visible persisted funnel definitions', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsFunnelDefinition.findMany.mockResolvedValue([
+      {
+        id: 'funnel-1',
+        key: 'landing-project-contact',
+        name: 'Landing -> Proyecto -> Contacto',
+        steps: ['landing_visit', 'project_view', 'contact_submit'],
+        visible: true,
+      },
+    ]);
+    const service = createService(prisma);
+
+    const result = await service.funnelDefinitions();
+
+    expect(prisma.analyticsFunnelDefinition.findMany).toHaveBeenCalledWith({
+      where: { deletedAt: null, visible: true },
+      orderBy: [{ order: 'asc' }, { updatedAt: 'desc' }],
+    });
+    expect(result).toHaveLength(1);
+  });
+
+  it('creates sanitized persisted funnel definitions', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsFunnelDefinition.create.mockResolvedValue({
+      id: 'funnel-1',
+    });
+    const service = createService(prisma);
+
+    await service.createFunnelDefinition({
+      key: 'landing-project-contact',
+      name: ' Landing -> Proyecto -> Contacto ',
+      description: ' Valida proyectos ',
+      steps: ['landing_visit', 'project_view', 'contact_submit'],
+      visible: false,
+      order: 2,
+    });
+
+    expect(prisma.analyticsFunnelDefinition.create).toHaveBeenCalledWith({
+      data: {
+        key: 'landing-project-contact',
+        name: 'Landing -> Proyecto -> Contacto',
+        description: 'Valida proyectos',
+        steps: ['landing_visit', 'project_view', 'contact_submit'],
+        visible: false,
+        order: 2,
+      },
+    });
+  });
+
+  it('soft deletes persisted funnel definitions', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsFunnelDefinition.findUnique.mockResolvedValue({
+      id: 'funnel-1',
+      deletedAt: null,
+    });
+    prisma.analyticsFunnelDefinition.update.mockResolvedValue({
+      id: 'funnel-1',
+      visible: false,
+    });
+    const service = createService(prisma);
+
+    await service.removeFunnelDefinition('funnel-1');
+
+    expect(prisma.analyticsFunnelDefinition.findUnique).toHaveBeenCalledWith({
+      where: { id: 'funnel-1' },
+    });
+    expect(prisma.analyticsFunnelDefinition.update).toHaveBeenCalledWith({
+      where: { id: 'funnel-1' },
+      data: { deletedAt: expect.any(Date), visible: false },
+    });
+  });
+
   it('builds a source and channel conversion funnel', async () => {
     const prisma = mockPrisma();
     prisma.analyticsEvent.findMany.mockResolvedValue([
@@ -498,6 +571,12 @@ function mockPrisma() {
       create: jest.fn(),
       deleteMany: jest.fn(),
       findMany: jest.fn(),
+    },
+    analyticsFunnelDefinition: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
   };
 }

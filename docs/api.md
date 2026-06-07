@@ -113,6 +113,10 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /analytics/channels?from=YYYY-MM-DD&to=YYYY-MM-DD&type=landing_visit` (`read_analytics`)
 - `GET /analytics/labels?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_adaptation` (`read_analytics`)
 - `GET /analytics/funnel?from=YYYY-MM-DD&to=YYYY-MM-DD&steps=landing_visit,project_view,contact_submit` (`read_analytics`)
+- `GET /analytics/funnel-definitions?includeHidden=true` (`read_analytics`)
+- `POST /analytics/funnel-definitions` (`manage_analytics`)
+- `PATCH /analytics/funnel-definitions/:id` (`manage_analytics`)
+- `DELETE /analytics/funnel-definitions/:id` (`manage_analytics`, soft delete)
 - `GET /analytics/funnel/channels?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_analytics`)
 - `POST /analytics/retention/prune` (`manage_analytics`)
 - `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
@@ -138,7 +142,9 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 }
 ```
 
-`GET /analytics/funnel` devuelve por defecto el embudo landing -> descarga CV -> formulario contacto, con ratio desde landing y desde el paso anterior. Opcionalmente acepta `steps` como CSV de 2 a 6 tipos de evento, por ejemplo `landing_visit,project_view,contact_submit`, para construir embudos configurables por API sin crear todavia definiciones persistentes.
+`GET /analytics/funnel` devuelve por defecto el embudo landing -> descarga CV -> formulario contacto, con ratio desde landing y desde el paso anterior. Opcionalmente acepta `steps` como CSV de 2 a 6 tipos de evento, por ejemplo `landing_visit,project_view,contact_submit`.
+
+`GET|POST|PATCH|DELETE /analytics/funnel-definitions` gestiona definiciones persistentes de embudos para el panel admin. Cada definicion guarda `key`, `name`, `description`, `steps`, `visible` y `order`; los pasos deben ser tipos de evento validos (`a-z`, numeros, `_` y `-`) y tener entre 2 y 6 elementos.
 
 `GET /analytics/funnel/channels` devuelve el mismo embudo agrupado por fuente/canal. Cada segmento incluye visitas landing, descargas CV, formularios y tasas de conversion sobre visitas landing.
 

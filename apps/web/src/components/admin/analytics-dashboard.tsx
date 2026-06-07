@@ -12,6 +12,7 @@ import {
   type AnalyticsChannels,
   type AnalyticsEvent,
   type AnalyticsFunnel,
+  type AnalyticsFunnelDefinition,
   type AnalyticsLabels,
   type AnalyticsPrivacyStatus,
   type AnalyticsSummary,
@@ -34,10 +35,34 @@ const eventTypeOptions = [
   { label: "Adaptacion CV", value: "cv_adaptation" }
 ];
 
-const funnelPresetOptions = [
-  { label: "Landing -> CV -> Contacto", value: "" },
-  { label: "Landing -> Proyecto -> Contacto", value: "landing_visit,project_view,contact_submit" },
-  { label: "Landing -> LinkedIn -> CV", value: "landing_visit,linkedin_click,cv_download" }
+const fallbackFunnelDefinitions: AnalyticsFunnelDefinition[] = [
+  {
+    id: "fallback-landing-cv-contact",
+    key: "landing-cv-contact",
+    name: "Landing -> CV -> Contacto",
+    description: "Embudo principal de conversion publica.",
+    steps: ["landing_visit", "cv_download", "contact_submit"],
+    visible: true,
+    order: 0
+  },
+  {
+    id: "fallback-landing-project-contact",
+    key: "landing-project-contact",
+    name: "Landing -> Proyecto -> Contacto",
+    description: "Valida el interes generado por proyectos destacados.",
+    steps: ["landing_visit", "project_view", "contact_submit"],
+    visible: true,
+    order: 1
+  },
+  {
+    id: "fallback-landing-linkedin-cv",
+    key: "landing-linkedin-cv",
+    name: "Landing -> LinkedIn -> CV",
+    description: "Mide investigacion de perfil antes de descargar CV.",
+    steps: ["landing_visit", "linkedin_click", "cv_download"],
+    visible: true,
+    order: 2
+  }
 ];
 
 export function AnalyticsDashboard() {
@@ -47,27 +72,43 @@ export function AnalyticsDashboard() {
   const [channels, setChannels] = useState<AnalyticsChannels | null>(null);
   const [labels, setLabels] = useState<AnalyticsLabels | null>(null);
   const [funnel, setFunnel] = useState<AnalyticsFunnel | null>(null);
+  const [funnelDefinitions, setFunnelDefinitions] = useState<AnalyticsFunnelDefinition[]>(fallbackFunnelDefinitions);
   const [channelFunnel, setChannelFunnel] = useState<AnalyticsChannelFunnel | null>(null);
   const [privacy, setPrivacy] = useState<AnalyticsPrivacyStatus | null>(null);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [eventType, setEventType] = useState("");
-  const [funnelSteps, setFunnelSteps] = useState("");
+  const [funnelSteps, setFunnelSteps] = useState("landing_visit,cv_download,contact_submit");
+  const [funnelDraftName, setFunnelDraftName] = useState(fallbackFunnelDefinitions[0].name);
+  const [funnelDraftDescription, setFunnelDraftDescription] = useState(fallbackFunnelDefinitions[0].description || "");
+  const [funnelDraftSteps, setFunnelDraftSteps] = useState(fallbackFunnelDefinitions[0].steps.join(","));
   const [message, setMessage] = useState("Cargando analitica.");
   const [isLoading, setIsLoading] = useState(true);
   const [isPruning, setIsPruning] = useState(false);
+  const [isSavingFunnel, setIsSavingFunnel] = useState(false);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
       const filters = { from: fromDate || undefined, to: toDate || undefined };
-      const [nextSummary, nextEvents, nextTimeSeries, nextChannels, nextLabels, nextFunnel, nextChannelFunnel, nextPrivacy] = await Promise.all([
+      const [
+        nextSummary,
+        nextEvents,
+        nextTimeSeries,
+        nextChannels,
+        nextLabels,
+        nextFunnel,
+        nextFunnelDefinitions,
+        nextChannelFunnel,
+        nextPrivacy
+      ] = await Promise.all([
         adminClient.analyticsSummary(filters),
         adminClient.analyticsEvents({ ...filters, type: eventType || undefined }),
         adminClient.analyticsTimeSeries({ ...filters, type: eventType || undefined }),
         adminClient.analyticsChannels({ ...filters, type: eventType || undefined }),
         adminClient.analyticsLabels({ ...filters, type: "cv_adaptation" }),
         adminClient.analyticsFunnel({ ...filters, steps: funnelSteps || undefined }),
+        adminClient.analyticsFunnelDefinitions().catch(() => fallbackFunnelDefinitions),
         adminClient.analyticsChannelFunnel(filters),
         adminClient.analyticsPrivacy()
       ]);
@@ -77,6 +118,7 @@ export function AnalyticsDashboard() {
       setChannels(nextChannels);
       setLabels(nextLabels);
       setFunnel(nextFunnel);
+      setFunnelDefinitions(nextFunnelDefinitions.length ? nextFunnelDefinitions : fallbackFunnelDefinitions);
       setChannelFunnel(nextChannelFunnel);
       setPrivacy(nextPrivacy);
       setMessage("Analitica sincronizada con filtros de API.");
@@ -100,7 +142,9 @@ export function AnalyticsDashboard() {
   const trend = useMemo(() => buildAnalyticsTrend(timeSeries), [timeSeries]);
   const maxTypeCount = Math.max(...trend.topTypes.map((item) => item.count), 1);
   const maxDayCount = Math.max(...trend.daily.map((item) => item.total), 1);
-  const selectedFunnelLabel = funnelPresetOptions.find((option) => option.value === funnelSteps)?.label || "Embudo configurable";
+  const selectedFunnelDefinition = funnelDefinitions.find((definition) => definition.steps.join(",") === funnelSteps);
+  const selectedFunnelLabel = selectedFunnelDefinition?.name || "Embudo configurable";
+  const selectedFunnelIsPersisted = Boolean(selectedFunnelDefinition && !selectedFunnelDefinition.id.startsWith("fallback-"));
 
   function exportCsv() {
     const blob = new Blob([buildCsv(filteredEvents)], { type: "text/csv;charset=utf-8" });
@@ -132,6 +176,73 @@ export function AnalyticsDashboard() {
       setMessage("No se pudo ejecutar la purga de retencion.");
     } finally {
       setIsPruning(false);
+    }
+  }
+
+  function selectFunnel(steps: string) {
+    setFunnelSteps(steps);
+    const definition = funnelDefinitions.find((item) => item.steps.join(",") === steps);
+    if (definition) {
+      setFunnelDraftName(definition.name);
+      setFunnelDraftDescription(definition.description || "");
+      setFunnelDraftSteps(definition.steps.join(","));
+    }
+  }
+
+  async function saveFunnelDefinition() {
+    const steps = parseFunnelSteps(funnelDraftSteps);
+    if (!funnelDraftName.trim() || steps.length < 2 || steps.length > 6) {
+      setMessage("El embudo necesita nombre y entre 2 y 6 pasos validos.");
+      return;
+    }
+
+    setIsSavingFunnel(true);
+    try {
+      if (selectedFunnelDefinition && selectedFunnelIsPersisted) {
+        const updated = await adminClient.updateAnalyticsFunnelDefinition(selectedFunnelDefinition.id, {
+          name: funnelDraftName,
+          description: funnelDraftDescription || null,
+          steps,
+          visible: true,
+          order: selectedFunnelDefinition.order
+        });
+        setFunnelSteps(updated.steps.join(","));
+        setMessage("Embudo actualizado.");
+      } else {
+        const created = await adminClient.createAnalyticsFunnelDefinition({
+          key: slugifyFunnelKey(funnelDraftName),
+          name: funnelDraftName,
+          description: funnelDraftDescription || null,
+          steps,
+          visible: true,
+          order: funnelDefinitions.length
+        });
+        setFunnelSteps(created.steps.join(","));
+        setMessage("Embudo creado.");
+      }
+      await loadAnalytics();
+    } catch {
+      setMessage("No se pudo guardar el embudo.");
+    } finally {
+      setIsSavingFunnel(false);
+    }
+  }
+
+  async function hideFunnelDefinition() {
+    if (!selectedFunnelDefinition || !selectedFunnelIsPersisted) {
+      setMessage("Selecciona un embudo guardado para ocultarlo.");
+      return;
+    }
+    setIsSavingFunnel(true);
+    try {
+      await adminClient.deleteAnalyticsFunnelDefinition(selectedFunnelDefinition.id);
+      selectFunnel(fallbackFunnelDefinitions[0].steps.join(","));
+      await loadAnalytics();
+      setMessage("Embudo ocultado.");
+    } catch {
+      setMessage("No se pudo ocultar el embudo.");
+    } finally {
+      setIsSavingFunnel(false);
     }
   }
 
@@ -186,12 +297,43 @@ export function AnalyticsDashboard() {
               id="analyticsFunnelPreset"
               className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
               value={funnelSteps}
-              onChange={(event) => setFunnelSteps(event.target.value)}
+              onChange={(event) => selectFunnel(event.target.value)}
             >
-              {funnelPresetOptions.map((option) => (
-                <option key={option.value || "default"} value={option.value}>{option.label}</option>
+              {funnelDefinitions.filter((definition) => definition.visible).map((definition) => (
+                <option key={definition.id} value={definition.steps.join(",")}>{definition.name}</option>
               ))}
             </select>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_1.5fr_auto]">
+          <div className="grid gap-2">
+            <Label htmlFor="analyticsFunnelName">Nombre embudo</Label>
+            <Input id="analyticsFunnelName" value={funnelDraftName} onChange={(event) => setFunnelDraftName(event.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="analyticsFunnelDescription">Descripcion</Label>
+            <Input
+              id="analyticsFunnelDescription"
+              value={funnelDraftDescription}
+              onChange={(event) => setFunnelDraftDescription(event.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="analyticsFunnelSteps">Pasos CSV</Label>
+            <Input
+              id="analyticsFunnelSteps"
+              value={funnelDraftSteps}
+              onChange={(event) => setFunnelDraftSteps(event.target.value)}
+              placeholder="landing_visit,project_view,contact_submit"
+            />
+          </div>
+          <div className="flex flex-wrap items-end gap-2">
+            <Button type="button" variant="outline" onClick={saveFunnelDefinition} disabled={isSavingFunnel}>
+              {selectedFunnelIsPersisted ? "Guardar" : "Crear"}
+            </Button>
+            <Button type="button" variant="outline" onClick={hideFunnelDefinition} disabled={isSavingFunnel || !selectedFunnelIsPersisted}>
+              Ocultar
+            </Button>
           </div>
         </div>
         <p className="mt-4 text-sm text-muted-foreground" aria-live="polite">{message}</p>
@@ -243,7 +385,7 @@ export function AnalyticsDashboard() {
             <p className="font-mono text-sm text-primary">Embudo conversion</p>
             <h2 className="mt-1 text-xl font-semibold">{selectedFunnelLabel}</h2>
           </div>
-          <Badge variant="outline">{funnelSteps ? "custom" : "basico"}</Badge>
+          <Badge variant="outline">{selectedFunnelIsPersisted ? "guardado" : "base"}</Badge>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {(funnel?.steps || []).map((step) => (
@@ -440,6 +582,24 @@ function buildAnalyticsTrend(points: AnalyticsTimeSeriesPoint[]) {
     topTypes,
     daily: points.slice(-14)
   };
+}
+
+function parseFunnelSteps(value: string) {
+  return value
+    .split(",")
+    .map((step) => step.trim())
+    .filter((step) => /^[a-z0-9_-]{1,80}$/.test(step))
+    .slice(0, 6);
+}
+
+function slugifyFunnelKey(value: string) {
+  const slug = value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || `funnel-${Date.now()}`;
 }
 
 function SegmentList({

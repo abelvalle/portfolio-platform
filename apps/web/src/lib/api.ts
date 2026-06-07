@@ -328,6 +328,26 @@ export const adminClient = {
   analyticsFunnel(filters?: AnalyticsFunnelFilters) {
     return apiFetch<AnalyticsFunnel>(withQuery("/analytics/funnel", filters));
   },
+  analyticsFunnelDefinitions(includeHidden = true) {
+    return apiFetch<AnalyticsFunnelDefinition[]>(
+      withQuery("/analytics/funnel-definitions", { includeHidden: includeHidden ? "true" : undefined })
+    );
+  },
+  createAnalyticsFunnelDefinition(data: AnalyticsFunnelDefinitionMutation) {
+    return apiFetch<AnalyticsFunnelDefinition>("/analytics/funnel-definitions", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  },
+  updateAnalyticsFunnelDefinition(id: string, data: Partial<AnalyticsFunnelDefinitionMutation>) {
+    return apiFetch<AnalyticsFunnelDefinition>(`/analytics/funnel-definitions/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data)
+    });
+  },
+  deleteAnalyticsFunnelDefinition(id: string) {
+    return apiFetch<AnalyticsFunnelDefinition>(`/analytics/funnel-definitions/${id}`, { method: "DELETE" });
+  },
   analyticsChannelFunnel(filters?: DateRangeFilters) {
     return apiFetch<AnalyticsChannelFunnel>(withQuery("/analytics/funnel/channels", filters));
   },
@@ -823,6 +843,27 @@ export type AnalyticsFunnel = {
     rateFromStart: number;
     rateFromPrevious: number;
   }>;
+};
+
+export type AnalyticsFunnelDefinition = {
+  id: string;
+  key: string;
+  name: string;
+  description?: string | null;
+  steps: string[];
+  visible: boolean;
+  order: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AnalyticsFunnelDefinitionMutation = {
+  key: string;
+  name: string;
+  description?: string | null;
+  steps: string[];
+  visible: boolean;
+  order: number;
 };
 
 export type AnalyticsChannelFunnel = {

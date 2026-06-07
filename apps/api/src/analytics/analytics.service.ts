@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
 import { Prisma } from '@prisma/client';
@@ -7,7 +11,9 @@ import {
   AnalyticsDateRangeQueryDto,
   AnalyticsEventsQueryDto,
   AnalyticsFunnelQueryDto,
+  CreateAnalyticsFunnelDefinitionDto,
   CreateAnalyticsEventDto,
+  UpdateAnalyticsFunnelDefinitionDto,
 } from './analytics.dto';
 
 type AnalyticsEventInput = CreateAnalyticsEventDto & {
@@ -225,6 +231,58 @@ export class AnalyticsService {
     };
   }
 
+  funnelDefinitions(includeHidden = false) {
+    return this.prisma.analyticsFunnelDefinition.findMany({
+      where: {
+        deletedAt: null,
+        ...(includeHidden ? {} : { visible: true }),
+      },
+      orderBy: [{ order: 'asc' }, { updatedAt: 'desc' }],
+    });
+  }
+
+  createFunnelDefinition(dto: CreateAnalyticsFunnelDefinitionDto) {
+    return this.prisma.analyticsFunnelDefinition.create({
+      data: {
+        key: dto.key.trim(),
+        name: dto.name.trim(),
+        description: this.optionalTrim(dto.description),
+        steps: this.funnelStepKeys(dto.steps),
+        visible: dto.visible ?? true,
+        order: dto.order ?? 0,
+      },
+    });
+  }
+
+  async updateFunnelDefinition(
+    id: string,
+    dto: UpdateAnalyticsFunnelDefinitionDto,
+  ) {
+    await this.findFunnelDefinition(id);
+    return this.prisma.analyticsFunnelDefinition.update({
+      where: { id },
+      data: {
+        ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
+        ...(dto.description !== undefined
+          ? { description: this.optionalTrim(dto.description) }
+          : {}),
+        ...(dto.steps !== undefined
+          ? { steps: this.funnelStepKeys(dto.steps) }
+          : {}),
+        ...(dto.visible !== undefined ? { visible: dto.visible } : {}),
+        ...(dto.order !== undefined ? { order: dto.order } : {}),
+      },
+    });
+  }
+
+  async removeFunnelDefinition(id: string) {
+    await this.findFunnelDefinition(id);
+    return this.prisma.analyticsFunnelDefinition.update({
+      where: { id },
+      data: { deletedAt: new Date(), visible: false },
+    });
+  }
+
   private async customFunnel(filters: AnalyticsFunnelQueryDto) {
     const steps = this.funnelStepDefinitions(filters.steps);
     const dateWhere = this.dateRangeWhere(filters);
@@ -359,6 +417,25 @@ export class AnalyticsService {
       key,
       label: this.funnelLabel(key),
     }));
+  }
+
+  private funnelStepKeys(steps: string[]) {
+    return this.funnelStepDefinitions(steps.join(',')).map((step) => step.key);
+  }
+
+  private async findFunnelDefinition(id: string) {
+    const definition = await this.prisma.analyticsFunnelDefinition.findUnique({
+      where: { id },
+    });
+    if (!definition || definition.deletedAt) {
+      throw new NotFoundException('Analytics funnel definition not found');
+    }
+    return definition;
+  }
+
+  private optionalTrim(value?: string) {
+    const trimmed = value?.trim();
+    return trimmed || null;
   }
 
   private funnelLabel(key: string) {

@@ -359,6 +359,35 @@ async function seedPageSectionsAndModules() {
       create: { key, name, order: index, enabled: true }
     });
   }
+
+  const funnelDefinitions = [
+    {
+      key: "landing-cv-contact",
+      name: "Landing -> CV -> Contacto",
+      description: "Embudo principal de conversion publica.",
+      steps: ["landing_visit", "cv_download", "contact_submit"]
+    },
+    {
+      key: "landing-project-contact",
+      name: "Landing -> Proyecto -> Contacto",
+      description: "Valida el interes generado por proyectos destacados.",
+      steps: ["landing_visit", "project_view", "contact_submit"]
+    },
+    {
+      key: "landing-linkedin-cv",
+      name: "Landing -> LinkedIn -> CV",
+      description: "Mide investigacion de perfil antes de descargar CV.",
+      steps: ["landing_visit", "linkedin_click", "cv_download"]
+    }
+  ];
+
+  for (const [index, definition] of funnelDefinitions.entries()) {
+    await prisma.analyticsFunnelDefinition.upsert({
+      where: { key: definition.key },
+      update: { ...definition, order: index, visible: true },
+      create: { ...definition, order: index, visible: true }
+    });
+  }
 }
 
 async function main() {
