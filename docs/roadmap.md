@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:32 CEST.
+Estado actualizado: 2026-06-07 08:39 CEST.
 
 ## Hitos completados
 
@@ -5276,6 +5276,20 @@ Verificacion realizada en este hito:
 
 - `gh run view 27084949112 --repo abelvalle/portfolio-platform --log`
 - `npm.cmd --prefix apps/api exec -- playwright --version`
+- `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"`
+- `git diff --check`
+
+### Fix lock Linux para Lightning CSS
+
+- Diagnosticado segundo fallo remoto de GitHub Actions: build/dev web en Ubuntu no encontraba `lightningcss.linux-x64-gnu.node`.
+- Anadida `lightningcss-linux-x64-gnu` como optional dependency explicita del frontend para que el lock incluya el paquete nativo Linux.
+- El fix corrige tanto `npm run build` como el smoke e2e web en runners Linux.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd install --workspace apps/web --save-optional lightningcss-linux-x64-gnu@1.32.0`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"`
 - `git diff --check`
 
