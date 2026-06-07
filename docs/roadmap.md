@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:07 CEST.
+Estado actualizado: 2026-06-07 09:10 CEST.
 
 ## Hitos completados
 
@@ -5384,6 +5384,18 @@ Verificacion realizada en este hito:
 
 - `gh run view 27085654767 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Politica de seguridad y CODEOWNERS
+
+- Anadido `SECURITY.md` con flujo de reporte responsable, reglas de manejo de datos sensibles y guardrails del proyecto.
+- Anadido `.github/CODEOWNERS` con propietario por defecto del repositorio.
+- README enlaza la politica de seguridad.
+
+Verificacion realizada en este hito:
+
+- `Get-Content -Path SECURITY.md`
+- `Get-Content -Path .github/CODEOWNERS`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

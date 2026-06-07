@@ -145,6 +145,8 @@ Ver [deployment.md](docs/deployment.md).
 
 Ver [CONTRIBUTING.md](CONTRIBUTING.md) para flujo de ramas, checklist de PR y reglas de contenido CV.
 
+Ver [SECURITY.md](SECURITY.md) para reporte responsable de vulnerabilidades y guardrails de seguridad.
+
 ## Capturas
 
 Pendiente añadir capturas finales en `docs/screenshots/`.
