@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:41 CEST.
+Estado actualizado: 2026-06-07 09:46 CEST.
 
 ## Hitos completados
 
@@ -5496,6 +5496,19 @@ Verificacion realizada en este hito:
 - `npm.cmd run audit:policy`
 - `Get-Content -Path .github/workflows/ci.yml`
 - `git diff --check`
+
+### CI y CodeQL remotos verdes tras audit gate
+
+- Revalidado GitHub Actions despues de anadir `npm run audit:policy` al job `Quality gates`.
+- Run CI `27086446807` completado correctamente en `develop`.
+- Run CodeQL `27086446800` completado correctamente en `develop`.
+- El paso `Audit policy` quedo verde antes de Prisma, lint, tests y build.
+
+Verificacion realizada en este hito:
+
+- `gh run view 27086446807 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27086446800 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
