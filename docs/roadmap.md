@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:28 CEST.
+Estado actualizado: 2026-06-07 09:32 CEST.
 
 ## Hitos completados
 
@@ -5445,6 +5445,19 @@ Verificacion realizada en este hito:
 - `gh api repos/github/codeql-action/git/matching-refs/tags/v --jq '.[].ref'`
 - `Get-Content -Path .github/workflows/codeql.yml`
 - `git diff --check`
+
+### CI y CodeQL remotos verdes
+
+- Revalidado GitHub Actions despues de anadir el workflow CodeQL.
+- Run CI `27086161262` completado correctamente en `develop`.
+- Run CodeQL `27086161258` completado correctamente en `develop`.
+- Jobs verdes: `Quality gates`, `Web e2e smoke` y `Analyze JavaScript and TypeScript`.
+
+Verificacion realizada en este hito:
+
+- `gh run view 27086161262 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27086161258 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
