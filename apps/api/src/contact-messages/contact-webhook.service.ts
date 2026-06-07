@@ -143,7 +143,7 @@ export class ContactWebhookService {
       config.timeoutMs,
     );
     if (!result.dispatched) {
-      this.scheduleRetry(message.id, retryAttempt + 1, config);
+      await this.scheduleRetry(message.id, retryAttempt + 1, config);
     }
     return result;
   }
@@ -185,7 +185,20 @@ export class ContactWebhookService {
     return { messageId, ...result };
   }
 
-  private scheduleRetry(
+  async processDueRetries(now = new Date()) {
+    const jobs = await this.prisma.contactWebhookRetryJob.findMany({
+      where: { status: 'pending', runAt: { lte: now } },
+      orderBy: { runAt: 'asc' },
+      take: 10,
+    });
+    const results: Array<Record<string, unknown>> = [];
+    for (const job of jobs) {
+      results.push(await this.runRetryJob(job.id));
+    }
+    return { processed: results.length, results };
+  }
+
+  private async scheduleRetry(
     messageId: string,
     retryAttempt: number,
     config: ContactWebhookRuntimeConfig,
@@ -193,9 +206,35 @@ export class ContactWebhookService {
     if (retryAttempt > config.retryAttempts) {
       return;
     }
+    const job = await this.prisma.contactWebhookRetryJob.create({
+      data: {
+        messageId,
+        attempt: retryAttempt,
+        runAt: new Date(Date.now() + config.retryDelayMs),
+      },
+    });
     setTimeout(() => {
-      void this.retryMessage(messageId, retryAttempt);
+      void this.runRetryJob(job.id);
     }, config.retryDelayMs);
+  }
+
+  private async runRetryJob(jobId: string) {
+    const job = await this.prisma.contactWebhookRetryJob.findUnique({
+      where: { id: jobId },
+    });
+    if (!job || job.status !== 'pending') {
+      return { jobId, skipped: true };
+    }
+
+    const result = await this.retryMessage(job.messageId, job.attempt);
+    await this.prisma.contactWebhookRetryJob.update({
+      where: { id: job.id },
+      data: {
+        status: result.dispatched ? 'completed' : 'failed',
+        resultJson: result as never,
+      },
+    });
+    return { jobId, ...result };
   }
 
   private async postWebhook(

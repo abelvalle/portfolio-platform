@@ -94,6 +94,14 @@ export class ContactMessagesController {
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_messages')
+  @Post('webhook/retries/process')
+  processWebhookRetries() {
+    return this.contactWebhookService.processDueRetries();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('read_messages')
   @Get()
   list(@Query() query: ContactMessageQueryDto) {

@@ -4375,6 +4375,24 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 
+### Cola persistente de reintentos webhook
+
+- Añadido modelo Prisma `ContactWebhookRetryJob` con indice por `status/runAt`.
+- Los fallos de webhook crean un job persistente ademas del temporizador inmediato.
+- `ContactWebhookService.processDueRetries` procesa hasta 10 jobs pendientes vencidos para recuperar tras reinicios.
+- La API expone `POST /contact-messages/webhook/retries/process` protegido por `manage_messages`.
+- `/admin/settings` añade accion `Procesar pendientes`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run db:generate`
+- `npm.cmd --prefix apps/api run test -- contact-webhook.service.spec.ts`
+- `npm.cmd --prefix apps/api run test:e2e -- contact-webhook.e2e-spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:api`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ya existe modelo/API/seed y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online leen traducciones publicas con fallback local. Falta ampliar seed/editor a todas las microcopias y secciones complejas antes de retirar completamente el fallback.
@@ -4388,7 +4406,7 @@ Verificacion realizada en este hito:
 - Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; el historial agregado de publicaciones CV queda visible desde Versiones CV.
 - Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, version/recurso, fecha y usuario, con timeline visual por version, historial agregado de publicaciones CV, detalle por evento, exportacion CSV visible y exportacion server-side del historico filtrado; falta analitica comparativa avanzada de cambios entre publicaciones.
 - Webhooks configuracion editable: URL/eventos/timeouts/reintentos ya se editan desde admin y persisten en DB; el secreto HMAC sigue viviendo en variables de entorno por seguridad. Falta soporte de rotacion/validacion guiada de secreto si se decide gestionar secretos fuera de `.env`.
-- Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido y reintentos diferidos en memoria configurables por entorno; falta cola persistente si se requiere tolerancia a reinicios del backend.
+- Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido, settings persistentes y cola `ContactWebhookRetryJob` procesable desde admin; falta worker/cron dedicado si se requiere ejecucion automatica tras reinicio sin intervencion manual.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side, accion masiva filtrada de leido/no leido y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal, embudo basico, presets UI de embudo configurable por API, embudo multicanal por fuente/canal desde UI y definiciones persistentes de embudos creadas/editadas desde admin; faltan objetivos persistentes mas ricos si se definen nuevos KPIs de negocio.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa, cohorts mensuales, cohorts por fuente/canal y comparativas contra mes previo; faltan desgloses mas ricos si se definen nuevos objetivos de negocio.

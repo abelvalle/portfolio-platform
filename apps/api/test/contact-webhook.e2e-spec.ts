@@ -12,6 +12,7 @@ describe('Contact webhook settings (e2e)', () => {
   let contactWebhookService: {
     deliveries: jest.Mock;
     retryMessage: jest.Mock;
+    processDueRetries: jest.Mock;
     settings: jest.Mock;
     status: jest.Mock;
     testDispatch: jest.Mock;
@@ -21,6 +22,10 @@ describe('Contact webhook settings (e2e)', () => {
   beforeEach(async () => {
     contactWebhookService = {
       deliveries: jest.fn(),
+      processDueRetries: jest.fn().mockResolvedValue({
+        processed: 1,
+        results: [{ messageId: 'message-1', dispatched: true, status: 200 }],
+      }),
       retryMessage: jest.fn(),
       settings: jest.fn().mockResolvedValue({
         id: 'settings-1',
@@ -125,5 +130,17 @@ describe('Contact webhook settings (e2e)', () => {
       .expect(400);
 
     expect(contactWebhookService.updateSettings).not.toHaveBeenCalled();
+  });
+
+  it('processes pending webhook retry jobs', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/contact-messages/webhook/retries/process')
+      .expect(201);
+
+    expect(contactWebhookService.processDueRetries).toHaveBeenCalled();
+    expect(response.body).toEqual({
+      processed: 1,
+      results: [{ messageId: 'message-1', dispatched: true, status: 200 }],
+    });
   });
 });

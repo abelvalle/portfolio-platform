@@ -14,6 +14,12 @@ const createPrisma = () => ({
     findFirst: jest.fn().mockResolvedValue(null),
     update: jest.fn(),
   },
+  contactWebhookRetryJob: {
+    create: jest.fn().mockResolvedValue({ id: 'retry-job-1' }),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
 });
 
 const createService = (
@@ -214,6 +220,13 @@ describe('ContactWebhookService', () => {
 
     expect(result).toEqual({ dispatched: false, status: 503 });
     expect(jest.getTimerCount()).toBe(1);
+    expect(prisma.contactWebhookRetryJob.create).toHaveBeenCalledWith({
+      data: {
+        messageId: 'message-1',
+        attempt: 1,
+        runAt: expect.any(Date),
+      },
+    });
     expect(prisma.auditLog.create).toHaveBeenCalledWith({
       data: {
         action: 'contact.webhook.delivery',
@@ -227,6 +240,76 @@ describe('ContactWebhookService', () => {
           status: 503,
         },
       },
+    });
+  });
+
+  it('processes due persistent retry jobs', async () => {
+    const prisma = createPrisma();
+    prisma.contactWebhookRetryJob.findMany.mockResolvedValue([
+      {
+        id: 'retry-job-1',
+        messageId: 'message-1',
+        attempt: 1,
+        status: 'pending',
+        runAt: new Date('2026-06-07T08:00:00.000Z'),
+      },
+    ]);
+    prisma.contactWebhookRetryJob.findUnique.mockResolvedValue({
+      id: 'retry-job-1',
+      messageId: 'message-1',
+      attempt: 1,
+      status: 'pending',
+    });
+    prisma.contactMessage.findUnique.mockResolvedValue(message);
+    prisma.contactWebhookSetting.findFirst.mockResolvedValue({
+      id: 'settings-1',
+      enabled: true,
+      url: 'https://example.com/webhook',
+      event: 'contact.message.created',
+      testEvent: 'contact.webhook.test',
+      timeoutMs: 5000,
+      retryAttempts: 1,
+      retryDelayMs: 1000,
+    });
+    Object.defineProperty(global, 'fetch', {
+      configurable: true,
+      value: jest.fn().mockResolvedValue({ ok: true, status: 200 }),
+    });
+    const service = createService({}, prisma);
+
+    const result = await service.processDueRetries(
+      new Date('2026-06-07T08:05:00.000Z'),
+    );
+
+    expect(prisma.contactWebhookRetryJob.findMany).toHaveBeenCalledWith({
+      where: {
+        status: 'pending',
+        runAt: { lte: new Date('2026-06-07T08:05:00.000Z') },
+      },
+      orderBy: { runAt: 'asc' },
+      take: 10,
+    });
+    expect(prisma.contactWebhookRetryJob.update).toHaveBeenCalledWith({
+      where: { id: 'retry-job-1' },
+      data: {
+        status: 'completed',
+        resultJson: {
+          messageId: 'message-1',
+          dispatched: true,
+          status: 200,
+        },
+      },
+    });
+    expect(result).toEqual({
+      processed: 1,
+      results: [
+        {
+          jobId: 'retry-job-1',
+          messageId: 'message-1',
+          dispatched: true,
+          status: 200,
+        },
+      ],
     });
   });
 

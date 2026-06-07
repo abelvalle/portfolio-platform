@@ -28,6 +28,7 @@ export function WebhookSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isProcessingRetries, setIsProcessingRetries] = useState(false);
   const [retryingMessageId, setRetryingMessageId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -113,6 +114,19 @@ export function WebhookSettings() {
     }
   }
 
+  async function processPendingRetries() {
+    setIsProcessingRetries(true);
+    try {
+      const result = await adminClient.processContactWebhookRetries();
+      await loadSettings();
+      setMessage(`Reintentos pendientes procesados: ${result.processed}.`);
+    } catch {
+      setMessage("No se pudieron procesar los reintentos pendientes.");
+    } finally {
+      setIsProcessingRetries(false);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -186,6 +200,10 @@ export function WebhookSettings() {
           <Button type="button" onClick={testWebhook} disabled={!status?.configured || isTesting}>
             <Send data-icon="inline-start" />
             {isTesting ? "Probando..." : "Probar webhook"}
+          </Button>
+          <Button type="button" variant="outline" onClick={processPendingRetries} disabled={!status?.configured || isProcessingRetries}>
+            <RotateCcw data-icon="inline-start" />
+            {isProcessingRetries ? "Procesando..." : "Procesar pendientes"}
           </Button>
         </div>
         <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">

@@ -239,6 +239,9 @@ export const adminClient = {
   retryContactWebhook(messageId: string) {
     return apiFetch<ContactWebhookRetryResult>(`/contact-messages/webhook/messages/${encodeURIComponent(messageId)}/retry`, { method: "POST" });
   },
+  processContactWebhookRetries() {
+    return apiFetch<ContactWebhookRetryProcessResult>("/contact-messages/webhook/retries/process", { method: "POST" });
+  },
   contactMessages(filters?: ContactMessageFilters) {
     return apiFetch<ContactMessage[]>(withQuery("/contact-messages", filters));
   },
@@ -699,6 +702,11 @@ export type ContactWebhookRetryResult = {
   messageId: string;
   dispatched: boolean;
   status?: number | null;
+};
+
+export type ContactWebhookRetryProcessResult = {
+  processed: number;
+  results: ContactWebhookRetryResult[];
 };
 
 export type ContactWebhookDelivery = {
