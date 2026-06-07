@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 07:12 CEST.
+Estado actualizado: 2026-06-07 07:15 CEST.
 
 ## Hitos completados
 
@@ -4932,6 +4932,18 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run lint`
 - `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "admin"`
+
+### Suite raiz tras cobertura i18n
+
+- Ejecutada la suite raiz despues de anadir cobertura editorial i18n en admin.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `29` suites y `158` tests, smoke web y build Next/Nest correctos.
+- Observacion: el build web sigue mostrando `DEP0205 module.register()` desde la cadena de Next/Node, sin bloquear compilacion.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
 
 ## Deuda técnica abierta
 
