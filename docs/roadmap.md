@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 05:18 CEST.
+Estado actualizado: 2026-06-07 05:20 CEST.
 
 ## Hitos completados
 
@@ -4602,6 +4602,17 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run test:e2e -- contact-webhook.e2e-spec.ts`
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
+
+### Suite raiz tras cron webhook
+
+- Ejecutada la suite raiz despues del endpoint de cron externo para reintentos webhook.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `28` suites y `148` tests, smoke web y build Next/Nest correctos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
 
 ## Deuda técnica abierta
 
