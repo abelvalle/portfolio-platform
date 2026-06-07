@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:14 CEST.
+Estado actualizado: 2026-06-07 08:15 CEST.
 
 ## Hitos completados
 
@@ -5164,6 +5164,19 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run test`
 - `npm.cmd run build`
+
+### Swagger configurable para produccion
+
+- Swagger queda activo por defecto fuera de `NODE_ENV=production`.
+- En produccion se desactiva salvo que `API_SWAGGER_ENABLED=true`.
+- `.env.example`, README y `docs/deployment.md` documentan el comportamiento para no exponer `/api/docs` por accidente.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- swagger.config.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

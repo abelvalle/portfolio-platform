@@ -41,7 +41,7 @@ Frontend: `http://localhost:3000`
 
 API: `http://localhost:4000/api/v1`
 
-Swagger: `http://localhost:4000/api/docs`
+Swagger: `http://localhost:4000/api/docs` en desarrollo. En produccion queda desactivado salvo que `API_SWAGGER_ENABLED=true`.
 
 Health: `http://localhost:4000/api/v1/health/live` y `/health/ready`
 

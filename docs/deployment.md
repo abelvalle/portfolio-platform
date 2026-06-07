@@ -22,6 +22,7 @@ Variables:
 - `JWT_ACCESS_SECRET`
 - `JWT_REFRESH_SECRET`
 - `API_CORS_ORIGIN`
+- `API_SWAGGER_ENABLED=true` si quieres exponer Swagger en produccion; por defecto solo se activa fuera de `NODE_ENV=production`
 - `ADMIN_EMAIL`
 - `ADMIN_PASSWORD`
 - `STORAGE_DIR`

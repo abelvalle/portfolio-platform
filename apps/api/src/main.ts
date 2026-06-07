@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { isSwaggerEnabled } from './common/config/swagger.config';
 import { securityHeadersMiddleware } from './common/security/security-headers';
 
 async function bootstrap() {
@@ -27,16 +28,23 @@ async function bootstrap() {
     }),
   );
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Portfolio Platform API')
-    .setDescription(
-      'REST API for Abel Valle Rosa portfolio, admin CMS, analytics and CV Manager.',
+  if (
+    isSwaggerEnabled(
+      configService.get<string>('NODE_ENV'),
+      configService.get<string>('API_SWAGGER_ENABLED'),
     )
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+  ) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Portfolio Platform API')
+      .setDescription(
+        'REST API for Abel Valle Rosa portfolio, admin CMS, analytics and CV Manager.',
+      )
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   await app.listen(configService.get<number>('PORT') ?? 4000);
 }
