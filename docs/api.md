@@ -194,7 +194,9 @@ Variables de privacidad:
 
 `GET /cv/download?template=ats-friendly` genera y descarga el PDF de la version primaria usando la plantilla publica solicitada. Si `template` se omite, usa la plantilla asociada a la version primaria. El override se guarda como `MediaAsset` y `CvGeneratedFile`, pero no reemplaza la referencia canonica `generatedPdfId` de la version. Cada descarga registra `cv_download` en analytics desde backend.
 
-`POST /cv/adapt-to-role` usa el motor por reglas por defecto. Si `CV_AI_ADAPTER_URL` está configurado, el backend consulta un proveedor IA externo opcional y guarda sus sugerencias en `adaptationMeta.aiSuggestion`.
+`POST /cv/adapt-to-role` usa el motor por reglas por defecto. Si `CV_AI_ADAPTER_URL` esta configurado, el backend consulta un proveedor IA externo opcional y guarda sus sugerencias en `adaptationMeta.aiSuggestion`.
+
+Cada `CvAdaptationRequest` guarda tambien `traceJson`, una traza saneada con estrategia usada, proveedor, longitud de oferta, keywords, conteo de skills/experiencias, referencias de rol/empresa y forma de la sugerencia IA. La traza no guarda prompt completo, respuesta literal, email, enlaces, notas privadas, API keys ni tokens; esos datos quedan fuera de `traceJson` por diseño.
 
 Las sugerencias IA quedan pendientes de revisión y solo pueden reordenar skills/experiencias existentes; no se aceptan empresas, títulos, fechas ni certificaciones nuevas.
 

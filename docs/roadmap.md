@@ -4269,6 +4269,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:api`
 - `npm.cmd run build:web`
 
+### Trazabilidad saneada de adaptaciones CV
+
+- Añadido `CvAdaptationRequest.traceJson` con migracion Prisma para auditar adaptaciones sin guardar secretos.
+- `CvAdaptationService` registra estrategia, proveedor, longitud de oferta, keywords, conteos y forma de sugerencia IA.
+- La traza excluye prompt completo, respuesta literal, emails, enlaces, notas privadas, API keys y tokens.
+- El test cubre motor por reglas y proveedor IA externo mockeado, validando que la traza no contenga datos sensibles.
+- `docs/api.md` documenta el contrato de `traceJson`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run db:generate`
+- `npm.cmd --prefix apps/api run test -- cv-adaptation.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -4276,7 +4291,7 @@ Verificacion realizada en este hito:
 - Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side, guard de overflow HTML, smoke de PDF real, diff visual automatizado contra PDF rasterizado, paginacion print para CV largos y saltos manuales `page-break`; DOCX comparte orden de bloques, tiene smoke real de paquete Word y valida metadatos ricos dentro de `word/document.xml`, aunque sigue usando renderer propio.
 - QA de guardado autenticado: `PATCH /theme` ya tiene contrato HTTP e2e con guards mockeados, validacion real y saneamiento de payload; falta prueba e2e desde UI con API real, sesion admin y persistencia DB.
 - ATS end to end con DB real: el editor ya permite reporte ATS, comparacion contra oferta y generacion PDF/DOCX desde la API con descarga cubierta en e2e mockeado; servicios y contrato HTTP cubren MediaAsset generado descargable desde storage local con version persistida en memoria; existe harness opcional `RUN_DB_E2E=true`, pero falta validarlo con credenciales Postgres reales porque Docker daemon no esta disponible y la instancia local no acepta las credenciales de ejemplo.
-- IA real end to end: el contrato mockeado del adaptador externo ya valida fuente saneada, auth header, normalizacion de sugerencias y fallback ante errores; falta probar un proveedor externo real y registrar trazabilidad de prompts/respuestas sin almacenar secretos.
+- IA real end to end: el contrato mockeado del adaptador externo ya valida fuente saneada, auth header, normalizacion de sugerencias y fallback ante errores; `CvAdaptationRequest.traceJson` registra trazabilidad saneada sin prompt completo, respuesta literal ni secretos. Falta probar un proveedor externo real.
 - Aceptar/rechazar sugerencias IA desde UI: el wizard ya permite aceptar/rechazar bloques principales, skills individuales, experiencias individuales y campos internos de experiencia con trazabilidad en `adaptationMeta`; falta extender la misma granularidad a otros bloques complejos si se incorporan propuestas mas ricas.
 - Roles objetivo CV: la pantalla admin permite CRUD, el wizard los usa como precarga, el backend persiste el rol elegido y analytics registra/expone uso agregado por rol objetivo, ruta y version base mediante `cv_adaptation` + `analytics/labels`, ya visible en `/admin/analytics`; faltan desgloses historicos avanzados por oferta sin guardar contenido sensible.
 - Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; el historial agregado de publicaciones CV queda visible desde Versiones CV.

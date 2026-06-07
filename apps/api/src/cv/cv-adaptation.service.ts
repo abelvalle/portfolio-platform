@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CvAiAdapterService } from './cv-ai-adapter.service';
+import {
+  CvAiAdapterService,
+  type AiAdaptationSuggestion,
+} from './cv-ai-adapter.service';
 import { AdaptCvDto, CompareVersionsDto } from './cv.dto';
 
 @Injectable()
@@ -40,6 +43,14 @@ export class CvAdaptationService {
     });
     const skills = (source.skills || []) as any[];
     const experiences = (source.experiences || []) as any[];
+    const trace = this.adaptationTrace({
+      dto,
+      source,
+      keywords,
+      aiSuggestion,
+      baseCvVersionId: base.id,
+      targetRoleId: targetRolePreset?.id,
+    });
     const proposed = {
       ...source,
       summary: this.orientSummary(source.summary, dto.targetRole),
@@ -67,6 +78,7 @@ export class CvAdaptationService {
         keywords,
         mode: aiSuggestion ? 'ai_assisted_with_rule_guardrails' : 'rules',
         aiSuggestion,
+        trace,
         pendingReview: true,
         guardrail:
           'No se han inventado empresas, fechas, títulos ni certificaciones. Las sugerencias IA quedan pendientes de revisión humana y solo pueden reordenar datos existentes.',
@@ -81,6 +93,7 @@ export class CvAdaptationService {
         targetCompany: dto.targetCompany,
         jobDescription: dto.jobDescription,
         proposedJson: proposed as any,
+        traceJson: trace as any,
       },
     });
 
@@ -211,5 +224,71 @@ export class CvAdaptationService {
 
   private orientSummary(summary = '', targetRole: string) {
     return `${summary} Versión orientada a ${targetRole}, pendiente de revisión humana para confirmar tono, prioridad de logros y ajuste a la oferta concreta.`;
+  }
+
+  private adaptationTrace({
+    dto,
+    source,
+    keywords,
+    aiSuggestion,
+    baseCvVersionId,
+    targetRoleId,
+  }: {
+    dto: AdaptCvDto;
+    source: Record<string, any>;
+    keywords: string[];
+    aiSuggestion: AiAdaptationSuggestion | null;
+    baseCvVersionId: string;
+    targetRoleId?: string;
+  }) {
+    const skills = Array.isArray(source.skills) ? source.skills : [];
+    const experiences = Array.isArray(source.experiences)
+      ? source.experiences
+      : [];
+
+    return {
+      strategy: aiSuggestion ? 'external-ai-with-rule-guardrails' : 'rules',
+      provider: aiSuggestion?.provider || 'rules',
+      generatedAt: new Date().toISOString(),
+      input: {
+        baseCvVersionId,
+        targetRoleId,
+        targetRole: dto.targetRole,
+        hasTargetCompany: Boolean(dto.targetCompany),
+        jobDescriptionLength: dto.jobDescription.length,
+        keywords,
+      },
+      sourceShape: {
+        summaryLength:
+          typeof source.summary === 'string' ? source.summary.length : 0,
+        skillCount: skills.length,
+        experienceCount: experiences.length,
+        skillNames: skills.map((skill) => this.cleanTraceText(skill.name)),
+        experienceRefs: experiences.map((experience) => ({
+          role: this.cleanTraceText(experience.role),
+          company: this.cleanTraceText(experience.company),
+        })),
+      },
+      suggestionShape: {
+        hasSuggestedSummary: Boolean(aiSuggestion?.suggestedSummary),
+        suggestedSummaryLength: aiSuggestion?.suggestedSummary?.length || 0,
+        prioritizedSkillNames: aiSuggestion?.prioritizedSkillNames || [],
+        prioritizedExperienceCompanies:
+          aiSuggestion?.prioritizedExperienceCompanies || [],
+        notesCount: aiSuggestion?.notes?.length || 0,
+        pendingReview: true,
+      },
+      redaction: {
+        promptStored: false,
+        responseStoredInTrace: false,
+        excludes: ['email', 'links', 'privateNotes', 'apiKeys', 'tokens'],
+      },
+    };
+  }
+
+  private cleanTraceText(value: unknown) {
+    return typeof value === 'string' && value.trim()
+      ? value.trim().slice(0, 120)
+      : null;
   }
 }
