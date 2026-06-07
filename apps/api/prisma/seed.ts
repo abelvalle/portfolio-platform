@@ -389,6 +389,33 @@ async function seedPageSectionsAndModules() {
     });
   }
 
+  const analyticsGoals = [
+    {
+      key: "sample-landing-visits",
+      name: "Visitas landing sample/demo",
+      description: "Objetivo demo editable para validar el panel de analitica.",
+      eventType: "landing_visit",
+      targetCount: 10,
+      period: "monthly"
+    },
+    {
+      key: "sample-cv-downloads",
+      name: "Descargas CV sample/demo",
+      description: "Objetivo demo editable; ajusta el KPI real desde admin.",
+      eventType: "cv_download",
+      targetCount: 3,
+      period: "monthly"
+    }
+  ];
+
+  for (const [index, goal] of analyticsGoals.entries()) {
+    await prisma.analyticsGoal.upsert({
+      where: { key: goal.key },
+      update: { ...goal, order: index, visible: true },
+      create: { ...goal, order: index, visible: true }
+    });
+  }
+
   const translations = [
     ["es", "public", "ariaSections", "Secciones"],
     ["es", "public.intro", "label", "Portfolio / CV"],

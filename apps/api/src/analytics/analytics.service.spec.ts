@@ -487,6 +487,104 @@ describe('AnalyticsService filters', () => {
     });
   });
 
+  it('creates sanitized analytics goals', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsGoal.create.mockResolvedValue({ id: 'goal-1' });
+    const service = createService(prisma);
+
+    await service.createGoal({
+      key: 'monthly-cv-downloads',
+      name: ' Descargas CV mensuales ',
+      description: ' sample/demo ',
+      eventType: 'cv_download',
+      targetCount: 20,
+      period: 'monthly',
+      visible: true,
+      order: 1,
+    });
+
+    expect(prisma.analyticsGoal.create).toHaveBeenCalledWith({
+      data: {
+        key: 'monthly-cv-downloads',
+        name: 'Descargas CV mensuales',
+        description: 'sample/demo',
+        eventType: 'cv_download',
+        targetCount: 20,
+        period: 'monthly',
+        visible: true,
+        order: 1,
+      },
+    });
+  });
+
+  it('builds analytics goal progress from filtered events', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsGoal.findMany.mockResolvedValue([
+      {
+        id: 'goal-1',
+        key: 'monthly-cv-downloads',
+        name: 'Descargas CV mensuales',
+        eventType: 'cv_download',
+        targetCount: 10,
+        period: 'monthly',
+        visible: true,
+        order: 0,
+      },
+    ]);
+    prisma.analyticsEvent.count.mockResolvedValue(6);
+    const service = createService(prisma);
+
+    const result = await service.goalProgress({
+      from: '2026-06-01',
+      to: '2026-06-30',
+    });
+
+    expect(prisma.analyticsGoal.findMany).toHaveBeenCalledWith({
+      where: { deletedAt: null, visible: true },
+      orderBy: [{ order: 'asc' }, { updatedAt: 'desc' }],
+    });
+    expect(prisma.analyticsEvent.count).toHaveBeenCalledWith({
+      where: {
+        createdAt: {
+          gte: new Date('2026-06-01T00:00:00.000Z'),
+          lte: new Date('2026-06-30T23:59:59.999Z'),
+        },
+        type: 'cv_download',
+      },
+    });
+    expect(result).toEqual([
+      expect.objectContaining({
+        id: 'goal-1',
+        count: 6,
+        progressRate: 60,
+        achieved: false,
+      }),
+    ]);
+  });
+
+  it('soft deletes analytics goals', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsGoal.findUnique.mockResolvedValue({
+      id: 'goal-1',
+      deletedAt: null,
+    });
+    prisma.analyticsGoal.update.mockResolvedValue({
+      id: 'goal-1',
+      visible: false,
+    });
+    const service = createService(prisma);
+
+    await service.removeGoal('goal-1');
+
+    expect(prisma.analyticsGoal.findUnique).toHaveBeenCalledWith({
+      where: { id: 'goal-1' },
+    });
+    expect(prisma.analyticsGoal.update).toHaveBeenCalledWith({
+      where: { id: 'goal-1' },
+      data: { deletedAt: expect.any(Date), visible: false },
+    });
+  });
+
   it('builds a source and channel conversion funnel', async () => {
     const prisma = mockPrisma();
     prisma.analyticsEvent.findMany.mockResolvedValue([
@@ -589,6 +687,12 @@ function mockPrisma() {
       findMany: jest.fn(),
     },
     analyticsFunnelDefinition: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+    analyticsGoal: {
       create: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),

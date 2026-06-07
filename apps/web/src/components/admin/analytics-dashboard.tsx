@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, RefreshCw } from "lucide-react";
+import { Download, RefreshCw, Target, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   type AnalyticsEvent,
   type AnalyticsFunnel,
   type AnalyticsFunnelDefinition,
+  type AnalyticsGoalProgress,
   type AnalyticsLabels,
   type AnalyticsPrivacyStatus,
   type AnalyticsSummary,
@@ -32,7 +33,16 @@ const eventTypeOptions = [
   { label: "Descarga CV", value: "cv_download" },
   { label: "Formulario contacto", value: "contact_submit" },
   { label: "Vista proyecto", value: "project_view" },
+  { label: "Click LinkedIn", value: "linkedin_click" },
   { label: "Adaptacion CV", value: "cv_adaptation" }
+];
+
+const goalPeriodOptions = [
+  { label: "Diario", value: "daily" },
+  { label: "Semanal", value: "weekly" },
+  { label: "Mensual", value: "monthly" },
+  { label: "Trimestral", value: "quarterly" },
+  { label: "Personalizado", value: "custom" }
 ];
 
 const fallbackFunnelDefinitions: AnalyticsFunnelDefinition[] = [
@@ -73,6 +83,7 @@ export function AnalyticsDashboard() {
   const [labels, setLabels] = useState<AnalyticsLabels | null>(null);
   const [funnel, setFunnel] = useState<AnalyticsFunnel | null>(null);
   const [funnelDefinitions, setFunnelDefinitions] = useState<AnalyticsFunnelDefinition[]>(fallbackFunnelDefinitions);
+  const [goals, setGoals] = useState<AnalyticsGoalProgress[]>([]);
   const [channelFunnel, setChannelFunnel] = useState<AnalyticsChannelFunnel | null>(null);
   const [privacy, setPrivacy] = useState<AnalyticsPrivacyStatus | null>(null);
   const [fromDate, setFromDate] = useState("");
@@ -82,10 +93,17 @@ export function AnalyticsDashboard() {
   const [funnelDraftName, setFunnelDraftName] = useState(fallbackFunnelDefinitions[0].name);
   const [funnelDraftDescription, setFunnelDraftDescription] = useState(fallbackFunnelDefinitions[0].description || "");
   const [funnelDraftSteps, setFunnelDraftSteps] = useState(fallbackFunnelDefinitions[0].steps.join(","));
+  const [selectedGoalId, setSelectedGoalId] = useState("");
+  const [goalDraftName, setGoalDraftName] = useState("");
+  const [goalDraftDescription, setGoalDraftDescription] = useState("");
+  const [goalDraftEventType, setGoalDraftEventType] = useState("landing_visit");
+  const [goalDraftTargetCount, setGoalDraftTargetCount] = useState("10");
+  const [goalDraftPeriod, setGoalDraftPeriod] = useState("monthly");
   const [message, setMessage] = useState("Cargando analitica.");
   const [isLoading, setIsLoading] = useState(true);
   const [isPruning, setIsPruning] = useState(false);
   const [isSavingFunnel, setIsSavingFunnel] = useState(false);
+  const [isSavingGoal, setIsSavingGoal] = useState(false);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
@@ -99,6 +117,7 @@ export function AnalyticsDashboard() {
         nextLabels,
         nextFunnel,
         nextFunnelDefinitions,
+        nextGoals,
         nextChannelFunnel,
         nextPrivacy
       ] = await Promise.all([
@@ -109,6 +128,7 @@ export function AnalyticsDashboard() {
         adminClient.analyticsLabels({ ...filters, type: "cv_adaptation" }),
         adminClient.analyticsFunnel({ ...filters, steps: funnelSteps || undefined }),
         adminClient.analyticsFunnelDefinitions().catch(() => fallbackFunnelDefinitions),
+        adminClient.analyticsGoalsProgress(filters).catch(() => []),
         adminClient.analyticsChannelFunnel(filters),
         adminClient.analyticsPrivacy()
       ]);
@@ -119,6 +139,7 @@ export function AnalyticsDashboard() {
       setLabels(nextLabels);
       setFunnel(nextFunnel);
       setFunnelDefinitions(nextFunnelDefinitions.length ? nextFunnelDefinitions : fallbackFunnelDefinitions);
+      setGoals(nextGoals);
       setChannelFunnel(nextChannelFunnel);
       setPrivacy(nextPrivacy);
       setMessage("Analitica sincronizada con filtros de API.");
@@ -145,6 +166,7 @@ export function AnalyticsDashboard() {
   const selectedFunnelDefinition = funnelDefinitions.find((definition) => definition.steps.join(",") === funnelSteps);
   const selectedFunnelLabel = selectedFunnelDefinition?.name || "Embudo configurable";
   const selectedFunnelIsPersisted = Boolean(selectedFunnelDefinition && !selectedFunnelDefinition.id.startsWith("fallback-"));
+  const selectedGoal = goals.find((goal) => goal.id === selectedGoalId);
 
   function exportCsv() {
     const blob = new Blob([buildCsv(filteredEvents)], { type: "text/csv;charset=utf-8" });
@@ -243,6 +265,83 @@ export function AnalyticsDashboard() {
       setMessage("No se pudo ocultar el embudo.");
     } finally {
       setIsSavingFunnel(false);
+    }
+  }
+
+  function selectGoal(id: string) {
+    setSelectedGoalId(id);
+    const goal = goals.find((item) => item.id === id);
+    if (goal) {
+      setGoalDraftName(goal.name);
+      setGoalDraftDescription(goal.description || "");
+      setGoalDraftEventType(goal.eventType);
+      setGoalDraftTargetCount(String(goal.targetCount));
+      setGoalDraftPeriod(goal.period);
+    }
+  }
+
+  function resetGoalDraft() {
+    setSelectedGoalId("");
+    setGoalDraftName("");
+    setGoalDraftDescription("");
+    setGoalDraftEventType("landing_visit");
+    setGoalDraftTargetCount("10");
+    setGoalDraftPeriod("monthly");
+  }
+
+  async function saveGoal() {
+    const targetCount = Number(goalDraftTargetCount);
+    if (!goalDraftName.trim() || !Number.isFinite(targetCount) || targetCount < 1) {
+      setMessage("El objetivo necesita nombre y meta numerica mayor que cero.");
+      return;
+    }
+
+    setIsSavingGoal(true);
+    try {
+      const mutation = {
+        name: goalDraftName,
+        description: goalDraftDescription || null,
+        eventType: goalDraftEventType,
+        targetCount: Math.trunc(targetCount),
+        period: goalDraftPeriod,
+        visible: true,
+        order: selectedGoal?.order ?? goals.length
+      };
+      if (selectedGoal) {
+        await adminClient.updateAnalyticsGoal(selectedGoal.id, mutation);
+        setMessage("Objetivo KPI actualizado.");
+      } else {
+        const created = await adminClient.createAnalyticsGoal({
+          key: slugifyAnalyticsKey(goalDraftName),
+          ...mutation
+        });
+        setSelectedGoalId(created.id);
+        setMessage("Objetivo KPI creado.");
+      }
+      await loadAnalytics();
+    } catch {
+      setMessage("No se pudo guardar el objetivo KPI.");
+    } finally {
+      setIsSavingGoal(false);
+    }
+  }
+
+  async function hideGoal() {
+    if (!selectedGoal) {
+      setMessage("Selecciona un objetivo guardado para ocultarlo.");
+      return;
+    }
+
+    setIsSavingGoal(true);
+    try {
+      await adminClient.deleteAnalyticsGoal(selectedGoal.id);
+      resetGoalDraft();
+      await loadAnalytics();
+      setMessage("Objetivo KPI ocultado.");
+    } catch {
+      setMessage("No se pudo ocultar el objetivo KPI.");
+    } finally {
+      setIsSavingGoal(false);
     }
   }
 
@@ -346,6 +445,95 @@ export function AnalyticsDashboard() {
             <p className="mt-2 text-3xl font-semibold">{summary?.[key] ?? 0}</p>
           </div>
         ))}
+      </section>
+
+      <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-mono text-sm text-primary">Objetivos KPI</p>
+            <h2 className="mt-1 text-xl font-semibold">Metas persistentes</h2>
+          </div>
+          <Badge variant="outline">{goals.length} objetivos</Badge>
+        </div>
+        <div className="grid gap-3 lg:grid-cols-[1fr_1fr_140px_150px_auto]">
+          <div className="grid gap-2">
+            <Label htmlFor="analyticsGoalName">Nombre objetivo</Label>
+            <Input id="analyticsGoalName" value={goalDraftName} onChange={(event) => setGoalDraftName(event.target.value)} placeholder="Descargas CV mensuales" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="analyticsGoalDescription">Descripcion</Label>
+            <Input id="analyticsGoalDescription" value={goalDraftDescription} onChange={(event) => setGoalDraftDescription(event.target.value)} placeholder="sample/demo o criterio interno" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="analyticsGoalTarget">Meta</Label>
+            <Input id="analyticsGoalTarget" type="number" min={1} value={goalDraftTargetCount} onChange={(event) => setGoalDraftTargetCount(event.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="analyticsGoalEventType">Evento</Label>
+            <select
+              id="analyticsGoalEventType"
+              className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+              value={goalDraftEventType}
+              onChange={(event) => setGoalDraftEventType(event.target.value)}
+            >
+              {eventTypeOptions.filter((option) => option.value).map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-wrap items-end gap-2">
+            <select
+              aria-label="Periodo objetivo KPI"
+              className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+              value={goalDraftPeriod}
+              onChange={(event) => setGoalDraftPeriod(event.target.value)}
+            >
+              {goalPeriodOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <Button type="button" variant="outline" onClick={saveGoal} disabled={isSavingGoal} aria-label={selectedGoal ? "Guardar objetivo KPI" : "Crear objetivo KPI"}>
+              <Target data-icon="inline-start" />
+              {selectedGoal ? "Guardar" : "Crear"}
+            </Button>
+            <Button type="button" variant="outline" onClick={resetGoalDraft} disabled={isSavingGoal} aria-label="Nuevo objetivo KPI">
+              Nuevo
+            </Button>
+            <Button type="button" variant="outline" onClick={hideGoal} disabled={isSavingGoal || !selectedGoal} aria-label="Ocultar objetivo KPI">
+              <Trash2 data-icon="inline-start" />
+              Ocultar
+            </Button>
+          </div>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {goals.map((goal) => (
+            <button
+              key={goal.id}
+              type="button"
+              className={`rounded-lg border p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-primary ${selectedGoalId === goal.id ? "border-primary bg-primary/10" : "border-border"}`}
+              onClick={() => selectGoal(goal.id)}
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p className="font-medium">{goal.name}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{goal.description || periodLabel(goal.period)}</p>
+                </div>
+                <Badge variant="outline">{goal.achieved ? "cumplido" : "en curso"}</Badge>
+              </div>
+              <div className="mt-4 flex items-end justify-between gap-3">
+                <p className="text-2xl font-semibold">{goal.count}</p>
+                <p className="text-sm text-muted-foreground">meta {goal.targetCount} - {formatPercent(goal.progressRate)}</p>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(goal.progressRate, 100)}%` }} />
+              </div>
+              <p className="mt-2 break-all text-xs text-muted-foreground">{goal.eventType} - {periodLabel(goal.period)}</p>
+            </button>
+          ))}
+          {goals.length ? null : (
+            <p className="text-sm text-muted-foreground">Sin objetivos KPI definidos para analytics.</p>
+          )}
+        </div>
       </section>
 
       <section className="grid gap-4 rounded-lg border border-border bg-card p-5">
@@ -602,6 +790,27 @@ function slugifyFunnelKey(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return slug || `funnel-${Date.now()}`;
+}
+
+function slugifyAnalyticsKey(value: string) {
+  const slug = value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || `goal-${Date.now()}`;
+}
+
+function periodLabel(period: string) {
+  const labels: Record<string, string> = {
+    daily: "diario",
+    weekly: "semanal",
+    monthly: "mensual",
+    quarterly: "trimestral",
+    custom: "personalizado"
+  };
+  return labels[period] || period;
 }
 
 function SegmentList({

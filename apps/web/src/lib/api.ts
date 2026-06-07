@@ -376,6 +376,21 @@ export const adminClient = {
   deleteAnalyticsFunnelDefinition(id: string) {
     return apiFetch<AnalyticsFunnelDefinition>(`/analytics/funnel-definitions/${id}`, { method: "DELETE" });
   },
+  analyticsGoalsProgress(filters?: DateRangeFilters) {
+    return apiFetch<AnalyticsGoalProgress[]>(withQuery("/analytics/goals/progress", filters));
+  },
+  analyticsGoals(includeHidden = true) {
+    return apiFetch<AnalyticsGoal[]>(withQuery("/analytics/goals", { includeHidden: includeHidden ? "true" : undefined }));
+  },
+  createAnalyticsGoal(data: AnalyticsGoalMutation) {
+    return apiFetch<AnalyticsGoal>("/analytics/goals", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateAnalyticsGoal(id: string, data: Partial<AnalyticsGoalMutation>) {
+    return apiFetch<AnalyticsGoal>(`/analytics/goals/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteAnalyticsGoal(id: string) {
+    return apiFetch<AnalyticsGoal>(`/analytics/goals/${id}`, { method: "DELETE" });
+  },
   analyticsChannelFunnel(filters?: DateRangeFilters) {
     return apiFetch<AnalyticsChannelFunnel>(withQuery("/analytics/funnel/channels", filters));
   },
@@ -930,6 +945,37 @@ export type AnalyticsFunnelDefinitionMutation = {
   steps: string[];
   visible: boolean;
   order: number;
+};
+
+export type AnalyticsGoal = {
+  id: string;
+  key: string;
+  name: string;
+  description?: string | null;
+  eventType: string;
+  targetCount: number;
+  period: string;
+  visible: boolean;
+  order: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AnalyticsGoalMutation = {
+  key: string;
+  name: string;
+  description?: string | null;
+  eventType: string;
+  targetCount: number;
+  period: string;
+  visible: boolean;
+  order: number;
+};
+
+export type AnalyticsGoalProgress = AnalyticsGoal & {
+  count: number;
+  progressRate: number;
+  achieved: boolean;
 };
 
 export type AnalyticsChannelFunnel = {

@@ -23,7 +23,9 @@ import {
   AnalyticsFunnelQueryDto,
   CreateAnalyticsFunnelDefinitionDto,
   CreateAnalyticsEventDto,
+  CreateAnalyticsGoalDto,
   UpdateAnalyticsFunnelDefinitionDto,
+  UpdateAnalyticsGoalDto,
 } from './analytics.dto';
 
 @ApiTags('analytics')
@@ -129,6 +131,46 @@ export class AnalyticsController {
   @Delete('funnel-definitions/:id')
   removeFunnelDefinition(@Param('id') id: string) {
     return this.analyticsService.removeFunnelDefinition(id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_analytics')
+  @Get('goals/progress')
+  goalProgress(@Query() query: AnalyticsDateRangeQueryDto) {
+    return this.analyticsService.goalProgress(query);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_analytics')
+  @Get('goals')
+  goals(@Query('includeHidden') includeHidden?: string) {
+    return this.analyticsService.goals(includeHidden === 'true');
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_analytics')
+  @Post('goals')
+  createGoal(@Body() body: CreateAnalyticsGoalDto) {
+    return this.analyticsService.createGoal(body);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_analytics')
+  @Patch('goals/:id')
+  updateGoal(@Param('id') id: string, @Body() body: UpdateAnalyticsGoalDto) {
+    return this.analyticsService.updateGoal(id, body);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_analytics')
+  @Delete('goals/:id')
+  removeGoal(@Param('id') id: string) {
+    return this.analyticsService.removeGoal(id);
   }
 
   @ApiBearerAuth()

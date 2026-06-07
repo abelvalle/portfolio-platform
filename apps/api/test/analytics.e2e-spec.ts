@@ -9,12 +9,54 @@ import { PermissionsGuard } from '../src/common/guards/permissions.guard';
 describe('AnalyticsController (e2e)', () => {
   let app: INestApplication;
   let analyticsService: {
+    createGoal: jest.Mock;
+    goalProgress: jest.Mock;
+    goals: jest.Mock;
     privacyStatus: jest.Mock;
     pruneRetention: jest.Mock;
+    removeGoal: jest.Mock;
+    updateGoal: jest.Mock;
   };
 
   beforeEach(async () => {
     analyticsService = {
+      createGoal: jest.fn().mockResolvedValue({
+        id: 'goal-2',
+        key: 'monthly-cv-downloads',
+        name: 'Descargas CV mensuales',
+        eventType: 'cv_download',
+        targetCount: 20,
+        period: 'monthly',
+        visible: true,
+        order: 1,
+      }),
+      goalProgress: jest.fn().mockResolvedValue([
+        {
+          id: 'goal-1',
+          key: 'sample-cv-downloads',
+          name: 'Descargas CV sample/demo',
+          eventType: 'cv_download',
+          targetCount: 3,
+          period: 'monthly',
+          visible: true,
+          order: 0,
+          count: 2,
+          progressRate: 66.7,
+          achieved: false,
+        },
+      ]),
+      goals: jest.fn().mockResolvedValue([
+        {
+          id: 'goal-1',
+          key: 'sample-cv-downloads',
+          name: 'Descargas CV sample/demo',
+          eventType: 'cv_download',
+          targetCount: 3,
+          period: 'monthly',
+          visible: true,
+          order: 0,
+        },
+      ]),
       privacyStatus: jest.fn().mockReturnValue({
         retentionDays: 30,
         storeUserAgent: false,
@@ -25,6 +67,19 @@ describe('AnalyticsController (e2e)', () => {
       pruneRetention: jest.fn().mockResolvedValue({
         retentionDays: 30,
         deleted: 2,
+      }),
+      removeGoal: jest.fn().mockResolvedValue({
+        id: 'goal-1',
+        visible: false,
+      }),
+      updateGoal: jest.fn().mockResolvedValue({
+        id: 'goal-1',
+        name: 'Descargas CV actualizadas',
+        eventType: 'cv_download',
+        targetCount: 10,
+        period: 'monthly',
+        visible: true,
+        order: 0,
       }),
     };
 
@@ -70,6 +125,61 @@ describe('AnalyticsController (e2e)', () => {
     expect(response.body).toEqual({
       retentionDays: 30,
       deleted: 2,
+    });
+  });
+
+  it('returns analytics goal progress through the HTTP contract', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/analytics/goals/progress?from=2026-06-01&to=2026-06-30')
+      .expect(200);
+
+    expect(analyticsService.goalProgress).toHaveBeenCalledWith({
+      from: '2026-06-01',
+      to: '2026-06-30',
+    });
+    expect(response.body).toEqual([
+      {
+        id: 'goal-1',
+        key: 'sample-cv-downloads',
+        name: 'Descargas CV sample/demo',
+        eventType: 'cv_download',
+        targetCount: 3,
+        period: 'monthly',
+        visible: true,
+        order: 0,
+        count: 2,
+        progressRate: 66.7,
+        achieved: false,
+      },
+    ]);
+  });
+
+  it('creates analytics goals through the protected HTTP contract', async () => {
+    const body = {
+      key: 'monthly-cv-downloads',
+      name: 'Descargas CV mensuales',
+      eventType: 'cv_download',
+      targetCount: 20,
+      period: 'monthly',
+      visible: true,
+      order: 1,
+    };
+
+    const response = await request(app.getHttpServer())
+      .post('/analytics/goals')
+      .send(body)
+      .expect(201);
+
+    expect(analyticsService.createGoal).toHaveBeenCalledWith(body);
+    expect(response.body).toEqual({
+      id: 'goal-2',
+      key: 'monthly-cv-downloads',
+      name: 'Descargas CV mensuales',
+      eventType: 'cv_download',
+      targetCount: 20,
+      period: 'monthly',
+      visible: true,
+      order: 1,
     });
   });
 });

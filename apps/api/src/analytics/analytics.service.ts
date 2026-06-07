@@ -13,7 +13,9 @@ import {
   AnalyticsFunnelQueryDto,
   CreateAnalyticsFunnelDefinitionDto,
   CreateAnalyticsEventDto,
+  CreateAnalyticsGoalDto,
   UpdateAnalyticsFunnelDefinitionDto,
+  UpdateAnalyticsGoalDto,
 } from './analytics.dto';
 
 type AnalyticsEventInput = CreateAnalyticsEventDto & {
@@ -287,6 +289,83 @@ export class AnalyticsService {
     });
   }
 
+  goals(includeHidden = false) {
+    return this.prisma.analyticsGoal.findMany({
+      where: {
+        deletedAt: null,
+        ...(includeHidden ? {} : { visible: true }),
+      },
+      orderBy: [{ order: 'asc' }, { updatedAt: 'desc' }],
+    });
+  }
+
+  async goalProgress(filters: AnalyticsDateRangeQueryDto = {}) {
+    const goals = await this.goals(false);
+    const dateWhere = this.dateRangeWhere(filters);
+    const counts = await Promise.all(
+      goals.map((goal) =>
+        this.prisma.analyticsEvent.count({
+          where: { ...dateWhere, type: goal.eventType },
+        }),
+      ),
+    );
+
+    return goals.map((goal, index) => {
+      const count = counts[index] || 0;
+      return {
+        ...goal,
+        count,
+        progressRate: this.percent(count, goal.targetCount),
+        achieved: count >= goal.targetCount,
+      };
+    });
+  }
+
+  createGoal(dto: CreateAnalyticsGoalDto) {
+    return this.prisma.analyticsGoal.create({
+      data: {
+        key: dto.key.trim(),
+        name: dto.name.trim(),
+        description: this.optionalTrim(dto.description),
+        eventType: dto.eventType.trim(),
+        targetCount: dto.targetCount,
+        period: dto.period ?? 'monthly',
+        visible: dto.visible ?? true,
+        order: dto.order ?? 0,
+      },
+    });
+  }
+
+  async updateGoal(id: string, dto: UpdateAnalyticsGoalDto) {
+    await this.findGoal(id);
+    return this.prisma.analyticsGoal.update({
+      where: { id },
+      data: {
+        ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
+        ...(dto.description !== undefined
+          ? { description: this.optionalTrim(dto.description) }
+          : {}),
+        ...(dto.eventType !== undefined
+          ? { eventType: dto.eventType.trim() }
+          : {}),
+        ...(dto.targetCount !== undefined
+          ? { targetCount: dto.targetCount }
+          : {}),
+        ...(dto.period !== undefined ? { period: dto.period } : {}),
+        ...(dto.visible !== undefined ? { visible: dto.visible } : {}),
+        ...(dto.order !== undefined ? { order: dto.order } : {}),
+      },
+    });
+  }
+
+  async removeGoal(id: string) {
+    await this.findGoal(id);
+    return this.prisma.analyticsGoal.update({
+      where: { id },
+      data: { deletedAt: new Date(), visible: false },
+    });
+  }
+
   private async customFunnel(filters: AnalyticsFunnelQueryDto) {
     const steps = this.funnelStepDefinitions(filters.steps);
     const dateWhere = this.dateRangeWhere(filters);
@@ -435,6 +514,16 @@ export class AnalyticsService {
       throw new NotFoundException('Analytics funnel definition not found');
     }
     return definition;
+  }
+
+  private async findGoal(id: string) {
+    const goal = await this.prisma.analyticsGoal.findUnique({
+      where: { id },
+    });
+    if (!goal || goal.deletedAt) {
+      throw new NotFoundException('Analytics goal not found');
+    }
+    return goal;
   }
 
   private optionalTrim(value?: string) {

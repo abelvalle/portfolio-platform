@@ -503,6 +503,24 @@ model AnalyticsFunnelDefinition {
   deletedAt   DateTime?
 }
 
+model AnalyticsGoal {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  name        String
+  description String?
+  eventType   String
+  targetCount Int
+  period      String    @default("monthly")
+  visible     Boolean   @default(true)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([visible, order])
+  @@index([eventType])
+}
+
 model IntegrationAccount {
   id           String    @id @default(cuid())
   provider     String

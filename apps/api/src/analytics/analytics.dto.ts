@@ -4,6 +4,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -137,6 +138,102 @@ export class UpdateAnalyticsFunnelDefinitionDto {
   @IsString({ each: true })
   @Matches(/^[a-z0-9_-]{1,80}$/, { each: true })
   steps?: string[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  visible?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  order?: number;
+}
+
+const analyticsGoalPeriods = [
+  'daily',
+  'weekly',
+  'monthly',
+  'quarterly',
+  'custom',
+];
+
+export class CreateAnalyticsGoalDto {
+  @ApiProperty({ example: 'monthly-cv-downloads' })
+  @IsString()
+  @Matches(/^[a-z0-9-]{1,80}$/)
+  key!: string;
+
+  @ApiProperty({ example: 'Descargas CV mensuales' })
+  @IsString()
+  @MaxLength(120)
+  name!: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  description?: string;
+
+  @ApiProperty({ example: 'cv_download' })
+  @IsString()
+  @Matches(/^[a-z0-9_-]{1,80}$/)
+  eventType!: string;
+
+  @ApiProperty({ example: 20 })
+  @IsInt()
+  @Min(1)
+  targetCount!: number;
+
+  @ApiProperty({ required: false, default: 'monthly' })
+  @IsOptional()
+  @IsString()
+  @IsIn(analyticsGoalPeriods)
+  period?: string;
+
+  @ApiProperty({ required: false, default: true })
+  @IsOptional()
+  @IsBoolean()
+  visible?: boolean;
+
+  @ApiProperty({ required: false, default: 0 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  order?: number;
+}
+
+export class UpdateAnalyticsGoalDto {
+  @ApiProperty({ required: false, example: 'Descargas CV mensuales' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  name?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  description?: string;
+
+  @ApiProperty({ required: false, example: 'cv_download' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-z0-9_-]{1,80}$/)
+  eventType?: string;
+
+  @ApiProperty({ required: false, example: 20 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  targetCount?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @IsIn(analyticsGoalPeriods)
+  period?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
