@@ -91,6 +91,10 @@ npm run test
 npm run test:e2e
 ```
 
+## CI
+
+GitHub Actions ejecuta una puerta base sobre `develop` y `master`: `npm ci`, `db:generate`, lint, tests, build y validacion de Docker Compose. Los e2e con navegador o PostgreSQL real quedan como validacion manual/operativa para no depender de servicios externos en cada push.
+
 E2E opcional con PostgreSQL real para generacion/descarga de CV:
 
 ```powershell

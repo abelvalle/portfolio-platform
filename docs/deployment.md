@@ -108,3 +108,16 @@ npm run docker:up
 Adminer queda disponible en `http://localhost:8080`.
 
 Para ejecutar la prueba e2e opcional con base de datos real, levanta primero Docker Desktop y PostgreSQL con `npm run docker:up`. Si usas una instancia Postgres local distinta, actualiza `DATABASE_URL` con credenciales reales antes de ejecutar `RUN_DB_E2E=true npm run test:e2e:db`.
+
+## CI/CD
+
+`.github/workflows/ci.yml` protege `develop` y `master` con una suite base de GitHub Actions:
+
+- `npm ci`
+- `npm run db:generate`
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+- `docker compose -f infra/docker-compose.yml config`
+
+Los e2e con navegador y los e2e con PostgreSQL real se mantienen como validaciones manuales o de entorno dedicado hasta disponer de credenciales/servicios estables en CI.

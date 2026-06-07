@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:01 CEST.
+Estado actualizado: 2026-06-07 08:06 CEST.
 
 ## Hitos completados
 
@@ -5121,6 +5121,21 @@ Verificacion realizada en este hito:
 
 - `node -e "const fs=require('fs'); JSON.parse(fs.readFileSync('apps/web/vercel.json','utf8')); console.log('vercel json ok')"`
 - `npm.cmd run build:web`
+- `git diff --check`
+
+### CI GitHub Actions baseline
+
+- Anadido `.github/workflows/ci.yml` para proteger `develop` y `master` en push y pull request.
+- La suite base instala dependencias limpias, genera Prisma Client, ejecuta lint, tests, build y valida `infra/docker-compose.yml`.
+- README y `docs/deployment.md` documentan el alcance de CI y dejan los e2e con navegador/PostgreSQL real como validaciones de entorno dedicado.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run db:generate`
+- `npm.cmd run lint`
+- `npm.cmd run test`
+- `npm.cmd run build`
+- `docker compose -f infra/docker-compose.yml config`
 - `git diff --check`
 
 ## Deuda técnica abierta
