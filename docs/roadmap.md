@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 04:50 CEST.
+Estado actualizado: 2026-06-07 04:54 CEST.
 
 ## Hitos completados
 
@@ -4467,9 +4467,22 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 
+### Seed i18n publico ampliado
+
+- El seed `TranslationEntry` cubre ahora microcopy publico ES/EN para intro, hero, command palette, about, experiencia, proyectos, etiquetas de educacion, contacto y CV online.
+- Las nuevas entradas salen del fallback `publicCopy` existente, sin inventar contenido profesional.
+- No se siembran todavia labels de `sections` porque el merge actual no escribe dentro de arrays.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `$env:DATABASE_URL='postgresql://user:pass@localhost:5432/portfolio'; npx.cmd prisma validate` en `apps/api`
+- `npx.cmd tsc --noEmit --pretty false --target es2022 --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck prisma/seed.ts` en `apps/api`
+
 ## Deuda técnica abierta
 
-- Persistencia i18n en backend/CMS: ya existe modelo/API/seed y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online consumen el diccionario anidado publico con fallback local. Falta ampliar seed/editor a todas las microcopias y secciones complejas antes de retirar completamente el fallback.
+- Persistencia i18n en backend/CMS: ya existe modelo/API/seed ampliado y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online consumen el diccionario anidado publico con fallback local. Falta soportar secciones complejas como arrays (`sections`) antes de retirar completamente el fallback.
 - Traducción de CV generado/exportado: las etiquetas PDF/DOCX ya se localizan por `CvVersion.language`; falta traducir contenido profesional cuando exista una versión estructurada EN aprobada en backend/CMS.
 - Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side, guard de overflow HTML, smoke de PDF real, diff visual automatizado contra PDF rasterizado, paginacion print para CV largos y saltos manuales `page-break`; DOCX comparte orden de bloques, tiene smoke real de paquete Word y valida metadatos ricos dentro de `word/document.xml`, aunque sigue usando renderer propio.
 - QA de guardado autenticado: `PATCH /theme` ya tiene contrato HTTP e2e con guards mockeados, validacion real y saneamiento de payload; falta prueba e2e desde UI con API real, sesion admin y persistencia DB.
