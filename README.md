@@ -127,6 +127,7 @@ Incluye:
 - Frontend: Vercel.
 - Backend: Render, Fly.io o Railway.
 - DB: PostgreSQL gestionado.
+- Render backend: Blueprint opcional en `infra/render.yaml`.
 
 Ver [deployment.md](docs/deployment.md).
 

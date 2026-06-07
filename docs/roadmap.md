@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 07:55 CEST.
+Estado actualizado: 2026-06-07 07:58 CEST.
 
 ## Hitos completados
 
@@ -5097,6 +5097,19 @@ Verificacion realizada en este hito:
 Verificacion realizada en este hito:
 
 - `docker compose -f infra/docker-compose.yml config`
+
+### Blueprint Render backend
+
+- Anadido `infra/render.yaml` para desplegar la API como servicio Docker y PostgreSQL gestionado en Render.
+- El Blueprint usa `dockerfilePath`, `dockerContext` y `healthCheckPath: /api/v1/health/live`.
+- Los secretos quedan marcados con `sync: false` para cargarlos fuera del repositorio.
+- README y `docs/deployment.md` enlazan el Blueprint y explican el `Blueprint Path`.
+
+Verificacion realizada en este hito:
+
+- `git diff --check`
+- `Get-Content -Path infra/render.yaml`
+- `render --version` (no disponible en esta maquina; validacion oficial pendiente con Render CLI/panel/API)
 
 ## Deuda técnica abierta
 

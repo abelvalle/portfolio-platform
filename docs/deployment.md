@@ -51,6 +51,10 @@ Health checks:
 - Liveness: `GET /api/v1/health/live`
 - Readiness: `GET /api/v1/health/ready` comprueba Prisma/PostgreSQL y devuelve 503 si la base de datos no responde.
 
+### Render Blueprint
+
+`infra/render.yaml` define un Blueprint para desplegar el backend Docker y una base de datos PostgreSQL gestionada. En Render, usa `infra/render.yaml` como Blueprint Path. Los secretos quedan con `sync: false`; debes cargarlos en el panel o gestor de secretos antes de publicar.
+
 Si configuras `MEDIA_EXTERNAL_SCAN_URL`, valida el proveedor desde `/admin/media` con `Probar scanner`; la prueba usa un archivo sintetico y no escribe nada en storage.
 
 ### Worker de reintentos webhook
