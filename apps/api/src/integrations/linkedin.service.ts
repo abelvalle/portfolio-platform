@@ -15,12 +15,20 @@ export class LinkedinService {
   ) {}
 
   async status() {
-    const profile = await this.prisma.profile.findFirst();
+    const [profile, account] = await Promise.all([
+      this.prisma.profile.findFirst(),
+      this.prisma.integrationAccount.findFirst({
+        where: { provider: 'linkedin', deletedAt: null },
+        orderBy: { lastSyncedAt: 'desc' },
+      }),
+    ]);
     return {
       configured: this.isOauthConfigured(),
       profileUrl: profile?.linkedin || null,
       scopes: ['openid', 'profile', 'email'],
       shareEnabled: Boolean(profile?.linkedin),
+      connected: Boolean(account),
+      lastSyncedAt: account?.lastSyncedAt ?? null,
     };
   }
 
@@ -50,6 +58,11 @@ export class LinkedinService {
 
     const token = await this.exchangeCode(code);
     const profile = await this.fetchUserInfo(token.access_token);
+    const account = await this.persistProfile(profile, {
+      state,
+      expiresIn: token.expires_in,
+      scope: token.scope,
+    });
 
     return {
       configured: true,
@@ -58,6 +71,11 @@ export class LinkedinService {
       expiresIn: token.expires_in ?? null,
       scope: token.scope ?? null,
       profile,
+      account: {
+        id: account.id,
+        provider: account.provider,
+        lastSyncedAt: account.lastSyncedAt,
+      },
     };
   }
 
@@ -138,6 +156,62 @@ export class LinkedinService {
       name: payload.name || null,
       email: payload.email || null,
       picture: payload.picture || null,
+    };
+  }
+
+  private persistProfile(
+    profile: {
+      sub: string | null;
+      name: string | null;
+      email: string | null;
+      picture: string | null;
+    },
+    metadata: { state?: string; expiresIn?: number; scope?: string },
+  ) {
+    const externalId = profile.sub || profile.email;
+    if (!externalId) {
+      throw new BadRequestException(
+        'LinkedIn profile missing stable identifier',
+      );
+    }
+    const now = new Date();
+    return this.prisma.integrationAccount.upsert({
+      where: {
+        provider_externalId: {
+          provider: 'linkedin',
+          externalId,
+        },
+      },
+      create: {
+        provider: 'linkedin',
+        externalId,
+        displayName: profile.name,
+        email: profile.email,
+        pictureUrl: profile.picture,
+        metadata: this.cleanMetadata(metadata),
+        connectedAt: now,
+        lastSyncedAt: now,
+      },
+      update: {
+        displayName: profile.name,
+        email: profile.email,
+        pictureUrl: profile.picture,
+        metadata: this.cleanMetadata(metadata),
+        lastSyncedAt: now,
+        deletedAt: null,
+      },
+    });
+  }
+
+  private cleanMetadata(metadata: {
+    state?: string;
+    expiresIn?: number;
+    scope?: string;
+  }) {
+    return {
+      state: metadata.state || null,
+      expiresIn: metadata.expiresIn ?? null,
+      scope: metadata.scope || null,
     };
   }
 }

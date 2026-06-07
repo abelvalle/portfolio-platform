@@ -9,6 +9,14 @@ describe('LinkedinService', () => {
         linkedin: 'https://www.linkedin.com/in/abelvros/',
       }),
     },
+    integrationAccount: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      upsert: jest.fn().mockResolvedValue({
+        id: 'integration-linkedin-1',
+        provider: 'linkedin',
+        lastSyncedAt: new Date('2026-06-07T08:00:00.000Z'),
+      }),
+    },
   };
 
   it('reports OAuth as not configured without secrets', async () => {
@@ -21,6 +29,8 @@ describe('LinkedinService', () => {
       configured: false,
       profileUrl: 'https://www.linkedin.com/in/abelvros/',
       shareEnabled: true,
+      connected: false,
+      lastSyncedAt: null,
     });
   });
 
@@ -96,6 +106,39 @@ describe('LinkedinService', () => {
         headers: { Authorization: 'Bearer linkedin-access-token' },
       }),
     );
+    expect(prisma.integrationAccount.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          provider_externalId: {
+            provider: 'linkedin',
+            externalId: 'linkedin-user',
+          },
+        },
+        create: expect.objectContaining({
+          provider: 'linkedin',
+          externalId: 'linkedin-user',
+          displayName: 'Abel Valle Rosa',
+          email: 'abel@example.com',
+          pictureUrl: 'https://media.example.com/abel.jpg',
+          metadata: {
+            state: 'state-123',
+            expiresIn: 3600,
+            scope: 'openid profile email',
+          },
+        }),
+        update: expect.objectContaining({
+          displayName: 'Abel Valle Rosa',
+          email: 'abel@example.com',
+          pictureUrl: 'https://media.example.com/abel.jpg',
+          metadata: {
+            state: 'state-123',
+            expiresIn: 3600,
+            scope: 'openid profile email',
+          },
+          deletedAt: null,
+        }),
+      }),
+    );
     expect(result).toEqual({
       configured: true,
       status: 'connected',
@@ -108,12 +151,21 @@ describe('LinkedinService', () => {
         email: 'abel@example.com',
         picture: 'https://media.example.com/abel.jpg',
       },
+      account: {
+        id: 'integration-linkedin-1',
+        provider: 'linkedin',
+        lastSyncedAt: new Date('2026-06-07T08:00:00.000Z'),
+      },
     });
     expect(JSON.stringify(result)).not.toContain('linkedin-access-token');
+    expect(
+      JSON.stringify(prisma.integrationAccount.upsert.mock.calls),
+    ).not.toContain('linkedin-access-token');
   });
 
   afterEach(() => {
     global.fetch = originalFetch;
+    jest.clearAllMocks();
   });
 });
 

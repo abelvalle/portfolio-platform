@@ -448,6 +448,25 @@ model AnalyticsEvent {
   createdAt DateTime @default(now())
 }
 
+model IntegrationAccount {
+  id           String    @id @default(cuid())
+  provider     String
+  externalId   String
+  displayName  String?
+  email        String?
+  pictureUrl   String?
+  profileUrl   String?
+  metadata     Json?
+  connectedAt  DateTime  @default(now())
+  lastSyncedAt DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@unique([provider, externalId])
+  @@index([provider])
+}
+
 model AppModule {
   id          String   @id @default(cuid())
   key         String   @unique

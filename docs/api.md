@@ -310,10 +310,10 @@ Endpoints admin de webhook:
 
 ### LinkedIn
 
-- `GET /integrations/linkedin/status`: devuelve si OAuth está configurado, URL de perfil y scopes previstos.
+- `GET /integrations/linkedin/status`: devuelve si OAuth está configurado, URL de perfil, scopes previstos, si existe cuenta sincronizada y `lastSyncedAt` sin exponer email ni tokens.
 - `GET /integrations/linkedin/share-url?path=/cv`: construye una URL de compartir en LinkedIn para una ruta pública.
 - `GET /integrations/linkedin/auth-url`: protegido con `manage_integrations`; construye URL OAuth si `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` y `LINKEDIN_REDIRECT_URI` están configurados.
-- `GET /integrations/linkedin/callback?code=...&state=...`: protegido con `manage_integrations`; intercambia el `code` por token, consulta OpenID `userinfo` y devuelve perfil sanitizado sin exponer el access token.
+- `GET /integrations/linkedin/callback?code=...&state=...`: protegido con `manage_integrations`; intercambia el `code` por token, consulta OpenID `userinfo`, persiste una `IntegrationAccount` con perfil sanitizado y devuelve perfil/cuenta sin exponer el access token.
 
 Sin credenciales LinkedIn, el sistema mantiene integración pública mediante enlace de perfil y share URL.
 
