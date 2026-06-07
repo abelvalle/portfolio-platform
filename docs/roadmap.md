@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 10:16 CEST.
+Estado actualizado: 2026-06-07 10:22 CEST.
 
 ## Hitos completados
 
@@ -5596,6 +5596,23 @@ Verificacion realizada en este hito:
 - `Select-String -Path .github/workflows/ci.yml,.github/workflows/codeql.yml -Pattern "actions/checkout"`
 - `gh run view 27087051764 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27087051746 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
+
+### Dependabot actions/setup-node v6
+
+- Fusionada por squash la PR #1 de Dependabot: `actions/setup-node` de `v4` a `v6`.
+- El cambio afecta solo a `.github/workflows/ci.yml`.
+- `develop` queda en el commit remoto `a88199c` tras el merge.
+- CI remoto valida `setup-node@v6` con cache npm, audit policy, Prisma, lint, tests, build, OpenAPI drift check y Docker Compose.
+
+Verificacion realizada en este hito:
+
+- `gh pr view 1 --repo abelvalle/portfolio-platform --json number,title,files,statusCheckRollup,mergeable`
+- `gh pr diff 1 --repo abelvalle/portfolio-platform`
+- `gh pr merge 1 --repo abelvalle/portfolio-platform --squash --delete-branch`
+- `Select-String -Path .github/workflows/ci.yml,.github/workflows/codeql.yml -Pattern "actions/setup-node|actions/checkout"`
+- `gh run view 27087157844 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27087157845 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
 
 ## Deuda técnica abierta
