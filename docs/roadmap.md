@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 11:16 CEST.
+Estado actualizado: 2026-06-07 11:21 CEST.
 
 ## Hitos completados
 
@@ -5773,6 +5773,23 @@ Verificacion realizada en este hito:
 - `gh run view 27088336251 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27088336252 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Guard build frontend API pública
+
+- Añadido `apps/web/scripts/check-public-api-url.mjs`.
+- El build del frontend ejecuta `prebuild` y exige `NEXT_PUBLIC_API_URL` absoluta, HTTP/HTTPS y no local.
+- CI inyecta `NEXT_PUBLIC_API_URL=https://api.example.com/api/v1` en el paso `Build` para mantener la compilacion reproducible sin apuntar a localhost.
+- README y deployment documentan el requisito para Vercel/despliegues reales.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run check:public-api-url` con `NEXT_PUBLIC_API_URL=https://api.example.com/api/v1`
+- `npm.cmd --prefix apps/web run check:public-api-url` sin `NEXT_PUBLIC_API_URL` comprobando fallo esperado
+- `npm.cmd --prefix apps/web run lint`
+- `node --check apps/web/scripts/check-public-api-url.mjs`
+- `npm.cmd run build:web` con `NEXT_PUBLIC_API_URL=https://api.example.com/api/v1`
+- `npm.cmd run build` con `NEXT_PUBLIC_API_URL=https://api.example.com/api/v1`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

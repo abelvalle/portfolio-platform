@@ -61,6 +61,11 @@ Variables opcionales de analitica:
 - `ANALYTICS_STORE_USER_AGENT=false`: evita guardar user-agent.
 - `ANALYTICS_RETENTION_DAYS`: dias de retencion antes de purgar eventos antiguos.
 
+Variables de frontend:
+
+- `NEXT_PUBLIC_API_URL`: URL absoluta de la API REST. Es obligatoria para builds de produccion del frontend y no puede apuntar a localhost.
+- `PUBLIC_SITE_URL`: URL publica del portfolio.
+
 Variables opcionales de media:
 
 - `MEDIA_STORAGE_PROVIDER=local`: proveedor activo; los adaptadores externos estan preparados pero aun no implementados.

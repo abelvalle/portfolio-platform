@@ -58,6 +58,8 @@ jobs:
         run: npm run test
 
       - name: Build
+        env:
+          NEXT_PUBLIC_API_URL: https://api.example.com/api/v1
         run: npm run build
 
       - name: Generate OpenAPI snapshot

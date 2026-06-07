@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run check:public-api-url",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "check:public-api-url": "node scripts/check-public-api-url.mjs",
     "test": "node -e \"console.log('web smoke ok')\"",
     "test:e2e": "playwright test"
   },
