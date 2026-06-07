@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:39 CEST.
+Estado actualizado: 2026-06-07 08:44 CEST.
 
 ## Hitos completados
 
@@ -5288,6 +5288,20 @@ Verificacion realizada en este hito:
 Verificacion realizada en este hito:
 
 - `npm.cmd install --workspace apps/web --save-optional lightningcss-linux-x64-gnu@1.32.0`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"`
+- `git diff --check`
+
+### Fix lock Linux para Tailwind Oxide
+
+- Diagnosticado fallo remoto restante: build/dev web en Ubuntu no encontraba `@tailwindcss/oxide-linux-x64-gnu`.
+- Anadida `@tailwindcss/oxide-linux-x64-gnu` como optional dependency explicita del frontend para que el lock incluya el paquete nativo Linux.
+- El fix completa la cobertura de dependencias opcionales nativas requeridas por Tailwind/Lightning CSS en runners Linux.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd install --workspace apps/web --save-optional @tailwindcss/oxide-linux-x64-gnu@4.3.0`
 - `npm.cmd --prefix apps/web run lint`
 - `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"`
