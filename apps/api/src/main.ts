@@ -5,7 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { parseCorsOrigins } from './common/config/cors.config';
-import { assertSafeProductionSecrets } from './common/config/production-secrets';
+import { assertSafeProductionConfig } from './common/config/production-secrets';
 import { isSwaggerEnabled } from './common/config/swagger.config';
 import { securityHeadersMiddleware } from './common/security/security-headers';
 
@@ -17,7 +17,7 @@ async function bootstrap() {
   );
   const nodeEnv = configService.get<string>('NODE_ENV');
 
-  assertSafeProductionSecrets(nodeEnv, (key) => configService.get<string>(key));
+  assertSafeProductionConfig(nodeEnv, (key) => configService.get<string>(key));
 
   app.setGlobalPrefix('api/v1');
   app.use(securityHeadersMiddleware);

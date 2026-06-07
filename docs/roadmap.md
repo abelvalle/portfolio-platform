@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:14 CEST.
+Estado actualizado: 2026-06-07 09:18 CEST.
 
 ## Hitos completados
 
@@ -5407,6 +5407,20 @@ Verificacion realizada en este hito:
 
 - `gh run view 27085788246 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Guard CORS de produccion
+
+- El bootstrap de la API usa `assertSafeProductionConfig` para validar secretos y configuracion runtime antes de abrir CORS.
+- En `NODE_ENV=production`, `API_CORS_ORIGIN` ya no puede faltar ni apuntar a `localhost`, `127.0.0.1` o `[::1]`.
+- El guard mantiene los nombres de claves inseguras en el error sin exponer valores sensibles.
+- README y deployment documentan el bloqueo de origenes locales en produccion.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- production-secrets.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `git diff --check`
 
 ## Deuda técnica abierta
 
