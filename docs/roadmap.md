@@ -4393,6 +4393,17 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:api`
 - `npm.cmd run build:web`
 
+### Suite raiz tras cola webhook
+
+- Ejecutada la suite raiz despues de la cola persistente de reintentos webhook.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `27` suites y `141` tests, smoke web y build Next/Nest correctos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ya existe modelo/API/seed y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online leen traducciones publicas con fallback local. Falta ampliar seed/editor a todas las microcopias y secciones complejas antes de retirar completamente el fallback.
