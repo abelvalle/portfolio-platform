@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 05:36 CEST.
+Estado actualizado: 2026-06-07 05:39 CEST.
 
 ## Hitos completados
 
@@ -4684,6 +4684,18 @@ Verificacion realizada en este hito:
 Verificacion realizada en este hito:
 
 - Revisión documental de `docs/deployment.md`
+
+### Contrato HTTP privacy Analytics
+
+- Añadido e2e de `AnalyticsController` para `GET /analytics/privacy`.
+- La prueba cubre `retentionWorkerEnabled` y `retentionWorkerIntervalMs` sin exponer datos sensibles.
+- El mismo spec valida `POST /analytics/retention/prune` con guards mockeados.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test:e2e -- analytics.e2e-spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
 
 ## Deuda técnica abierta
 
