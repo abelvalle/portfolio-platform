@@ -2196,6 +2196,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Seguridad admin")).toBeVisible();
   await expect(page.getByText("Webhooks contacto")).toBeVisible();
   await expect(page.getByText("Validacion guiada de secreto")).toBeVisible();
+  await expect(page.getByText("Rotacion guiada")).toBeVisible();
+  await expect(page.getByText("pendiente de validacion")).toBeVisible();
   await page.getByLabel("Secreto candidato").fill("secret-value");
   const webhookSecretValidationRequest = page.waitForRequest((request) => {
     if (!request.url().endsWith("/api/v1/contact-messages/webhook/secret/validate") || request.method() !== "POST") {
@@ -2208,6 +2210,8 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await webhookSecretValidationRequest;
   await expect(page.getByText("Secreto webhook validado correctamente.")).toBeVisible();
   await expect(page.getByLabel("Secreto candidato")).toHaveValue("");
+  await expect(page.getByText("nuevo valor validado")).toBeVisible();
+  await expect(page.getByText("Ultima validacion: correcta")).toBeVisible();
   await expect(page.getByText("Ultimas entregas webhook")).toBeVisible();
   await expect(page.getByText("Reintentos: 2 cada 30000 ms")).toBeVisible();
   await expect(page.getByText("contact.message.created", { exact: true }).first()).toBeVisible();

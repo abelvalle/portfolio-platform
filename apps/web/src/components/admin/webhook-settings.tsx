@@ -19,6 +19,14 @@ const emptySettingsDraft = {
   retryDelayMs: 30000
 };
 
+const rotationSteps = [
+  "Preparar nuevo CONTACT_WEBHOOK_SECRET en el gestor de secretos del proveedor.",
+  "Desplegar backend con el nuevo valor y mantener URL/eventos sin cambios.",
+  "Validar el nuevo valor con el campo de secreto candidato.",
+  "Enviar evento de prueba y revisar entregas recientes.",
+  "Retirar el secreto anterior del proveedor externo."
+];
+
 export function WebhookSettings() {
   const [status, setStatus] = useState<ContactWebhookStatus | null>(null);
   const [settings, setSettings] = useState<ContactWebhookSettings | null>(null);
@@ -198,6 +206,30 @@ export function WebhookSettings() {
             <Badge variant="outline">{secretValidation?.signatureHeader || "X-Portfolio-Signature"}</Badge>
             <Badge variant="outline">{secretValidation?.algorithm || "hmac-sha256"}</Badge>
             <Badge variant="outline">valor no persistido</Badge>
+          </div>
+        </div>
+        <div className="grid gap-3 rounded-lg border border-border/60 p-4" aria-label="Rotacion guiada webhook">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">Rotacion guiada</p>
+              <p className="text-xs text-muted-foreground">Checklist operativo para cambiar `CONTACT_WEBHOOK_SECRET` sin guardarlo en la base de datos.</p>
+            </div>
+            <Badge variant={secretValidation?.valid ? "default" : "outline"}>
+              {secretValidation?.valid ? "nuevo valor validado" : "pendiente de validacion"}
+            </Badge>
+          </div>
+          <div className="grid gap-2 text-sm">
+            {rotationSteps.map((step, index) => (
+              <div key={step} className="flex gap-3 rounded-md bg-muted/40 px-3 py-2">
+                <Badge variant="outline">{index + 1}</Badge>
+                <span>{step}</span>
+              </div>
+            ))}
+          </div>
+          <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+            <span>Secreto activo: {status?.hasSecret ? "si" : "no"}</span>
+            <span>URL activa: {settingsDraft.url ? "si" : "no"}</span>
+            <span>Ultima validacion: {secretValidation ? (secretValidation.valid ? "correcta" : "fallida") : "sin ejecutar"}</span>
           </div>
         </div>
         <div className="grid gap-3 rounded-lg border border-border/60 p-4">

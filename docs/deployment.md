@@ -53,6 +53,16 @@ En un despliegue con varias replicas, usa una sola de estas opciones:
 
 El secreto HMAC de webhooks sigue viviendo en `CONTACT_WEBHOOK_SECRET`; no se guarda en base de datos ni se expone desde la API.
 
+### Rotacion de secreto webhook
+
+El panel admin muestra un checklist de rotacion y permite validar un candidato contra `CONTACT_WEBHOOK_SECRET`, pero no guarda secretos. Flujo recomendado:
+
+1. Crear el nuevo valor en el gestor de secretos del proveedor.
+2. Desplegar el backend con el nuevo `CONTACT_WEBHOOK_SECRET`.
+3. Validar el candidato desde `/admin/settings`.
+4. Enviar `contact.webhook.test` desde el panel y revisar entregas recientes.
+5. Retirar el secreto anterior del proveedor externo.
+
 ### Worker de retencion Analytics
 
 Si `ANALYTICS_RETENTION_DAYS` esta configurado, `ANALYTICS_RETENTION_WORKER_ENABLED=true` activa una purga periodica interna de eventos antiguos.

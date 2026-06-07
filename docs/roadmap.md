@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 06:58 CEST.
+Estado actualizado: 2026-06-07 07:02 CEST.
 
 ## Hitos completados
 
@@ -4895,6 +4895,19 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 
+### Rotacion guiada de secreto webhook
+
+- `/admin/settings` muestra checklist operativo para rotar `CONTACT_WEBHOOK_SECRET` sin guardar secretos.
+- La guia reutiliza la validacion segura del secreto candidato y muestra estado de URL, secreto activo y ultima validacion.
+- `docs/deployment.md` documenta el flujo recomendado de rotacion HMAC.
+- El e2e admin valida la guia antes y despues de validar el secreto.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "admin"`
+
 ## Deuda técnica abierta
 
 - Build web: Next/Node emite `DEP0205 module.register()` durante `npm.cmd run build`; no bloquea produccion, pero conviene revisarlo cuando Next actualice su runtime o cuando se suba la version de Node.
@@ -4908,7 +4921,7 @@ Verificacion realizada en este hito:
 - Roles objetivo CV: la pantalla admin permite CRUD, el wizard los usa como precarga, el backend persiste el rol elegido y analytics registra/expone uso agregado por rol objetivo, ruta y version base mediante `cv_adaptation` + `analytics/labels`, ya visible en `/admin/analytics`; faltan desgloses historicos avanzados por oferta sin guardar contenido sensible.
 - Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; el historial agregado de publicaciones CV queda visible desde Versiones CV.
 - Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, version/recurso, fecha y usuario, con timeline visual por version, historial agregado de publicaciones CV, detalle por evento, exportacion CSV visible y exportacion server-side del historico filtrado; falta analitica comparativa avanzada de cambios entre publicaciones.
-- Webhooks configuracion editable: URL/eventos/timeouts/reintentos ya se editan desde admin y persisten en DB; el secreto HMAC sigue viviendo en variables de entorno por seguridad y puede validarse desde admin sin guardarlo ni exponerlo. Falta soporte de rotacion guiada si se decide gestionar secretos fuera de `.env`.
+- Webhooks configuracion editable: URL/eventos/timeouts/reintentos ya se editan desde admin y persisten en DB; el secreto HMAC sigue viviendo en variables de entorno por seguridad, puede validarse desde admin sin guardarlo ni exponerlo y tiene checklist de rotacion guiada en panel/deployment.
 - Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido, settings persistentes, cola `ContactWebhookRetryJob`, procesamiento admin, worker interno configurable, estado visible en admin, fallback local solo cuando el worker esta desactivado, guia de despliegue single/multi-replica, endpoint de cron externo con secreto dedicado y auditoria saneada del cron; falta solo configurar un scheduler externo real en la plataforma de despliegue si se decide no usar worker dedicado.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side, accion masiva filtrada de leido/no leido y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención manual, worker periodico y guía de deployment multi-replica, segmentación fuente/canal, embudo basico, presets UI de embudo configurable por API, embudo multicanal por fuente/canal desde UI, definiciones persistentes de embudos creadas/editadas desde admin y objetivos KPI persistentes simples/compuestos con progreso, restantes y alertas basicas por rango.
