@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 05:10 CEST.
+Estado actualizado: 2026-06-07 05:12 CEST.
 
 ## Hitos completados
 
@@ -4565,6 +4565,18 @@ Verificacion realizada en este hito:
 - `npm.cmd audit --audit-level=moderate` (falla por deuda conocida `next`/`postcss`)
 - `npm.cmd view next@latest version dependencies.postcss`
 - `npm.cmd ls next postcss --workspace apps/web`
+
+### Contrato HTTP de estado worker webhook
+
+- El e2e de `ContactMessagesController` valida `GET /contact-messages/webhook/status`.
+- La prueba cubre `retryWorkerEnabled` y `retryWorkerIntervalMs` sin exponer secretos.
+- El contrato queda alineado con la card admin de webhooks.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test:e2e -- contact-webhook.e2e-spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
 
 ## Deuda técnica abierta
 

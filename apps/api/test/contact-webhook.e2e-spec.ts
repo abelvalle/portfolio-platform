@@ -39,7 +39,17 @@ describe('Contact webhook settings (e2e)', () => {
         hasSecret: true,
         source: 'database',
       }),
-      status: jest.fn(),
+      status: jest.fn().mockResolvedValue({
+        configured: true,
+        hasSecret: true,
+        event: 'contact.message.created',
+        testEvent: 'contact.webhook.test',
+        timeoutMs: 5000,
+        retryAttempts: 2,
+        retryDelayMs: 30000,
+        retryWorkerEnabled: true,
+        retryWorkerIntervalMs: 60000,
+      }),
       testDispatch: jest.fn(),
       updateSettings: jest.fn().mockImplementation((data) => ({
         id: 'settings-1',
@@ -88,6 +98,23 @@ describe('Contact webhook settings (e2e)', () => {
         hasSecret: true,
         source: 'database',
         url: 'https://example.com/webhook',
+      }),
+    );
+    expect(JSON.stringify(response.body)).not.toContain('secret-value');
+  });
+
+  it('returns webhook status with retry worker metadata', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/contact-messages/webhook/status')
+      .expect(200);
+
+    expect(contactWebhookService.status).toHaveBeenCalled();
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        configured: true,
+        hasSecret: true,
+        retryWorkerEnabled: true,
+        retryWorkerIntervalMs: 60000,
       }),
     );
     expect(JSON.stringify(response.body)).not.toContain('secret-value');
