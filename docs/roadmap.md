@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 04:46 CEST.
+Estado actualizado: 2026-06-07 04:50 CEST.
 
 ## Hitos completados
 
@@ -4455,6 +4455,17 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run test -- contact-webhook.service.spec.ts`
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
+
+### Suite raiz tras i18n y worker webhook
+
+- Ejecutada la suite raiz despues del diccionario i18n backend/frontend, contrato admin y worker interno de reintentos webhook.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `28` suites y `144` tests, smoke web y build Next/Nest correctos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
 
 ## Deuda técnica abierta
 
