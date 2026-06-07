@@ -33,6 +33,6 @@
     "install:all": "npm --prefix apps/api install && npm --prefix apps/web install"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^10.0.3"
   }
 }
