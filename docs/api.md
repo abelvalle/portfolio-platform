@@ -346,6 +346,8 @@ Cada intento de entrega o prueba de webhook registra un `AuditLog` con evento, e
 
 Si falla una entrega de `contact.message.created`, el backend puede reintentar de forma diferida reconstruyendo el payload desde el mensaje persistido. La política se controla con `CONTACT_WEBHOOK_RETRY_ATTEMPTS` y `CONTACT_WEBHOOK_RETRY_DELAY_MS`.
 
+El worker interno `ContactWebhookRetryWorker` procesa periodicamente jobs pendientes de `ContactWebhookRetryJob`. Se controla con `CONTACT_WEBHOOK_RETRY_WORKER_ENABLED` (`true` por defecto) y `CONTACT_WEBHOOK_RETRY_WORKER_INTERVAL_MS` (60000 ms por defecto). En despliegues con varias replicas puede dejarse activo solo en una instancia o desactivarse para delegar en cron externo.
+
 Privacidad de contacto:
 
 - `CONTACT_IP_HASH_SALT`: sal opcional para el hash de IP.

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 04:43 CEST.
+Estado actualizado: 2026-06-07 04:46 CEST.
 
 ## Hitos completados
 
@@ -4442,6 +4442,20 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 
+### Worker interno de reintentos webhook
+
+- Añadido `ContactWebhookRetryWorker` como provider Nest dentro de `ContactMessagesModule`.
+- El worker procesa periodicamente `ContactWebhookRetryJob` pendientes mediante `ContactWebhookService.processDueRetries`.
+- Se controla con `CONTACT_WEBHOOK_RETRY_WORKER_ENABLED` y `CONTACT_WEBHOOK_RETRY_WORKER_INTERVAL_MS`.
+- El intervalo se limpia en `onModuleDestroy` y usa `unref` para no retener procesos de test/CLI.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- contact-webhook-retry.worker.spec.ts`
+- `npm.cmd --prefix apps/api run test -- contact-webhook.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ya existe modelo/API/seed y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online consumen el diccionario anidado publico con fallback local. Falta ampliar seed/editor a todas las microcopias y secciones complejas antes de retirar completamente el fallback.
@@ -4455,7 +4469,7 @@ Verificacion realizada en este hito:
 - Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; el historial agregado de publicaciones CV queda visible desde Versiones CV.
 - Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, version/recurso, fecha y usuario, con timeline visual por version, historial agregado de publicaciones CV, detalle por evento, exportacion CSV visible y exportacion server-side del historico filtrado; falta analitica comparativa avanzada de cambios entre publicaciones.
 - Webhooks configuracion editable: URL/eventos/timeouts/reintentos ya se editan desde admin y persisten en DB; el secreto HMAC sigue viviendo en variables de entorno por seguridad. Falta soporte de rotacion/validacion guiada de secreto si se decide gestionar secretos fuera de `.env`.
-- Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido, settings persistentes y cola `ContactWebhookRetryJob` procesable desde admin; falta worker/cron dedicado si se requiere ejecucion automatica tras reinicio sin intervencion manual.
+- Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido, settings persistentes, cola `ContactWebhookRetryJob`, procesamiento admin y worker interno configurable; falta decidir si en produccion multi-replica se delega a un cron externo o se deja activo en una sola instancia.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side, accion masiva filtrada de leido/no leido y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal, embudo basico, presets UI de embudo configurable por API, embudo multicanal por fuente/canal desde UI y definiciones persistentes de embudos creadas/editadas desde admin; faltan objetivos persistentes mas ricos si se definen nuevos KPIs de negocio.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa, cohorts mensuales, cohorts por fuente/canal y comparativas contra mes previo; faltan desgloses mas ricos si se definen nuevos objetivos de negocio.
