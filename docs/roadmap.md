@@ -4108,6 +4108,18 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
 
+### Saneamiento de escrituras AppModule
+
+- `ResourcesService` filtra campos permitidos en `appModule` para evitar mass assignment sobre `id`, `key` y timestamps en actualizaciones.
+- La creacion de modulos conserva `key/name/description/enabled/order`, mientras la actualizacion solo acepta campos operativos editables.
+- Añadidos tests unitarios para creacion segura y actualizacion protegida.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- resources.service.spec.ts resource-controller.factory.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.

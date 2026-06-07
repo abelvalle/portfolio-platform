@@ -37,6 +37,19 @@ const VISIBLE_MODELS = new Set([
   'pageSection',
   'cvTemplate',
 ]);
+const APP_MODULE_CREATE_KEYS = new Set([
+  'key',
+  'name',
+  'description',
+  'enabled',
+  'order',
+]);
+const APP_MODULE_UPDATE_KEYS = new Set([
+  'name',
+  'description',
+  'enabled',
+  'order',
+]);
 
 @Injectable()
 export class ResourcesService {
@@ -69,14 +82,16 @@ export class ResourcesService {
   }
 
   async create(model: string, data: Record<string, unknown>) {
-    return this.delegate(model).create({ data: this.normalizeDates(data) });
+    return this.delegate(model).create({
+      data: this.normalizeDates(this.sanitizeCreateData(model, data)),
+    });
   }
 
   async update(model: string, id: string, data: Record<string, unknown>) {
     await this.findOne(model, id);
     return this.delegate(model).update({
       where: { id },
-      data: this.normalizeDates(data),
+      data: this.normalizeDates(this.sanitizeUpdateData(model, data)),
     });
   }
 
@@ -145,5 +160,32 @@ export class ResourcesService {
       }
     }
     return normalized;
+  }
+
+  private sanitizeCreateData(model: string, data: Record<string, unknown>) {
+    if (model !== 'appModule') {
+      return data;
+    }
+    return this.pickAllowedKeys(data, APP_MODULE_CREATE_KEYS);
+  }
+
+  private sanitizeUpdateData(model: string, data: Record<string, unknown>) {
+    if (model !== 'appModule') {
+      return data;
+    }
+    return this.pickAllowedKeys(data, APP_MODULE_UPDATE_KEYS);
+  }
+
+  private pickAllowedKeys(
+    data: Record<string, unknown>,
+    allowedKeys: Set<string>,
+  ) {
+    const sanitized: Record<string, unknown> = {};
+    for (const key of Object.keys(data)) {
+      if (allowedKeys.has(key)) {
+        sanitized[key] = data[key];
+      }
+    }
+    return sanitized;
   }
 }
