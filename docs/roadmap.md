@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 10:29 CEST.
+Estado actualizado: 2026-06-07 10:34 CEST.
 
 ## Hitos completados
 
@@ -5642,6 +5642,19 @@ Verificacion realizada en este hito:
 
 - `Get-Content -Path .github/dependabot.yml`
 - `git diff --check`
+
+### CI y CodeQL remotos verdes tras segmentar Dependabot
+
+- Revalidado GitHub Actions despues de limitar los grupos npm de Dependabot a updates minor/patch.
+- Run CI `27087428878` completado correctamente en `develop`.
+- Run CodeQL `27087428877` completado correctamente en `develop`.
+- Dependabot recalculo nuevas PRs separando major updates para revision manual.
+
+Verificacion realizada en este hito:
+
+- `gh run view 27087428878 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27087428877 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
