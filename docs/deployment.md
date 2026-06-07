@@ -51,6 +51,8 @@ Comandos:
 
 En `NODE_ENV=production`, el backend falla al arrancar si `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` o `ADMIN_PASSWORD` conservan valores placeholder de `.env.example`.
 
+`API_CORS_ORIGIN` acepta una lista separada por comas. Como la API usa cookies/tokens con `credentials: true`, no uses `*`; el bootstrap lo descarta y exige origenes explicitos.
+
 Health checks:
 
 - Liveness: `GET /api/v1/health/live`

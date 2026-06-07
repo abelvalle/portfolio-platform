@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { parseCorsOrigins } from './common/config/cors.config';
 import { assertSafeProductionSecrets } from './common/config/production-secrets';
 import { isSwaggerEnabled } from './common/config/swagger.config';
 import { securityHeadersMiddleware } from './common/security/security-headers';
@@ -11,8 +12,9 @@ import { securityHeadersMiddleware } from './common/security/security-headers';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const corsOrigin =
-    configService.get<string>('API_CORS_ORIGIN') || 'http://localhost:3000';
+  const corsOrigins = parseCorsOrigins(
+    configService.get<string>('API_CORS_ORIGIN'),
+  );
   const nodeEnv = configService.get<string>('NODE_ENV');
 
   assertSafeProductionSecrets(nodeEnv, (key) => configService.get<string>(key));
@@ -20,7 +22,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   app.use(securityHeadersMiddleware);
   app.enableCors({
-    origin: corsOrigin.split(','),
+    origin: corsOrigins,
     credentials: true,
   });
   app.use(cookieParser());

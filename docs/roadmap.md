@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:21 CEST.
+Estado actualizado: 2026-06-07 08:22 CEST.
 
 ## Hitos completados
 
@@ -5214,6 +5214,19 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run test`
 - `npm.cmd run build`
+
+### CORS explicito con credenciales
+
+- `API_CORS_ORIGIN` se normaliza como lista separada por comas con trim y fallback local.
+- El wildcard `*` se descarta para no combinarlo con `credentials: true`.
+- `docs/deployment.md` documenta que produccion debe usar origenes explicitos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- cors.config.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `git diff --check`
 
 ## Deuda técnica abierta
 
