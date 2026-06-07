@@ -858,6 +858,17 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       body: JSON.stringify(eventType ? events.filter((event) => event.type === eventType) : events)
     });
   });
+  const appModules = [
+    { id: "module-1", key: "dashboard", name: "Dashboard", enabled: true, order: 1 },
+    { id: "module-2", key: "analytics", name: "Analitica", enabled: true, order: 2 },
+    { id: "module-3", key: "media", name: "Media", enabled: false, order: 3 }
+  ];
+  await page.route(/\/api\/v1\/app-modules(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(appModules)
+    });
+  });
   await page.route(/\/api\/v1\/admin\/dashboard(\?.*)?$/, async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -903,11 +914,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           ]
         },
         latestChanges: [],
-        modules: [
-          { id: "module-1", key: "dashboard", name: "Dashboard", enabled: true, order: 1 },
-          { id: "module-2", key: "analytics", name: "Analitica", enabled: true, order: 2 },
-          { id: "module-3", key: "media", name: "Media", enabled: false, order: 3 }
-        ]
+        modules: appModules
       })
     });
   });
@@ -1452,6 +1459,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await expect(page.locator("nav a[href='/admin/analytics']")).toHaveCount(1);
+  await expect(page.locator("nav a[href='/admin/media']")).toHaveCount(0);
+  await expect(page.locator("nav a[href='/admin/settings/modules']")).toHaveCount(1);
   await expect(page.getByRole("link", { name: /Visitas landing/ })).toBeVisible();
   await expect(page.getByText("Pulso operativo")).toBeVisible();
   await expect(page.getByText("Segmentacion operativa")).toBeVisible();

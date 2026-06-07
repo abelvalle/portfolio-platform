@@ -4084,6 +4084,18 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 
+### Navegacion admin sensible a modulos
+
+- El sidebar admin consulta `AppModule` y oculta los modulos principales desactivados.
+- Configuracion, usuarios, publicacion y gestion de modulos permanecen accesibles para evitar bloqueos operativos.
+- El e2e valida que `Media` desaparece cuando el modulo esta inactivo y que el acceso a `Modulos` sigue disponible.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"` (primer intento detecto mock `app-modules` faltante; segundo intento correcto tras cubrirlo)
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
