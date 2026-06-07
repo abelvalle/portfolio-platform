@@ -89,11 +89,14 @@ npm run build
 npm run lint
 npm run test
 npm run test:e2e
+npm run audit:policy
 ```
 
 ## CI
 
 GitHub Actions ejecuta una puerta base sobre `develop` y `master`: `npm ci`, `db:generate`, instalacion de Chromium para tests PDF/visual, lint, tests, build y validacion de Docker Compose. Ademas corre un smoke e2e Chromium para headers de seguridad del frontend. Los e2e largos o con PostgreSQL real quedan como validacion manual/operativa para no depender de servicios externos en cada push.
+
+CodeQL analiza JavaScript/TypeScript en pushes, pull requests, ejecucion semanal y lanzamiento manual. `npm run audit:policy` permite solo la deuda moderada conocida de Next/PostCSS y falla si aparece cualquier hallazgo nuevo.
 
 Dependabot revisa semanalmente dependencias npm y GitHub Actions, agrupando actualizaciones de Next/React, Nest/Prisma y tooling frontend.
 
