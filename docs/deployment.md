@@ -32,6 +32,8 @@ Variables:
 - `ANALYTICS_IP_HASH_SALT` opcional para saltear hashes de IP
 - `ANALYTICS_STORE_USER_AGENT=false` opcional para no guardar user-agent
 - `ANALYTICS_RETENTION_DAYS` opcional para purgar eventos antiguos
+- `ANALYTICS_RETENTION_WORKER_ENABLED=true` para activar purga periodica interna si hay retencion
+- `ANALYTICS_RETENTION_WORKER_INTERVAL_MS=86400000` para ajustar el intervalo de purga
 
 Comandos:
 

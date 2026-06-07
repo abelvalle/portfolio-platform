@@ -196,12 +196,14 @@ Variables de privacidad:
 - `ANALYTICS_IP_HASH_SALT`: sal opcional para el hash de IP.
 - `ANALYTICS_STORE_USER_AGENT`: usa `false` para no persistir user-agent.
 - `ANALYTICS_RETENTION_DAYS`: si es un numero positivo, habilita purga de eventos anteriores a ese umbral.
+- `ANALYTICS_RETENTION_WORKER_ENABLED`: usa `false` para desactivar la purga periodica interna.
+- `ANALYTICS_RETENTION_WORKER_INTERVAL_MS`: intervalo de purga interna cuando hay retencion configurada.
 
 `GET /analytics/privacy` devuelve configuracion no sensible: dias de retencion, si se guarda user-agent y si hay sal configurada.
 
 `GET /analytics/timeseries` agrupa eventos por dia y tipo. Si se envian `from` y `to`, devuelve tambien dias intermedios sin eventos con `total: 0`.
 
-`POST /analytics/retention/prune` borra eventos anteriores a la retencion configurada y requiere `manage_analytics`.
+`POST /analytics/retention/prune` borra eventos anteriores a la retencion configurada y requiere `manage_analytics`. `AnalyticsRetentionWorker` ejecuta la misma purga periodicamente solo si `ANALYTICS_RETENTION_DAYS` es positivo.
 
 `GET /analytics/export` devuelve los eventos filtrados en CSV server-side con columnas `type,path,label,createdAt`.
 
