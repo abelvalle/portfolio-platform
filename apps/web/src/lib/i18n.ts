@@ -317,6 +317,14 @@ export type PublicTranslationEntry = {
   value: string;
 };
 
+export type PublicTranslationDictionary = Record<string, unknown>;
+
+export function applyPublicDictionary(copy: PublicCopy, dictionary: PublicTranslationDictionary): PublicCopy {
+  const nextCopy = JSON.parse(JSON.stringify(copy)) as PublicCopy;
+  mergeExistingStrings(nextCopy as unknown as Record<string, unknown>, dictionary);
+  return nextCopy;
+}
+
 export function applyPublicTranslations(copy: PublicCopy, entries: PublicTranslationEntry[]): PublicCopy {
   const nextCopy = JSON.parse(JSON.stringify(copy)) as PublicCopy;
 
@@ -327,6 +335,23 @@ export function applyPublicTranslations(copy: PublicCopy, entries: PublicTransla
   }
 
   return nextCopy;
+}
+
+function mergeExistingStrings(target: Record<string, unknown>, source: PublicTranslationDictionary) {
+  for (const [key, value] of Object.entries(source)) {
+    const current = target[key];
+    if (typeof current === "string" && typeof value === "string") {
+      target[key] = value;
+      continue;
+    }
+    if (isPlainObject(current) && isPlainObject(value)) {
+      mergeExistingStrings(current, value);
+    }
+  }
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function setExistingString(target: Record<string, unknown>, path: string[], value: string) {

@@ -1,12 +1,12 @@
 import { portfolioFallback, type PortfolioSnapshot } from "./portfolio-data";
 import {
-  applyPublicTranslations,
+  applyPublicDictionary,
   getLocalizedFallback,
   localizeSnapshot,
   publicCopy as fallbackPublicCopy,
   type Locale,
   type PublicCopy,
-  type PublicTranslationEntry
+  type PublicTranslationDictionary
 } from "./i18n";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
@@ -86,8 +86,8 @@ export const portfolioClient = {
   },
   async publicCopy(locale: Locale = "es"): Promise<PublicCopy> {
     try {
-      const entries = await apiFetch<PublicTranslationEntry[]>(withQuery("/translations/public", { locale }));
-      return applyPublicTranslations(fallbackPublicCopy[locale], entries);
+      const dictionary = await apiFetch<PublicTranslationDictionary>(withQuery("/translations/public/dictionary", { locale }));
+      return applyPublicDictionary(fallbackPublicCopy[locale], dictionary);
     } catch {
       return fallbackPublicCopy[locale];
     }
