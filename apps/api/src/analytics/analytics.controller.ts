@@ -17,6 +17,7 @@ import { AnalyticsService } from './analytics.service';
 import {
   AnalyticsDateRangeQueryDto,
   AnalyticsEventsQueryDto,
+  AnalyticsFunnelQueryDto,
   CreateAnalyticsEventDto,
 } from './analytics.dto';
 
@@ -86,7 +87,7 @@ export class AnalyticsController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('read_analytics')
   @Get('funnel')
-  funnel(@Query() query: AnalyticsDateRangeQueryDto) {
+  funnel(@Query() query: AnalyticsFunnelQueryDto) {
     return this.analyticsService.funnel(query);
   }
 

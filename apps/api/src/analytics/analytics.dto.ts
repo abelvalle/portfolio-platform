@@ -51,3 +51,14 @@ export class AnalyticsEventsQueryDto extends AnalyticsDateRangeQueryDto {
   @MaxLength(80)
   type?: string;
 }
+
+export class AnalyticsFunnelQueryDto extends AnalyticsDateRangeQueryDto {
+  @ApiProperty({
+    required: false,
+    example: 'landing_visit,project_view,contact_submit',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  steps?: string;
+}

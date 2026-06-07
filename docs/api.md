@@ -112,7 +112,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /analytics/timeseries?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
 - `GET /analytics/channels?from=YYYY-MM-DD&to=YYYY-MM-DD&type=landing_visit` (`read_analytics`)
 - `GET /analytics/labels?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_adaptation` (`read_analytics`)
-- `GET /analytics/funnel?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_analytics`)
+- `GET /analytics/funnel?from=YYYY-MM-DD&to=YYYY-MM-DD&steps=landing_visit,project_view,contact_submit` (`read_analytics`)
 - `GET /analytics/funnel/channels?from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_analytics`)
 - `POST /analytics/retention/prune` (`manage_analytics`)
 - `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
@@ -138,7 +138,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 }
 ```
 
-`GET /analytics/funnel` devuelve un embudo fijo de conversion landing -> descarga CV -> formulario contacto, con ratio desde landing y desde el paso anterior.
+`GET /analytics/funnel` devuelve por defecto el embudo landing -> descarga CV -> formulario contacto, con ratio desde landing y desde el paso anterior. Opcionalmente acepta `steps` como CSV de 2 a 6 tipos de evento, por ejemplo `landing_visit,project_view,contact_submit`, para construir embudos configurables por API sin crear todavia definiciones persistentes.
 
 `GET /analytics/funnel/channels` devuelve el mismo embudo agrupado por fuente/canal. Cada segmento incluye visitas landing, descargas CV, formularios y tasas de conversion sobre visitas landing.
 

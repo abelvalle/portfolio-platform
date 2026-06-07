@@ -328,6 +328,76 @@ describe('AnalyticsService filters', () => {
     });
   });
 
+  it('builds a configurable conversion funnel from query steps', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsEvent.count
+      .mockResolvedValueOnce(12)
+      .mockResolvedValueOnce(6)
+      .mockResolvedValueOnce(3);
+    const service = createService(prisma);
+
+    const result = await service.funnel({
+      from: '2026-06-01',
+      to: '2026-06-02',
+      steps: 'landing_visit,project_view,contact_submit',
+    });
+
+    expect(prisma.analyticsEvent.count).toHaveBeenNthCalledWith(1, {
+      where: {
+        createdAt: {
+          gte: new Date('2026-06-01T00:00:00.000Z'),
+          lte: new Date('2026-06-02T23:59:59.999Z'),
+        },
+        type: 'landing_visit',
+      },
+    });
+    expect(prisma.analyticsEvent.count).toHaveBeenNthCalledWith(2, {
+      where: {
+        createdAt: {
+          gte: new Date('2026-06-01T00:00:00.000Z'),
+          lte: new Date('2026-06-02T23:59:59.999Z'),
+        },
+        type: 'project_view',
+      },
+    });
+    expect(result).toEqual({
+      steps: [
+        {
+          key: 'landing_visit',
+          label: 'Visitas landing',
+          count: 12,
+          rateFromStart: 100,
+          rateFromPrevious: 100,
+        },
+        {
+          key: 'project_view',
+          label: 'Vistas proyecto',
+          count: 6,
+          rateFromStart: 50,
+          rateFromPrevious: 50,
+        },
+        {
+          key: 'contact_submit',
+          label: 'Formularios contacto',
+          count: 3,
+          rateFromStart: 25,
+          rateFromPrevious: 50,
+        },
+      ],
+    });
+  });
+
+  it('rejects invalid configurable funnel steps', async () => {
+    const service = createService(mockPrisma());
+
+    await expect(
+      service.funnel({ steps: 'landing_visit' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      service.funnel({ steps: 'landing_visit,../contact' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
   it('builds a source and channel conversion funnel', async () => {
     const prisma = mockPrisma();
     prisma.analyticsEvent.findMany.mockResolvedValue([

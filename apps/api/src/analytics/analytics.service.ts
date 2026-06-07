@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   AnalyticsDateRangeQueryDto,
   AnalyticsEventsQueryDto,
+  AnalyticsFunnelQueryDto,
   CreateAnalyticsEventDto,
 } from './analytics.dto';
 
@@ -187,7 +188,11 @@ export class AnalyticsService {
     };
   }
 
-  async funnel(filters: AnalyticsDateRangeQueryDto = {}) {
+  async funnel(filters: AnalyticsFunnelQueryDto = {}) {
+    if (filters.steps) {
+      return this.customFunnel(filters);
+    }
+
     const summary = await this.summary(filters);
     const steps = [
       {
@@ -216,6 +221,31 @@ export class AnalyticsService {
           index === 0
             ? this.percent(step.count, firstCount)
             : this.percent(step.count, steps[index - 1].count),
+      })),
+    };
+  }
+
+  private async customFunnel(filters: AnalyticsFunnelQueryDto) {
+    const steps = this.funnelStepDefinitions(filters.steps);
+    const dateWhere = this.dateRangeWhere(filters);
+    const counts = await Promise.all(
+      steps.map((step) =>
+        this.prisma.analyticsEvent.count({
+          where: { ...dateWhere, type: step.key },
+        }),
+      ),
+    );
+    const firstCount = counts[0] || 0;
+
+    return {
+      steps: steps.map((step, index) => ({
+        ...step,
+        count: counts[index],
+        rateFromStart: this.percent(counts[index], firstCount),
+        rateFromPrevious:
+          index === 0
+            ? this.percent(counts[index], firstCount)
+            : this.percent(counts[index], counts[index - 1]),
       })),
     };
   }
@@ -310,6 +340,36 @@ export class AnalyticsService {
     }
 
     return Object.keys(createdAt).length ? { createdAt } : {};
+  }
+
+  private funnelStepDefinitions(steps?: string) {
+    const keys = steps
+      ?.split(',')
+      .map((step) => step.trim())
+      .filter(Boolean);
+
+    if (!keys || keys.length < 2 || keys.length > 6) {
+      throw new BadRequestException('Analytics funnel requires 2 to 6 steps');
+    }
+    if (!keys.every((key) => /^[a-z0-9_-]{1,80}$/.test(key))) {
+      throw new BadRequestException('Invalid analytics funnel step');
+    }
+
+    return keys.map((key) => ({
+      key,
+      label: this.funnelLabel(key),
+    }));
+  }
+
+  private funnelLabel(key: string) {
+    const labels: Record<string, string> = {
+      landing_visit: 'Visitas landing',
+      project_view: 'Vistas proyecto',
+      cv_download: 'Descargas CV',
+      contact_submit: 'Formularios contacto',
+      linkedin_click: 'Clicks LinkedIn',
+    };
+    return labels[key] || key.replace(/_/g, ' ');
   }
 
   private seedTimeSeries(filters: AnalyticsDateRangeQueryDto) {
