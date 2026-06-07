@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 10:39 CEST.
+Estado actualizado: 2026-06-07 10:44 CEST.
 
 ## Hitos completados
 
@@ -5670,6 +5670,22 @@ Verificacion realizada en este hito:
 - `Select-String -Path apps/api/package.json -Pattern '@types/bcryptjs'`
 - `gh run view 27087528150 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27087528165 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
+
+### Dependabot concurrently 10.0.3
+
+- Fusionada por squash la PR #11 de Dependabot: `concurrently` de `9.2.1` a `10.0.3`.
+- El cambio afecta a `package.json` y `package-lock.json`.
+- `develop` queda en el commit remoto `047e67b` tras el merge.
+- Se acepta el major porque el proyecto y CI ya usan Node 22+ y `concurrently` se usa como tooling del script local `npm run dev`.
+
+Verificacion realizada en este hito:
+
+- `gh pr view 11 --repo abelvalle/portfolio-platform --json number,title,files,statusCheckRollup,mergeable`
+- `gh pr merge 11 --repo abelvalle/portfolio-platform --squash --delete-branch`
+- `Select-String -Path package.json -Pattern 'concurrently'`
+- `gh run view 27087634376 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27087634383 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
 
 ## Deuda técnica abierta
