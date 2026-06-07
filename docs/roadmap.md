@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 10:34 CEST.
+Estado actualizado: 2026-06-07 10:39 CEST.
 
 ## Hitos completados
 
@@ -5654,6 +5654,22 @@ Verificacion realizada en este hito:
 
 - `gh run view 27087428878 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27087428877 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
+
+### Dependabot @types/bcryptjs 3.0.0
+
+- Fusionada por squash la PR #8 de Dependabot: `@types/bcryptjs` de `2.4.6` a `3.0.0`.
+- El cambio afecta a `apps/api/package.json` y `package-lock.json`.
+- `develop` queda en el commit remoto `e9f69e3` tras el merge.
+- CI remoto valida que el cambio de tipos no rompe auth, build API ni el resto de quality gates.
+
+Verificacion realizada en este hito:
+
+- `gh pr view 8 --repo abelvalle/portfolio-platform --json number,title,files,statusCheckRollup,mergeable`
+- `gh pr merge 8 --repo abelvalle/portfolio-platform --squash --delete-branch`
+- `Select-String -Path apps/api/package.json -Pattern '@types/bcryptjs'`
+- `gh run view 27087528150 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27087528165 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
 
 ## Deuda técnica abierta
