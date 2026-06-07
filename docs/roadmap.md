@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:44 CEST.
+Estado actualizado: 2026-06-07 08:48 CEST.
 
 ## Hitos completados
 
@@ -5306,6 +5306,17 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"`
 - `git diff --check`
+
+### CI remoto verde en develop
+
+- Revalidado GitHub Actions despues de instalar Chromium y anadir dependencias opcionales Linux de Lightning CSS y Tailwind Oxide.
+- Run `27085283416` completado correctamente en `develop`.
+- Jobs verdes: `Quality gates` y `Web e2e smoke`.
+
+Verificacion realizada en este hito:
+
+- `gh run view 27085283416 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
