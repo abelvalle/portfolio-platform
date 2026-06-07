@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 05:05 CEST.
+Estado actualizado: 2026-06-07 05:07 CEST.
 
 ## Hitos completados
 
@@ -4531,6 +4531,17 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run test -- contact-webhook.service.spec.ts`
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
+
+### Suite raiz tras worker webhook visible
+
+- Ejecutada la suite raiz despues de exponer estado del worker y coordinar fallback local.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `28` suites y `146` tests, smoke web y build Next/Nest correctos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
 
 ## Deuda técnica abierta
 
