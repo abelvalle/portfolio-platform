@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 11:37 CEST.
+Estado actualizado: 2026-06-07 11:41 CEST.
 
 ## Hitos completados
 
@@ -5827,6 +5827,9 @@ Verificacion realizada en este hito:
 - `docker compose -f infra/docker-compose.yml config`
 - `npm.cmd run build:web` con localhost y `NEXT_PUBLIC_ALLOW_LOCAL_API_URL=true`
 - `git diff --check`
+- `gh run view 27088850334 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27088850333 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
