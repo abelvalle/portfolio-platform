@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:10 CEST.
+Estado actualizado: 2026-06-07 09:14 CEST.
 
 ## Hitos completados
 
@@ -5396,6 +5396,17 @@ Verificacion realizada en este hito:
 - `Get-Content -Path SECURITY.md`
 - `Get-Content -Path .github/CODEOWNERS`
 - `git diff --check`
+
+### CI remoto verde tras politica de seguridad
+
+- Revalidado GitHub Actions despues de anadir `SECURITY.md` y `.github/CODEOWNERS`.
+- Run `27085788246` completado correctamente en `develop`.
+- Jobs verdes: `Quality gates` y `Web e2e smoke`.
+
+Verificacion realizada en este hito:
+
+- `gh run view 27085788246 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
