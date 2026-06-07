@@ -4,6 +4,7 @@ import {
   unsafeProductionContactEmailConfigKeys,
   unsafeProductionContactWebhookConfigKeys,
   unsafeProductionConfigKeys,
+  unsafeProductionLinkedinConfigKeys,
   unsafeProductionMediaConfigKeys,
   unsafeProductionRuntimeConfigKeys,
   unsafeProductionSecretKeys,
@@ -258,6 +259,71 @@ describe('production secrets guard', () => {
     ).toEqual([]);
   });
 
+  it('allows LinkedIn OAuth to remain disabled in production', () => {
+    expect(
+      unsafeProductionLinkedinConfigKeys('production', () => undefined),
+    ).toEqual([]);
+    expect(
+      unsafeProductionLinkedinConfigKeys('production', (key) =>
+        key === 'LINKEDIN_REDIRECT_URI'
+          ? 'http://localhost:4000/api/v1/integrations/linkedin/callback'
+          : undefined,
+      ),
+    ).toEqual([]);
+  });
+
+  it('requires complete LinkedIn credentials when OAuth is enabled', () => {
+    const values: Record<string, string | undefined> = {
+      LINKEDIN_CLIENT_ID: 'client-id',
+      LINKEDIN_REDIRECT_URI:
+        'https://api.example.com/api/v1/integrations/linkedin/callback',
+    };
+
+    expect(
+      unsafeProductionLinkedinConfigKeys('production', (key) => values[key]),
+    ).toEqual(['LINKEDIN_CLIENT_SECRET']);
+  });
+
+  it('rejects local or invalid LinkedIn redirect URIs in production', () => {
+    const localValues: Record<string, string | undefined> = {
+      LINKEDIN_CLIENT_ID: 'client-id',
+      LINKEDIN_CLIENT_SECRET: 'client-secret',
+      LINKEDIN_REDIRECT_URI:
+        'http://localhost:4000/api/v1/integrations/linkedin/callback',
+    };
+    const invalidValues: Record<string, string | undefined> = {
+      LINKEDIN_CLIENT_ID: 'client-id',
+      LINKEDIN_CLIENT_SECRET: 'client-secret',
+      LINKEDIN_REDIRECT_URI: 'not-a-url',
+    };
+
+    expect(
+      unsafeProductionLinkedinConfigKeys(
+        'production',
+        (key) => localValues[key],
+      ),
+    ).toEqual(['LINKEDIN_REDIRECT_URI']);
+    expect(
+      unsafeProductionLinkedinConfigKeys(
+        'production',
+        (key) => invalidValues[key],
+      ),
+    ).toEqual(['LINKEDIN_REDIRECT_URI']);
+  });
+
+  it('allows complete LinkedIn OAuth settings in production', () => {
+    const values: Record<string, string | undefined> = {
+      LINKEDIN_CLIENT_ID: 'client-id',
+      LINKEDIN_CLIENT_SECRET: 'client-secret',
+      LINKEDIN_REDIRECT_URI:
+        'https://api.example.com/api/v1/integrations/linkedin/callback',
+    };
+
+    expect(
+      unsafeProductionLinkedinConfigKeys('production', (key) => values[key]),
+    ).toEqual([]);
+  });
+
   it('combines unsafe secrets and runtime config without exposing values', () => {
     const values: Record<string, string> = {
       JWT_ACCESS_SECRET: 'change-me-access-secret',
@@ -268,6 +334,9 @@ describe('production secrets guard', () => {
       CONTACT_WEBHOOK_URL: 'http://localhost:4000/webhook',
       MEDIA_STORAGE_PROVIDER: 's3',
       MEDIA_EXTERNAL_SCAN_URL: 'http://127.0.0.1:8080/scan',
+      LINKEDIN_CLIENT_ID: 'client-id',
+      LINKEDIN_REDIRECT_URI:
+        'http://localhost:4000/api/v1/integrations/linkedin/callback',
     };
 
     expect(
@@ -283,11 +352,13 @@ describe('production secrets guard', () => {
       'CONTACT_WEBHOOK_SECRET',
       'MEDIA_STORAGE_PROVIDER',
       'MEDIA_EXTERNAL_SCAN_URL',
+      'LINKEDIN_CLIENT_SECRET',
+      'LINKEDIN_REDIRECT_URI',
     ]);
     expect(() =>
       assertSafeProductionConfig('production', (key) => values[key]),
     ).toThrow(
-      'JWT_ACCESS_SECRET, API_CORS_ORIGIN, CONTACT_EMAIL_API_URL, CONTACT_EMAIL_API_KEY, CONTACT_EMAIL_FROM, CONTACT_EMAIL_TO, CONTACT_WEBHOOK_URL, CONTACT_WEBHOOK_SECRET, MEDIA_STORAGE_PROVIDER, MEDIA_EXTERNAL_SCAN_URL',
+      'JWT_ACCESS_SECRET, API_CORS_ORIGIN, CONTACT_EMAIL_API_URL, CONTACT_EMAIL_API_KEY, CONTACT_EMAIL_FROM, CONTACT_EMAIL_TO, CONTACT_WEBHOOK_URL, CONTACT_WEBHOOK_SECRET, MEDIA_STORAGE_PROVIDER, MEDIA_EXTERNAL_SCAN_URL, LINKEDIN_CLIENT_SECRET, LINKEDIN_REDIRECT_URI',
     );
     expect(() =>
       assertSafeProductionConfig('production', (key) => values[key]),

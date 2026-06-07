@@ -76,6 +76,10 @@ Variables opcionales de contacto:
 - `CONTACT_EMAIL_PROVIDER=disabled|resend|generic`: activa notificacion email no bloqueante para nuevos mensajes.
 - `CONTACT_EMAIL_API_KEY`, `CONTACT_EMAIL_FROM`, `CONTACT_EMAIL_TO`: credenciales y routing del proveedor, siempre fuera del repositorio. Si usas `generic`, define tambien `CONTACT_EMAIL_API_URL`.
 
+Variables opcionales de integraciones:
+
+- `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `LINKEDIN_REDIRECT_URI`: activan OAuth LinkedIn. En produccion, si configuras credenciales, el redirect debe ser una URL HTTP/HTTPS no local.
+
 ## Migraciones y seed
 
 ```bash

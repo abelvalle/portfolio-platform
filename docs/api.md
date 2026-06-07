@@ -426,7 +426,7 @@ Endpoints admin de webhook:
 - `GET /integrations/linkedin/auth-url`: protegido con `manage_integrations`; construye URL OAuth si `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` y `LINKEDIN_REDIRECT_URI` están configurados.
 - `GET /integrations/linkedin/callback?code=...&state=...`: protegido con `manage_integrations`; intercambia el `code` por token, consulta OpenID `userinfo`, persiste una `IntegrationAccount` con perfil sanitizado y devuelve perfil/cuenta sin exponer el access token.
 
-Sin credenciales LinkedIn, el sistema mantiene integración pública mediante enlace de perfil y share URL.
+Sin credenciales LinkedIn, el sistema mantiene integración pública mediante enlace de perfil y share URL. En produccion, si se define `LINKEDIN_CLIENT_ID` o `LINKEDIN_CLIENT_SECRET`, el backend exige ambas credenciales y un `LINKEDIN_REDIRECT_URI` HTTP/HTTPS no local.
 
 ## Media
 

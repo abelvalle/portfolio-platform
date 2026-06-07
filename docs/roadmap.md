@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 11:10 CEST.
+Estado actualizado: 2026-06-07 11:12 CEST.
 
 ## Hitos completados
 
@@ -5755,6 +5755,21 @@ Verificacion realizada en este hito:
 - `gh run view 27088192298 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27088192295 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Guard producción LinkedIn OAuth
+
+- Añadido guard de arranque para `NODE_ENV=production` sobre OAuth LinkedIn.
+- La integracion sigue siendo opcional: si no hay credenciales, se conserva el enlace publico y share URL.
+- Si se configura `LINKEDIN_CLIENT_ID` o `LINKEDIN_CLIENT_SECRET`, el backend exige ambas credenciales y `LINKEDIN_REDIRECT_URI`.
+- El redirect debe ser HTTP/HTTPS y no local para evitar callbacks a `localhost` en despliegues reales.
+- README, API docs y deployment documentan el contrato.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- production-secrets.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

@@ -171,6 +171,38 @@ export function unsafeProductionMediaConfigKeys(
   return unsafeKeys;
 }
 
+export function unsafeProductionLinkedinConfigKeys(
+  nodeEnv: string | undefined,
+  lookup: SecretLookup,
+) {
+  if (nodeEnv !== 'production') {
+    return [];
+  }
+
+  const clientId = lookup('LINKEDIN_CLIENT_ID')?.trim() || '';
+  const clientSecret = lookup('LINKEDIN_CLIENT_SECRET')?.trim() || '';
+  if (!clientId && !clientSecret) {
+    return [];
+  }
+
+  const redirectUri = lookup('LINKEDIN_REDIRECT_URI')?.trim() || '';
+  const unsafeKeys: string[] = [];
+  if (!clientId) {
+    unsafeKeys.push('LINKEDIN_CLIENT_ID');
+  }
+  if (!clientSecret) {
+    unsafeKeys.push('LINKEDIN_CLIENT_SECRET');
+  }
+  if (
+    !redirectUri ||
+    !isValidHttpUrl(redirectUri) ||
+    isLocalOrigin(redirectUri)
+  ) {
+    unsafeKeys.push('LINKEDIN_REDIRECT_URI');
+  }
+  return unsafeKeys;
+}
+
 export function unsafeProductionConfigKeys(
   nodeEnv: string | undefined,
   lookup: SecretLookup,
@@ -181,6 +213,7 @@ export function unsafeProductionConfigKeys(
     ...unsafeProductionContactEmailConfigKeys(nodeEnv, lookup),
     ...unsafeProductionContactWebhookConfigKeys(nodeEnv, lookup),
     ...unsafeProductionMediaConfigKeys(nodeEnv, lookup),
+    ...unsafeProductionLinkedinConfigKeys(nodeEnv, lookup),
   ];
 }
 

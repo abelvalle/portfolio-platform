@@ -44,6 +44,7 @@ Variables:
 - `ANALYTICS_RETENTION_DAYS` opcional para purgar eventos antiguos
 - `ANALYTICS_RETENTION_WORKER_ENABLED=true` para activar purga periodica interna si hay retencion
 - `ANALYTICS_RETENTION_WORKER_INTERVAL_MS=86400000` para ajustar el intervalo de purga
+- `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `LINKEDIN_REDIRECT_URI` opcionales para OAuth LinkedIn
 
 Comandos:
 
@@ -52,7 +53,7 @@ Comandos:
 - Migraciones: `npm --prefix apps/api run db:deploy`
 - Seed: `npm --prefix apps/api run db:seed`
 
-En `NODE_ENV=production`, el backend falla al arrancar si `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` o `ADMIN_PASSWORD` conservan valores placeholder de `.env.example`, si `API_CORS_ORIGIN` falta o apunta solo a localhost, si `MEDIA_STORAGE_PROVIDER` no es `local`, si `MEDIA_EXTERNAL_SCAN_URL` apunta a localhost o no es HTTP/HTTPS, si `CONTACT_WEBHOOK_URL` apunta a localhost o no tiene `CONTACT_WEBHOOK_SECRET`, o si `CONTACT_EMAIL_PROVIDER` esta activado sin las credenciales minimas del proveedor.
+En `NODE_ENV=production`, el backend falla al arrancar si `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` o `ADMIN_PASSWORD` conservan valores placeholder de `.env.example`, si `API_CORS_ORIGIN` falta o apunta solo a localhost, si `MEDIA_STORAGE_PROVIDER` no es `local`, si `MEDIA_EXTERNAL_SCAN_URL` apunta a localhost o no es HTTP/HTTPS, si `CONTACT_WEBHOOK_URL` apunta a localhost o no tiene `CONTACT_WEBHOOK_SECRET`, si `CONTACT_EMAIL_PROVIDER` esta activado sin las credenciales minimas del proveedor, o si OAuth LinkedIn tiene credenciales parciales o redirect local.
 
 `API_CORS_ORIGIN` acepta una lista separada por comas. Como la API usa cookies/tokens con `credentials: true`, no uses `*`; el bootstrap lo descarta y exige origenes explicitos.
 
