@@ -49,6 +49,8 @@ Comandos:
 - Migraciones: `npm --prefix apps/api run db:deploy`
 - Seed: `npm --prefix apps/api run db:seed`
 
+En `NODE_ENV=production`, el backend falla al arrancar si `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` o `ADMIN_PASSWORD` conservan valores placeholder de `.env.example`.
+
 Health checks:
 
 - Liveness: `GET /api/v1/health/live`

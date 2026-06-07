@@ -113,7 +113,7 @@ Login: `/login`
 
 Email por defecto: `abel.valle.rosa@gmail.com`
 
-Password por defecto: valor de `ADMIN_PASSWORD` en `.env`.
+Password por defecto: valor de `ADMIN_PASSWORD` en `.env`. En `NODE_ENV=production`, la API rechaza arrancar con secretos placeholder.
 
 ## CV Manager
 

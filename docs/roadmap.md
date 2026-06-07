@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:17 CEST.
+Estado actualizado: 2026-06-07 08:18 CEST.
 
 ## Hitos completados
 
@@ -5189,6 +5189,19 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run test`
 - `npm.cmd run build`
+
+### Guard de secretos en produccion
+
+- El bootstrap de API valida `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` y `ADMIN_PASSWORD` cuando `NODE_ENV=production`.
+- Si faltan o conservan valores placeholder, la API falla al arrancar sin exponer el valor secreto.
+- README y `docs/deployment.md` documentan el guard para despliegues.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- production-secrets.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

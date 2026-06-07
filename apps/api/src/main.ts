@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { assertSafeProductionSecrets } from './common/config/production-secrets';
 import { isSwaggerEnabled } from './common/config/swagger.config';
 import { securityHeadersMiddleware } from './common/security/security-headers';
 
@@ -12,6 +13,9 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const corsOrigin =
     configService.get<string>('API_CORS_ORIGIN') || 'http://localhost:3000';
+  const nodeEnv = configService.get<string>('NODE_ENV');
+
+  assertSafeProductionSecrets(nodeEnv, (key) => configService.get<string>(key));
 
   app.setGlobalPrefix('api/v1');
   app.use(securityHeadersMiddleware);
@@ -29,10 +33,7 @@ async function bootstrap() {
   );
 
   if (
-    isSwaggerEnabled(
-      configService.get<string>('NODE_ENV'),
-      configService.get<string>('API_SWAGGER_ENABLED'),
-    )
+    isSwaggerEnabled(nodeEnv, configService.get<string>('API_SWAGGER_ENABLED'))
   ) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('Portfolio Platform API')
