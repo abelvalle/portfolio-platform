@@ -12,6 +12,12 @@ Para regenerarlo:
 npm run openapi:generate
 ```
 
+Para comprobar que el snapshot coincide con los controllers actuales:
+
+```bash
+npm run openapi:check
+```
+
 ## Autenticación
 
 `POST /auth/login`

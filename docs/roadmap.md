@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:57 CEST.
+Estado actualizado: 2026-06-07 09:59 CEST.
 
 ## Hitos completados
 
@@ -5535,6 +5535,18 @@ Verificacion realizada en este hito:
 - `gh run view 27086649510 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27086649501 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Drift check OpenAPI en CI
+
+- Anadido script `npm run openapi:check` para regenerar `docs/openapi.json` y comprobar que no cambia.
+- El job `Quality gates` genera OpenAPI despues del build y falla si el snapshot versionado queda desactualizado.
+- README y `docs/api.md` documentan la comprobacion local.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run openapi:check`
+- `Get-Content -Path .github/workflows/ci.yml`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

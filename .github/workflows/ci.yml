@@ -60,6 +60,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Generate OpenAPI snapshot
+        run: npm run openapi:generate
+
+      - name: Verify OpenAPI snapshot
+        run: git diff --exit-code -- docs/openapi.json
+
       - name: Validate Docker Compose
         run: docker compose -f infra/docker-compose.yml config
 
