@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 04:40 CEST.
+Estado actualizado: 2026-06-07 04:43 CEST.
 
 ## Hitos completados
 
@@ -4361,6 +4361,18 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run lint`
 - `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test`
+
+### Contrato HTTP admin del diccionario i18n
+
+- El e2e de `TranslationsController` valida `GET /translations/dictionary` con guards mockeados.
+- La prueba confirma que `includeHidden=true` llega al servicio y que el endpoint admin no fuerza modo publico.
+- El mismo spec mantiene cobertura del endpoint publico `/translations/public/dictionary`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test:e2e -- translations.e2e-spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
 
 ### Configuracion persistente parcial de webhooks
 

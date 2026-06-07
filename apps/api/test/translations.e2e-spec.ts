@@ -97,6 +97,23 @@ describe('TranslationsController (e2e)', () => {
     });
   });
 
+  it('returns admin translation dictionary without forced public mode', async () => {
+    const response = await request(app.getHttpServer())
+      .get(
+        '/translations/dictionary?locale=en&namespace=public.hero&includeHidden=true',
+      )
+      .expect(200);
+
+    expect(translationsService.dictionary).toHaveBeenCalledWith({
+      locale: 'en',
+      namespace: 'public.hero',
+      includeHidden: 'true',
+    });
+    expect(response.body).toEqual({
+      hero: { downloadCv: 'Download resume' },
+    });
+  });
+
   it('upserts admin translations with a validated and sanitized payload', async () => {
     const response = await request(app.getHttpServer())
       .post('/translations')
