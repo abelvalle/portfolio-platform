@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 11:29 CEST.
+Estado actualizado: 2026-06-07 11:33 CEST.
 
 ## Hitos completados
 
@@ -5808,6 +5808,9 @@ Verificacion realizada en este hito:
 - `next start` en puerto temporal + `curl.exe -I http://localhost:3010/` comprobando `connect-src 'self' https://api.example.com` sin localhost ni wildcard `https:` separado
 - `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"`
 - `git diff --check`
+- `gh run view 27088675574 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27088675553 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
