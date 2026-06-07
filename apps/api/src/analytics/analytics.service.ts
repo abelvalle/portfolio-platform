@@ -303,18 +303,24 @@ export class AnalyticsService {
     const goals = await this.goals(false);
     const dateWhere = this.dateRangeWhere(filters);
     const counts = await Promise.all(
-      goals.map((goal) =>
-        this.prisma.analyticsEvent.count({
-          where: { ...dateWhere, type: goal.eventType },
-        }),
-      ),
+      goals.map((goal) => {
+        const eventTypes = this.goalEventTypes(goal.eventTypes, goal.eventType);
+        return this.prisma.analyticsEvent.count({
+          where: {
+            ...dateWhere,
+            type: this.goalEventTypeWhere(eventTypes),
+          },
+        });
+      }),
     );
 
     return goals.map((goal, index) => {
+      const eventTypes = this.goalEventTypes(goal.eventTypes, goal.eventType);
       const count = counts[index] || 0;
       const alert = this.goalAlert(count, goal.targetCount);
       return {
         ...goal,
+        eventTypes,
         count,
         progressRate: this.percent(count, goal.targetCount),
         achieved: count >= goal.targetCount,
@@ -326,12 +332,14 @@ export class AnalyticsService {
   }
 
   createGoal(dto: CreateAnalyticsGoalDto) {
+    const eventTypes = this.goalEventTypes(dto.eventTypes, dto.eventType);
     return this.prisma.analyticsGoal.create({
       data: {
         key: dto.key.trim(),
         name: dto.name.trim(),
         description: this.optionalTrim(dto.description),
-        eventType: dto.eventType.trim(),
+        eventType: eventTypes[0],
+        eventTypes,
         targetCount: dto.targetCount,
         period: dto.period ?? 'monthly',
         visible: dto.visible ?? true,
@@ -341,7 +349,14 @@ export class AnalyticsService {
   }
 
   async updateGoal(id: string, dto: UpdateAnalyticsGoalDto) {
-    await this.findGoal(id);
+    const currentGoal = await this.findGoal(id);
+    const eventTypes =
+      dto.eventType !== undefined || dto.eventTypes !== undefined
+        ? this.goalEventTypes(
+            dto.eventTypes,
+            dto.eventType ?? currentGoal.eventType,
+          )
+        : null;
     return this.prisma.analyticsGoal.update({
       where: { id },
       data: {
@@ -349,9 +364,7 @@ export class AnalyticsService {
         ...(dto.description !== undefined
           ? { description: this.optionalTrim(dto.description) }
           : {}),
-        ...(dto.eventType !== undefined
-          ? { eventType: dto.eventType.trim() }
-          : {}),
+        ...(eventTypes ? { eventType: eventTypes[0], eventTypes } : {}),
         ...(dto.targetCount !== undefined
           ? { targetCount: dto.targetCount }
           : {}),
@@ -571,6 +584,27 @@ export class AnalyticsService {
       level: 'info',
       message: `Faltan ${remainingCount} ${eventLabel} para cerrar el objetivo.`,
     };
+  }
+
+  private goalEventTypes(eventTypes: string[] | undefined, fallback: string) {
+    const source = eventTypes?.length ? eventTypes : [fallback];
+    const normalized = [
+      ...new Set(source.map((eventType) => eventType.trim()).filter(Boolean)),
+    ];
+
+    if (
+      !normalized.length ||
+      normalized.length > 6 ||
+      normalized.some((eventType) => !/^[a-z0-9_-]{1,80}$/.test(eventType))
+    ) {
+      throw new BadRequestException('Invalid analytics goal event types');
+    }
+
+    return normalized;
+  }
+
+  private goalEventTypeWhere(eventTypes: string[]) {
+    return eventTypes.length === 1 ? eventTypes[0] : { in: eventTypes };
   }
 
   private seedTimeSeries(filters: AnalyticsDateRangeQueryDto) {

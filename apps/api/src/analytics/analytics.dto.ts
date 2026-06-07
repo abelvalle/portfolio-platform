@@ -181,6 +181,18 @@ export class CreateAnalyticsGoalDto {
   @Matches(/^[a-z0-9_-]{1,80}$/)
   eventType!: string;
 
+  @ApiProperty({
+    required: false,
+    example: ['project_view', 'cv_download', 'contact_submit'],
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(6)
+  @IsString({ each: true })
+  @Matches(/^[a-z0-9_-]{1,80}$/, { each: true })
+  eventTypes?: string[];
+
   @ApiProperty({ example: 20 })
   @IsInt()
   @Min(1)
@@ -222,6 +234,18 @@ export class UpdateAnalyticsGoalDto {
   @IsString()
   @Matches(/^[a-z0-9_-]{1,80}$/)
   eventType?: string;
+
+  @ApiProperty({
+    required: false,
+    example: ['project_view', 'cv_download', 'contact_submit'],
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(6)
+  @IsString({ each: true })
+  @Matches(/^[a-z0-9_-]{1,80}$/, { each: true })
+  eventTypes?: string[];
 
   @ApiProperty({ required: false, example: 20 })
   @IsOptional()

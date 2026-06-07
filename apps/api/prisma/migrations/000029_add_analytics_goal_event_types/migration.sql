@@ -1,0 +1,2 @@
+ALTER TABLE "AnalyticsGoal"
+ADD COLUMN "eventTypes" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

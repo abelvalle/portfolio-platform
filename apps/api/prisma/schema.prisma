@@ -509,6 +509,7 @@ model AnalyticsGoal {
   name        String
   description String?
   eventType   String
+  eventTypes  String[]  @default([])
   targetCount Int
   period      String    @default("monthly")
   visible     Boolean   @default(true)

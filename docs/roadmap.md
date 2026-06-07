@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 06:28 CEST.
+Estado actualizado: 2026-06-07 06:37 CEST.
 
 ## Hitos completados
 
@@ -4797,6 +4797,26 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 
+### Objetivos KPI compuestos Analytics
+
+- Anadido campo persistente `eventTypes` en `AnalyticsGoal` con migracion `000029_add_analytics_goal_event_types`.
+- `GET /analytics/goals/progress` cuenta objetivos simples con `eventType` y objetivos compuestos con `eventTypes`.
+- `POST|PATCH /analytics/goals` acepta de 1 a 6 eventos, sanea duplicados y mantiene `eventType` como evento principal compatible.
+- El seed incluye un objetivo compuesto `sample/demo` basado solo en eventos analytics existentes.
+- `/admin/analytics` permite seleccionar evento principal y eventos incluidos mediante checkboxes.
+- `docs/api.md` documenta el contrato compuesto.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run db:generate`
+- `npm.cmd --prefix apps/api run test -- analytics.service.spec.ts`
+- `npm.cmd --prefix apps/api run test:e2e -- analytics.e2e-spec.ts`
+- `npm.cmd --prefix apps/web run test:e2e -- analytics-goals.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:api`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Build web: Next/Node emite `DEP0205 module.register()` durante `npm.cmd run build`; no bloquea produccion, pero conviene revisarlo cuando Next actualice su runtime o cuando se suba la version de Node.
@@ -4813,7 +4833,7 @@ Verificacion realizada en este hito:
 - Webhooks configuracion editable: URL/eventos/timeouts/reintentos ya se editan desde admin y persisten en DB; el secreto HMAC sigue viviendo en variables de entorno por seguridad y puede validarse desde admin sin guardarlo ni exponerlo. Falta soporte de rotacion guiada si se decide gestionar secretos fuera de `.env`.
 - Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido, settings persistentes, cola `ContactWebhookRetryJob`, procesamiento admin, worker interno configurable, estado visible en admin, fallback local solo cuando el worker esta desactivado, guia de despliegue single/multi-replica, endpoint de cron externo con secreto dedicado y auditoria saneada del cron; falta solo configurar un scheduler externo real en la plataforma de despliegue si se decide no usar worker dedicado.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side, accion masiva filtrada de leido/no leido y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
-- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención manual, worker periodico y guía de deployment multi-replica, segmentación fuente/canal, embudo basico, presets UI de embudo configurable por API, embudo multicanal por fuente/canal desde UI, definiciones persistentes de embudos creadas/editadas desde admin y objetivos KPI persistentes con progreso, restantes y alertas basicas por rango; faltan objetivos compuestos si se definen nuevos KPIs de negocio.
+- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención manual, worker periodico y guía de deployment multi-replica, segmentación fuente/canal, embudo basico, presets UI de embudo configurable por API, embudo multicanal por fuente/canal desde UI, definiciones persistentes de embudos creadas/editadas desde admin y objetivos KPI persistentes simples/compuestos con progreso, restantes y alertas basicas por rango.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa, cohorts mensuales, cohorts por fuente/canal y comparativas contra mes previo; faltan desgloses mas ricos si se definen nuevos objetivos de negocio.
 - Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, reordenado por botones, filas drag/drop, draft/publish desde UI y asociación visual de skills/tecnologías mediante chips sobre arrays existentes.
 - Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media, reordenado por botones, filas drag/drop y draft/publish desde UI.
@@ -4833,6 +4853,6 @@ Verificacion realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
-2. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.
-3. Preparar el siguiente bloque funcional no dependiente de Docker/Postgres real.
+1. Suite raiz tras objetivos KPI compuestos.
+2. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
+3. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.

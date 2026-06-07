@@ -69,6 +69,7 @@ test("admin analytics KPI goals render and persist mutations", async ({ context,
           name: "Descargas CV sample/demo",
           description: "Objetivo demo editable.",
           eventType: "cv_download",
+          eventTypes: ["cv_download", "contact_submit"],
           targetCount: 3,
           period: "monthly",
           visible: true,
@@ -90,9 +91,10 @@ test("admin analytics KPI goals render and persist mutations", async ({ context,
         body: JSON.stringify({
           id: "goal-1",
           key: "sample-cv-downloads",
-          name: "Descargas CV revisadas",
-          eventType: "cv_download",
-          targetCount: 5,
+            name: "Descargas CV revisadas",
+            eventType: "cv_download",
+            eventTypes: ["cv_download", "contact_submit"],
+            targetCount: 5,
           period: "monthly",
           visible: true,
           order: 0
@@ -113,6 +115,7 @@ test("admin analytics KPI goals render and persist mutations", async ({ context,
         key: "contactos-mensuales",
         name: "Contactos mensuales",
         eventType: "contact_submit",
+        eventTypes: ["contact_submit"],
         targetCount: 2,
         period: "monthly",
         visible: true,
@@ -136,9 +139,11 @@ test("admin analytics KPI goals render and persist mutations", async ({ context,
   await expect(page.getByText("Descargas CV sample/demo")).toBeVisible();
   await expect(page.getByText("meta 3 - 66,7%")).toBeVisible();
   await expect(page.getByText("Faltan 1 evento para cerrar el objetivo.")).toBeVisible();
+  await expect(page.getByText("cv_download + contact_submit - mensual")).toBeVisible();
 
   await page.getByRole("button", { name: /Descargas CV sample\/demo/ }).click();
   await expect(page.getByLabel("Nombre objetivo")).toHaveValue("Descargas CV sample/demo");
+  await expect(page.getByRole("checkbox", { name: "Formulario contacto" })).toBeChecked();
   await page.getByLabel("Nombre objetivo").fill("Descargas CV revisadas");
   await page.getByLabel("Meta").fill("5");
   const updateRequest = page.waitForRequest((request) => {
@@ -146,7 +151,7 @@ test("admin analytics KPI goals render and persist mutations", async ({ context,
       return false;
     }
     const data = JSON.parse(request.postData() || "{}");
-    return data.name === "Descargas CV revisadas" && data.targetCount === 5;
+    return data.name === "Descargas CV revisadas" && data.targetCount === 5 && data.eventTypes?.includes("contact_submit");
   });
   await page.getByRole("button", { name: "Guardar objetivo KPI" }).click();
   await updateRequest;
@@ -154,13 +159,13 @@ test("admin analytics KPI goals render and persist mutations", async ({ context,
   await page.getByRole("button", { name: "Nuevo objetivo KPI" }).click();
   await page.getByLabel("Nombre objetivo").fill("Contactos mensuales");
   await page.getByLabel("Meta").fill("2");
-  await page.getByLabel("Evento", { exact: true }).selectOption("contact_submit");
+  await page.getByLabel("Evento principal").selectOption("contact_submit");
   const createRequest = page.waitForRequest((request) => {
     if (!request.url().endsWith("/api/v1/analytics/goals") || request.method() !== "POST") {
       return false;
     }
     const data = JSON.parse(request.postData() || "{}");
-    return data.key === "contactos-mensuales" && data.eventType === "contact_submit";
+    return data.key === "contactos-mensuales" && data.eventType === "contact_submit" && data.eventTypes?.join(",") === "contact_submit";
   });
   await page.getByRole("button", { name: "Crear objetivo KPI" }).click();
   await createRequest;

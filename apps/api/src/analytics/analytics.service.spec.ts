@@ -497,6 +497,7 @@ describe('AnalyticsService filters', () => {
       name: ' Descargas CV mensuales ',
       description: ' sample/demo ',
       eventType: 'cv_download',
+      eventTypes: [' cv_download ', 'contact_submit', 'cv_download'],
       targetCount: 20,
       period: 'monthly',
       visible: true,
@@ -509,6 +510,7 @@ describe('AnalyticsService filters', () => {
         name: 'Descargas CV mensuales',
         description: 'sample/demo',
         eventType: 'cv_download',
+        eventTypes: ['cv_download', 'contact_submit'],
         targetCount: 20,
         period: 'monthly',
         visible: true,
@@ -525,6 +527,7 @@ describe('AnalyticsService filters', () => {
         key: 'monthly-cv-downloads',
         name: 'Descargas CV mensuales',
         eventType: 'cv_download',
+        eventTypes: [],
         targetCount: 10,
         period: 'monthly',
         visible: true,
@@ -555,12 +558,57 @@ describe('AnalyticsService filters', () => {
     expect(result).toEqual([
       expect.objectContaining({
         id: 'goal-1',
+        eventTypes: ['cv_download'],
         count: 6,
         progressRate: 60,
         achieved: false,
         remainingCount: 4,
         alertLevel: 'info',
         alertMessage: 'Faltan 4 eventos para cerrar el objetivo.',
+      }),
+    ]);
+  });
+
+  it('builds composite analytics goal progress from multiple event types', async () => {
+    const prisma = mockPrisma();
+    prisma.analyticsGoal.findMany.mockResolvedValue([
+      {
+        id: 'goal-1',
+        key: 'monthly-engagement',
+        name: 'Acciones de interes',
+        eventType: 'project_view',
+        eventTypes: ['project_view', 'cv_download', 'contact_submit'],
+        targetCount: 10,
+        period: 'monthly',
+        visible: true,
+        order: 0,
+      },
+    ]);
+    prisma.analyticsEvent.count.mockResolvedValue(7);
+    const service = createService(prisma);
+
+    const result = await service.goalProgress({
+      from: '2026-06-01',
+      to: '2026-06-30',
+    });
+
+    expect(prisma.analyticsEvent.count).toHaveBeenCalledWith({
+      where: {
+        createdAt: {
+          gte: new Date('2026-06-01T00:00:00.000Z'),
+          lte: new Date('2026-06-30T23:59:59.999Z'),
+        },
+        type: { in: ['project_view', 'cv_download', 'contact_submit'] },
+      },
+    });
+    expect(result).toEqual([
+      expect.objectContaining({
+        id: 'goal-1',
+        eventTypes: ['project_view', 'cv_download', 'contact_submit'],
+        count: 7,
+        progressRate: 70,
+        achieved: false,
+        remainingCount: 3,
       }),
     ]);
   });

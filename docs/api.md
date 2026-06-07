@@ -190,7 +190,7 @@ Ejemplo de diccionario publico:
 
 `GET|POST|PATCH|DELETE /analytics/funnel-definitions` gestiona definiciones persistentes de embudos para el panel admin. Cada definicion guarda `key`, `name`, `description`, `steps`, `visible` y `order`; los pasos deben ser tipos de evento validos (`a-z`, numeros, `_` y `-`) y tener entre 2 y 6 elementos.
 
-`GET|POST|PATCH|DELETE /analytics/goals` gestiona objetivos KPI persistentes para el panel admin. Cada objetivo guarda `key`, `name`, `description`, `eventType`, `targetCount`, `period`, `visible` y `order`. `period` acepta `daily`, `weekly`, `monthly`, `quarterly` o `custom`.
+`GET|POST|PATCH|DELETE /analytics/goals` gestiona objetivos KPI persistentes para el panel admin. Cada objetivo guarda `key`, `name`, `description`, `eventType`, `eventTypes`, `targetCount`, `period`, `visible` y `order`. `eventType` es el evento principal y mantiene compatibilidad; `eventTypes` permite objetivos compuestos de 1 a 6 eventos. `period` acepta `daily`, `weekly`, `monthly`, `quarterly` o `custom`.
 
 `GET /analytics/goals/progress?from=YYYY-MM-DD&to=YYYY-MM-DD` devuelve objetivos visibles con `count`, `progressRate` y `achieved` calculados contra eventos filtrados por fecha:
 
@@ -200,6 +200,7 @@ Ejemplo de diccionario publico:
     "key": "sample-cv-downloads",
     "name": "Descargas CV sample/demo",
     "eventType": "cv_download",
+    "eventTypes": ["cv_download", "contact_submit"],
     "targetCount": 3,
     "period": "monthly",
     "count": 2,

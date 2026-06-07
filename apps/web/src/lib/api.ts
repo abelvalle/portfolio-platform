@@ -966,6 +966,7 @@ export type AnalyticsGoal = {
   name: string;
   description?: string | null;
   eventType: string;
+  eventTypes?: string[];
   targetCount: number;
   period: string;
   visible: boolean;
@@ -979,6 +980,7 @@ export type AnalyticsGoalMutation = {
   name: string;
   description?: string | null;
   eventType: string;
+  eventTypes?: string[];
   targetCount: number;
   period: string;
   visible: boolean;

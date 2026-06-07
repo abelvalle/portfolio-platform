@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, RefreshCw, Target, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -44,6 +45,8 @@ const goalPeriodOptions = [
   { label: "Trimestral", value: "quarterly" },
   { label: "Personalizado", value: "custom" }
 ];
+
+const goalEventTypeOptions = eventTypeOptions.filter((option) => option.value);
 
 const fallbackFunnelDefinitions: AnalyticsFunnelDefinition[] = [
   {
@@ -97,6 +100,7 @@ export function AnalyticsDashboard() {
   const [goalDraftName, setGoalDraftName] = useState("");
   const [goalDraftDescription, setGoalDraftDescription] = useState("");
   const [goalDraftEventType, setGoalDraftEventType] = useState("landing_visit");
+  const [goalDraftEventTypes, setGoalDraftEventTypes] = useState<string[]>(["landing_visit"]);
   const [goalDraftTargetCount, setGoalDraftTargetCount] = useState("10");
   const [goalDraftPeriod, setGoalDraftPeriod] = useState("monthly");
   const [message, setMessage] = useState("Cargando analitica.");
@@ -275,6 +279,7 @@ export function AnalyticsDashboard() {
       setGoalDraftName(goal.name);
       setGoalDraftDescription(goal.description || "");
       setGoalDraftEventType(goal.eventType);
+      setGoalDraftEventTypes(normalizeGoalEventTypes(goal.eventTypes, goal.eventType));
       setGoalDraftTargetCount(String(goal.targetCount));
       setGoalDraftPeriod(goal.period);
     }
@@ -285,8 +290,25 @@ export function AnalyticsDashboard() {
     setGoalDraftName("");
     setGoalDraftDescription("");
     setGoalDraftEventType("landing_visit");
+    setGoalDraftEventTypes(["landing_visit"]);
     setGoalDraftTargetCount("10");
     setGoalDraftPeriod("monthly");
+  }
+
+  function selectGoalPrimaryEvent(eventType: string) {
+    setGoalDraftEventType(eventType);
+    setGoalDraftEventTypes([eventType]);
+  }
+
+  function toggleGoalEventType(eventType: string, checked: boolean) {
+    const nextEventTypes = checked
+      ? normalizeGoalEventTypes([...goalDraftEventTypes, eventType], goalDraftEventType)
+      : goalDraftEventTypes.filter((item) => item !== eventType);
+    const normalized = normalizeGoalEventTypes(nextEventTypes, goalDraftEventType);
+    setGoalDraftEventTypes(normalized);
+    if (!normalized.includes(goalDraftEventType)) {
+      setGoalDraftEventType(normalized[0]);
+    }
   }
 
   async function saveGoal() {
@@ -298,10 +320,13 @@ export function AnalyticsDashboard() {
 
     setIsSavingGoal(true);
     try {
+      const eventTypes = normalizeGoalEventTypes(goalDraftEventTypes, goalDraftEventType);
+      const orderedEventTypes = [goalDraftEventType, ...eventTypes.filter((item) => item !== goalDraftEventType)];
       const mutation = {
         name: goalDraftName,
         description: goalDraftDescription || null,
-        eventType: goalDraftEventType,
+        eventType: orderedEventTypes[0],
+        eventTypes: orderedEventTypes,
         targetCount: Math.trunc(targetCount),
         period: goalDraftPeriod,
         visible: true,
@@ -469,14 +494,14 @@ export function AnalyticsDashboard() {
             <Input id="analyticsGoalTarget" type="number" min={1} value={goalDraftTargetCount} onChange={(event) => setGoalDraftTargetCount(event.target.value)} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="analyticsGoalEventType">Evento</Label>
+            <Label htmlFor="analyticsGoalEventType">Evento principal</Label>
             <select
               id="analyticsGoalEventType"
               className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
               value={goalDraftEventType}
-              onChange={(event) => setGoalDraftEventType(event.target.value)}
+              onChange={(event) => selectGoalPrimaryEvent(event.target.value)}
             >
-              {eventTypeOptions.filter((option) => option.value).map((option) => (
+              {goalEventTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </select>
@@ -505,6 +530,20 @@ export function AnalyticsDashboard() {
             </Button>
           </div>
         </div>
+        <div className="grid gap-2">
+          <Label>Eventos incluidos</Label>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {goalEventTypeOptions.map((option) => (
+              <label key={option.value} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+                <Checkbox
+                  checked={goalDraftEventTypes.includes(option.value)}
+                  onCheckedChange={(checked) => toggleGoalEventType(option.value, Boolean(checked))}
+                />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {goals.map((goal) => (
             <button
@@ -528,7 +567,7 @@ export function AnalyticsDashboard() {
                 <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(goal.progressRate, 100)}%` }} />
               </div>
               <p className="mt-2 text-sm text-muted-foreground">{goal.alertMessage}</p>
-              <p className="mt-2 break-all text-xs text-muted-foreground">{goal.eventType} - {periodLabel(goal.period)}</p>
+              <p className="mt-2 break-all text-xs text-muted-foreground">{normalizeGoalEventTypes(goal.eventTypes, goal.eventType).join(" + ")} - {periodLabel(goal.period)}</p>
             </button>
           ))}
           {goals.length ? null : (
@@ -801,6 +840,12 @@ function slugifyAnalyticsKey(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return slug || `goal-${Date.now()}`;
+}
+
+function normalizeGoalEventTypes(eventTypes: string[] | undefined, fallback: string) {
+  const source = eventTypes?.length ? eventTypes : [fallback];
+  const normalized = Array.from(new Set(source.map((eventType) => eventType.trim()).filter(Boolean))).slice(0, 6);
+  return normalized.length ? normalized : [fallback];
 }
 
 function periodLabel(period: string) {

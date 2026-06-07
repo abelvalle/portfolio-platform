@@ -395,6 +395,7 @@ async function seedPageSectionsAndModules() {
       name: "Visitas landing sample/demo",
       description: "Objetivo demo editable para validar el panel de analitica.",
       eventType: "landing_visit",
+      eventTypes: ["landing_visit"],
       targetCount: 10,
       period: "monthly"
     },
@@ -403,7 +404,17 @@ async function seedPageSectionsAndModules() {
       name: "Descargas CV sample/demo",
       description: "Objetivo demo editable; ajusta el KPI real desde admin.",
       eventType: "cv_download",
+      eventTypes: ["cv_download"],
       targetCount: 3,
+      period: "monthly"
+    },
+    {
+      key: "sample-engagement-actions",
+      name: "Acciones de interes sample/demo",
+      description: "Objetivo demo compuesto; combina eventos existentes sin crear KPIs reales.",
+      eventType: "project_view",
+      eventTypes: ["project_view", "cv_download", "contact_submit"],
+      targetCount: 6,
       period: "monthly"
     }
   ];
