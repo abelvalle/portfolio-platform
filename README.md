@@ -70,8 +70,8 @@ Variables opcionales de contacto:
 
 - `CONTACT_IP_HASH_SALT`: sal para hashes de IP en mensajes de contacto.
 - `CONTACT_STORE_USER_AGENT=false`: evita guardar user-agent en mensajes de contacto.
-- `CONTACT_EMAIL_PROVIDER=resend|generic`: activa notificacion email no bloqueante para nuevos mensajes.
-- `CONTACT_EMAIL_API_KEY`, `CONTACT_EMAIL_FROM`, `CONTACT_EMAIL_TO`: credenciales y routing del proveedor, siempre fuera del repositorio.
+- `CONTACT_EMAIL_PROVIDER=disabled|resend|generic`: activa notificacion email no bloqueante para nuevos mensajes.
+- `CONTACT_EMAIL_API_KEY`, `CONTACT_EMAIL_FROM`, `CONTACT_EMAIL_TO`: credenciales y routing del proveedor, siempre fuera del repositorio. Si usas `generic`, define tambien `CONTACT_EMAIL_API_URL`.
 
 ## Migraciones y seed
 
@@ -120,7 +120,7 @@ Login: `/login`
 
 Email por defecto: `abel.valle.rosa@gmail.com`
 
-Password por defecto: valor de `ADMIN_PASSWORD` en `.env`. En `NODE_ENV=production`, la API rechaza arrancar con secretos placeholder o `API_CORS_ORIGIN` local.
+Password por defecto: valor de `ADMIN_PASSWORD` en `.env`. En `NODE_ENV=production`, la API rechaza arrancar con secretos placeholder, `API_CORS_ORIGIN` local o notificacion email activada sin configuracion completa.
 
 ## CV Manager
 

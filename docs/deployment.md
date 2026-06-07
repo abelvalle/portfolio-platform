@@ -49,7 +49,7 @@ Comandos:
 - Migraciones: `npm --prefix apps/api run db:deploy`
 - Seed: `npm --prefix apps/api run db:seed`
 
-En `NODE_ENV=production`, el backend falla al arrancar si `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` o `ADMIN_PASSWORD` conservan valores placeholder de `.env.example`, o si `API_CORS_ORIGIN` falta o apunta solo a localhost.
+En `NODE_ENV=production`, el backend falla al arrancar si `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` o `ADMIN_PASSWORD` conservan valores placeholder de `.env.example`, si `API_CORS_ORIGIN` falta o apunta solo a localhost, o si `CONTACT_EMAIL_PROVIDER` esta activado sin las credenciales minimas del proveedor.
 
 `API_CORS_ORIGIN` acepta una lista separada por comas. Como la API usa cookies/tokens con `credentials: true`, no uses `*`; el bootstrap lo descarta y exige origenes explicitos.
 
@@ -83,6 +83,8 @@ El secreto HMAC de webhooks sigue viviendo en `CONTACT_WEBHOOK_SECRET`; no se gu
 ### Notificacion email de contacto
 
 La notificacion email es opcional y no sustituye el guardado en base de datos. Para Resend, configura `CONTACT_EMAIL_PROVIDER=resend`, `CONTACT_EMAIL_API_KEY`, `CONTACT_EMAIL_FROM` y `CONTACT_EMAIL_TO`; si `CONTACT_EMAIL_API_URL` queda vacia, se usa `https://api.resend.com/emails`. Para otro proveedor HTTP compatible, usa `CONTACT_EMAIL_PROVIDER=generic` y define `CONTACT_EMAIL_API_URL`.
+
+En produccion, cualquier valor distinto de `disabled`, `none`, `resend` o `generic` en `CONTACT_EMAIL_PROVIDER` bloquea el arranque para evitar typos silenciosos. `generic` exige `CONTACT_EMAIL_API_URL`; `resend` permite dejarla vacia y usar el endpoint por defecto.
 
 El panel `/admin/settings` solo muestra si los valores estan configurados. No devuelve ni guarda API key, remitente ni destinatario. Tras desplegar, usa `Probar email` para enviar un mensaje sintetico sin datos personales y confirmar el proveedor.
 

@@ -15,7 +15,14 @@ const insecureValues = new Set([
   'change-me',
 ]);
 
+const disabledContactEmailProviders = new Set(['', 'disabled', 'none']);
+const supportedContactEmailProviders = new Set(['resend', 'generic']);
+
 type SecretLookup = (key: string) => string | null | undefined;
+
+function hasValue(value: string | null | undefined) {
+  return Boolean(value?.trim());
+}
 
 function isLocalOrigin(origin: string) {
   const normalized = origin.trim().toLowerCase();
@@ -73,6 +80,36 @@ export function unsafeProductionRuntimeConfigKeys(
     : [];
 }
 
+export function unsafeProductionContactEmailConfigKeys(
+  nodeEnv: string | undefined,
+  lookup: SecretLookup,
+) {
+  if (nodeEnv !== 'production') {
+    return [];
+  }
+
+  const provider = (lookup('CONTACT_EMAIL_PROVIDER') || '')
+    .trim()
+    .toLowerCase();
+
+  if (disabledContactEmailProviders.has(provider)) {
+    return [];
+  }
+
+  if (!supportedContactEmailProviders.has(provider)) {
+    return ['CONTACT_EMAIL_PROVIDER'];
+  }
+
+  const requiredKeys = [
+    ...(provider === 'generic' ? ['CONTACT_EMAIL_API_URL'] : []),
+    'CONTACT_EMAIL_API_KEY',
+    'CONTACT_EMAIL_FROM',
+    'CONTACT_EMAIL_TO',
+  ];
+
+  return requiredKeys.filter((key) => !hasValue(lookup(key)));
+}
+
 export function unsafeProductionConfigKeys(
   nodeEnv: string | undefined,
   lookup: SecretLookup,
@@ -80,6 +117,7 @@ export function unsafeProductionConfigKeys(
   return [
     ...unsafeProductionSecretKeys(nodeEnv, lookup),
     ...unsafeProductionRuntimeConfigKeys(nodeEnv, lookup),
+    ...unsafeProductionContactEmailConfigKeys(nodeEnv, lookup),
   ];
 }
 

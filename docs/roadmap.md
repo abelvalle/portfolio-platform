@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 10:45 CEST.
+Estado actualizado: 2026-06-07 10:52 CEST.
 
 ## Hitos completados
 
@@ -5699,6 +5699,22 @@ Verificacion realizada en este hito:
 Verificacion realizada en este hito:
 
 - `gh pr list --repo abelvalle/portfolio-platform --state open --limit 20 --json number,title,headRefName,statusCheckRollup,updatedAt`
+- `git diff --check`
+
+### Guard producción email contacto
+
+- Añadido guard de arranque para `NODE_ENV=production` cuando `CONTACT_EMAIL_PROVIDER` esta activado.
+- `disabled`, `none`, `resend` y `generic` quedan como valores soportados; cualquier otro valor bloquea el arranque para evitar typos silenciosos.
+- `resend` exige `CONTACT_EMAIL_API_KEY`, `CONTACT_EMAIL_FROM` y `CONTACT_EMAIL_TO`; `CONTACT_EMAIL_API_URL` puede quedar vacia y usar el endpoint por defecto.
+- `generic` exige tambien `CONTACT_EMAIL_API_URL`.
+- El email de contacto sigue siendo opcional: si el proveedor esta desactivado, produccion no requiere credenciales de email.
+- README y guia de deployment documentan el nuevo comportamiento.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- production-secrets.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
 - `git diff --check`
 
 ## Deuda técnica abierta
