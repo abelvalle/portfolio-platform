@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:00 CEST.
+Estado actualizado: 2026-06-07 09:02 CEST.
 
 ## Hitos completados
 
@@ -5361,6 +5361,18 @@ Verificacion realizada en este hito:
 
 - `gh run view 27085502994 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Guia de contribucion y PR checklist
+
+- Anadido `CONTRIBUTING.md` con flujo `develop`/`master`, comandos de verificacion, reglas de contenido CV y seguridad.
+- Anadida plantilla `.github/PULL_REQUEST_TEMPLATE.md` con checklist de tipo de cambio, verificacion y datos sensibles/CV.
+- README enlaza la guia de contribucion.
+
+Verificacion realizada en este hito:
+
+- `Get-Content -Path CONTRIBUTING.md`
+- `Get-Content -Path .github/PULL_REQUEST_TEMPLATE.md`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

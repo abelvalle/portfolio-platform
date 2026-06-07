@@ -143,6 +143,8 @@ Ver [deployment.md](docs/deployment.md).
 - `master`: rama estable.
 - `develop`: rama principal de trabajo.
 
+Ver [CONTRIBUTING.md](CONTRIBUTING.md) para flujo de ramas, checklist de PR y reglas de contenido CV.
+
 ## Capturas
 
 Pendiente añadir capturas finales en `docs/screenshots/`.
