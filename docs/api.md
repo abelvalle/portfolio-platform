@@ -292,7 +292,9 @@ Las exportaciones ATS siguen priorizando compatibilidad: fuerzan color textual y
 
 Si `CONTACT_WEBHOOK_URL` está configurado, cada mensaje guardado dispara un `POST` externo con evento `contact.message.created`. Si `CONTACT_WEBHOOK_SECRET` existe, se añade firma HMAC SHA-256 en `X-Portfolio-Signature`.
 
-Cada intento de entrega o prueba de webhook registra un `AuditLog` con evento, estado HTTP si existe y resultado `configured/dispatched`. No se guardan URL, secreto, cuerpo del mensaje ni contenido personal del contacto en ese registro.
+Cada intento de entrega o prueba de webhook registra un `AuditLog` con evento, estado HTTP si existe, `retryAttempt` cuando aplica y resultado `configured/dispatched`. No se guardan URL, secreto, cuerpo del mensaje ni contenido personal del contacto en ese registro.
+
+Si falla una entrega de `contact.message.created`, el backend puede reintentar de forma diferida reconstruyendo el payload desde el mensaje persistido. La política se controla con `CONTACT_WEBHOOK_RETRY_ATTEMPTS` y `CONTACT_WEBHOOK_RETRY_DELAY_MS`.
 
 Privacidad de contacto:
 
@@ -301,7 +303,7 @@ Privacidad de contacto:
 
 Endpoints admin de webhook:
 
-- `GET /contact-messages/webhook/status`: protegido para `admin`, `editor` y `viewer`; indica si URL/secret están configurados sin exponer valores.
+- `GET /contact-messages/webhook/status`: protegido para `admin`, `editor` y `viewer`; indica si URL/secret están configurados y política de retry sin exponer valores.
 - `GET /contact-messages/webhook/deliveries`: protegido para `admin`, `editor` y `viewer`; devuelve los 10 últimos intentos auditados sin URL, secreto ni payload.
 - `POST /contact-messages/webhook/messages/:id/retry`: protegido para `admin` y `editor`; reconstruye el payload desde el mensaje guardado y crea una nueva auditoria de entrega.
 - `POST /contact-messages/webhook/test`: protegido para `admin` y `editor`; envía un evento `contact.webhook.test` sin datos personales.

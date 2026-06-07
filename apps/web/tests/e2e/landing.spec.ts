@@ -185,7 +185,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
         hasSecret: true,
         event: "contact.message.created",
         testEvent: "contact.webhook.test",
-        timeoutMs: 5000
+        timeoutMs: 5000,
+        retryAttempts: 2,
+        retryDelayMs: 30000
       })
     });
   });
@@ -209,6 +211,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
           dispatched: false,
           error: "fetch failed",
           messageId: "message-2",
+          retryAttempt: 1,
           createdAt: "2026-06-06T08:35:00.000Z"
         }
       ])
@@ -2071,7 +2074,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Seguridad admin")).toBeVisible();
   await expect(page.getByText("Webhooks contacto")).toBeVisible();
   await expect(page.getByText("Ultimas entregas webhook")).toBeVisible();
+  await expect(page.getByText("Reintentos: 2 cada 30000 ms")).toBeVisible();
   await expect(page.getByText("contact.message.created", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/retry 1/)).toBeVisible();
   await expect(page.getByText("HTTP 202")).toBeVisible();
   await page.getByRole("button", { name: "Reintentar" }).click();
   await expect(page.getByText("Reintento enviado para message-2.")).toBeVisible();

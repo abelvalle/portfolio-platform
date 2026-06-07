@@ -38,6 +38,7 @@ const message = {
 
 describe('ContactWebhookService', () => {
   afterEach(() => {
+    jest.useRealTimers();
     jest.restoreAllMocks();
   });
 
@@ -63,6 +64,8 @@ describe('ContactWebhookService', () => {
       event: 'contact.message.created',
       testEvent: 'contact.webhook.test',
       timeoutMs: 5000,
+      retryAttempts: 2,
+      retryDelayMs: 30000,
     });
   });
 
@@ -104,6 +107,42 @@ describe('ContactWebhookService', () => {
     );
   });
 
+  it('schedules automatic retry for failed message deliveries', async () => {
+    jest.useFakeTimers();
+    const prisma = createPrisma();
+    const service = createService(
+      {
+        CONTACT_WEBHOOK_URL: 'https://example.com/webhook',
+        CONTACT_WEBHOOK_RETRY_ATTEMPTS: '1',
+        CONTACT_WEBHOOK_RETRY_DELAY_MS: '1000',
+      },
+      prisma,
+    );
+    Object.defineProperty(global, 'fetch', {
+      configurable: true,
+      value: jest.fn().mockResolvedValue({ ok: false, status: 503 }),
+    });
+
+    const result = await service.dispatch(message);
+
+    expect(result).toEqual({ dispatched: false, status: 503 });
+    expect(jest.getTimerCount()).toBe(1);
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: {
+        action: 'contact.webhook.delivery',
+        resource: 'contact-webhook',
+        resourceId: 'contact.message.created',
+        metadata: {
+          event: 'contact.message.created',
+          configured: true,
+          dispatched: false,
+          messageId: 'message-1',
+          status: 503,
+        },
+      },
+    });
+  });
+
   it('audits manual test attempts when webhook is not configured', async () => {
     const prisma = createPrisma();
     const service = createService({}, prisma);
@@ -137,6 +176,7 @@ describe('ContactWebhookService', () => {
           dispatched: true,
           messageId: 'message-1',
           status: 202,
+          retryAttempt: 1,
           ignored: 'not-returned',
         },
         createdAt: new Date('2026-06-06T08:30:00.000Z'),
@@ -174,6 +214,7 @@ describe('ContactWebhookService', () => {
         status: 202,
         error: null,
         messageId: 'message-1',
+        retryAttempt: 1,
         createdAt: new Date('2026-06-06T08:30:00.000Z'),
       },
       {
@@ -184,6 +225,7 @@ describe('ContactWebhookService', () => {
         status: null,
         error: 'fetch failed',
         messageId: null,
+        retryAttempt: null,
         createdAt: new Date('2026-06-06T08:31:00.000Z'),
       },
     ]);

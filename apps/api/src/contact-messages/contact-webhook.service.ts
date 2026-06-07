@@ -20,6 +20,8 @@ export class ContactWebhookService {
       event: 'contact.message.created',
       testEvent: 'contact.webhook.test',
       timeoutMs: 5_000,
+      retryAttempts: this.retryAttempts,
+      retryDelayMs: this.retryDelayMs,
     };
   }
 
@@ -43,12 +45,13 @@ export class ContactWebhookService {
         status: this.numberValue(metadata.status),
         error: this.stringValue(metadata.error),
         messageId: this.stringValue(metadata.messageId),
+        retryAttempt: this.numberValue(metadata.retryAttempt),
         createdAt: log.createdAt,
       };
     });
   }
 
-  async dispatch(message: ContactMessage) {
+  async dispatch(message: ContactMessage, retryAttempt = 0) {
     const url = this.webhookUrl;
     if (!url) {
       return { dispatched: false };
@@ -67,9 +70,19 @@ export class ContactWebhookService {
       },
     });
 
-    return this.postWebhook(url, body, 'contact.message.created', {
-      messageId: message.id,
-    });
+    const result = await this.postWebhook(
+      url,
+      body,
+      'contact.message.created',
+      {
+        messageId: message.id,
+        ...(retryAttempt ? { retryAttempt } : {}),
+      },
+    );
+    if (!result.dispatched) {
+      this.scheduleRetry(message.id, retryAttempt + 1);
+    }
+    return result;
   }
 
   async testDispatch() {
@@ -91,7 +104,7 @@ export class ContactWebhookService {
     return { configured: true, ...result };
   }
 
-  async retryMessage(messageId: string) {
+  async retryMessage(messageId: string, retryAttempt = 0) {
     const message = await this.prisma.contactMessage.findUnique({
       where: { id: messageId },
     });
@@ -99,8 +112,17 @@ export class ContactWebhookService {
       throw new NotFoundException('Contact message not found');
     }
 
-    const result = await this.dispatch(message);
+    const result = await this.dispatch(message, retryAttempt);
     return { messageId, ...result };
+  }
+
+  private scheduleRetry(messageId: string, retryAttempt: number) {
+    if (retryAttempt > this.retryAttempts) {
+      return;
+    }
+    setTimeout(() => {
+      void this.retryMessage(messageId, retryAttempt);
+    }, this.retryDelayMs);
   }
 
   private async postWebhook(
@@ -182,6 +204,32 @@ export class ContactWebhookService {
 
   private get webhookSecret() {
     return this.configService.get<string>('CONTACT_WEBHOOK_SECRET');
+  }
+
+  private get retryAttempts() {
+    return this.numberConfig('CONTACT_WEBHOOK_RETRY_ATTEMPTS', 2, 0, 5);
+  }
+
+  private get retryDelayMs() {
+    return this.numberConfig(
+      'CONTACT_WEBHOOK_RETRY_DELAY_MS',
+      30_000,
+      1_000,
+      300_000,
+    );
+  }
+
+  private numberConfig(
+    key: string,
+    fallback: number,
+    minimum: number,
+    maximum: number,
+  ) {
+    const configured = Number(this.configService.get<string>(key) || fallback);
+    if (!Number.isFinite(configured)) {
+      return fallback;
+    }
+    return Math.min(Math.max(Math.trunc(configured), minimum), maximum);
   }
 
   private metadataRecord(metadata: unknown): Record<string, unknown> {

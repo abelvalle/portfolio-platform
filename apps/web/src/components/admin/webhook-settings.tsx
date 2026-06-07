@@ -89,6 +89,7 @@ export function WebhookSettings() {
           <span>Test: {status?.testEvent || "contact.webhook.test"}</span>
           <span>Firma HMAC: {status?.hasSecret ? "activa" : "no configurada"}</span>
           <span>Timeout: {status?.timeoutMs ?? 5000} ms</span>
+          <span>Reintentos: {status?.retryAttempts ?? 0} cada {status?.retryDelayMs ?? 0} ms</span>
         </div>
         <div className="grid gap-2">
           <h3 className="text-sm font-medium">Ultimas entregas webhook</h3>
@@ -101,6 +102,7 @@ export function WebhookSettings() {
                     <p className="text-muted-foreground">
                       {formatDeliveryDate(delivery.createdAt)}
                       {delivery.messageId ? ` - mensaje ${delivery.messageId}` : ""}
+                      {delivery.retryAttempt ? ` - retry ${delivery.retryAttempt}` : ""}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:justify-end">

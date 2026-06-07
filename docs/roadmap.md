@@ -4045,6 +4045,22 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
 
+### Reintentos automaticos diferidos de webhooks
+
+- `ContactWebhookService` agenda reintentos diferidos para entregas fallidas de `contact.message.created`.
+- La politica se controla con `CONTACT_WEBHOOK_RETRY_ATTEMPTS` y `CONTACT_WEBHOOK_RETRY_DELAY_MS`, documentadas en `.env.example`.
+- Cada intento mantiene auditoria sin URL, secreto ni payload, y registra `retryAttempt` cuando aplica.
+- `/admin/settings` muestra reintentos configurados y el intento en el historial de entregas.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- contact-webhook.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -4058,7 +4074,7 @@ Verificacion realizada en este hito:
 - Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; el historial agregado de publicaciones CV queda visible desde Versiones CV.
 - Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, version/recurso, fecha y usuario, con timeline visual por version, historial agregado de publicaciones CV, detalle por evento, exportacion CSV visible y exportacion server-side del historico filtrado; falta analitica comparativa avanzada de cambios entre publicaciones.
 - Webhooks configuración editable: existe UI de estado/prueba; falta edición persistente desde admin porque URL/secret siguen viviendo en variables de entorno.
-- Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test y reintento manual desde mensaje persistido; falta cola automatica/retry diferido para destinos externos caidos.
+- Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido y reintentos diferidos en memoria configurables por entorno; falta cola persistente si se requiere tolerancia a reinicios del backend.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side, accion masiva filtrada de leido/no leido y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal, embudo basico y embudo multicanal por fuente/canal desde UI; faltan embudos configurables definidos por admin.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa, cohorts mensuales, cohorts por fuente/canal y comparativas contra mes previo; faltan desgloses mas ricos si se definen nuevos objetivos de negocio.

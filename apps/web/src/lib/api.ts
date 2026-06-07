@@ -601,6 +601,8 @@ export type ContactWebhookStatus = {
   event: string;
   testEvent: string;
   timeoutMs: number;
+  retryAttempts?: number;
+  retryDelayMs?: number;
 };
 
 export type LinkedinIntegrationStatus = {
@@ -631,6 +633,7 @@ export type ContactWebhookDelivery = {
   status?: number | null;
   error?: string | null;
   messageId?: string | null;
+  retryAttempt?: number | null;
   createdAt: string;
 };
 
