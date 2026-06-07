@@ -663,6 +663,8 @@ export type ContactWebhookStatus = {
   timeoutMs: number;
   retryAttempts?: number;
   retryDelayMs?: number;
+  retryWorkerEnabled?: boolean;
+  retryWorkerIntervalMs?: number;
 };
 
 export type ContactWebhookSettings = ContactWebhookStatus & {

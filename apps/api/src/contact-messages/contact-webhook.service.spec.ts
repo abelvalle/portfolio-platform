@@ -77,7 +77,23 @@ describe('ContactWebhookService', () => {
       timeoutMs: 5000,
       retryAttempts: 2,
       retryDelayMs: 30000,
+      retryWorkerEnabled: true,
+      retryWorkerIntervalMs: 60000,
     });
+  });
+
+  it('reports disabled webhook retry worker configuration', async () => {
+    const service = createService({
+      CONTACT_WEBHOOK_RETRY_WORKER_ENABLED: 'false',
+      CONTACT_WEBHOOK_RETRY_WORKER_INTERVAL_MS: '120000',
+    });
+
+    await expect(service.status()).resolves.toEqual(
+      expect.objectContaining({
+        retryWorkerEnabled: false,
+        retryWorkerIntervalMs: 120000,
+      }),
+    );
   });
 
   it('uses persisted webhook settings without exposing the secret', async () => {
@@ -109,6 +125,8 @@ describe('ContactWebhookService', () => {
       timeoutMs: 8000,
       retryAttempts: 1,
       retryDelayMs: 5000,
+      retryWorkerEnabled: true,
+      retryWorkerIntervalMs: 60000,
       hasSecret: true,
       source: 'database',
     });

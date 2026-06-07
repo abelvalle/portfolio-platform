@@ -26,6 +26,7 @@ export class ContactWebhookService {
 
   async status() {
     const config = await this.runtimeConfig();
+    const retryWorker = this.retryWorkerConfig();
     return {
       configured: Boolean(config.enabled && config.url),
       hasSecret: Boolean(this.webhookSecret),
@@ -34,12 +35,15 @@ export class ContactWebhookService {
       timeoutMs: config.timeoutMs,
       retryAttempts: config.retryAttempts,
       retryDelayMs: config.retryDelayMs,
+      retryWorkerEnabled: retryWorker.enabled,
+      retryWorkerIntervalMs: retryWorker.intervalMs,
     };
   }
 
   async settings() {
     const settings = await this.persistedSettings();
     const config = await this.runtimeConfig(settings);
+    const retryWorker = this.retryWorkerConfig();
     return {
       id: settings?.id,
       enabled: config.enabled,
@@ -49,6 +53,8 @@ export class ContactWebhookService {
       timeoutMs: config.timeoutMs,
       retryAttempts: config.retryAttempts,
       retryDelayMs: config.retryDelayMs,
+      retryWorkerEnabled: retryWorker.enabled,
+      retryWorkerIntervalMs: retryWorker.intervalMs,
       hasSecret: Boolean(this.webhookSecret),
       source: settings ? 'database' : 'environment',
     };
@@ -358,6 +364,21 @@ export class ContactWebhookService {
 
   private get webhookSecret() {
     return this.configService.get<string>('CONTACT_WEBHOOK_SECRET');
+  }
+
+  private retryWorkerConfig() {
+    return {
+      enabled:
+        this.configService.get<string>(
+          'CONTACT_WEBHOOK_RETRY_WORKER_ENABLED',
+        ) !== 'false',
+      intervalMs: this.numberConfig(
+        'CONTACT_WEBHOOK_RETRY_WORKER_INTERVAL_MS',
+        60_000,
+        1_000,
+        300_000,
+      ),
+    };
   }
 
   private numberConfig(
