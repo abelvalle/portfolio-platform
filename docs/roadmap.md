@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 10:11 CEST.
+Estado actualizado: 2026-06-07 10:16 CEST.
 
 ## Hitos completados
 
@@ -5579,6 +5579,23 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:api`
 - `gh run view 27086947384 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27086947391 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
+
+### Dependabot actions/checkout v6
+
+- Fusionada por squash la PR #2 de Dependabot: `actions/checkout` de `v4` a `v6`.
+- El cambio afecta a `.github/workflows/ci.yml` y `.github/workflows/codeql.yml`.
+- `develop` queda en el commit remoto `2d2df83` tras el merge.
+- CI y CodeQL remotos validan que `checkout@v6` funciona con los runners actuales y con los quality gates existentes.
+
+Verificacion realizada en este hito:
+
+- `gh pr view 2 --repo abelvalle/portfolio-platform --json number,title,files,statusCheckRollup,mergeable`
+- `gh pr diff 2 --repo abelvalle/portfolio-platform`
+- `gh pr merge 2 --repo abelvalle/portfolio-platform --squash --delete-branch`
+- `Select-String -Path .github/workflows/ci.yml,.github/workflows/codeql.yml -Pattern "actions/checkout"`
+- `gh run view 27087051764 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27087051746 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
 
 ## Deuda técnica abierta
