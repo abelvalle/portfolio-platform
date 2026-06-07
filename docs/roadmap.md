@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 04:57 CEST.
+Estado actualizado: 2026-06-07 04:59 CEST.
 
 ## Hitos completados
 
@@ -4494,6 +4494,17 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:api`
 - `$env:DATABASE_URL='postgresql://user:pass@localhost:5432/portfolio'; npx.cmd prisma validate` en `apps/api`
 - `npx.cmd tsc --noEmit --pretty false --target es2022 --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck prisma/seed.ts` en `apps/api`
+
+### Suite raiz tras seed y sections i18n
+
+- Ejecutada la suite raiz despues de ampliar seed i18n publico y permitir traducciones indexadas de secciones.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `28` suites y `144` tests, smoke web y build Next/Nest correctos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
 
 ## Deuda técnica abierta
 
