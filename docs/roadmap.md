@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:40 CEST.
+Estado actualizado: 2026-06-07 09:41 CEST.
 
 ## Hitos completados
 
@@ -5484,6 +5484,18 @@ Verificacion realizada en este hito:
 - `gh run view 27086305083 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27086305084 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Politica npm audit en CI
+
+- Anadido paso `Audit policy` en el job `Quality gates`.
+- La CI ejecuta `npm run audit:policy` despues de `npm ci` y antes de generar Prisma/lint/tests/build.
+- README refleja la politica de audit como parte de la puerta base en `develop` y `master`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run audit:policy`
+- `Get-Content -Path .github/workflows/ci.yml`
+- `git diff --check`
 
 ## Deuda técnica abierta
 
