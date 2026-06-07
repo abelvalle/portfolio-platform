@@ -4120,6 +4120,17 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
 
+### Suite raiz tras bloque AppModule
+
+- Ejecutada la suite raiz despues de navegacion sensible a modulos, permisos endurecidos y saneamiento de escrituras `AppModule`.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `26` suites y `125` tests API, smoke web y build Next/Nest correctos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
