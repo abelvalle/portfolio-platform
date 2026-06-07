@@ -4353,6 +4353,17 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:api`
 - `npm.cmd run build:web`
 
+### Contrato HTTP de settings webhook
+
+- Añadido e2e de `ContactMessagesController` para `GET|PATCH /contact-messages/webhook/settings`.
+- El test valida que settings no exponen secreto, que `PATCH` elimina campos desconocidos como `secret` y que URL invalida devuelve `400`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test:e2e -- contact-webhook.e2e-spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ya existe modelo/API/seed y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online leen traducciones publicas con fallback local. Falta ampliar seed/editor a todas las microcopias y secciones complejas antes de retirar completamente el fallback.
