@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 06:18 CEST.
+Estado actualizado: 2026-06-07 06:20 CEST.
 
 ## Hitos completados
 
@@ -4756,6 +4756,17 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:api`
 - `npm.cmd run build:web`
 - `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "admin publication page"`
+
+### Suite raiz tras validacion secreto webhook
+
+- Ejecutada la suite raiz despues de añadir la validacion guiada de secreto webhook.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `29` suites y `157` tests, smoke web y build Next/Nest correctos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
 
 ## Deuda técnica abierta
 
