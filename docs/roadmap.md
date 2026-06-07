@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 07:51 CEST.
+Estado actualizado: 2026-06-07 07:53 CEST.
 
 ## Hitos completados
 
@@ -5073,6 +5073,18 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run test -- app.controller.spec.ts`
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
+
+### Suite raiz tras health checks API
+
+- Ejecutada la suite raiz despues de anadir liveness/readiness para despliegue API.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `30` suites y `170` tests, smoke web y build Next/Nest correctos.
+- Observacion: el build web sigue mostrando `DEP0205 module.register()` desde la cadena de Next/Node, sin bloquear compilacion.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
 
 ## Deuda técnica abierta
 
