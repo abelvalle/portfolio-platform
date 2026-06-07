@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 10:22 CEST.
+Estado actualizado: 2026-06-07 10:27 CEST.
 
 ## Hitos completados
 
@@ -5613,6 +5613,22 @@ Verificacion realizada en este hito:
 - `Select-String -Path .github/workflows/ci.yml,.github/workflows/codeql.yml -Pattern "actions/setup-node|actions/checkout"`
 - `gh run view 27087157844 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27087157845 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
+
+### Dependabot React 19.2.7
+
+- Fusionada por squash la PR #3 de Dependabot: `react` y `react-dom` de `19.2.4` a `19.2.7`.
+- El cambio afecta a `apps/web/package.json` y `package-lock.json`.
+- `develop` queda en el commit remoto `3390486` tras el merge.
+- CI remoto valida lint, tests, build web/API, smoke e2e frontend, audit policy, OpenAPI drift check y Docker Compose.
+
+Verificacion realizada en este hito:
+
+- `gh pr view 3 --repo abelvalle/portfolio-platform --json number,title,files,statusCheckRollup,mergeable`
+- `gh pr merge 3 --repo abelvalle/portfolio-platform --squash --delete-branch`
+- `Select-String -Path apps/web/package.json -Pattern 'react|react-dom'`
+- `gh run view 27087269916 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27087269915 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
 
 ## Deuda técnica abierta
