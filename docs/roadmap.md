@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:56 CEST.
+Estado actualizado: 2026-06-07 09:00 CEST.
 
 ## Hitos completados
 
@@ -5350,6 +5350,17 @@ Verificacion realizada en este hito:
 
 - `Get-Content -Path .github/dependabot.yml`
 - `git diff --check`
+
+### CI remoto verde tras Dependabot
+
+- Revalidado GitHub Actions despues de anadir `.github/dependabot.yml`.
+- Run `27085502994` completado correctamente en `develop`.
+- Jobs verdes: `Quality gates` y `Web e2e smoke`.
+
+Verificacion realizada en este hito:
+
+- `gh run view 27085502994 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
