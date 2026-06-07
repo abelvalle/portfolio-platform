@@ -39,6 +39,12 @@ type SkillFormDraft = {
   level: string;
 };
 
+type LanguageFormDraft = {
+  index: number;
+  name: string;
+  level: string;
+};
+
 type ProjectFormDraft = {
   index: number;
   name: string;
@@ -92,6 +98,12 @@ const emptySkillFormDraft: SkillFormDraft = {
   index: 0,
   name: "",
   category: "",
+  level: ""
+};
+
+const emptyLanguageFormDraft: LanguageFormDraft = {
+  index: 0,
+  name: "",
   level: ""
 };
 
@@ -259,6 +271,14 @@ function languagesFromStructuredJson(value: unknown) {
     })
     .filter(Boolean)
     .join("\n");
+}
+
+function languageListFromStructuredJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return [];
+  }
+  const languages = (value as Record<string, unknown>).languages;
+  return Array.isArray(languages) ? languages : [];
 }
 
 function projectsFromStructuredJson(value: unknown) {
@@ -487,6 +507,19 @@ function skillFormFromStructuredJson(value: unknown, index = 0): SkillFormDraft 
   };
 }
 
+function languageFormFromStructuredJson(value: unknown, index = 0): LanguageFormDraft {
+  const selected = languageListFromStructuredJson(value)[index];
+  if (!selected || typeof selected !== "object" || Array.isArray(selected)) {
+    return { ...emptyLanguageFormDraft, index };
+  }
+  const data = selected as Record<string, unknown>;
+  return {
+    index,
+    name: textField(data, "name"),
+    level: textField(data, "level")
+  };
+}
+
 function projectFormFromStructuredJson(value: unknown, index = 0): ProjectFormDraft {
   const selected = projectListFromStructuredJson(value)[index];
   if (!selected || typeof selected !== "object" || Array.isArray(selected)) {
@@ -675,6 +708,7 @@ export function CvVersionTable() {
   const [skillsDraft, setSkillsDraft] = useState("");
   const [skillFormDraft, setSkillFormDraft] = useState(emptySkillFormDraft);
   const [languagesDraft, setLanguagesDraft] = useState("");
+  const [languageFormDraft, setLanguageFormDraft] = useState(emptyLanguageFormDraft);
   const [projectsDraft, setProjectsDraft] = useState("");
   const [projectFormDraft, setProjectFormDraft] = useState(emptyProjectFormDraft);
   const [educationDraft, setEducationDraft] = useState("");
@@ -734,6 +768,7 @@ export function CvVersionTable() {
       setSkillsDraft(skillsFromStructuredJson(selectedVersion.structuredJson));
       setSkillFormDraft(skillFormFromStructuredJson(selectedVersion.structuredJson));
       setLanguagesDraft(languagesFromStructuredJson(selectedVersion.structuredJson));
+      setLanguageFormDraft(languageFormFromStructuredJson(selectedVersion.structuredJson));
       setProjectsDraft(projectsFromStructuredJson(selectedVersion.structuredJson));
       setProjectFormDraft(projectFormFromStructuredJson(selectedVersion.structuredJson));
       setEducationDraft(educationFromStructuredJson(selectedVersion.structuredJson));
@@ -954,6 +989,7 @@ export function CvVersionTable() {
     setSkillsDraft(skillsFromStructuredJson(selectedVersion?.structuredJson));
     setSkillFormDraft(skillFormFromStructuredJson(selectedVersion?.structuredJson));
     setLanguagesDraft(languagesFromStructuredJson(selectedVersion?.structuredJson));
+    setLanguageFormDraft(languageFormFromStructuredJson(selectedVersion?.structuredJson));
     setProjectsDraft(projectsFromStructuredJson(selectedVersion?.structuredJson));
     setProjectFormDraft(projectFormFromStructuredJson(selectedVersion?.structuredJson));
     setEducationDraft(educationFromStructuredJson(selectedVersion?.structuredJson));
@@ -1113,7 +1149,62 @@ export function CvVersionTable() {
       delete nextStructuredJson.languages;
     }
     setJsonDraft(formatJson(nextStructuredJson));
+    setLanguageFormDraft(languageFormFromStructuredJson(nextStructuredJson, Math.min(languageFormDraft.index, Math.max(nextLanguages.length - 1, 0))));
     setJsonMessage("Bloque idiomas aplicado al JSON. Guarda JSON para persistirlo.");
+  }
+
+  function selectLanguageFormIndex(index: number) {
+    try {
+      setLanguageFormDraft(languageFormFromStructuredJson(JSON.parse(jsonDraft), index));
+    } catch {
+      setLanguageFormDraft((current) => ({ ...current, index }));
+    }
+  }
+
+  function applyLanguageFormBlock() {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonDraft);
+    } catch {
+      setJsonMessage("JSON invalido. Revisa comas, llaves y comillas antes de aplicar el bloque.");
+      return;
+    }
+    const validationMessage = validateStructuredJson(parsed);
+    if (validationMessage) {
+      setJsonMessage(validationMessage);
+      return;
+    }
+
+    const name = languageFormDraft.name.trim();
+    if (!name) {
+      setJsonMessage("El nombre de idioma es obligatorio para aplicar el formulario granular.");
+      return;
+    }
+
+    const nextStructuredJson = { ...(parsed as Record<string, unknown>) };
+    const existingLanguages = listField(nextStructuredJson, "languages");
+    const nextLanguages = existingLanguages.map((item) =>
+      item && typeof item === "object" && !Array.isArray(item) ? { ...(item as Record<string, unknown>) } : { name: String(item || "") }
+    );
+    const index = Math.min(Math.max(languageFormDraft.index, 0), nextLanguages.length);
+    const nextLanguage: Record<string, unknown> = {
+      ...(nextLanguages[index] || {}),
+      name
+    };
+    const level = languageFormDraft.level.trim();
+
+    if (level) {
+      nextLanguage.level = level;
+    } else {
+      delete nextLanguage.level;
+    }
+
+    nextLanguages[index] = nextLanguage;
+    nextStructuredJson.languages = nextLanguages.filter((language) => textField(language, "name"));
+    setJsonDraft(formatJson(nextStructuredJson));
+    setLanguagesDraft(languagesFromStructuredJson(nextStructuredJson));
+    setLanguageFormDraft(languageFormFromStructuredJson(nextStructuredJson, index));
+    setJsonMessage("Formulario granular de idioma aplicado al JSON. Guarda JSON para persistirlo.");
   }
 
   function applyProjectsBlock() {
@@ -1750,7 +1841,7 @@ export function CvVersionTable() {
   }
 
   function deleteStructuredListItem(
-    field: "skills" | "experiences" | "projects" | "education" | "certifications",
+    field: "skills" | "experiences" | "projects" | "education" | "certifications" | "languages",
     index: number,
     syncDrafts: (nextStructuredJson: Record<string, unknown>, nextIndex: number) => void,
     label: string
@@ -1792,7 +1883,7 @@ export function CvVersionTable() {
   }
 
   function duplicateStructuredListItem(
-    field: "skills" | "experiences" | "projects" | "education" | "certifications",
+    field: "skills" | "experiences" | "projects" | "education" | "certifications" | "languages",
     index: number,
     primaryField: "name" | "role" | "title",
     syncDrafts: (nextStructuredJson: Record<string, unknown>, nextIndex: number) => void,
@@ -1846,6 +1937,13 @@ export function CvVersionTable() {
     }, "Skill");
   }
 
+  function duplicateLanguageFormItem() {
+    duplicateStructuredListItem("languages", languageFormDraft.index, "name", (nextStructuredJson, nextIndex) => {
+      setLanguagesDraft(languagesFromStructuredJson(nextStructuredJson));
+      setLanguageFormDraft(languageFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Idioma");
+  }
+
   function duplicateExperienceFormItem() {
     duplicateStructuredListItem("experiences", experienceFormDraft.index, "role", (nextStructuredJson, nextIndex) => {
       setExperiencesDraft(experiencesFromStructuredJson(nextStructuredJson));
@@ -1879,6 +1977,13 @@ export function CvVersionTable() {
       setSkillsDraft(skillsFromStructuredJson(nextStructuredJson));
       setSkillFormDraft(skillFormFromStructuredJson(nextStructuredJson, nextIndex));
     }, "Skill");
+  }
+
+  function deleteLanguageFormItem() {
+    deleteStructuredListItem("languages", languageFormDraft.index, (nextStructuredJson, nextIndex) => {
+      setLanguagesDraft(languagesFromStructuredJson(nextStructuredJson));
+      setLanguageFormDraft(languageFormFromStructuredJson(nextStructuredJson, nextIndex));
+    }, "Idioma");
   }
 
   function deleteExperienceFormItem() {
@@ -2116,6 +2221,7 @@ export function CvVersionTable() {
   }
 
   const skillOptions = splitBlockLines(skillsDraft);
+  const languageOptions = splitBlockLines(languagesDraft);
   const experienceOptions = splitBlockLines(experiencesDraft);
   const projectOptions = splitBlockLines(projectsDraft);
   const educationOptions = splitBlockLines(educationDraft);
@@ -2734,6 +2840,60 @@ export function CvVersionTable() {
           <Button type="button" variant="outline" className="w-fit" onClick={applyLanguagesBlock} disabled={!jsonVersionId}>
             Aplicar idiomas
           </Button>
+          <div className="grid gap-3 border-t border-border pt-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="grid min-w-[220px] gap-2">
+                <Label htmlFor="languageFormIndex">Idioma granular</Label>
+                <select
+                  id="languageFormIndex"
+                  className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+                  value={String(languageFormDraft.index)}
+                  onChange={(event) => selectLanguageFormIndex(Number(event.target.value))}
+                  disabled={!jsonVersionId}
+                >
+                  {languageOptions.length ? (
+                    <>
+                      {languageOptions.map((language, index) => (
+                        <option key={`${language}-${index}`} value={index}>{language}</option>
+                      ))}
+                      <option value={languageOptions.length}>Nuevo idioma</option>
+                    </>
+                  ) : (
+                    <option value="0">Nuevo idioma</option>
+                  )}
+                </select>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" onClick={applyLanguageFormBlock} disabled={!jsonVersionId}>
+                  Aplicar idioma granular
+                </Button>
+                <Button type="button" variant="outline" onClick={duplicateLanguageFormItem} disabled={!jsonVersionId || !languageOptions.length || languageFormDraft.index >= languageOptions.length}>
+                  Duplicar idioma granular
+                </Button>
+                <Button type="button" variant="outline" onClick={deleteLanguageFormItem} disabled={!jsonVersionId || !languageOptions.length || languageFormDraft.index >= languageOptions.length}>
+                  Eliminar idioma granular
+                </Button>
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="languageFormName">Nombre idioma CV</Label>
+                <Input
+                  id="languageFormName"
+                  value={languageFormDraft.name}
+                  onChange={(event) => setLanguageFormDraft((current) => ({ ...current, name: event.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="languageFormLevel">Nivel idioma CV</Label>
+                <Input
+                  id="languageFormLevel"
+                  value={languageFormDraft.level}
+                  onChange={(event) => setLanguageFormDraft((current) => ({ ...current, level: event.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="projectsBlock">Proyectos CV</Label>
