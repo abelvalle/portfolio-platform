@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:34 CEST.
+Estado actualizado: 2026-06-07 09:40 CEST.
 
 ## Hitos completados
 
@@ -5471,6 +5471,19 @@ Verificacion realizada en este hito:
 - `npm.cmd audit --json --audit-level=moderate`
 - `npm.cmd run audit:policy`
 - `git diff --check`
+
+### CI y CodeQL remotos verdes tras politica audit
+
+- Revalidado GitHub Actions despues de anadir la politica verificable de `npm audit`.
+- Run CI `27086305083` completado correctamente en `develop`.
+- Run CodeQL `27086305084` completado correctamente en `develop`.
+- Jobs verdes: `Quality gates`, `Web e2e smoke` y `Analyze JavaScript and TypeScript`.
+
+Verificacion realizada en este hito:
+
+- `gh run view 27086305083 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27086305084 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
 
 ## Deuda técnica abierta
 
