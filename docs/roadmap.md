@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:54 CEST.
+Estado actualizado: 2026-06-07 08:56 CEST.
 
 ## Hitos completados
 
@@ -5339,6 +5339,17 @@ Verificacion realizada en este hito:
 
 - `gh run view 27085389773 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Dependabot para mantenimiento
+
+- Anadido `.github/dependabot.yml` para revisar dependencias npm y GitHub Actions semanalmente.
+- Las actualizaciones npm quedan agrupadas por Next/React, Nest/Prisma y tooling frontend.
+- README documenta el mantenimiento automatico de dependencias.
+
+Verificacion realizada en este hito:
+
+- `Get-Content -Path .github/dependabot.yml`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

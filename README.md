@@ -95,6 +95,8 @@ npm run test:e2e
 
 GitHub Actions ejecuta una puerta base sobre `develop` y `master`: `npm ci`, `db:generate`, instalacion de Chromium para tests PDF/visual, lint, tests, build y validacion de Docker Compose. Ademas corre un smoke e2e Chromium para headers de seguridad del frontend. Los e2e largos o con PostgreSQL real quedan como validacion manual/operativa para no depender de servicios externos en cada push.
 
+Dependabot revisa semanalmente dependencias npm y GitHub Actions, agrupando actualizaciones de Next/React, Nest/Prisma y tooling frontend.
+
 E2E opcional con PostgreSQL real para generacion/descarga de CV:
 
 ```powershell
