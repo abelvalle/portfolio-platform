@@ -8,6 +8,8 @@ Variables:
 
 - `NEXT_PUBLIC_API_URL=https://api.example.com/api/v1`
 
+Configura el proyecto Vercel con Root Directory `apps/web`. `apps/web/vercel.json` fija el preset Next.js y el build command local del frontend.
+
 Comando de build: `npm --prefix apps/web run build`
 
 ## Backend

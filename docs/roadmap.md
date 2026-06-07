@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 07:58 CEST.
+Estado actualizado: 2026-06-07 08:01 CEST.
 
 ## Hitos completados
 
@@ -5110,6 +5110,18 @@ Verificacion realizada en este hito:
 - `git diff --check`
 - `Get-Content -Path infra/render.yaml`
 - `render --version` (no disponible en esta maquina; validacion oficial pendiente con Render CLI/panel/API)
+
+### Config Vercel frontend
+
+- Anadido `apps/web/vercel.json` con schema oficial, preset `nextjs`, build command y dev command del frontend.
+- `docs/deployment.md` indica configurar Vercel con Root Directory `apps/web`.
+- README enlaza la configuracion opcional del frontend.
+
+Verificacion realizada en este hito:
+
+- `node -e "const fs=require('fs'); JSON.parse(fs.readFileSync('apps/web/vercel.json','utf8')); console.log('vercel json ok')"`
+- `npm.cmd run build:web`
+- `git diff --check`
 
 ## Deuda técnica abierta
 
