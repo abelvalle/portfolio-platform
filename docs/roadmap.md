@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 06:40 CEST.
+Estado actualizado: 2026-06-07 06:41 CEST.
 
 ## Hitos completados
 
@@ -4829,6 +4829,19 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 
+### Revalidacion Next/PostCSS
+
+- Revalidado `next@latest` desde npm: sigue en `16.2.7`.
+- Revalidada dependencia interna `next@latest dependencies.postcss`: sigue en `8.4.31`.
+- `npm audit --audit-level=moderate` mantiene 2 vulnerabilidades moderadas en la cadena `next`/`postcss`.
+- No se aplica `npm audit fix --force` porque todavia propone downgrade rompedor a `next@9.3.3`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd view next version`
+- `npm.cmd view next@latest dependencies.postcss`
+- `npm.cmd audit --audit-level=moderate`
+
 ## Deuda técnica abierta
 
 - Build web: Next/Node emite `DEP0205 module.register()` durante `npm.cmd run build`; no bloquea produccion, pero conviene revisarlo cuando Next actualice su runtime o cuando se suba la version de Node.
@@ -4861,10 +4874,10 @@ Verificacion realizada en este hito:
 - Restauración por entidad CMS: existe restore para tema visual, perfil público, experiencias, proyectos, skills, estudios, certificaciones y versiones CV; `/admin/settings/publication` ya expone enlaces contextuales por entidad, habilita restore para todas las entidades soportadas y las pantallas CMS principales enlazan al historial central. Falta restore inline por entidad solo si se requiere un flujo todavia mas directo.
 - Media storage externo: existe servicio desacoplado local y los providers no implementados fallan explicitamente en subida/descarga/borrado; falta adaptador real S3/R2/Supabase Storage y URLs firmadas.
 - Media lifecycle: la biblioteca ya permite baja soft-delete con confirmacion, metricas de uso, cuota opcional, auditoria de upload/delete, purga fisica diferida y bloqueo local de firma EICAR; falta integracion antivirus externa real.
-- NPM audit: quedan 2 vulnerabilidades moderadas en la cadena `next`/`postcss` confirmadas con `npm.cmd audit --audit-level=moderate`; revalidado el 2026-06-07 05:10 CEST que `next@latest` sigue siendo `16.2.7` y todavia depende de `postcss@8.4.31`, mientras Tailwind/shadcn ya usan `postcss@8.5.15`; no se aplica `audit fix --force` porque propone un downgrade rompedor a `next@9.3.3`.
+- NPM audit: quedan 2 vulnerabilidades moderadas en la cadena `next`/`postcss` confirmadas con `npm.cmd audit --audit-level=moderate`; revalidado el 2026-06-07 06:41 CEST que `next@latest` sigue siendo `16.2.7` y todavia depende de `postcss@8.4.31`, mientras Tailwind/shadcn ya usan `postcss@8.5.15`; no se aplica `audit fix --force` porque propone un downgrade rompedor a `next@9.3.3`.
 
 ## Próximos hitos priorizados
 
-1. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
-2. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.
-3. Preparar el siguiente bloque funcional no dependiente de Docker/Postgres real.
+1. Preparar el siguiente bloque funcional no dependiente de Docker/Postgres real.
+2. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
+3. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.
