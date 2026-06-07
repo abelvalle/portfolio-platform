@@ -67,6 +67,8 @@ Variables opcionales de contacto:
 
 - `CONTACT_IP_HASH_SALT`: sal para hashes de IP en mensajes de contacto.
 - `CONTACT_STORE_USER_AGENT=false`: evita guardar user-agent en mensajes de contacto.
+- `CONTACT_EMAIL_PROVIDER=resend|generic`: activa notificacion email no bloqueante para nuevos mensajes.
+- `CONTACT_EMAIL_API_KEY`, `CONTACT_EMAIL_FROM`, `CONTACT_EMAIL_TO`: credenciales y routing del proveedor, siempre fuera del repositorio.
 
 ## Migraciones y seed
 

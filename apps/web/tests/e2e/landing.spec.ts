@@ -201,6 +201,21 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       })
     });
   });
+  await page.route("**/api/v1/contact-messages/email/status", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        enabled: true,
+        configured: true,
+        provider: "resend",
+        apiUrlConfigured: true,
+        apiKeyConfigured: true,
+        fromConfigured: true,
+        toConfigured: true,
+        timeoutMs: 5000
+      })
+    });
+  });
   await page.route("**/api/v1/contact-messages/webhook/settings", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -2205,6 +2220,9 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.goto("/admin/settings");
   await expect(page.getByText("Seguridad admin")).toBeVisible();
   await expect(page.getByText("Webhooks contacto")).toBeVisible();
+  await expect(page.getByText("Email contacto")).toBeVisible();
+  await expect(page.getByText("Proveedor: resend")).toBeVisible();
+  await expect(page.getByText("Valores sensibles: ocultos")).toBeVisible();
   await expect(page.getByText("Validacion guiada de secreto")).toBeVisible();
   await expect(page.getByText("Rotacion guiada")).toBeVisible();
   await expect(page.getByText("pendiente de validacion")).toBeVisible();

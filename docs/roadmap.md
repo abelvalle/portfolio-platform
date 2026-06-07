@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 07:15 CEST.
+Estado actualizado: 2026-06-07 07:24 CEST.
 
 ## Hitos completados
 
@@ -4945,6 +4945,24 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 
+### Notificacion email opcional de contacto
+
+- Anadido `ContactEmailNotificationService` para enviar avisos HTTP opcionales cuando se guarda un mensaje de contacto.
+- El envio es no bloqueante y mantiene el mensaje persistido aunque el proveedor de email falle o no este configurado.
+- Nuevo endpoint protegido `GET /contact-messages/email/status` expone solo estado no sensible: proveedor, configuracion de API URL/key/remitente/destinatario y timeout.
+- `/admin/settings` muestra una tarjeta "Email contacto" con estado operativo sin exponer API key, remitente ni destinatario.
+- `.env.example`, README, `docs/api.md` y `docs/deployment.md` documentan las variables `CONTACT_EMAIL_*`.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- contact-email-notification.service.spec.ts contact-messages.service.spec.ts`
+- `npm.cmd --prefix apps/api run test:e2e -- contact-webhook.e2e-spec.ts`
+- `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "admin"`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:api`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Build web: Next/Node emite `DEP0205 module.register()` durante `npm.cmd run build`; no bloquea produccion, pero conviene revisarlo cuando Next actualice su runtime o cuando se suba la version de Node.
@@ -4960,7 +4978,7 @@ Verificacion realizada en este hito:
 - Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, version/recurso, fecha y usuario, con timeline visual por version, historial agregado de publicaciones CV, detalle por evento, exportacion CSV visible y exportacion server-side del historico filtrado; falta analitica comparativa avanzada de cambios entre publicaciones.
 - Webhooks configuracion editable: URL/eventos/timeouts/reintentos ya se editan desde admin y persisten en DB; el secreto HMAC sigue viviendo en variables de entorno por seguridad, puede validarse desde admin sin guardarlo ni exponerlo y tiene checklist de rotacion guiada en panel/deployment.
 - Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido, settings persistentes, cola `ContactWebhookRetryJob`, procesamiento admin, worker interno configurable, estado visible en admin, fallback local solo cuando el worker esta desactivado, guia de despliegue single/multi-replica, endpoint de cron externo con secreto dedicado y auditoria saneada del cron; falta solo configurar un scheduler externo real en la plataforma de despliegue si se decide no usar worker dedicado.
-- Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side, accion masiva filtrada de leido/no leido y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
+- Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side, accion masiva filtrada de leido/no leido, privacidad configurable de metadata técnica y notificacion email HTTP opcional con estado visible en admin; falta validarla con credenciales de un proveedor email real.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención manual, worker periodico y guía de deployment multi-replica, segmentación fuente/canal, embudo basico, presets UI de embudo configurable por API, embudo multicanal por fuente/canal desde UI, definiciones persistentes de embudos creadas/editadas desde admin y objetivos KPI persistentes simples/compuestos con progreso, restantes y alertas basicas por rango.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa, cohorts mensuales, cohorts por fuente/canal, comparativas contra mes previo y estado de objetivos KPI simples/compuestos; faltan desgloses mas ricos solo si se definen nuevos objetivos de negocio.
 - Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, reordenado por botones, filas drag/drop, draft/publish desde UI y asociación visual de skills/tecnologías mediante chips sobre arrays existentes.

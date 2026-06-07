@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../src/common/guards/permissions.guard';
+import { ContactEmailNotificationService } from '../src/contact-messages/contact-email-notification.service';
 import { ContactMessagesController } from '../src/contact-messages/contact-messages.controller';
 import { ContactMessagesService } from '../src/contact-messages/contact-messages.service';
 import { ContactWebhookService } from '../src/contact-messages/contact-webhook.service';
@@ -19,6 +20,9 @@ describe('Contact webhook settings (e2e)', () => {
     testDispatch: jest.Mock;
     updateSettings: jest.Mock;
     validateSecret: jest.Mock;
+  };
+  let contactEmailNotificationService: {
+    status: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -70,12 +74,28 @@ describe('Contact webhook settings (e2e)', () => {
         algorithm: 'hmac-sha256',
       }),
     };
+    contactEmailNotificationService = {
+      status: jest.fn().mockReturnValue({
+        enabled: true,
+        configured: true,
+        provider: 'resend',
+        apiUrlConfigured: true,
+        apiKeyConfigured: true,
+        fromConfigured: true,
+        toConfigured: true,
+        timeoutMs: 5000,
+      }),
+    };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [ContactMessagesController],
       providers: [
         { provide: ContactMessagesService, useValue: {} },
         { provide: ContactWebhookService, useValue: contactWebhookService },
+        {
+          provide: ContactEmailNotificationService,
+          useValue: contactEmailNotificationService,
+        },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -130,6 +150,24 @@ describe('Contact webhook settings (e2e)', () => {
       }),
     );
     expect(JSON.stringify(response.body)).not.toContain('secret-value');
+  });
+
+  it('returns email notification status without provider secrets', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/contact-messages/email/status')
+      .expect(200);
+
+    expect(contactEmailNotificationService.status).toHaveBeenCalled();
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        configured: true,
+        provider: 'resend',
+        apiKeyConfigured: true,
+        toConfigured: true,
+      }),
+    );
+    expect(JSON.stringify(response.body)).not.toContain('secret-key');
+    expect(JSON.stringify(response.body)).not.toContain('abel@example.com');
   });
 
   it('updates webhook settings with a validated and sanitized payload', async () => {

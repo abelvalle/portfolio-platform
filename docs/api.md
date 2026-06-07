@@ -75,6 +75,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET|POST|PATCH|DELETE /project-categories` (writes: `manage_portfolio`)
 - `POST /contact-messages`
 - `GET /contact-messages?status=unread&from=YYYY-MM-DD&to=YYYY-MM-DD` (`read_messages`)
+- `GET /contact-messages/email/status` (`read_messages`, no expone valores sensibles)
 - `GET /contact-messages/webhook/status` (`read_messages`)
 - `GET /contact-messages/webhook/settings` (`manage_messages`)
 - `PATCH /contact-messages/webhook/settings` (`manage_messages`, no acepta secretos)
@@ -369,6 +370,8 @@ Las exportaciones ATS siguen priorizando compatibilidad: fuerzan color textual y
 
 Si `CONTACT_WEBHOOK_URL` está configurado, cada mensaje guardado dispara un `POST` externo con evento `contact.message.created`. Si `CONTACT_WEBHOOK_SECRET` existe, se añade firma HMAC SHA-256 en `X-Portfolio-Signature`.
 
+Si `CONTACT_EMAIL_PROVIDER` esta configurado (`resend` o endpoint HTTP compatible), cada mensaje guardado tambien puede disparar un email operativo al destinatario de `CONTACT_EMAIL_TO`. El envio es no bloqueante: el mensaje queda persistido aunque el proveedor de email falle. La API no guarda ni expone `CONTACT_EMAIL_API_KEY`, remitente ni destinatario.
+
 Cada intento de entrega o prueba de webhook registra un `AuditLog` con evento, estado HTTP si existe, `retryAttempt` cuando aplica y resultado `configured/dispatched`. No se guardan URL, secreto, cuerpo del mensaje ni contenido personal del contacto en ese registro.
 
 Cada ejecucion valida del cron externo de reintentos registra `AuditLog` con accion `contact.webhook.retry_cron` y solo guarda el conteo `processed`; no guarda header, secreto ni payload.
@@ -384,6 +387,7 @@ Privacidad de contacto:
 
 Endpoints admin de webhook:
 
+- `GET /contact-messages/email/status`: protegido para `admin`, `editor` y `viewer`; indica proveedor, si esta configurado y si existen API URL/key/remitente/destinatario sin devolver ningun valor sensible.
 - `GET /contact-messages/webhook/status`: protegido para `admin`, `editor` y `viewer`; indica si URL/secret están configurados, politica de retry y estado del worker (`retryWorkerEnabled`, `retryWorkerIntervalMs`) sin exponer valores sensibles.
 - `GET /contact-messages/webhook/settings` y `PATCH /contact-messages/webhook/settings`: protegidos con `manage_messages`; permiten persistir `enabled`, `url`, `event`, `testEvent`, `timeoutMs`, `retryAttempts` y `retryDelayMs`. El secreto HMAC no forma parte del DTO ni se guarda en base de datos.
 - `POST /contact-messages/webhook/secret/validate`: protegido con `manage_messages`; compara un `secret` candidato contra `CONTACT_WEBHOOK_SECRET` usando comparacion segura sobre hashes y devuelve solo `configured`, `valid`, `signatureHeader` y `algorithm`.

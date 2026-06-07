@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { adminClient, type ContactWebhookDelivery, type ContactWebhookSettings, type ContactWebhookStatus } from "@/lib/api";
+import { adminClient, type ContactEmailStatus, type ContactWebhookDelivery, type ContactWebhookSettings, type ContactWebhookStatus } from "@/lib/api";
 
 const emptySettingsDraft = {
   enabled: false,
@@ -29,6 +29,7 @@ const rotationSteps = [
 
 export function WebhookSettings() {
   const [status, setStatus] = useState<ContactWebhookStatus | null>(null);
+  const [emailStatus, setEmailStatus] = useState<ContactEmailStatus | null>(null);
   const [settings, setSettings] = useState<ContactWebhookSettings | null>(null);
   const [settingsDraft, setSettingsDraft] = useState(emptySettingsDraft);
   const [deliveries, setDeliveries] = useState<ContactWebhookDelivery[]>([]);
@@ -49,12 +50,14 @@ export function WebhookSettings() {
   async function loadSettings() {
     setIsLoading(true);
     try {
-      const [nextStatus, nextSettings, nextDeliveries] = await Promise.all([
+      const [nextStatus, nextSettings, nextDeliveries, nextEmailStatus] = await Promise.all([
         adminClient.contactWebhookStatus(),
         adminClient.contactWebhookSettings(),
-        adminClient.contactWebhookDeliveries()
+        adminClient.contactWebhookDeliveries(),
+        adminClient.contactEmailStatus()
       ]);
       setStatus(nextStatus);
+      setEmailStatus(nextEmailStatus);
       setSettings(nextSettings);
       setSettingsDraft({
         enabled: nextSettings.enabled,
@@ -173,6 +176,23 @@ export function WebhookSettings() {
         <p className="text-sm text-muted-foreground">
           URL y politica de entrega persistentes. El secreto HMAC sigue viviendo en variables de entorno y no se muestra.
         </p>
+        <div className="grid gap-3 rounded-lg border border-border/60 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">Email contacto</p>
+              <p className="text-xs text-muted-foreground">Notificacion opcional del formulario mediante proveedor HTTP configurado por entorno.</p>
+            </div>
+            <Badge variant={emailStatus?.configured ? "default" : "outline"}>{emailStatus?.configured ? "configurado" : "sin configurar"}</Badge>
+          </div>
+          <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+            <span>Proveedor: {emailStatus?.provider || "disabled"}</span>
+            <span>API key: {emailStatus?.apiKeyConfigured ? "activa" : "no configurada"}</span>
+            <span>Destino/remitente: {emailStatus?.toConfigured && emailStatus?.fromConfigured ? "listos" : "pendientes"}</span>
+            <span>URL API: {emailStatus?.apiUrlConfigured ? "configurada" : "pendiente"}</span>
+            <span>Timeout: {emailStatus?.timeoutMs ?? 5000} ms</span>
+            <span>Valores sensibles: ocultos</span>
+          </div>
+        </div>
         <div className="grid gap-3 rounded-lg border border-border/60 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>

@@ -94,6 +94,32 @@ describe('ContactMessagesService filters', () => {
     expect(result).toEqual({ count: 3, status: 'read' });
   });
 
+  it('dispatches webhook and email notifications after saving a message', async () => {
+    const prisma = mockPrisma();
+    const savedMessage = { id: 'message-1', email: 'abel@example.com' };
+    const webhookService = { dispatch: jest.fn() };
+    const emailNotificationService = { dispatch: jest.fn() };
+    prisma.contactMessage.create.mockResolvedValue(savedMessage);
+    const service = new ContactMessagesService(
+      prisma as never,
+      webhookService as never,
+      emailNotificationService as never,
+      mockConfig(),
+    );
+
+    await service.create({
+      name: 'Abel',
+      email: 'ABEL@EXAMPLE.COM',
+      subject: 'Hola',
+      message: 'Mensaje de prueba',
+    });
+
+    expect(webhookService.dispatch).toHaveBeenCalledWith(savedMessage);
+    expect(emailNotificationService.dispatch).toHaveBeenCalledWith(
+      savedMessage,
+    );
+  });
+
   it('salts contact IP hash and can drop user agent storage', async () => {
     const prisma = mockPrisma();
     prisma.contactMessage.create.mockResolvedValue({ id: 'message-1' });
@@ -130,9 +156,12 @@ function createService(
   prisma: ReturnType<typeof mockPrisma>,
   config: Record<string, string> = {},
 ) {
+  const webhookService = { dispatch: jest.fn() };
+  const emailNotificationService = { dispatch: jest.fn() };
   return new ContactMessagesService(
     prisma as never,
-    { dispatch: jest.fn() } as never,
+    webhookService as never,
+    emailNotificationService as never,
     mockConfig(config),
   );
 }

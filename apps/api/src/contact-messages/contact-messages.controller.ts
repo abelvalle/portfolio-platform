@@ -28,6 +28,7 @@ import {
   ContactMessageQueryDto,
   CreateContactMessageDto,
 } from './contact-message.dto';
+import { ContactEmailNotificationService } from './contact-email-notification.service';
 import { ContactMessagesService } from './contact-messages.service';
 import { ContactWebhookService } from './contact-webhook.service';
 
@@ -37,6 +38,7 @@ export class ContactMessagesController {
   constructor(
     private readonly contactMessagesService: ContactMessagesService,
     private readonly contactWebhookService: ContactWebhookService,
+    private readonly contactEmailNotificationService: ContactEmailNotificationService,
   ) {}
 
   @Throttle({ default: { ttl: 60_000, limit: 3 } })
@@ -55,6 +57,14 @@ export class ContactMessagesController {
   @Get('webhook/status')
   webhookStatus() {
     return this.contactWebhookService.status();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_messages')
+  @Get('email/status')
+  emailStatus() {
+    return this.contactEmailNotificationService.status();
   }
 
   @ApiBearerAuth()

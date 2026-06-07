@@ -218,6 +218,9 @@ export const adminClient = {
   contactWebhookStatus() {
     return apiFetch<ContactWebhookStatus>("/contact-messages/webhook/status");
   },
+  contactEmailStatus() {
+    return apiFetch<ContactEmailStatus>("/contact-messages/email/status");
+  },
   contactWebhookSettings() {
     return apiFetch<ContactWebhookSettings>("/contact-messages/webhook/settings");
   },
@@ -704,6 +707,17 @@ export type ContactWebhookStatus = {
   retryDelayMs?: number;
   retryWorkerEnabled?: boolean;
   retryWorkerIntervalMs?: number;
+};
+
+export type ContactEmailStatus = {
+  enabled: boolean;
+  configured: boolean;
+  provider: string;
+  apiUrlConfigured: boolean;
+  apiKeyConfigured: boolean;
+  fromConfigured: boolean;
+  toConfigured: boolean;
+  timeoutMs: number;
 };
 
 export type ContactWebhookSettings = ContactWebhookStatus & {

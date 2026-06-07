@@ -13,6 +13,7 @@ import {
   ContactMessageQueryDto,
   CreateContactMessageDto,
 } from './contact-message.dto';
+import { ContactEmailNotificationService } from './contact-email-notification.service';
 import { ContactWebhookService } from './contact-webhook.service';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class ContactMessagesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly webhookService: ContactWebhookService,
+    private readonly emailNotificationService: ContactEmailNotificationService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -35,6 +37,7 @@ export class ContactMessagesService {
       },
     });
     void this.webhookService.dispatch(message);
+    void this.emailNotificationService.dispatch(message);
     return message;
   }
 
