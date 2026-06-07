@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 10:06 CEST.
+Estado actualizado: 2026-06-07 10:11 CEST.
 
 ## Hitos completados
 
@@ -5559,6 +5559,26 @@ Verificacion realizada en este hito:
 
 - `gh run view 27086830532 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27086830535 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- Resultado remoto: `success`
+
+### Dependabot dotenv patch
+
+- Fusionada por squash la PR #6 de Dependabot: `dotenv` de `17.4.1` a `17.4.2`.
+- El cambio afecta solo a `apps/api/package.json` y `package-lock.json`.
+- `develop` queda en el commit remoto `1c588dd` tras el merge.
+- CI y CodeQL remotos validan la actualizacion con audit policy, Prisma, lint, tests, build, OpenAPI drift check y Docker Compose.
+
+Verificacion realizada en este hito:
+
+- `gh pr view 6 --repo abelvalle/portfolio-platform --json number,title,files,statusCheckRollup,mergeable`
+- `gh pr merge 6 --repo abelvalle/portfolio-platform --squash --delete-branch`
+- `npm.cmd ci` intento local bloqueado por `EPERM` en binario nativo de Lightning CSS en Windows; no hubo cambio de contenido en git.
+- `npm.cmd install`
+- `npm.cmd run db:generate`
+- `npm.cmd run audit:policy`
+- `npm.cmd run build:api`
+- `gh run view 27086947384 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
+- `gh run view 27086947391 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
 
 ## Deuda técnica abierta
