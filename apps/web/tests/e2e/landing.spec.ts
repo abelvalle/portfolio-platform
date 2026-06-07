@@ -869,6 +869,15 @@ test("admin publication page is reachable behind the session proxy", async ({ co
             { period: "2026-05", source: "linkedin", channel: "social", count: 4 },
             { period: "2026-06", source: "direct", channel: "direct", count: 3 },
             { period: "2026-06", source: "email", channel: "newsletter", count: 3 }
+          ],
+          cohortComparisons: [
+            { period: "2026-05", count: 4, previousPeriod: "2026-04", previousCount: 0, delta: 4, deltaPercent: 100 },
+            { period: "2026-06", count: 6, previousPeriod: "2026-05", previousCount: 4, delta: 2, deltaPercent: 50 }
+          ],
+          cohortSourceComparisons: [
+            { period: "2026-05", source: "linkedin", channel: "social", count: 4, previousPeriod: "2026-04", previousCount: 0, delta: 4, deltaPercent: 100 },
+            { period: "2026-06", source: "direct", channel: "direct", count: 3, previousPeriod: "2026-05", previousCount: 0, delta: 3, deltaPercent: 100 },
+            { period: "2026-06", source: "email", channel: "newsletter", count: 3, previousPeriod: "2026-05", previousCount: 1, delta: 2, deltaPercent: 200 }
           ]
         },
         latestChanges: [],
@@ -1427,7 +1436,10 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await expect(page.getByText("Cohorts mensuales")).toBeVisible();
   await expect(page.getByText("2026-06", { exact: true })).toBeVisible();
   await expect(page.getByText("Fuentes por mes")).toBeVisible();
-  await expect(page.getByText("2026-06 - email/newsletter")).toBeVisible();
+  await expect(page.getByText("2026-06 - email/newsletter").first()).toBeVisible();
+  await expect(page.getByText("Comparativa cohorts")).toBeVisible();
+  await expect(page.getByText("2026-06 vs 2026-05")).toBeVisible();
+  await expect(page.getByText("+2 (+50%)")).toBeVisible();
   await expect(page.getByText("cv_download")).toBeVisible();
   await expect(page.getByText("Conversion contacto")).toBeVisible();
   await expect(page.getByRole("link", { name: /Ver eventos/ })).toHaveAttribute("href", "/admin/analytics");

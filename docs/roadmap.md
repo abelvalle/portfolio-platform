@@ -3930,6 +3930,21 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"`
 - `npm.cmd run build:web`
 
+### Cohorts comparativos dashboard
+
+- El dashboard API expone comparativas mensuales de visitas landing contra el mes anterior.
+- Añadidas comparativas por fuente/canal, calculadas contra la misma fuente del mes previo.
+- `/admin` muestra la nueva seccion `Comparativa cohorts` con conteo actual, conteo anterior y delta porcentual.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- admin.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- --grep "admin publication"` (primer intento detecto ambiguedad strict-mode en una asercion; segundo intento correcto tras ajustar el test)
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
@@ -3946,7 +3961,7 @@ Verificacion realizada en este hito:
 - Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test y reintento manual desde mensaje persistido; falta cola automatica/retry diferido para destinos externos caidos.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal, embudo basico y embudo multicanal por fuente/canal desde UI; faltan embudos configurables definidos por admin.
-- Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa, cohorts mensuales y cohorts basicos por fuente/canal; faltan cohorts comparativos avanzados.
+- Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa, cohorts mensuales, cohorts por fuente/canal y comparativas contra mes previo; faltan desgloses mas ricos si se definen nuevos objetivos de negocio.
 - Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, reordenado por botones, filas drag/drop y draft/publish desde UI; falta asociación visual con skills/tecnologías.
 - Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media, reordenado por botones, filas drag/drop y draft/publish desde UI.
 - Skills UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, gestion de categorias, selector de niveles, reordenado por botones, filas drag/drop y draft/publish desde UI.

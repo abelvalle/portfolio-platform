@@ -530,6 +530,24 @@ export type AdminDashboard = {
     };
     cohorts?: Array<{ period: string; count: number }>;
     cohortSources?: Array<{ period: string; source: string; channel: string; count: number }>;
+    cohortComparisons?: Array<{
+      period: string;
+      count: number;
+      previousPeriod: string;
+      previousCount: number;
+      delta: number;
+      deltaPercent: number;
+    }>;
+    cohortSourceComparisons?: Array<{
+      period: string;
+      source: string;
+      channel: string;
+      count: number;
+      previousPeriod: string;
+      previousCount: number;
+      delta: number;
+      deltaPercent: number;
+    }>;
   };
   latestChanges: ChangeLogItem[];
   modules: Array<{

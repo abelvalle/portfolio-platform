@@ -175,6 +175,42 @@ export function DashboardCards() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Comparativa cohorts</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-5 md:grid-cols-2">
+          {dashboard?.segments?.cohortComparisons?.length ? (
+            <ComparisonGroup
+              title="Visitas vs mes anterior"
+              items={dashboard.segments.cohortComparisons.map((cohort) => ({
+                label: `${cohort.period} vs ${cohort.previousPeriod}`,
+                count: cohort.count,
+                previousCount: cohort.previousCount,
+                delta: cohort.delta,
+                deltaPercent: cohort.deltaPercent
+              }))}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">Sin comparativa mensual para los filtros actuales.</p>
+          )}
+          {dashboard?.segments?.cohortSourceComparisons?.length ? (
+            <ComparisonGroup
+              title="Fuentes vs mes anterior"
+              items={dashboard.segments.cohortSourceComparisons.map((cohort) => ({
+                label: `${cohort.period} - ${cohort.source}/${cohort.channel}`,
+                count: cohort.count,
+                previousCount: cohort.previousCount,
+                delta: cohort.delta,
+                deltaPercent: cohort.deltaPercent
+              }))}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">Sin comparativa de fuentes para los filtros actuales.</p>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
@@ -233,6 +269,37 @@ function SegmentGroup({
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-muted">
             <div className="h-full rounded-full bg-primary" style={{ width: `${(value / max) * 100}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ComparisonGroup({
+  title,
+  items
+}: {
+  title: string;
+  items: Array<{ label: string; count: number; previousCount: number; delta: number; deltaPercent: number }>;
+}) {
+  const max = Math.max(...items.map((item) => item.count), 1);
+
+  return (
+    <div className="grid gap-3">
+      <p className="text-sm font-medium text-muted-foreground">{title}</p>
+      {items.map((item) => (
+        <div key={item.label} className="grid gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+            <span className="break-all font-medium">{item.label}</span>
+            <Badge variant="outline">{formatDelta(item.delta, item.deltaPercent)}</Badge>
+          </div>
+          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span>Actual {item.count}</span>
+            <span>Anterior {item.previousCount}</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary" style={{ width: `${(item.count / max) * 100}%` }} />
           </div>
         </div>
       ))}
@@ -302,6 +369,12 @@ function percent(value: number, total: number) {
     return 0;
   }
   return Math.round((value / total) * 100);
+}
+
+function formatDelta(delta: number, deltaPercent: number) {
+  const prefix = delta > 0 ? "+" : "";
+  const percentPrefix = deltaPercent > 0 ? "+" : "";
+  return `${prefix}${delta} (${percentPrefix}${deltaPercent}%)`;
 }
 
 function moduleHref(key: string) {

@@ -85,6 +85,9 @@ export class AdminService {
         },
         cohorts: this.monthlyCohorts(landingCohortEvents),
         cohortSources: this.monthlySourceCohorts(landingCohortEvents),
+        cohortComparisons: this.monthlyCohortComparisons(landingCohortEvents),
+        cohortSourceComparisons:
+          this.monthlySourceCohortComparisons(landingCohortEvents),
       },
       latestChanges: changes,
       modules,
@@ -125,6 +128,30 @@ export class AdminService {
       .slice(-6);
   }
 
+  private monthlyCohortComparisons(events: Array<{ createdAt: Date }>) {
+    const cohorts = new Map<string, number>();
+    for (const event of events) {
+      const period = event.createdAt.toISOString().slice(0, 7);
+      cohorts.set(period, (cohorts.get(period) || 0) + 1);
+    }
+
+    return [...cohorts.entries()]
+      .map(([period, count]) => {
+        const previousPeriod = previousMonth(period);
+        const previousCount = cohorts.get(previousPeriod) || 0;
+        return {
+          period,
+          count,
+          previousPeriod,
+          previousCount,
+          delta: count - previousCount,
+          deltaPercent: percentDelta(count, previousCount),
+        };
+      })
+      .sort((left, right) => left.period.localeCompare(right.period))
+      .slice(-6);
+  }
+
   private monthlySourceCohorts(
     events: Array<{ createdAt: Date; metadata: unknown; path?: string | null }>,
   ) {
@@ -140,6 +167,43 @@ export class AdminService {
       .map(([key, count]) => {
         const [period, source, channel] = key.split('|');
         return { period, source, channel, count };
+      })
+      .sort(
+        (left, right) =>
+          left.period.localeCompare(right.period) ||
+          right.count - left.count ||
+          left.source.localeCompare(right.source),
+      )
+      .slice(-8);
+  }
+
+  private monthlySourceCohortComparisons(
+    events: Array<{ createdAt: Date; metadata: unknown; path?: string | null }>,
+  ) {
+    const cohorts = new Map<string, number>();
+    for (const event of events) {
+      const period = event.createdAt.toISOString().slice(0, 7);
+      const attribution = this.resolveAttribution(event.metadata, event.path);
+      const key = `${period}|${attribution.source}|${attribution.channel}`;
+      cohorts.set(key, (cohorts.get(key) || 0) + 1);
+    }
+
+    return [...cohorts.entries()]
+      .map(([key, count]) => {
+        const [period, source, channel] = key.split('|');
+        const previousPeriod = previousMonth(period);
+        const previousCount =
+          cohorts.get(`${previousPeriod}|${source}|${channel}`) || 0;
+        return {
+          period,
+          source,
+          channel,
+          count,
+          previousPeriod,
+          previousCount,
+          delta: count - previousCount,
+          deltaPercent: percentDelta(count, previousCount),
+        };
       })
       .sort(
         (left, right) =>
@@ -194,4 +258,17 @@ function startOfDayUtc(value: string) {
 
 function endOfDayUtc(value: string) {
   return new Date(`${value}T23:59:59.999Z`);
+}
+
+function previousMonth(period: string) {
+  const [year, month] = period.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 2, 1));
+  return date.toISOString().slice(0, 7);
+}
+
+function percentDelta(current: number, previous: number) {
+  if (!previous) {
+    return current ? 100 : 0;
+  }
+  return Math.round(((current - previous) / previous) * 1000) / 10;
 }
