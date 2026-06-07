@@ -8,11 +8,12 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RequirePermissions } from '../common/guards/permissions.decorator';
@@ -79,6 +80,22 @@ export class ContactMessagesController {
   @Get()
   list(@Query() query: ContactMessageQueryDto) {
     return this.contactMessagesService.list(query);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('read_messages')
+  @Get('export')
+  async exportCsv(
+    @Query() query: ContactMessageQueryDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    response.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    response.setHeader(
+      'Content-Disposition',
+      'attachment; filename="contact-messages.csv"',
+    );
+    return this.contactMessagesService.exportCsv(query);
   }
 
   @ApiBearerAuth()

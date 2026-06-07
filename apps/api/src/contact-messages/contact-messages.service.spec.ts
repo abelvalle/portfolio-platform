@@ -36,6 +36,38 @@ describe('ContactMessagesService filters', () => {
     ).toThrow(BadRequestException);
   });
 
+  it('exports filtered contact messages as privacy-safe CSV', async () => {
+    const prisma = mockPrisma();
+    prisma.contactMessage.findMany.mockResolvedValue([
+      {
+        id: 'message-1',
+        name: 'Recruiter "Demo"',
+        email: 'recruiter@example.com',
+        subject: 'Oferta PM',
+        message: 'Podemos hablar esta semana?',
+        status: 'unread',
+        createdAt: new Date('2026-06-06T08:00:00.000Z'),
+      },
+    ]);
+    const service = createService(prisma);
+
+    const csv = await service.exportCsv({ status: 'unread' });
+
+    expect(prisma.contactMessage.findMany).toHaveBeenCalledWith({
+      where: {
+        deletedAt: null,
+        status: 'unread',
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    expect(csv).toBe(
+      '"name","email","subject","status","createdAt","message"\n' +
+        '"Recruiter ""Demo""","recruiter@example.com","Oferta PM","unread","2026-06-06T08:00:00.000Z","Podemos hablar esta semana?"',
+    );
+    expect(csv).not.toContain('ipHash');
+    expect(csv).not.toContain('userAgent');
+  });
+
   it('salts contact IP hash and can drop user agent storage', async () => {
     const prisma = mockPrisma();
     prisma.contactMessage.create.mockResolvedValue({ id: 'message-1' });

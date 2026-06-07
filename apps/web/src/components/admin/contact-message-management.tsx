@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Eye, MailOpen, RefreshCw, Reply, Trash2 } from "lucide-react";
+import { Download, Eye, MailOpen, RefreshCw, Reply, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -79,6 +79,15 @@ export function ContactMessageManagement() {
     }
   }
 
+  function exportApiCsv() {
+    window.location.href = adminClient.contactMessagesExportUrl({
+      status: filter || undefined,
+      from: fromDate || undefined,
+      to: toDate || undefined
+    });
+    setMessage("Descarga CSV de mensajes desde API iniciada.");
+  }
+
   return (
     <div className="grid gap-6">
       <section className="rounded-lg border border-border bg-card p-6">
@@ -87,10 +96,16 @@ export function ContactMessageManagement() {
             <h1 className="text-3xl font-semibold">Mensajes de contacto</h1>
             <p className="mt-2 text-sm text-muted-foreground">Bandeja conectada a la API REST.</p>
           </div>
-          <Button type="button" variant="outline" onClick={() => loadMessages()} disabled={isLoading}>
-            <RefreshCw className={isLoading ? "animate-spin" : ""} data-icon="inline-start" />
-            Actualizar
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={exportApiCsv}>
+              <Download data-icon="inline-start" />
+              CSV API
+            </Button>
+            <Button type="button" variant="outline" onClick={() => loadMessages()} disabled={isLoading}>
+              <RefreshCw className={isLoading ? "animate-spin" : ""} data-icon="inline-start" />
+              Actualizar
+            </Button>
+          </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {filters.map((item) => (

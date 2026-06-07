@@ -2060,6 +2060,7 @@ test("admin publication page is reachable behind the session proxy", async ({ co
 
   await page.goto("/admin/messages");
   await expect(page.getByRole("heading", { name: "Mensajes de contacto" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "CSV API" })).toBeVisible();
   await expect(page.getByLabel("Desde")).toBeVisible();
   await expect(page.getByLabel("Hasta")).toBeVisible();
   await expect(page.getByText("Oferta PM")).toBeVisible();

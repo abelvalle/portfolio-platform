@@ -48,6 +48,22 @@ export class ContactMessagesService {
     });
   }
 
+  async exportCsv(query: ContactMessageQueryDto = {}) {
+    const messages = await this.list(query);
+    const rows = [
+      ['name', 'email', 'subject', 'status', 'createdAt', 'message'],
+      ...messages.map((message) => [
+        message.name,
+        message.email,
+        message.subject || '',
+        message.status,
+        message.createdAt.toISOString(),
+        message.message,
+      ]),
+    ];
+    return rows.map((row) => row.map(csvCell).join(',')).join('\n');
+  }
+
   async findOne(id: string) {
     const message = await this.prisma.contactMessage.findUnique({
       where: { id },
@@ -122,4 +138,8 @@ function startOfDayUtc(value: string) {
 
 function endOfDayUtc(value: string) {
   return new Date(`${value}T23:59:59.999Z`);
+}
+
+function csvCell(value: string) {
+  return `"${value.replace(/"/g, '""')}"`;
 }

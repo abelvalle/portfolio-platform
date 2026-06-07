@@ -214,6 +214,9 @@ export const adminClient = {
   contactMessages(filters?: ContactMessageFilters) {
     return apiFetch<ContactMessage[]>(withQuery("/contact-messages", filters));
   },
+  contactMessagesExportUrl(filters?: ContactMessageFilters) {
+    return getApiUrl(withQuery("/contact-messages/export", filters));
+  },
   updateContactMessageStatus(id: string, status: string) {
     return apiFetch<ContactMessage>(`/contact-messages/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
   },
