@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 05:39 CEST.
+Estado actualizado: 2026-06-07 05:41 CEST.
 
 ## Hitos completados
 
@@ -4696,6 +4696,17 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run test:e2e -- analytics.e2e-spec.ts`
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
+
+### Suite raiz tras contrato privacy Analytics
+
+- Ejecutada la suite raiz despues de cubrir el contrato HTTP de privacidad y purga analytics.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `29` suites y `152` tests, smoke web y build Next/Nest correctos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
 
 ## Deuda técnica abierta
 
