@@ -218,7 +218,7 @@ describe('ContactWebhookService', () => {
     );
   });
 
-  it('schedules automatic retry for failed message deliveries', async () => {
+  it('persists retry jobs for failed deliveries when worker is enabled', async () => {
     jest.useFakeTimers();
     const prisma = createPrisma();
     const service = createService(
@@ -237,7 +237,7 @@ describe('ContactWebhookService', () => {
     const result = await service.dispatch(message);
 
     expect(result).toEqual({ dispatched: false, status: 503 });
-    expect(jest.getTimerCount()).toBe(1);
+    expect(jest.getTimerCount()).toBe(0);
     expect(prisma.contactWebhookRetryJob.create).toHaveBeenCalledWith({
       data: {
         messageId: 'message-1',
@@ -259,6 +259,28 @@ describe('ContactWebhookService', () => {
         },
       },
     });
+  });
+
+  it('uses local retry timer when the retry worker is disabled', async () => {
+    jest.useFakeTimers();
+    const prisma = createPrisma();
+    const service = createService(
+      {
+        CONTACT_WEBHOOK_URL: 'https://example.com/webhook',
+        CONTACT_WEBHOOK_RETRY_ATTEMPTS: '1',
+        CONTACT_WEBHOOK_RETRY_DELAY_MS: '1000',
+        CONTACT_WEBHOOK_RETRY_WORKER_ENABLED: 'false',
+      },
+      prisma,
+    );
+    Object.defineProperty(global, 'fetch', {
+      configurable: true,
+      value: jest.fn().mockResolvedValue({ ok: false, status: 503 }),
+    });
+
+    await service.dispatch(message);
+
+    expect(jest.getTimerCount()).toBe(1);
   });
 
   it('processes due persistent retry jobs', async () => {

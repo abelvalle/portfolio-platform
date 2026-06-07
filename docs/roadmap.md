@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 05:02 CEST.
+Estado actualizado: 2026-06-07 05:05 CEST.
 
 ## Hitos completados
 
@@ -4520,6 +4520,18 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:api`
 - `npm.cmd run build:web`
 
+### Coordinacion worker/timer de reintentos webhook
+
+- Los fallos de webhook siguen creando `ContactWebhookRetryJob` persistente.
+- El `setTimeout` local de fallback solo se programa cuando `CONTACT_WEBHOOK_RETRY_WORKER_ENABLED=false`.
+- Con el worker activo, la cola persistente queda como camino principal y se reducen ejecuciones duplicadas dentro de la misma instancia.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- contact-webhook.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ya existe modelo/API/seed ampliado, soporte de sections indexadas y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online consumen el diccionario anidado publico con fallback local. Falta retirar el fallback solo cuando todo el copy publico y contenido traducible complejo tenga cobertura editorial aprobada.
@@ -4533,7 +4545,7 @@ Verificacion realizada en este hito:
 - Adaptación CV a versión final: el wizard ya propone datos desde API, crea una `CvVersion` draft revisada por bloques, enlaza comparador/editor, permite publicarla como principal desde el comparador y muestra auditoria visual de publicacion; el historial agregado de publicaciones CV queda visible desde Versiones CV.
 - Auditoria CV avanzada: Versiones CV ya audita acciones clave y muestra eventos paginados filtrables por accion, version/recurso, fecha y usuario, con timeline visual por version, historial agregado de publicaciones CV, detalle por evento, exportacion CSV visible y exportacion server-side del historico filtrado; falta analitica comparativa avanzada de cambios entre publicaciones.
 - Webhooks configuracion editable: URL/eventos/timeouts/reintentos ya se editan desde admin y persisten en DB; el secreto HMAC sigue viviendo en variables de entorno por seguridad. Falta soporte de rotacion/validacion guiada de secreto si se decide gestionar secretos fuera de `.env`.
-- Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido, settings persistentes, cola `ContactWebhookRetryJob`, procesamiento admin, worker interno configurable y estado visible en admin; falta decidir si en produccion multi-replica se delega a un cron externo o se deja activo en una sola instancia.
+- Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido, settings persistentes, cola `ContactWebhookRetryJob`, procesamiento admin, worker interno configurable, estado visible en admin y fallback local solo cuando el worker esta desactivado; falta decidir si en produccion multi-replica se delega a un cron externo o se deja activo en una sola instancia.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side, accion masiva filtrada de leido/no leido y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
 - Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención, segmentación fuente/canal, embudo basico, presets UI de embudo configurable por API, embudo multicanal por fuente/canal desde UI y definiciones persistentes de embudos creadas/editadas desde admin; faltan objetivos persistentes mas ricos si se definen nuevos KPIs de negocio.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa, cohorts mensuales, cohorts por fuente/canal y comparativas contra mes previo; faltan desgloses mas ricos si se definen nuevos objetivos de negocio.

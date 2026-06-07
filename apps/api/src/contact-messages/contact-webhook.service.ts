@@ -219,9 +219,12 @@ export class ContactWebhookService {
         runAt: new Date(Date.now() + config.retryDelayMs),
       },
     });
-    setTimeout(() => {
-      void this.runRetryJob(job.id);
-    }, config.retryDelayMs);
+    if (!this.retryWorkerConfig().enabled) {
+      const retryTimer = setTimeout(() => {
+        void this.runRetryJob(job.id);
+      }, config.retryDelayMs);
+      retryTimer.unref?.();
+    }
   }
 
   private async runRetryJob(jobId: string) {
