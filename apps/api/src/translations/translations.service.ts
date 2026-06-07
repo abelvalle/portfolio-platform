@@ -24,6 +24,22 @@ export class TranslationsService {
     });
   }
 
+  async dictionary(query: TranslationQueryDto = {}, forcePublic = false) {
+    const entries = await this.list(query, forcePublic);
+    const dictionary: Record<string, unknown> = {};
+    for (const entry of entries) {
+      const namespace = entry.namespace.startsWith('public.')
+        ? entry.namespace.slice('public.'.length)
+        : entry.namespace;
+      this.setNestedValue(
+        dictionary,
+        [...namespace.split('.'), ...entry.key.split('.')].filter(Boolean),
+        entry.value,
+      );
+    }
+    return dictionary;
+  }
+
   async upsert(dto: UpsertTranslationDto) {
     const data = this.normalizedData(dto);
     return this.prisma.translationEntry.upsert({
@@ -89,5 +105,25 @@ export class TranslationsService {
   private optionalTrim(value?: string) {
     const trimmed = value?.trim();
     return trimmed || null;
+  }
+
+  private setNestedValue(
+    target: Record<string, unknown>,
+    path: string[],
+    value: string,
+  ) {
+    const [head, ...tail] = path;
+    if (!head) {
+      return;
+    }
+    if (!tail.length) {
+      target[head] = value;
+      return;
+    }
+    const next = target[head];
+    if (!next || typeof next !== 'object' || Array.isArray(next)) {
+      target[head] = {};
+    }
+    this.setNestedValue(target[head] as Record<string, unknown>, tail, value);
   }
 }

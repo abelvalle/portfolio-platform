@@ -97,6 +97,8 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `GET /app-modules`
 - `PATCH /app-modules/:id` (`manage_portfolio`)
 - `GET /translations/public?locale=en&namespace=public.hero`
+- `GET /translations/public/dictionary?locale=en`
+- `GET /translations/dictionary?locale=en&namespace=public.hero` (`manage_settings`)
 - `GET /translations?locale=en&namespace=public.hero&includeHidden=true` (`manage_settings`)
 - `POST /translations` (`manage_settings`, upsert por locale/namespace/key)
 - `PATCH /translations/:id` (`manage_settings`)
@@ -132,7 +134,7 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 
 ## Traducciones
 
-`GET /translations/public` expone entradas visibles para preparar i18n cargado desde backend. El panel admin usa `GET|POST|PATCH|DELETE /translations` con `manage_settings`; `POST` hace upsert por la clave unica `locale + namespace + key`.
+`GET /translations/public` expone entradas visibles para preparar i18n cargado desde backend. `GET /translations/public/dictionary` devuelve esas entradas como objeto anidado consumible por el frontend, retirando el prefijo `public.` del namespace. El panel admin usa `GET|POST|PATCH|DELETE /translations` con `manage_settings`; `POST` hace upsert por la clave unica `locale + namespace + key`. `GET /translations/dictionary` ofrece el mismo objeto anidado en modo admin y puede incluir entradas ocultas con `includeHidden=true`.
 
 Cada entrada guarda:
 
@@ -144,6 +146,21 @@ Cada entrada guarda:
   "value": "Download resume",
   "description": "Editable public UI copy",
   "visible": true
+}
+```
+
+Ejemplo de diccionario publico:
+
+```json
+{
+  "hero": {
+    "downloadCv": "Download resume"
+  },
+  "contact": {
+    "form": {
+      "submit": "Send message"
+    }
+  }
 }
 ```
 

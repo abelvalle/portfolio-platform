@@ -30,12 +30,25 @@ export class TranslationsController {
     return this.translationsService.list(query, true);
   }
 
+  @Get('public/dictionary')
+  publicDictionary(@Query() query: TranslationQueryDto) {
+    return this.translationsService.dictionary(query, true);
+  }
+
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('manage_settings')
   @Get()
   list(@Query() query: TranslationQueryDto) {
     return this.translationsService.list(query);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('manage_settings')
+  @Get('dictionary')
+  dictionary(@Query() query: TranslationQueryDto) {
+    return this.translationsService.dictionary(query);
   }
 
   @ApiBearerAuth()

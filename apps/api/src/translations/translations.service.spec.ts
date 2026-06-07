@@ -32,6 +32,38 @@ describe('TranslationsService', () => {
     });
   });
 
+  it('builds a nested public dictionary from translation entries', async () => {
+    const prisma = mockPrisma();
+    prisma.translationEntry.findMany.mockResolvedValue([
+      {
+        namespace: 'public.hero',
+        key: 'downloadCv',
+        value: 'Download resume',
+      },
+      {
+        namespace: 'public.contact.form',
+        key: 'submit',
+        value: 'Send message',
+      },
+    ]);
+    const service = new TranslationsService(prisma as never);
+
+    const result = await service.dictionary({ locale: 'en' }, true);
+
+    expect(prisma.translationEntry.findMany).toHaveBeenCalledWith({
+      where: {
+        deletedAt: null,
+        locale: 'en',
+        visible: true,
+      },
+      orderBy: [{ locale: 'asc' }, { namespace: 'asc' }, { key: 'asc' }],
+    });
+    expect(result).toEqual({
+      hero: { downloadCv: 'Download resume' },
+      contact: { form: { submit: 'Send message' } },
+    });
+  });
+
   it('upserts translations by locale namespace and key', async () => {
     const prisma = mockPrisma();
     prisma.translationEntry.upsert.mockResolvedValue({ id: 'translation-1' });

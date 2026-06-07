@@ -9,6 +9,7 @@ import { TranslationsService } from '../src/translations/translations.service';
 describe('TranslationsController (e2e)', () => {
   let app: INestApplication;
   let translationsService: {
+    dictionary: jest.Mock;
     list: jest.Mock;
     remove: jest.Mock;
     update: jest.Mock;
@@ -17,6 +18,9 @@ describe('TranslationsController (e2e)', () => {
 
   beforeEach(async () => {
     translationsService = {
+      dictionary: jest.fn().mockResolvedValue({
+        hero: { downloadCv: 'Download resume' },
+      }),
       list: jest.fn().mockResolvedValue([
         {
           id: 'translation-1',
@@ -77,6 +81,20 @@ describe('TranslationsController (e2e)', () => {
         value: 'Download resume',
       }),
     );
+  });
+
+  it('returns public translation dictionary with forced public mode', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/translations/public/dictionary?locale=en')
+      .expect(200);
+
+    expect(translationsService.dictionary).toHaveBeenCalledWith(
+      { locale: 'en' },
+      true,
+    );
+    expect(response.body).toEqual({
+      hero: { downloadCv: 'Download resume' },
+    });
   });
 
   it('upserts admin translations with a validated and sanitized payload', async () => {
