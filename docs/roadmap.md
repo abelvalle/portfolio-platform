@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 11:33 CEST.
+Estado actualizado: 2026-06-07 11:37 CEST.
 
 ## Hitos completados
 
@@ -5811,6 +5811,22 @@ Verificacion realizada en este hito:
 - `gh run view 27088675574 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27088675553 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Docker build frontend local
+
+- Añadidos build args al Dockerfile web para que `NEXT_PUBLIC_API_URL` y `NEXT_PUBLIC_ALLOW_LOCAL_API_URL` esten disponibles durante `next build`.
+- `infra/docker-compose.yml` pasa `NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1` y `NEXT_PUBLIC_ALLOW_LOCAL_API_URL=true` solo para el entorno local.
+- El guard del frontend sigue bloqueando localhost por defecto; el override debe declararse explicitamente.
+- README y deployment documentan el uso local controlado del override.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run check:public-api-url` con localhost sin override, comprobando fallo esperado
+- `npm.cmd --prefix apps/web run check:public-api-url` con localhost y `NEXT_PUBLIC_ALLOW_LOCAL_API_URL=true`
+- `node --check apps/web/scripts/check-public-api-url.mjs`
+- `docker compose -f infra/docker-compose.yml config`
+- `npm.cmd run build:web` con localhost y `NEXT_PUBLIC_ALLOW_LOCAL_API_URL=true`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

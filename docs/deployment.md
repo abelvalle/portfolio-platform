@@ -8,7 +8,7 @@ Variables:
 
 - `NEXT_PUBLIC_API_URL=https://api.example.com/api/v1`
 
-El build del frontend ejecuta `npm --prefix apps/web run check:public-api-url` antes de `next build`. En produccion, `NEXT_PUBLIC_API_URL` debe ser una URL absoluta HTTP/HTTPS no local; esto evita publicar una web que intente llamar a `localhost`.
+El build del frontend ejecuta `npm --prefix apps/web run check:public-api-url` antes de `next build`. En produccion, `NEXT_PUBLIC_API_URL` debe ser una URL absoluta HTTP/HTTPS no local; esto evita publicar una web que intente llamar a `localhost`. Para builds locales controlados, como Docker Compose, puede usarse `NEXT_PUBLIC_ALLOW_LOCAL_API_URL=true`.
 
 Configura el proyecto Vercel con Root Directory `apps/web`. `apps/web/vercel.json` fija el preset Next.js y el build command local del frontend.
 

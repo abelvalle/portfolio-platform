@@ -64,6 +64,7 @@ Variables opcionales de analitica:
 Variables de frontend:
 
 - `NEXT_PUBLIC_API_URL`: URL absoluta de la API REST. Es obligatoria para builds de produccion del frontend y no puede apuntar a localhost.
+- `NEXT_PUBLIC_ALLOW_LOCAL_API_URL=true`: solo para builds locales controlados, por ejemplo Docker Compose apuntando al API publicado en `localhost:4000`.
 - `PUBLIC_SITE_URL`: URL publica del portfolio.
 
 Variables opcionales de media:

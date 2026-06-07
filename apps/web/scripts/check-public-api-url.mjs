@@ -15,7 +15,10 @@ if (!["http:", "https:"].includes(apiUrl.protocol)) {
   fail("NEXT_PUBLIC_API_URL must use http or https.");
 }
 
-if (isLocalHost(apiUrl.hostname)) {
+if (
+  isLocalHost(apiUrl.hostname) &&
+  process.env.NEXT_PUBLIC_ALLOW_LOCAL_API_URL !== "true"
+) {
   fail("NEXT_PUBLIC_API_URL must not point to localhost for production builds.");
 }
 
