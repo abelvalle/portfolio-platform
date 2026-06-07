@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:29 CEST.
+Estado actualizado: 2026-06-07 08:32 CEST.
 
 ## Hitos completados
 
@@ -5264,6 +5264,19 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"`
 - `npm.cmd --prefix apps/web run lint`
 - `npm.cmd run build:web`
+- `git diff --check`
+
+### Fix CI Chromium para tests API
+
+- Diagnosticado fallo remoto de GitHub Actions: `quality` ejecutaba tests PDF/visual de API sin Chromium instalado.
+- Anadido paso `npm --prefix apps/api exec -- playwright install --with-deps chromium` antes de `npm run test` en el job `quality`.
+- README y `docs/deployment.md` documentan que CI instala Chromium para los tests API PDF/visual.
+
+Verificacion realizada en este hito:
+
+- `gh run view 27084949112 --repo abelvalle/portfolio-platform --log`
+- `npm.cmd --prefix apps/api exec -- playwright --version`
+- `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"`
 - `git diff --check`
 
 ## Deuda técnica abierta

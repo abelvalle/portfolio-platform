@@ -39,6 +39,9 @@ jobs:
       - name: Generate Prisma client
         run: npm run db:generate
 
+      - name: Install Chromium for API PDF tests
+        run: npm --prefix apps/api exec -- playwright install --with-deps chromium
+
       - name: Lint
         run: npm run lint
 
@@ -70,7 +73,7 @@ jobs:
         run: npm ci
 
       - name: Install Chromium
-        run: npm --prefix apps/web exec playwright install --with-deps chromium
+        run: npm --prefix apps/web exec -- playwright install --with-deps chromium
 
       - name: Run frontend security headers smoke
         run: npm --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"

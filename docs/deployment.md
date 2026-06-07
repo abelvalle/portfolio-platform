@@ -125,6 +125,7 @@ Para ejecutar la prueba e2e opcional con base de datos real, levanta primero Doc
 
 - `npm ci`
 - `npm run db:generate`
+- instalacion de Chromium para tests API PDF/visual
 - `npm run lint`
 - `npm run test`
 - `npm run build`
