@@ -39,6 +39,18 @@ test("landing intro, hero and command palette work", async ({ page }) => {
   await expect(page.getByRole("option", { name: "Acceso secreto admin" })).toBeVisible();
 });
 
+test("frontend security headers are served", async ({ page }) => {
+  const response = await page.goto("/");
+
+  expect(response).not.toBeNull();
+  const headers = response?.headers() || {};
+  expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+  expect(headers["content-security-policy"]).toContain("object-src 'none'");
+  expect(headers["x-frame-options"]).toBe("DENY");
+  expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+  expect(headers["permissions-policy"]).toContain("camera=()");
+});
+
 test("english landing and online resume route work", async ({ page }) => {
   await page.goto("/en");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");

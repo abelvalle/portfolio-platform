@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 08:25 CEST.
+Estado actualizado: 2026-06-07 08:27 CEST.
 
 ## Hitos completados
 
@@ -5239,6 +5239,19 @@ Verificacion realizada en este hito:
 
 - `npm.cmd run test`
 - `npm.cmd run build`
+
+### E2E de headers frontend
+
+- Anadida prueba Playwright que valida los headers servidos por Next en `/`.
+- La prueba cubre CSP, `X-Frame-Options`, `Referrer-Policy` y `Permissions-Policy`.
+- Mantiene el baseline de seguridad como comportamiento observable, no solo configuracion compilada.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "frontend security headers"`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `git diff --check`
 
 ## Deuda técnica abierta
 
