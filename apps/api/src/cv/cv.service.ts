@@ -103,7 +103,7 @@ export class CvService {
     const file = await this.exporter.generatePdf(
       version.id,
       version.structuredJson as never,
-      { template: this.exportTemplate(version) },
+      { template: this.exportTemplate(version), language: version.language },
     );
     return this.persistGeneratedFile(
       version.id,
@@ -119,7 +119,7 @@ export class CvService {
     const file = await this.exporter.generateDocx(
       version.id,
       version.structuredJson as never,
-      { template: this.exportTemplate(version) },
+      { template: this.exportTemplate(version), language: version.language },
     );
     return this.persistGeneratedFile(
       version.id,
@@ -140,7 +140,7 @@ export class CvService {
     const file = await this.exporter.generatePdf(
       version.id,
       version.structuredJson as never,
-      { template },
+      { template, language: version.language },
     );
     const persisted = await this.persistGeneratedFile(
       version.id,
@@ -190,7 +190,11 @@ export class CvService {
     const file = await this.exporter.generatePdf(
       version.id,
       version.structuredJson as never,
-      { ats: true, template: this.exportTemplate(version) },
+      {
+        ats: true,
+        template: this.exportTemplate(version),
+        language: version.language,
+      },
     );
     return this.persistGeneratedFile(
       version.id,
@@ -211,7 +215,11 @@ export class CvService {
     const file = await this.exporter.generateDocx(
       version.id,
       version.structuredJson as never,
-      { ats: true, template: this.exportTemplate(version) },
+      {
+        ats: true,
+        template: this.exportTemplate(version),
+        language: version.language,
+      },
     );
     return this.persistGeneratedFile(
       version.id,

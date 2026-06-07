@@ -16,6 +16,7 @@ type CvFormationItem = {
 };
 
 type CvStructuredData = {
+  language?: string;
   profile?: {
     fullName?: string;
     headline?: string;
@@ -50,6 +51,7 @@ type CvStructuredData = {
 
 type CvTemplateExportOptions = {
   ats?: boolean;
+  language?: string;
   template?: {
     name: string;
     slug: string;
@@ -128,6 +130,7 @@ export class CvExportService {
 
   renderHtml(data: CvStructuredData, options: CvTemplateExportOptions = {}) {
     const template = this.resolveTemplateOptions(options);
+    const labels = this.labelsFor(options.language || data.language);
     const pagePadding = template.density === 'compact' ? '36px' : '48px';
     const visibleExperiences = (data.experiences || []).slice(
       0,
@@ -137,7 +140,7 @@ export class CvExportService {
       0,
       template.density === 'compact' ? 10 : 14,
     );
-    const formationRows = this.formationRows(data).slice(
+    const formationRows = this.formationRows(data, labels).slice(
       0,
       template.density === 'compact' ? 2 : 4,
     );
@@ -191,17 +194,17 @@ export class CvExportService {
 
     const sections = {
       summary: this.htmlSection(
-        'Resumen profesional',
+        labels.summary,
         this.htmlParagraph(data.summary),
         'summary',
       ),
       experiences: this.htmlSection(
-        options.ats ? 'Experiencia profesional' : 'Experiencia',
+        options.ats ? labels.experienceAts : labels.experience,
         experienceBody,
         'experiences',
       ),
       formation: this.htmlSection(
-        'Formacion y certificaciones',
+        labels.formation,
         formationBody ? `<ul>${formationBody}</ul>` : '',
         'formation',
       ),
@@ -211,11 +214,11 @@ export class CvExportService {
         'skills',
       ),
       languages: this.htmlSection(
-        'Idiomas',
+        labels.languages,
         languageRows ? `<ul>${languageRows}</ul>` : '',
         'languages',
       ),
-      projects: this.htmlSection('Proyectos', projectBody, 'projects'),
+      projects: this.htmlSection(labels.projects, projectBody, 'projects'),
       sections: customSections,
     };
     const orderedSections = this.orderedHtmlItems(data)
@@ -362,22 +365,27 @@ export class CvExportService {
     template: ResolvedTemplateOptions,
     options: CvTemplateExportOptions,
   ) {
+    const labels = this.labelsFor(options.language || data.language);
     const blocks: Record<CvExportSectionKey, Paragraph[]> = {
       summary: [
-        this.heading('Resumen profesional', 18, template),
+        this.heading(labels.summary, 18, template),
         this.text(data.summary || '', template),
       ],
       experiences: [
         this.heading(
-          options.ats ? 'Experiencia profesional' : 'Experiencia',
+          options.ats ? labels.experienceAts : labels.experience,
           18,
           template,
         ),
         ...this.experienceParagraphs(data, template),
       ],
       formation: [
-        this.heading('Formacion y certificaciones', 18, template),
-        ...this.simpleList(this.formationRows(data), (item) => item, template),
+        this.heading(labels.formation, 18, template),
+        ...this.simpleList(
+          this.formationRows(data, labels),
+          (item) => item,
+          template,
+        ),
       ],
       skills: [
         this.heading('Skills', 18, template),
@@ -387,7 +395,7 @@ export class CvExportService {
         ),
       ],
       languages: [
-        this.heading('Idiomas', 18, template),
+        this.heading(labels.languages, 18, template),
         this.text(
           (data.languages || [])
             .map((language) =>
@@ -400,7 +408,7 @@ export class CvExportService {
         ),
       ],
       projects: [
-        this.heading('Proyectos', 18, template),
+        this.heading(labels.projects, 18, template),
         ...this.simpleList(this.projectRows(data), (item) => item, template),
       ],
       sections: this.customSectionParagraphs(data, template),
@@ -552,7 +560,7 @@ export class CvExportService {
     );
   }
 
-  private formationRows(data: CvStructuredData) {
+  private formationRows(data: CvStructuredData, labels = this.labelsFor()) {
     return [...(data.education || []), ...(data.certifications || [])].map(
       (item) =>
         [
@@ -561,12 +569,40 @@ export class CvExportService {
           item.date,
           item.description,
           item.url,
-          item.certificateUrl ? `Certificado: ${item.certificateUrl}` : '',
-          item.credentialId ? `ID: ${item.credentialId}` : '',
+          item.certificateUrl
+            ? `${labels.certificate}: ${item.certificateUrl}`
+            : '',
+          item.credentialId ? `${labels.credential}: ${item.credentialId}` : '',
         ]
           .filter(Boolean)
           .join(' - '),
     );
+  }
+
+  private labelsFor(language = 'es') {
+    if (language.toLowerCase().startsWith('en')) {
+      return {
+        summary: 'Professional summary',
+        experience: 'Experience',
+        experienceAts: 'Professional experience',
+        formation: 'Education and certifications',
+        languages: 'Languages',
+        projects: 'Projects',
+        certificate: 'Certificate',
+        credential: 'ID',
+      };
+    }
+
+    return {
+      summary: 'Resumen profesional',
+      experience: 'Experiencia',
+      experienceAts: 'Experiencia profesional',
+      formation: 'Formacion y certificaciones',
+      languages: 'Idiomas',
+      projects: 'Proyectos',
+      certificate: 'Certificado',
+      credential: 'ID',
+    };
   }
 
   private customSectionRows(data: CvStructuredData) {

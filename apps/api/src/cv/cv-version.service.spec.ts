@@ -28,6 +28,7 @@ describe('CvVersionService', () => {
           slug: 'ejecutiva',
           config: { primaryColor: '#0f766e' },
         },
+        language: 'en',
       },
     );
     expect(prisma.cvVersion.update).toHaveBeenCalledWith({
@@ -256,6 +257,7 @@ function mockPrisma() {
         status: 'draft',
         deletedAt: null,
         structuredJson: { profile: { fullName: 'Abel Valle Rosa' } },
+        language: 'en',
         template: {
           name: 'Ejecutiva',
           slug: 'ejecutiva',

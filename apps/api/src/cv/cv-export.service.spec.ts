@@ -195,6 +195,38 @@ describe('CvExportService', () => {
     expect(noPhotoHtml).not.toContain('class="cv-photo"');
   });
 
+  it('localizes export labels from CV language without translating content', () => {
+    const service = new CvExportService();
+
+    const html = service.renderHtml({
+      language: 'en',
+      summary: 'Resumen real sin traducir',
+      experiences: [
+        {
+          role: 'Delivery Manager',
+          company: 'Demo Company',
+          description: 'Gestion de delivery',
+        },
+      ],
+      certifications: [
+        {
+          title: 'Scrum Master',
+          certificateUrl: 'https://example.com/certificado',
+        },
+      ],
+      languages: [{ name: 'Spanish', level: 'Native' }],
+      projects: [{ name: 'Portfolio Platform' }],
+    });
+
+    expect(html).toContain('<h2>Professional summary</h2>');
+    expect(html).toContain('<h2>Experience</h2>');
+    expect(html).toContain('<h2>Education and certifications</h2>');
+    expect(html).toContain('<h2>Languages</h2>');
+    expect(html).toContain('<h2>Projects</h2>');
+    expect(html).toContain('Certificate: https://example.com/certificado');
+    expect(html).toContain('Resumen real sin traducir');
+  });
+
   it('generates PDFs from server-side A4 HTML with Playwright', async () => {
     const page = {
       setContent: jest.fn().mockResolvedValue(undefined),

@@ -58,6 +58,7 @@ describe('CvService public downloads', () => {
           slug: 'ats-friendly',
           config: { primaryColor: '#111827', density: 'compact' },
         },
+        language: 'en',
       },
     );
     expect(prisma.mediaAsset.create).toHaveBeenCalledWith({
@@ -99,6 +100,7 @@ function mockPrisma() {
         cvId: 'cv-1',
         deletedAt: null,
         structuredJson: { profile: { fullName: 'Abel Valle Rosa' } },
+        language: 'en',
         template: {
           name: 'Ejecutiva',
           slug: 'ejecutiva',

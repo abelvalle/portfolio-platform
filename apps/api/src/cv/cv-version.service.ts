@@ -124,7 +124,7 @@ export class CvVersionService {
     const file = await this.exporter.generatePdf(
       version.id,
       version.structuredJson as never,
-      { template: this.exportTemplate(version) },
+      { template: this.exportTemplate(version), language: version.language },
     );
     const result = await this.persistGeneratedFile(
       version.id,
@@ -145,7 +145,7 @@ export class CvVersionService {
     const file = await this.exporter.generateDocx(
       version.id,
       version.structuredJson as never,
-      { template: this.exportTemplate(version) },
+      { template: this.exportTemplate(version), language: version.language },
     );
     const result = await this.persistGeneratedFile(
       version.id,
