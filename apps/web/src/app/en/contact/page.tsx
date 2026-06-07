@@ -2,13 +2,11 @@ import Link from "next/link";
 import { ContactForm } from "@/components/public/contact-form";
 import { buttonVariants } from "@/components/ui/button";
 import { portfolioClient } from "@/lib/api";
-import { publicCopy } from "@/lib/i18n";
 import { buildPublicThemeStyle } from "@/lib/public-theme";
 import { cn } from "@/lib/utils";
 
 export default async function EnglishContactPage() {
-  const snapshot = await portfolioClient.snapshot("en");
-  const copy = publicCopy.en;
+  const [snapshot, copy] = await Promise.all([portfolioClient.snapshot("en"), portfolioClient.publicCopy("en")]);
 
   return (
     <main className="min-h-dvh bg-background px-6 py-16 text-foreground sm:px-10 lg:px-16" style={buildPublicThemeStyle(snapshot.theme)}>

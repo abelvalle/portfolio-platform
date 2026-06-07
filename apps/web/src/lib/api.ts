@@ -1,5 +1,13 @@
 import { portfolioFallback, type PortfolioSnapshot } from "./portfolio-data";
-import { getLocalizedFallback, localizeSnapshot, type Locale } from "./i18n";
+import {
+  applyPublicTranslations,
+  getLocalizedFallback,
+  localizeSnapshot,
+  publicCopy as fallbackPublicCopy,
+  type Locale,
+  type PublicCopy,
+  type PublicTranslationEntry
+} from "./i18n";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
@@ -74,6 +82,14 @@ export const portfolioClient = {
       );
     } catch {
       return locale === "es" ? portfolioFallback : getLocalizedFallback(locale);
+    }
+  },
+  async publicCopy(locale: Locale = "es"): Promise<PublicCopy> {
+    try {
+      const entries = await apiFetch<PublicTranslationEntry[]>(withQuery("/translations/public", { locale }));
+      return applyPublicTranslations(fallbackPublicCopy[locale], entries);
+    } catch {
+      return fallbackPublicCopy[locale];
     }
   },
   sendContact(data: Record<string, string>) {

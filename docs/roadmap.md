@@ -4301,9 +4301,21 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:api`
 - `npm.cmd run build:web`
 
+### Copy publico conectado a i18n persistente
+
+- `portfolioClient.publicCopy(locale)` carga `GET /translations/public` y aplica entradas sobre `publicCopy` local.
+- La mezcla solo reemplaza rutas string ya existentes, evitando crear estructura inesperada desde traducciones mal formadas.
+- Landing, contacto y CV online cargan snapshot y copy persistido en paralelo.
+- Si la API no responde, las rutas publicas mantienen el fallback local existente.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
-- Persistencia i18n en backend/CMS: ya existe modelo/API/seed y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; falta conectar la landing publica a esas entradas cuando se decida sustituir el fallback local.
+- Persistencia i18n en backend/CMS: ya existe modelo/API/seed y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online leen traducciones publicas con fallback local. Falta ampliar seed/editor a todas las microcopias y secciones complejas antes de retirar completamente el fallback.
 - Traducción de CV generado/exportado: las etiquetas PDF/DOCX ya se localizan por `CvVersion.language`; falta traducir contenido profesional cuando exista una versión estructurada EN aprobada en backend/CMS.
 - Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side, guard de overflow HTML, smoke de PDF real, diff visual automatizado contra PDF rasterizado, paginacion print para CV largos y saltos manuales `page-break`; DOCX comparte orden de bloques, tiene smoke real de paquete Word y valida metadatos ricos dentro de `word/document.xml`, aunque sigue usando renderer propio.
 - QA de guardado autenticado: `PATCH /theme` ya tiene contrato HTTP e2e con guards mockeados, validacion real y saneamiento de payload; falta prueba e2e desde UI con API real, sesion admin y persistencia DB.

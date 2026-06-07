@@ -12,13 +12,12 @@ import { ProjectCard } from "./project-card";
 import { SectionNavigation } from "./section-navigation";
 import { SkillsGrid } from "./skills-grid";
 import { portfolioClient } from "@/lib/api";
-import { getPortfolioPath, publicCopy, type Locale } from "@/lib/i18n";
+import { getPortfolioPath, type Locale, type PublicCopy } from "@/lib/i18n";
 import type { PortfolioSnapshot } from "@/lib/portfolio-data";
 import { buildPublicThemeStyle } from "@/lib/public-theme";
 
-export function PublicLanding({ snapshot, locale }: { snapshot: PortfolioSnapshot; locale: Locale }) {
+export function PublicLanding({ snapshot, locale, copy }: { snapshot: PortfolioSnapshot; locale: Locale; copy: PublicCopy }) {
   const [introVisible, setIntroVisible] = useState(true);
-  const copy = publicCopy[locale];
   const trackingPath = getPortfolioPath(locale);
   const themeStyle = buildPublicThemeStyle(snapshot.theme);
 

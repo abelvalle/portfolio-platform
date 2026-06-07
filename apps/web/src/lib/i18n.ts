@@ -311,6 +311,41 @@ export function getLocalizedFallback(locale: Locale): PortfolioSnapshot {
   return localizeSnapshot(portfolioFallback, locale);
 }
 
+export type PublicTranslationEntry = {
+  namespace: string;
+  key: string;
+  value: string;
+};
+
+export function applyPublicTranslations(copy: PublicCopy, entries: PublicTranslationEntry[]): PublicCopy {
+  const nextCopy = JSON.parse(JSON.stringify(copy)) as PublicCopy;
+
+  for (const entry of entries) {
+    const namespace = entry.namespace.startsWith("public.") ? entry.namespace.slice("public.".length) : entry.namespace;
+    const path = [...namespace.split("."), ...entry.key.split(".")].filter(Boolean);
+    setExistingString(nextCopy as unknown as Record<string, unknown>, path, entry.value);
+  }
+
+  return nextCopy;
+}
+
+function setExistingString(target: Record<string, unknown>, path: string[], value: string) {
+  const [head, ...tail] = path;
+  if (!head) {
+    return;
+  }
+  if (!tail.length) {
+    if (typeof target[head] === "string") {
+      target[head] = value;
+    }
+    return;
+  }
+  const next = target[head];
+  if (next && typeof next === "object" && !Array.isArray(next)) {
+    setExistingString(next as Record<string, unknown>, tail, value);
+  }
+}
+
 const experienceTranslations: Record<string, Partial<PortfolioSnapshot["experiences"][number]>> = {
   "Experis ManpowerGroup": {
     description:
