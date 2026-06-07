@@ -75,7 +75,10 @@ test("admin analytics KPI goals render and persist mutations", async ({ context,
           order: 0,
           count: 2,
           progressRate: 66.7,
-          achieved: false
+          achieved: false,
+          remainingCount: 1,
+          alertLevel: "info",
+          alertMessage: "Faltan 1 evento para cerrar el objetivo."
         }
       ])
     });
@@ -132,6 +135,7 @@ test("admin analytics KPI goals render and persist mutations", async ({ context,
   await expect(page.getByText("Objetivos KPI", { exact: true })).toBeVisible();
   await expect(page.getByText("Descargas CV sample/demo")).toBeVisible();
   await expect(page.getByText("meta 3 - 66,7%")).toBeVisible();
+  await expect(page.getByText("Faltan 1 evento para cerrar el objetivo.")).toBeVisible();
 
   await page.getByRole("button", { name: /Descargas CV sample\/demo/ }).click();
   await expect(page.getByLabel("Nombre objetivo")).toHaveValue("Descargas CV sample/demo");

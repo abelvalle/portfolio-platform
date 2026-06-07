@@ -312,11 +312,15 @@ export class AnalyticsService {
 
     return goals.map((goal, index) => {
       const count = counts[index] || 0;
+      const alert = this.goalAlert(count, goal.targetCount);
       return {
         ...goal,
         count,
         progressRate: this.percent(count, goal.targetCount),
         achieved: count >= goal.targetCount,
+        remainingCount: alert.remainingCount,
+        alertLevel: alert.level,
+        alertMessage: alert.message,
       };
     });
   }
@@ -540,6 +544,33 @@ export class AnalyticsService {
       linkedin_click: 'Clicks LinkedIn',
     };
     return labels[key] || key.replace(/_/g, ' ');
+  }
+
+  private goalAlert(count: number, targetCount: number) {
+    const remainingCount = Math.max(targetCount - count, 0);
+    if (!remainingCount) {
+      return {
+        remainingCount,
+        level: 'success',
+        message: 'Meta cumplida para el rango seleccionado.',
+      };
+    }
+
+    const progressRate = this.percent(count, targetCount);
+    const eventLabel = remainingCount === 1 ? 'evento' : 'eventos';
+    if (!count || progressRate < 50) {
+      return {
+        remainingCount,
+        level: 'warning',
+        message: `Faltan ${remainingCount} ${eventLabel} para alcanzar la meta.`,
+      };
+    }
+
+    return {
+      remainingCount,
+      level: 'info',
+      message: `Faltan ${remainingCount} ${eventLabel} para cerrar el objetivo.`,
+    };
   }
 
   private seedTimeSeries(filters: AnalyticsDateRangeQueryDto) {

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 06:20 CEST.
+Estado actualizado: 2026-06-07 06:24 CEST.
 
 ## Hitos completados
 
@@ -4768,6 +4768,23 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 
+### Alertas basicas KPI Analytics
+
+- `GET /analytics/goals/progress` devuelve ahora `remainingCount`, `alertLevel` y `alertMessage`.
+- El calculo distingue objetivos cumplidos, seguimiento informativo y alerta `warning` cuando el progreso es bajo.
+- `/admin/analytics` muestra el mensaje operativo de cada objetivo KPI junto al progreso.
+- `docs/api.md` actualiza el ejemplo de respuesta del endpoint.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- analytics.service.spec.ts`
+- `npm.cmd --prefix apps/api run test:e2e -- analytics.e2e-spec.ts`
+- `npm.cmd --prefix apps/web run test:e2e -- analytics-goals.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:api`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ya existe modelo/API/seed ampliado, soporte de sections indexadas y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online consumen el diccionario anidado publico con fallback local. Falta retirar el fallback solo cuando todo el copy publico y contenido traducible complejo tenga cobertura editorial aprobada.
@@ -4783,7 +4800,7 @@ Verificacion realizada en este hito:
 - Webhooks configuracion editable: URL/eventos/timeouts/reintentos ya se editan desde admin y persisten en DB; el secreto HMAC sigue viviendo en variables de entorno por seguridad y puede validarse desde admin sin guardarlo ni exponerlo. Falta soporte de rotacion guiada si se decide gestionar secretos fuera de `.env`.
 - Reintentos webhooks: hay trazabilidad persistente, vista admin de entregas/test, reintento manual desde mensaje persistido, settings persistentes, cola `ContactWebhookRetryJob`, procesamiento admin, worker interno configurable, estado visible en admin, fallback local solo cuando el worker esta desactivado, guia de despliegue single/multi-replica, endpoint de cron externo con secreto dedicado y auditoria saneada del cron; falta solo configurar un scheduler externo real en la plataforma de despliegue si se decide no usar worker dedicado.
 - Mensajes UI avanzada: la bandeja está conectada con filtros API por fecha/estado, vista detalle, confirmación de borrado, respuesta `mailto`, export CSV server-side, accion masiva filtrada de leido/no leido y privacidad configurable de metadata técnica; falta integracion real con proveedor email.
-- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención manual, worker periodico y guía de deployment multi-replica, segmentación fuente/canal, embudo basico, presets UI de embudo configurable por API, embudo multicanal por fuente/canal desde UI, definiciones persistentes de embudos creadas/editadas desde admin y objetivos KPI persistentes con progreso por rango; faltan objetivos compuestos o alertas si se definen nuevos KPIs de negocio.
+- Analítica avanzada: el panel está conectado a eventos con filtros API por fecha/tipo, exportación CSV, tendencias, serie diaria histórica, tracking server-side de descargas CV, estado de privacidad, purga de retención manual, worker periodico y guía de deployment multi-replica, segmentación fuente/canal, embudo basico, presets UI de embudo configurable por API, embudo multicanal por fuente/canal desde UI, definiciones persistentes de embudos creadas/editadas desde admin y objetivos KPI persistentes con progreso, restantes y alertas basicas por rango; faltan objetivos compuestos si se definen nuevos KPIs de negocio.
 - Dashboard avanzado: el resumen está conectado con drill-downs, filtros temporales de API, pulso operativo, segmentación operativa, cohorts mensuales, cohorts por fuente/canal y comparativas contra mes previo; faltan desgloses mas ricos si se definen nuevos objetivos de negocio.
 - Experiencias UI avanzada: el CRUD está conectado con confirmación modal de borrado, edición completa por dialogo, reordenado por botones, filas drag/drop, draft/publish desde UI y asociación visual de skills/tecnologías mediante chips sobre arrays existentes.
 - Proyectos UI avanzada: el CRUD está conectado con confirmación modal de borrado, gestion de categorias, edición completa por dialogo, selector de media, reordenado por botones, filas drag/drop y draft/publish desde UI.

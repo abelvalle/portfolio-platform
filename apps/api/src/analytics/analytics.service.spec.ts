@@ -558,6 +558,9 @@ describe('AnalyticsService filters', () => {
         count: 6,
         progressRate: 60,
         achieved: false,
+        remainingCount: 4,
+        alertLevel: 'info',
+        alertMessage: 'Faltan 4 eventos para cerrar el objetivo.',
       }),
     ]);
   });

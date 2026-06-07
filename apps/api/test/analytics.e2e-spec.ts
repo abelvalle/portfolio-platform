@@ -43,6 +43,9 @@ describe('AnalyticsController (e2e)', () => {
           count: 2,
           progressRate: 66.7,
           achieved: false,
+          remainingCount: 1,
+          alertLevel: 'info',
+          alertMessage: 'Faltan 1 evento para cerrar el objetivo.',
         },
       ]),
       goals: jest.fn().mockResolvedValue([
@@ -150,6 +153,9 @@ describe('AnalyticsController (e2e)', () => {
         count: 2,
         progressRate: 66.7,
         achieved: false,
+        remainingCount: 1,
+        alertLevel: 'info',
+        alertMessage: 'Faltan 1 evento para cerrar el objetivo.',
       },
     ]);
   });

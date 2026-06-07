@@ -518,7 +518,7 @@ export function AnalyticsDashboard() {
                   <p className="font-medium">{goal.name}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{goal.description || periodLabel(goal.period)}</p>
                 </div>
-                <Badge variant="outline">{goal.achieved ? "cumplido" : "en curso"}</Badge>
+                <Badge variant={goal.alertLevel === "success" ? "default" : "outline"}>{goal.achieved ? "cumplido" : goal.alertLevel}</Badge>
               </div>
               <div className="mt-4 flex items-end justify-between gap-3">
                 <p className="text-2xl font-semibold">{goal.count}</p>
@@ -527,6 +527,7 @@ export function AnalyticsDashboard() {
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
                 <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(goal.progressRate, 100)}%` }} />
               </div>
+              <p className="mt-2 text-sm text-muted-foreground">{goal.alertMessage}</p>
               <p className="mt-2 break-all text-xs text-muted-foreground">{goal.eventType} - {periodLabel(goal.period)}</p>
             </button>
           ))}

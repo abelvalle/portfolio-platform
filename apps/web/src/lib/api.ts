@@ -989,6 +989,9 @@ export type AnalyticsGoalProgress = AnalyticsGoal & {
   count: number;
   progressRate: number;
   achieved: boolean;
+  remainingCount: number;
+  alertLevel: "success" | "info" | "warning";
+  alertMessage: string;
 };
 
 export type AnalyticsChannelFunnel = {
