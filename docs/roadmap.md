@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 09:25 CEST.
+Estado actualizado: 2026-06-07 09:28 CEST.
 
 ## Hitos completados
 
@@ -5432,6 +5432,19 @@ Verificacion realizada en este hito:
 
 - `gh run view 27086000316 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### CodeQL para analisis estatico
+
+- Anadido workflow `.github/workflows/codeql.yml` para analizar JavaScript/TypeScript en `develop` y `master`.
+- El workflow se ejecuta en push, pull request, calendario semanal y `workflow_dispatch`.
+- Permisos limitados a lectura de acciones/contenido y escritura de `security-events`.
+- `SECURITY.md` documenta el escaneo automatico y el criterio de triaje antes de `master`.
+
+Verificacion realizada en este hito:
+
+- `gh api repos/github/codeql-action/git/matching-refs/tags/v --jq '.[].ref'`
+- `Get-Content -Path .github/workflows/codeql.yml`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

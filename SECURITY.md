@@ -29,6 +29,12 @@ Include:
 - Do not upload private CV files, contact messages or user data as proof.
 - If a finding involves external providers, report only sanitized request/response metadata.
 
+## Automated Scanning
+
+- CodeQL runs on pushes and pull requests for `develop` and `master`.
+- CodeQL also runs weekly and can be launched manually from GitHub Actions.
+- Findings should be triaged before merging affected changes into `master`.
+
 ## Project Guardrails
 
 - Admin routes must remain protected by auth guards and permissions.
