@@ -100,7 +100,7 @@ GitHub Actions ejecuta una puerta base sobre `develop` y `master`: `npm ci`, pol
 
 CodeQL analiza JavaScript/TypeScript en pushes, pull requests, ejecucion semanal y lanzamiento manual. `npm run audit:policy` permite solo la deuda moderada conocida de Next/PostCSS y falla si aparece cualquier hallazgo nuevo. `npm run openapi:generate` actualiza el snapshot estático `docs/openapi.json`; `npm run openapi:check` falla si el snapshot queda desactualizado.
 
-Dependabot revisa semanalmente dependencias npm y GitHub Actions, agrupando actualizaciones de Next/React, Nest/Prisma y tooling frontend.
+Dependabot revisa semanalmente dependencias npm y GitHub Actions. Los grupos npm de Next/React, Nest/Prisma y tooling frontend solo agrupan updates minor/patch; los major quedan separados para revisión manual.
 
 E2E opcional con PostgreSQL real para generacion/descarga de CV:
 

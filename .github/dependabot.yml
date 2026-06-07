@@ -16,11 +16,17 @@ updates:
           - "react"
           - "react-dom"
           - "eslint-config-next"
+        update-types:
+          - "minor"
+          - "patch"
       nest-api:
         patterns:
           - "@nestjs/*"
           - "@prisma/*"
           - "prisma"
+        update-types:
+          - "minor"
+          - "patch"
       frontend-tooling:
         patterns:
           - "tailwindcss"
@@ -28,6 +34,9 @@ updates:
           - "lightningcss*"
           - "eslint"
           - "typescript"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "github-actions"
     directory: "/"

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 10:27 CEST.
+Estado actualizado: 2026-06-07 10:29 CEST.
 
 ## Hitos completados
 
@@ -5630,6 +5630,18 @@ Verificacion realizada en este hito:
 - `gh run view 27087269916 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27087269915 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Dependabot segmentado por riesgo semver
+
+- Actualizada `.github/dependabot.yml` para que los grupos npm `next-react`, `nest-api` y `frontend-tooling` agrupen solo updates `minor` y `patch`.
+- Los updates `major` quedan fuera de esos grupos y deben revisarse como PRs separadas.
+- README documenta el criterio de mantenimiento: minor/patch agrupado, major con revisión manual.
+- Se consulto la referencia oficial de GitHub Dependabot para confirmar `groups.update-types`.
+
+Verificacion realizada en este hito:
+
+- `Get-Content -Path .github/dependabot.yml`
+- `git diff --check`
 
 ## Deuda técnica abierta
 
