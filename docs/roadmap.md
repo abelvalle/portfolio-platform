@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 06:37 CEST.
+Estado actualizado: 2026-06-07 06:40 CEST.
 
 ## Hitos completados
 
@@ -4817,6 +4817,18 @@ Verificacion realizada en este hito:
 - `npm.cmd run build:api`
 - `npm.cmd run build:web`
 
+### Suite raiz tras objetivos KPI compuestos
+
+- Ejecutada la suite raiz despues de anadir objetivos KPI compuestos.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `29` suites y `158` tests, smoke web y build Next/Nest correctos.
+- Observacion: el build web sigue mostrando `DEP0205 module.register()` desde la cadena de Next/Node, sin bloquear compilacion.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
+
 ## Deuda técnica abierta
 
 - Build web: Next/Node emite `DEP0205 module.register()` durante `npm.cmd run build`; no bloquea produccion, pero conviene revisarlo cuando Next actualice su runtime o cuando se suba la version de Node.
@@ -4853,6 +4865,6 @@ Verificacion realizada en este hito:
 
 ## Próximos hitos priorizados
 
-1. Suite raiz tras objetivos KPI compuestos.
-2. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
-3. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.
+1. Prueba e2e con DB real para generar y descargar archivos CV persistidos por HTTP.
+2. Monitorizar nueva version de Next que actualice `postcss` sin downgrade forzado.
+3. Preparar el siguiente bloque funcional no dependiente de Docker/Postgres real.
