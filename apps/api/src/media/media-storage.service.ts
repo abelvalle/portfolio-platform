@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { createReadStream, type ReadStream } from 'node:fs';
 import { access, mkdir, unlink, writeFile } from 'node:fs/promises';
 import {
@@ -44,6 +44,8 @@ export class MediaStorageService {
       quotaMb: this.quotaMb,
       allowedMimeTypes: this.allowedMimeTypes,
       signatureScanEnabled: this.signatureScanEnabled,
+      externalScanEnabled: this.externalScanEnabled,
+      externalScanConfigured: Boolean(this.externalScanUrl),
       uploadEndpoint: '/api/v1/media/upload',
       downloadPattern: '/api/v1/media/:id/download',
     };
@@ -52,6 +54,7 @@ export class MediaStorageService {
   async save(file: UploadedMediaFile): Promise<StoredMediaFile> {
     this.assertLocalProvider();
     this.validateFile(file);
+    await this.scanWithExternalProvider(file);
 
     const uploadDir = join(this.storageRoot, 'uploads');
     await mkdir(uploadDir, { recursive: true });
@@ -128,6 +131,64 @@ export class MediaStorageService {
     }
   }
 
+  private async scanWithExternalProvider(file: UploadedMediaFile) {
+    if (!this.externalScanEnabled || !this.externalScanUrl) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      this.externalScanTimeoutMs,
+    );
+
+    try {
+      const response = await fetch(this.externalScanUrl, {
+        method: 'POST',
+        headers: this.externalScanHeaders,
+        body: JSON.stringify({
+          filename: file.originalname,
+          mimeType: file.mimetype,
+          size: file.size,
+          sha256: createHash('sha256').update(file.buffer).digest('hex'),
+          contentBase64: file.buffer.toString('base64'),
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new BadRequestException('External malware scan failed');
+      }
+
+      const result = (await response.json().catch(() => null)) as {
+        clean?: boolean;
+        verdict?: string;
+        status?: string;
+      } | null;
+
+      if (!this.isCleanExternalScan(result)) {
+        throw new BadRequestException('File rejected by external malware scan');
+      }
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException('External malware scan failed');
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  private isCleanExternalScan(
+    result: { clean?: boolean; verdict?: string; status?: string } | null,
+  ) {
+    return (
+      result?.clean === true ||
+      result?.verdict?.toLowerCase() === 'clean' ||
+      result?.status?.toLowerCase() === 'clean'
+    );
+  }
+
   private buildFilename(originalName: string, mimeType: string) {
     const ext = extname(originalName) || this.extensionForMimeType(mimeType);
     const base = basename(originalName || 'file', ext)
@@ -191,6 +252,37 @@ export class MediaStorageService {
     return (
       this.configService.get<string>('MEDIA_SIGNATURE_SCAN_ENABLED') !== 'false'
     );
+  }
+
+  private get externalScanEnabled() {
+    return (
+      this.configService.get<string>('MEDIA_EXTERNAL_SCAN_ENABLED') !==
+        'false' && Boolean(this.externalScanUrl)
+    );
+  }
+
+  private get externalScanUrl() {
+    return this.configService.get<string>('MEDIA_EXTERNAL_SCAN_URL') || null;
+  }
+
+  private get externalScanHeaders() {
+    const apiKey = this.configService.get<string>(
+      'MEDIA_EXTERNAL_SCAN_API_KEY',
+    );
+    return {
+      'Content-Type': 'application/json',
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+    };
+  }
+
+  private get externalScanTimeoutMs() {
+    const configured = Number(
+      this.configService.get<string>('MEDIA_EXTERNAL_SCAN_TIMEOUT_MS') || 5000,
+    );
+    if (!Number.isFinite(configured)) {
+      return 5000;
+    }
+    return Math.max(1000, Math.min(30000, configured));
   }
 
   private get allowedMimeTypes() {

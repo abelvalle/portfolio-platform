@@ -1149,6 +1149,8 @@ export type MediaStorageStatus = {
   usedBytes?: number;
   usedMb?: number;
   signatureScanEnabled?: boolean;
+  externalScanEnabled?: boolean;
+  externalScanConfigured?: boolean;
   allowedMimeTypes: string[];
   uploadEndpoint: string;
   downloadPattern: string;

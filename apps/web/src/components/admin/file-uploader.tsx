@@ -134,6 +134,7 @@ export function FileUploader() {
               <Badge variant="outline">max {storageStatus.maxFileSizeMb} MB</Badge>
               {storageStatus.quotaMb ? <Badge variant="outline">cuota {storageStatus.quotaMb} MB</Badge> : null}
               <Badge variant="outline">scan {storageStatus.signatureScanEnabled === false ? "off" : "on"}</Badge>
+              <Badge variant="outline">av externo {storageStatus.externalScanEnabled ? "on" : storageStatus.externalScanConfigured ? "pendiente" : "off"}</Badge>
               <Badge variant="outline">assets {storageStatus.assetCount ?? assets.length}</Badge>
               <Badge variant="outline">uso {formatSize(storageStatus.usedBytes)}</Badge>
               <Badge variant="outline">{storageStatus.storageDir}</Badge>

@@ -4,7 +4,14 @@ import { access, mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { MediaStorageService } from './media-storage.service';
 
+const originalFetch = global.fetch;
+
 describe('MediaStorageService', () => {
+  afterEach(() => {
+    global.fetch = originalFetch;
+    jest.restoreAllMocks();
+  });
+
   it('reports local storage defaults', () => {
     const service = new MediaStorageService(mockConfig());
 
@@ -14,6 +21,8 @@ describe('MediaStorageService', () => {
       maxFileSizeMb: 10,
       quotaMb: null,
       signatureScanEnabled: true,
+      externalScanEnabled: false,
+      externalScanConfigured: false,
       uploadEndpoint: '/api/v1/media/upload',
     });
   });
@@ -63,6 +72,84 @@ describe('MediaStorageService', () => {
         buffer,
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('sends uploads to the configured external malware scanner before writing', async () => {
+    const storageDir = `storage-test-${Date.now()}`;
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue({ clean: true }),
+    });
+    global.fetch = fetchMock as never;
+
+    try {
+      const service = new MediaStorageService(
+        mockConfig({
+          STORAGE_DIR: storageDir,
+          MEDIA_EXTERNAL_SCAN_URL: 'https://scanner.example.com/scan',
+          MEDIA_EXTERNAL_SCAN_API_KEY: 'scan-key',
+        }),
+      );
+      const file = {
+        originalname: 'cv.pdf',
+        mimetype: 'application/pdf',
+        size: 3,
+        buffer: Buffer.from('pdf'),
+      };
+
+      const stored = await service.save(file);
+
+      expect(stored.filename).toContain('cv-');
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://scanner.example.com/scan',
+        expect.objectContaining({
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer scan-key',
+          },
+        }),
+      );
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+      expect(body).toEqual(
+        expect.objectContaining({
+          filename: 'cv.pdf',
+          mimeType: 'application/pdf',
+          size: 3,
+          contentBase64: Buffer.from('pdf').toString('base64'),
+        }),
+      );
+      expect(body.sha256).toHaveLength(64);
+    } finally {
+      await rm(join(process.cwd(), storageDir), {
+        recursive: true,
+        force: true,
+      });
+    }
+  });
+
+  it('rejects uploads when the external malware scanner reports a threat', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue({ clean: false }),
+    });
+    global.fetch = fetchMock as never;
+    const service = new MediaStorageService(
+      mockConfig({
+        MEDIA_EXTERNAL_SCAN_URL: 'https://scanner.example.com/scan',
+      }),
+    );
+
+    await expect(
+      service.save({
+        originalname: 'cv.pdf',
+        mimetype: 'application/pdf',
+        size: 3,
+        buffer: Buffer.from('pdf'),
+      }),
+    ).rejects.toThrow('File rejected by external malware scan');
   });
 
   it('deletes local files inside the configured storage directory', async () => {

@@ -24,6 +24,7 @@ Variables:
 - `ADMIN_PASSWORD`
 - `STORAGE_DIR`
 - `MEDIA_SIGNATURE_SCAN_ENABLED` opcional para activar/desactivar el bloqueo local de firmas EICAR
+- `MEDIA_EXTERNAL_SCAN_URL`, `MEDIA_EXTERNAL_SCAN_API_KEY` y `MEDIA_EXTERNAL_SCAN_TIMEOUT_MS` opcionales para scanner HTTP externo de uploads
 - `CONTACT_IP_HASH_SALT` opcional para saltear hashes de IP en contacto
 - `CONTACT_STORE_USER_AGENT=false` opcional para no guardar user-agent en contacto
 - `CONTACT_WEBHOOK_RETRY_WORKER_ENABLED=true` para procesar reintentos webhook dentro del backend

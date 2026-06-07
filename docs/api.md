@@ -172,7 +172,7 @@ Ejemplo de diccionario publico:
 
 `GET /admin/dashboard` devuelve `cards`, `latestChanges`, `modules` y `segments`. `segments.analytics` agrupa eventos clave (`landingVisits`, `cvDownloads`, `contactSubmits`, `projectViews`) con los mismos filtros temporales; `segments.content` resume proyectos, experiencias y modulos activos; `segments.cohorts` agrupa visitas landing por mes (`YYYY-MM`) hasta 6 periodos recientes; `segments.cohortSources` agrupa visitas landing por mes, fuente y canal; `segments.kpiGoals` resume objetivos KPI visibles con progreso, eventos simples/compuestos y alertas.
 
-`GET /media/storage/status` incluye `signatureScanEnabled`. Los uploads locales bloquean la firma de prueba EICAR antes de escribir archivos si `MEDIA_SIGNATURE_SCAN_ENABLED` no es `false`; esto es una puerta basica de seguridad, no sustituye un antivirus externo.
+`GET /media/storage/status` incluye `signatureScanEnabled`, `externalScanEnabled` y `externalScanConfigured`. Los uploads locales bloquean la firma de prueba EICAR antes de escribir archivos si `MEDIA_SIGNATURE_SCAN_ENABLED` no es `false`; si `MEDIA_EXTERNAL_SCAN_URL` esta configurado, tambien envian un JSON con nombre, MIME, tamano, SHA-256 y contenido base64 a un scanner HTTP externo antes de escribir el archivo.
 
 `POST /analytics/events` registra eventos anonimos de landing, descarga de CV, contacto y proyectos. La IP se guarda como hash SHA-256 y puede saltearse con `ANALYTICS_IP_HASH_SALT`.
 
@@ -421,6 +421,9 @@ Variables principales:
 - `MEDIA_MAX_FILE_SIZE_MB`: tamaño máximo por archivo.
 - `MEDIA_STORAGE_QUOTA_MB`: cuota total opcional para assets activos.
 - `MEDIA_ALLOWED_MIME_TYPES`: lista separada por comas.
+- `MEDIA_EXTERNAL_SCAN_URL`: endpoint HTTP opcional para scanner externo de malware.
+- `MEDIA_EXTERNAL_SCAN_API_KEY`: bearer token opcional para el scanner externo.
+- `MEDIA_EXTERNAL_SCAN_TIMEOUT_MS`: timeout del scanner externo, entre 1000 y 30000 ms.
 
 Endpoints:
 

@@ -62,6 +62,7 @@ Variables opcionales de analitica:
 Variables opcionales de media:
 
 - `MEDIA_SIGNATURE_SCAN_ENABLED=false`: desactiva el bloqueo local de firmas EICAR en uploads.
+- `MEDIA_EXTERNAL_SCAN_URL`: activa scanner HTTP externo antes de escribir uploads.
 
 Variables opcionales de contacto:
 
