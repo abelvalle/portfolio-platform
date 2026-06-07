@@ -12,6 +12,7 @@ import { IntegrationsModule } from './integrations/integrations.module';
 import { MediaModule } from './media/media.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ResourcesModule } from './resources/resources.module';
+import { TranslationsModule } from './translations/translations.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -27,6 +28,7 @@ import { UsersModule } from './users/users.module';
     AdminModule,
     AnalyticsModule,
     MediaModule,
+    TranslationsModule,
     UsersModule,
   ],
   controllers: [AppController],

@@ -25,6 +25,17 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Traducciones</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 text-sm text-muted-foreground">
+          <p>Edita copy publico por locale, namespace y clave desde backend.</p>
+          <div>
+            <Link className={cn(buttonVariants({ variant: "outline" }))} href="/admin/settings/translations">Gestionar traducciones</Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

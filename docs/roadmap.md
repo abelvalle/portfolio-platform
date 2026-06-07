@@ -4284,9 +4284,26 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/api run lint`
 - `npm.cmd run build:api`
 
+### Persistencia i18n para copy publico
+
+- Añadido modelo Prisma `TranslationEntry` con clave unica `locale + namespace + key`.
+- La API expone `GET /translations/public` y CRUD admin `GET|POST|PATCH|DELETE /translations` protegido por `manage_settings`.
+- El seed inicializa copy publico base ES/EN para hero, command palette y contacto.
+- `/admin/settings/translations` permite listar, crear, editar y ocultar traducciones desde el panel.
+- `docs/api.md` documenta el contrato i18n persistente.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run db:generate`
+- `npm.cmd --prefix apps/api run test -- translations.service.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:api`
+- `npm.cmd run build:web`
+
 ## Deuda técnica abierta
 
-- Persistencia i18n en backend/CMS: ahora la traducción pública vive en el frontend para el seed conocido; falta modelo/API para editar traducciones desde admin.
+- Persistencia i18n en backend/CMS: ya existe modelo/API/seed y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; falta conectar la landing publica a esas entradas cuando se decida sustituir el fallback local.
 - Traducción de CV generado/exportado: las etiquetas PDF/DOCX ya se localizan por `CvVersion.language`; falta traducir contenido profesional cuando exista una versión estructurada EN aprobada en backend/CMS.
 - Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side, guard de overflow HTML, smoke de PDF real, diff visual automatizado contra PDF rasterizado, paginacion print para CV largos y saltos manuales `page-break`; DOCX comparte orden de bloques, tiene smoke real de paquete Word y valida metadatos ricos dentro de `word/document.xml`, aunque sigue usando renderer propio.
 - QA de guardado autenticado: `PATCH /theme` ya tiene contrato HTTP e2e con guards mockeados, validacion real y saneamiento de payload; falta prueba e2e desde UI con API real, sesion admin y persistencia DB.

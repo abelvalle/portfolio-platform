@@ -388,6 +388,34 @@ async function seedPageSectionsAndModules() {
       create: { ...definition, order: index, visible: true }
     });
   }
+
+  const translations = [
+    ["es", "public.hero", "downloadCv", "Descargar CV"],
+    ["es", "public.hero", "viewCv", "Ver CV online"],
+    ["es", "public.hero", "contact", "Contactar"],
+    ["es", "public.command", "admin", "Acceso secreto admin"],
+    ["es", "public.contact", "title", "Construyamos algo juntos."],
+    ["en", "public.hero", "downloadCv", "Download resume"],
+    ["en", "public.hero", "viewCv", "View resume online"],
+    ["en", "public.hero", "contact", "Contact"],
+    ["en", "public.command", "admin", "Secret admin access"],
+    ["en", "public.contact", "title", "Let's build something together."]
+  ];
+
+  for (const [locale, namespace, key, value] of translations) {
+    await prisma.translationEntry.upsert({
+      where: { locale_namespace_key: { locale, namespace, key } },
+      update: { value, visible: true },
+      create: {
+        locale,
+        namespace,
+        key,
+        value,
+        description: "Editable public UI copy",
+        visible: true
+      }
+    });
+  }
 }
 
 async function main() {

@@ -363,6 +363,18 @@ export const adminClient = {
   updateAppModule(id: string, data: Partial<AppModuleItem>) {
     return apiFetch<AppModuleItem>(`/app-modules/${id}`, { method: "PATCH", body: JSON.stringify(data) });
   },
+  translations(filters?: TranslationFilters) {
+    return apiFetch<TranslationEntry[]>(withQuery("/translations", filters));
+  },
+  upsertTranslation(data: TranslationMutation) {
+    return apiFetch<TranslationEntry>("/translations", { method: "POST", body: JSON.stringify(data) });
+  },
+  updateTranslation(id: string, data: Partial<TranslationMutation>) {
+    return apiFetch<TranslationEntry>(`/translations/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  deleteTranslation(id: string) {
+    return apiFetch<TranslationEntry>(`/translations/${id}`, { method: "DELETE" });
+  },
   profile() {
     return apiFetch<ProfileSettings>("/profile");
   },
@@ -899,6 +911,33 @@ export type AppModuleItem = {
   order: number;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type TranslationEntry = {
+  id: string;
+  locale: string;
+  namespace: string;
+  key: string;
+  value: string;
+  description?: string | null;
+  visible: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type TranslationFilters = {
+  locale?: string;
+  namespace?: string;
+  includeHidden?: string;
+};
+
+export type TranslationMutation = {
+  locale: string;
+  namespace: string;
+  key: string;
+  value: string;
+  description?: string | null;
+  visible: boolean;
 };
 
 export type ProfileSettings = {

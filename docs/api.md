@@ -93,6 +93,11 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `POST /admin/publication/changelog/:id/restore` (`manage_publication`)
 - `GET /app-modules`
 - `PATCH /app-modules/:id` (`manage_portfolio`)
+- `GET /translations/public?locale=en&namespace=public.hero`
+- `GET /translations?locale=en&namespace=public.hero&includeHidden=true` (`manage_settings`)
+- `POST /translations` (`manage_settings`, upsert por locale/namespace/key)
+- `PATCH /translations/:id` (`manage_settings`)
+- `DELETE /translations/:id` (`manage_settings`, soft delete)
 - `GET|POST /users` (`manage_users`)
 - `PATCH|DELETE /users/:id` (`manage_users`)
 - `GET /users/permissions` (`manage_users`)
@@ -121,6 +126,23 @@ La API mantiene roles (`admin`, `editor`, `viewer`) y una matriz de permisos por
 - `POST /analytics/retention/prune` (`manage_analytics`)
 - `GET /analytics?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`)
 - `GET /analytics/export?from=YYYY-MM-DD&to=YYYY-MM-DD&type=cv_download` (`read_analytics`, CSV)
+
+## Traducciones
+
+`GET /translations/public` expone entradas visibles para preparar i18n cargado desde backend. El panel admin usa `GET|POST|PATCH|DELETE /translations` con `manage_settings`; `POST` hace upsert por la clave unica `locale + namespace + key`.
+
+Cada entrada guarda:
+
+```json
+{
+  "locale": "en",
+  "namespace": "public.hero",
+  "key": "downloadCv",
+  "value": "Download resume",
+  "description": "Editable public UI copy",
+  "visible": true
+}
+```
 
 ## Analytics
 
