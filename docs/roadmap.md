@@ -4313,6 +4313,17 @@ Verificacion realizada en este hito:
 - `npm.cmd --prefix apps/web run lint`
 - `npm.cmd run build:web`
 
+### Suite raiz tras bloque Analytics, CV e i18n
+
+- Ejecutada la suite raiz despues de embudos persistentes, trazabilidad saneada de adaptaciones CV, CMS i18n y copy publico conectado.
+- Ejecutado build raiz de produccion para API y web.
+- Resultado: `27` suites y `138` tests, smoke web y build Next/Nest correctos.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd run test`
+- `npm.cmd run build`
+
 ## Deuda técnica abierta
 
 - Persistencia i18n en backend/CMS: ya existe modelo/API/seed y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online leen traducciones publicas con fallback local. Falta ampliar seed/editor a todas las microcopias y secciones complejas antes de retirar completamente el fallback.
