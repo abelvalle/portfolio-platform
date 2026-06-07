@@ -177,6 +177,16 @@ test("admin publication page is reachable behind the session proxy", async ({ co
       body: JSON.stringify({ count: 1, status: "read" })
     });
   });
+  await page.route(/\/api\/v1\/translations(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        { id: "translation-1", locale: "en", namespace: "public.hero", key: "downloadCv", value: "Download resume", description: "CTA", visible: true },
+        { id: "translation-2", locale: "en", namespace: "public.hero", key: "contact", value: "Contact", description: "CTA", visible: true },
+        { id: "translation-3", locale: "en", namespace: "public.command", key: "admin", value: "Secret admin access", description: "Command", visible: false }
+      ])
+    });
+  });
   await page.route("**/api/v1/contact-messages/webhook/status", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -2233,6 +2243,13 @@ test("admin publication page is reachable behind the session proxy", async ({ co
   await page.getByRole("button", { name: "Activar", exact: true }).click();
   await expect(page.getByText("Estado del modulo actualizado.")).toBeVisible();
   await expect(page.locator("nav a[href='/admin/media']")).toHaveCount(1);
+
+  await page.goto("/admin/settings/translations");
+  await expect(page.getByRole("heading", { name: "Traducciones editables" })).toBeVisible();
+  await expect(page.getByText("Claves esperadas")).toBeVisible();
+  await expect(page.getByText("Cubiertas CMS")).toBeVisible();
+  await expect(page.getByText("Pendientes", { exact: true })).toBeVisible();
+  await expect(page.getByText("downloadCv")).toBeVisible();
 
   await page.goto("/admin/media");
   await expect(page.getByRole("heading", { name: "Biblioteca media" })).toBeVisible();

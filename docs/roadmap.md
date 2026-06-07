@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 07:04 CEST.
+Estado actualizado: 2026-06-07 07:12 CEST.
 
 ## Hitos completados
 
@@ -4920,10 +4920,23 @@ Verificacion realizada en este hito:
 - `npm.cmd run test`
 - `npm.cmd run build`
 
+### Cobertura editorial i18n en admin
+
+- `/admin/settings/translations` calcula cobertura editorial contra `publicCopy` local por idioma y filtro de namespace.
+- El panel muestra claves esperadas, claves cubiertas por CMS visible, pendientes, porcentaje y primeras claves pendientes.
+- El hito no retira el fallback local: convierte la deuda i18n en una lista visible hasta aprobacion editorial completa.
+- El e2e admin cubre la presencia del resumen de cobertura y claves pendientes.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/web run lint`
+- `npm.cmd run build:web`
+- `npm.cmd --prefix apps/web run test:e2e -- landing.spec.ts --project=chromium -g "admin"`
+
 ## Deuda técnica abierta
 
 - Build web: Next/Node emite `DEP0205 module.register()` durante `npm.cmd run build`; no bloquea produccion, pero conviene revisarlo cuando Next actualice su runtime o cuando se suba la version de Node.
-- Persistencia i18n en backend/CMS: ya existe modelo/API/seed ampliado, soporte de sections indexadas y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online consumen el diccionario anidado publico con fallback local. Falta retirar el fallback solo cuando todo el copy publico y contenido traducible complejo tenga cobertura editorial aprobada.
+- Persistencia i18n en backend/CMS: ya existe modelo/API/seed ampliado, soporte de sections indexadas y pantalla admin para editar copy publico por `locale`, `namespace` y `key`; landing, contacto y CV online consumen el diccionario anidado publico con fallback local, y `/admin/settings/translations` muestra cobertura editorial y claves pendientes. Falta retirar el fallback solo cuando todo el copy publico y contenido traducible complejo tenga cobertura editorial aprobada.
 - Traducción de CV generado/exportado: las etiquetas PDF/DOCX ya se localizan por `CvVersion.language`; falta traducir contenido profesional cuando exista una versión estructurada EN aprobada en backend/CMS.
 - Renderer fiel al preview: el PDF ya se genera desde el HTML/CSS A4 server-side con Playwright, el exportador respeta `sectionOrder`, existe contrato `data-*` compartido con preview web, hay smoke visual A4 del renderer server-side, guard de overflow HTML, smoke de PDF real, diff visual automatizado contra PDF rasterizado, paginacion print para CV largos y saltos manuales `page-break`; DOCX comparte orden de bloques, tiene smoke real de paquete Word y valida metadatos ricos dentro de `word/document.xml`, aunque sigue usando renderer propio.
 - QA de guardado autenticado: `PATCH /theme` ya tiene contrato HTTP e2e con guards mockeados, validacion real y saneamiento de payload; falta prueba e2e desde UI con API real, sesion admin y persistencia DB.

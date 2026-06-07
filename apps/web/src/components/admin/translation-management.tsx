@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { publicCopy, type Locale } from "@/lib/i18n";
 import { adminClient, type TranslationEntry, type TranslationMutation } from "@/lib/api";
 
 const emptyDraft: TranslationMutation = {
@@ -31,6 +32,10 @@ export function TranslationManagement() {
   const namespaces = useMemo(
     () => [...new Set(translations.map((item) => item.namespace))].sort(),
     [translations]
+  );
+  const coverage = useMemo(
+    () => buildTranslationCoverage(translations, localeFilter, namespaceFilter),
+    [localeFilter, namespaceFilter, translations]
   );
 
   const loadTranslations = useCallback(async () => {
@@ -162,6 +167,32 @@ export function TranslationManagement() {
         </div>
       </div>
 
+      <div className="mt-5 grid gap-3 rounded-lg border border-border p-4 md:grid-cols-4">
+        <div>
+          <p className="text-sm text-muted-foreground">Claves esperadas</p>
+          <p className="mt-1 text-2xl font-semibold">{coverage.expected}</p>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">Cubiertas CMS</p>
+          <p className="mt-1 text-2xl font-semibold">{coverage.covered}</p>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">Pendientes</p>
+          <p className="mt-1 text-2xl font-semibold">{coverage.missing}</p>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">Cobertura</p>
+          <Badge variant={coverage.missing ? "outline" : "default"}>{coverage.percent}%</Badge>
+        </div>
+        {coverage.missingKeys.length ? (
+          <p className="text-xs text-muted-foreground md:col-span-4">
+            Pendientes: {coverage.missingKeys.slice(0, 5).join(", ")}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground md:col-span-4">Cobertura completa para los filtros actuales.</p>
+        )}
+      </div>
+
       <div className="mt-5 grid gap-5 lg:grid-cols-[1.2fr_1fr]">
         <div className="overflow-hidden rounded-lg border border-border">
           <div className="grid grid-cols-[90px_1fr_1fr_90px] bg-muted/40 p-3 text-sm font-medium">
@@ -233,4 +264,59 @@ export function TranslationManagement() {
       <p className="mt-4 text-sm text-muted-foreground" aria-live="polite">{message}</p>
     </section>
   );
+}
+
+function buildTranslationCoverage(translations: TranslationEntry[], locale: string, namespace: string) {
+  const expectedKeys = expectedPublicTranslationKeys(locale, namespace);
+  const visibleKeys = new Set(
+    translations
+      .filter((item) => item.visible && item.locale === locale && (!namespace || item.namespace === namespace))
+      .map((item) => `${item.namespace}.${item.key}`)
+  );
+  const missingKeys = expectedKeys.filter((key) => !visibleKeys.has(key));
+  const covered = expectedKeys.length - missingKeys.length;
+
+  return {
+    expected: expectedKeys.length,
+    covered,
+    missing: missingKeys.length,
+    percent: expectedKeys.length ? Math.round((covered / expectedKeys.length) * 100) : 100,
+    missingKeys
+  };
+}
+
+function expectedPublicTranslationKeys(locale: string, namespaceFilter: string) {
+  const copy = isSupportedLocale(locale) ? publicCopy[locale] : null;
+  if (!copy) {
+    return [];
+  }
+
+  return flattenCopyPaths(copy)
+    .map((path) => translationKeyFromPath(path))
+    .filter((key) => !/\.sections\.\d+\.(id|number)$/.test(key))
+    .filter((key) => !namespaceFilter || key.startsWith(`${namespaceFilter}.`));
+}
+
+function flattenCopyPaths(value: unknown, path: string[] = []): string[][] {
+  if (typeof value === "string") {
+    return [path];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((item, index) => flattenCopyPaths(item, [...path, String(index)]));
+  }
+  if (value && typeof value === "object") {
+    return Object.entries(value).flatMap(([key, item]) => flattenCopyPaths(item, [...path, key]));
+  }
+  return [];
+}
+
+function translationKeyFromPath(path: string[]) {
+  const numericIndex = path.findIndex((part) => /^\d+$/.test(part));
+  const namespaceParts = numericIndex >= 0 ? path.slice(0, numericIndex) : path.slice(0, -1);
+  const keyParts = numericIndex >= 0 ? path.slice(numericIndex) : path.slice(-1);
+  return [`public`, ...namespaceParts, ...keyParts].join(".");
+}
+
+function isSupportedLocale(locale: string): locale is Locale {
+  return locale === "es" || locale === "en";
 }
