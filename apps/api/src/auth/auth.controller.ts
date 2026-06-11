@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
+import type { CookieOptions, Response } from 'express';
 import { CurrentUser } from '../common/guards/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
@@ -69,8 +69,8 @@ export class AuthController {
     @CurrentUser() user: { id: string },
     @Res({ passthrough: true }) response: Response,
   ) {
-    response.clearCookie('accessToken');
-    response.clearCookie('refreshToken');
+    response.clearCookie('accessToken', this.cookieOptions());
+    response.clearCookie('refreshToken', this.cookieOptions());
     return this.authService.logout(user.id);
   }
 
@@ -124,18 +124,21 @@ export class AuthController {
     accessToken: string,
     refreshToken: string,
   ) {
-    const secure = process.env.NODE_ENV === 'production';
     response.cookie('accessToken', accessToken, {
-      httpOnly: false,
-      sameSite: 'lax',
-      secure,
+      ...this.cookieOptions(),
       maxAge: 15 * 60 * 1000,
     });
     response.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure,
+      ...this.cookieOptions(),
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+  }
+
+  private cookieOptions(): CookieOptions {
+    return {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    };
   }
 }

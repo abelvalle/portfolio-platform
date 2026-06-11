@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado actualizado: 2026-06-07 11:49 CEST.
+Estado actualizado: 2026-06-11 19:08 CEST.
 
 ## Hitos completados
 
@@ -5849,6 +5849,21 @@ Verificacion realizada en este hito:
 - `gh run view 27089039099 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - `gh run view 27089039098 --repo abelvalle/portfolio-platform --json status,conclusion,url,jobs`
 - Resultado remoto: `success`
+
+### Cookies auth HttpOnly
+
+- `accessToken` y `refreshToken` se emiten como cookies `HttpOnly`.
+- En produccion ambas cookies usan `Secure` y `SameSite=Lax`.
+- `logout` limpia las cookies con las mismas opciones para evitar divergencias entre emision y borrado.
+- Anadidos tests de controlador para login/logout.
+- API docs y deployment documentan el contrato de cookies.
+
+Verificacion realizada en este hito:
+
+- `npm.cmd --prefix apps/api run test -- auth.controller.spec.ts`
+- `npm.cmd --prefix apps/api run lint`
+- `npm.cmd run build:api`
+- `git diff --check`
 
 ## Deuda técnica abierta
 

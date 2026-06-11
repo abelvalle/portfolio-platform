@@ -29,7 +29,7 @@ npm run openapi:check
 }
 ```
 
-Devuelve `accessToken`, `refreshToken` y usuario. Las rutas admin usan bearer token/cookie.
+Devuelve `accessToken`, `refreshToken` y usuario. Las rutas admin usan bearer token/cookie. Cuando se emiten como cookies, `accessToken` y `refreshToken` son `HttpOnly`, `SameSite=Lax` y usan `Secure` en produccion.
 
 Si el usuario tiene MFA activado, el login no emite tokens finales todavía:
 
